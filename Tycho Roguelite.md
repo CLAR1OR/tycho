@@ -158,6 +158,40 @@ Each tech researched: **read explanation → solve a short puzzle/quiz → unloc
 | I   | Gold      | Market (sells surplus)     | Construction & upgrades |
 
 
+#### Resource progression across the ages
+
+**Principle: fixed *roles*, evolving *instances*.** Resources do NOT accumulate across the game — they get **superseded and retire**. The player only ever tracks a handful of *roles* (~5–6 active resources at any one age); what fills each role modernizes with the era. [Anti-overwhelm: you learn the slots once, not a dozen items.]
+
+The roles:
+
+| Role | What it does | Changes per age? |
+| --- | --- | --- |
+| **Research** | Knowledge (+ Knowledge Shards from runs) | No — same currency, generated faster by better buildings |
+| **Money** | Gold | No — money is money the whole way through |
+| **Material** | what you build with | **Yes** — Timber/Stone → (Iron) → Steel → Oil/composites → Nanomaterial |
+| **Energy** | powers production; born as a *tracked* resource in the Industrial age | **Yes** — implicit (water/muscle) → Coal → Electricity → Fusion |
+| **Military input** | feeds summons/armies; born when the strategy layer seeds (Renaissance) | **Yes** — Saltpeter → Munitions → … |
+| **Combat / artefact** | Resonance Ore (weapons), Resonance Dust (etchings) | **No — constant across all ages** |
+| **Story** | Codex Shards | No |
+
+Two load-bearing choices:
+- **Resonance resources never change — and that's lore-correct.** They are nanobot/alien tech, not era-tech, so the combat economy stays stable while the *civilian* economy modernizes. The player's combat mental model is never disrupted.
+- **Graceful retirement.** Advancing an age folds the previous material into a cheap "you have plenty now" baseline (greyed/collapsed in the UI). You stop micromanaging Timber once you have Steel — the bottleneck moves up, the count stays flat.
+
+**Pacing — complexity tracks history.** Don't add a resource every age. The **Industrial Revolution *is* the resource-complexity spike**, so the jump lives there; the other ages stay light. The curve rises, peaks at Industrial, then eases at Future (post-scarcity on-ramp — also the intended answer to the "Dyson sphere makes resources obsolete" worry). The complexity curve mirrors the subject being taught.
+
+Per-age additions (later-age headline techs are named as design intent; they live in unauthored data slots for now):
+
+| Age | New resource | Unlocked by (tech) | Role | Used for | What retires |
+| --- | --- | --- | --- | --- | --- |
+| **I Medieval** | Timber, Stone | start / Masonry & the Arch | Material | Buildings | — |
+| **II Renaissance** | **Saltpeter** | Gunpowder & Ballistics | Military input | Gunpowder for early cannon/ranged → seeds the summon/army economy. [Historically *the* strategic bottleneck — niter beds, "saltpetermen", the India trade.] Printing/optics boost *Knowledge* as building effects, not new resources. | — |
+| **III Industrial** | **Coal → Power**, **Steel** | Steam Engine / Bessemer Steelmaking | Energy + Material | Coal powers factories → production multiplier; Steel = advanced buildings & machinery. [Coke-smelted iron comes first, then Bessemer steel (1856) supersedes it within the age.] | Timber/Stone/iron fold into baseline |
+| **IV Modern** | **Electricity**, **Oil** | Electrification / Internal Combustion + Petrochemistry | Energy + Material | Electricity replaces Coal as the power currency; Oil doubles as plastics/composites feedstock. [Computing arrives as a *Knowledge multiplier* building, not a resource.] | Coal retires; Steel stays a commodity |
+| **V Future** | **Fusion**, **Nanomaterial** | Fusion Power / Nanotechnology | Energy + Material | Fusion → Dyson-scale & FTL; Nanomaterial = engineered matter (**lore payoff: now *we* build the nanobots**) | Economy collapses toward just energy + matter |
+
+**Research accelerators are buildings/tech, never new resources** (printing in Renaissance, computing in Modern multiply Knowledge output) — otherwise the count bloats for no gameplay gain. Architecturally a resource is a data entry tagged with the age it activates and the resource it supersedes, so adding/retiring is data, not code (consistent with "age as data").
+
 
 ### Dungeons 
 
