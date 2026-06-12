@@ -14,9 +14,10 @@ Working doc for AI agents (and humans) building **Tycho Roguelite**. **Read this
 ## What this is (30-second version)
 A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped around a **rational-fiction story** and a **real-science tech tree**. Medieval setting; "magic" is secretly nanobots. The roguelite is the engine; **the story + learning is the soul.** Full vision + locked decisions: `Tycho Roguelite.md`.
 
-## Current status (2026-06-07)
-- **Phase: pre-development.** Design refined, decisions locked. **No code, no Godot project, no git repo yet.**
-- **Next concrete action:** Phase 0 below (project skeleton + the two gates).
+## Current status (2026-06-12)
+- **Phase: pre-development.** Design refined, decisions locked, **all four open story threads resolved**, 2.5D rendering confirmed (see `Tycho Roguelite.md` → "Story decisions — resolved" and "Combat & presentation").
+- **Git repo initialized** (branch `main`, Godot 4 `.gitignore` in place). **No Godot project or code yet.**
+- **Next concrete action:** Phase 0 below — create the Godot 4.6 project, then the combat-feel gate.
 
 ## Working agreement
 - **Documentation is sacred.** Keep `Tycho Roguelite.md` (design bible) and this file accurate and current. A new agent must be able to pick up the project from these two docs alone. Update them as part of any task that changes scope, decisions, or structure.
