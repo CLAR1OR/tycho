@@ -15,7 +15,7 @@ Working doc for AI agents (and humans) building **Tycho Roguelite**. **Read this
 A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped around a **rational-fiction story** and a **real-science tech tree**. Medieval setting; "magic" is secretly nanobots. The roguelite is the engine; **the story + learning is the soul.** Full vision + locked decisions: `Tycho Roguelite.md`.
 
 ## Current status (2026-06-12)
-- **Phase: pre-development.** Design refined, decisions locked, **all four open story threads resolved**, 2.5D rendering confirmed (see `Tycho Roguelite.md` → "Story decisions — resolved" and "Combat & presentation").
+- **Phase: pre-development.** Design refined, decisions locked, **all four open story threads resolved**, 2.5D rendering confirmed, **pacing/economy/accessibility locked** (1 day = 1 run, 20–25 min runs, 5 floors × 6–10 rooms, no death penalty, no dungeon puzzle rooms, nanobot assist mode, combat-feel pass bar) — see `Tycho Roguelite.md` → "Story decisions — resolved", "Combat & presentation", "Pacing, economy & accessibility".
 - **Git repo initialized** (branch `main`, Godot 4 `.gitignore` in place). **No Godot project or code yet.**
 - **Next concrete action:** Phase 0 below — create the Godot 4.6 project, then the combat-feel gate.
 
@@ -31,7 +31,7 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 
 ### Phase 0 — Skeleton + the two gates (DO THIS FIRST)
 1. Initialize a git repo and a Godot 4.6 project.
-2. **Combat-feel gate:** one throwaway room, one Tycho, one enemy, dash + light attack, placeholder models. Iterate ONLY on feel until clearing it feels genuinely good. **This is the go/no-go for the entire project** — if a single room can't feel good, no story or tech tree will save it.
+2. **Combat-feel gate:** one throwaway room, one Tycho, one enemy, dash + light attack, placeholder models. Iterate ONLY on feel. **Pass bar: after the 20th clear of the same room, you still want one more.** It does NOT need to feel like Hades — its own feel is fine (Hades = quality reference, not cloning target). **This is the go/no-go for the entire project** — if a single room can't feel good, no story or tech tree will save it.
 3. **Content gate:** author one complete tech-tree node end-to-end (explanation → puzzle → "aha"); playtest whether it reads as *delight* or *homework*. Fix the format before authoring the rest.
 
 ### Architectural "prepare-for" requirements (bake in from the start)
@@ -42,7 +42,7 @@ v1 builds only the roguelite, but must not paint us into a corner. Set these up 
 - **Separable pillars** — keep roguelite / strategy / space concerns decoupled so Acts II (strategy) and III (space) can slot in later. **Do NOT build strategy or space gameplay in v1.**
 
 ### Phase 1+ — the v1 roguelite (detail TBD — do NOT pre-build)
-Town hub, dialogue system, characters, tech tree, weapons, etchings, dungeon generation, enemies/bosses, meta-progression, resource economy. **Broken into real tasks only after the Phase 0 gates pass.** Too much is still open to plan in detail now — see the design bible's open authorial threads, plus second-order unknowns: puzzle pacing within the run loop, resource-economy numbers, and how many weapons/etchings v1 needs.
+Town hub, dialogue system, characters, tech tree, weapons, etchings, dungeon generation, enemies/bosses, meta-progression, resource economy. **Broken into real tasks only after the Phase 0 gates pass.** Too much is still open to plan in detail now — see the design bible's open authorial threads, plus second-order unknowns: tech-puzzle pacing between runs, resource-economy numbers, and how many weapons/etchings v1 needs.
 
 ## v1 finish line
 End of Act I — the **evil emperor enters** as the antagonist (cliffhanger into the future strategy layer). NOT the alien reveal, NOT the war.
