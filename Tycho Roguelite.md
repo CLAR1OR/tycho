@@ -34,14 +34,16 @@ The game deliberately alternates two opposite headspaces:
 - **Assist mode = "Reinforcement Protocol" (God-Mode-alike, nanobot-framed).** Opt-in toggle: with each death the nanobots adapt the host a little better (small stacking damage resistance, capped), so persistent players always get through. Diegetic fit: the runs *are* learning trials — assist is just the nanobots learning faster. Mirrors Linnea's auto-solve: graceful paths in **both** directions (combat-shy thinkers, puzzle-shy fighters); no content hard-gated behind either skill.
 - **Combat-feel bar: the game does NOT need to feel like Hades** — its own feel is fine. The combat-feel gate's pass bar: *after clearing the same room for the 20th time, you still want one more.* (Hades stays the quality reference, not a cloning target.)
 - **Codex shards assemble a visible artifact in the final-boss chamber.** Each shard visibly slots into place across runs, so v1 players watch the meta-puzzle take shape even though solving it (the alien reveal) is post-v1 — the growing mystery itself is the v1 payoff.
+- **v1 content scope (2026-06-12):** Act I targets **10–15 hours**; **3 weapons** (Sword, Bow, Daggers — Spear stays a data slot); **a boss on every floor (5)**; **Hades-style high-volume dialogue** (fresh contextual lines nearly every run return — the largest writing line item, agent-drafted/human-curated). Full counts: `design/content-budget.md`. Story spine + arcs + dialogue-system spec: `design/act1-story-beats.md`.
 
 ## Scope & roadmap
 - **v1 = the roguelite pillar only**, built end-to-end and finished: dungeon + town hub + characters + dialogue + tech tree + weapons + etchings + meta-progression.
 - **v1 climaxes at the end of Act I: the evil emperor enters the story** as the human-scale antagonist — the cliffhanger hook into the strategy layer. (NOT the alien reveal, NOT the war.)
 - **Strategy (Act II) and Space (Act III) are designed-for now, built later.** Architect saves/data/systems so they slot in cleanly; do not build their gameplay in v1.
-- **Two go/no-go gates before building the real game** (details in `CLAUDE.md` → Phase 0):
-  1. **Combat-feel gate:** one throwaway room, dash + attack, iterate on feel until genuinely good. Pass bar: *after the 20th clear of the same room, you still want one more* (own feel is fine — Hades is the quality reference, not a cloning target). Biggest project risk; only hands-on playtesting validates it. Do this FIRST.
-  2. **Content gate:** author one complete tech-tree node (explanation → puzzle → "aha") and playtest delight-vs-homework before authoring the rest.
+- **Three gates before building the real game** (details in `CLAUDE.md` → Phase 0):
+  1. **Combat-feel gate (go/no-go):** one throwaway room, dash + attack, iterate on feel until genuinely good. Pass bar: *after the 20th clear of the same room, you still want one more* (own feel is fine — Hades is the quality reference, not a cloning target). Biggest project risk; only hands-on playtesting validates it. Do this FIRST.
+  2. **Content gate (go/no-go):** author one complete tech-tree node (explanation → puzzle → "aha") and playtest delight-vs-homework before authoring the rest.
+  3. **Asset-pipeline gate (validate, added 2026-06-12):** push ONE character end-to-end — Tripo model → rig → Quaternius/UAL animation retarget → animated in a Godot scene under the fixed camera. Validates the 2.5D pipeline assumption before any 3D asset line item; can run in parallel with gate 1 (and feeds it placeholder-plus models). Failure ≠ project no-go — fallbacks are stock Quaternius models or learning Blender.
 
 ## Diegetic frame (keep)
 - Magic = nanobots (Clarke's 3rd law); hand-wavy limits are OK since nanobots aren't real yet.
@@ -121,6 +123,8 @@ I want the feeling of this to be similar to that elicited by the game Hades (as 
 ### Story + Dialogues
 
 Hades like, we unlock new dialogues and story progression in between runs. Reaching certain dialogues can unlock new functionality: early game access to the tech tree, weapon upgrade, etchings upgrade, town upgrades. Later, the strategy layer. 
+
+**Volume model = Hades-style high volume** (locked 2026-06-12): fresh contextual dialogue on nearly every run return (~250 contextual snippets + ~60 barks + the scripted story scenes — counts in `design/content-budget.md`; spine, arcs, and the dialogue-selection spec in `design/act1-story-beats.md`).
 
 Dialogues are always scripted, player doesn't have to choose anything here. All decisions happen elsewhere. When we speak with a character, we see a dialogue box at the bottom, with a picture to the left of it. Tycho also speaks in Dialogues. It should also be possible to have more than 2 characters talking, e.g. a third chiming in. Some Dialogues have cutscenes - a fade to one or more images with a narrative text at the bottom describing what is happening, then fade back to conversation. 
 
@@ -210,7 +214,11 @@ Per-age additions (later-age headline techs are named as design intent; they liv
 
 #### Enemies
 
+~12 base enemy types in v1; elites are a modifier system on base types, not new enemies (budget: `design/content-budget.md`).
+
 #### Bosses
+
+**A boss on every floor — 5 bosses** (locked 2026-06-12); floor 5's is the final boss and drops Codex Shards. Difficulty tiers reuse all 5 with new patterns/modifiers.
 
 #### Boons / Echo / in-run upgades
 
@@ -224,12 +232,14 @@ After talking with Mara (the smith) and giving her some of the mysterious resona
 We can upgrade each weapon several times, in different categories. Refining the weapon with standard improvements gives flat upgrades, e.g. attack speed or damage. Refining with resonance ore gives additional effects, e.g. increasing damage when hitting same enemy. 
 
 
-| Weapon  | Flat upgrades | Resonance upgrades |
-| ------- | ------------- | ------------------ |
-| Sword   |               |                    |
-| Daggers |               |                    |
-| Bow     |               |                    |
-| Spear   |               |                    |
+**v1 ships 3 weapons: Sword, Bow, Daggers** (locked 2026-06-12). Spear is a designed-for data slot, post-v1. Per weapon: light combo + 1 special, 5 flat upgrade levels, 4 resonance effects (see `design/content-budget.md`).
+
+| Weapon  | v1? | Flat upgrades | Resonance upgrades |
+| ------- | --- | ------------- | ------------------ |
+| Sword   | ✓   |               |                    |
+| Bow     | ✓   |               |                    |
+| Daggers | ✓   |               |                    |
+| Spear   | post-v1 |           |                    |
 
 
 

@@ -17,7 +17,8 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 ## Current status (2026-06-12)
 - **Phase: pre-development.** Design refined, decisions locked, **all four open story threads resolved**, 2.5D rendering confirmed, **pacing/economy/accessibility locked** (1 day = 1 run, 20–25 min runs, 5 floors × 6–10 rooms, no death penalty, no dungeon puzzle rooms, nanobot assist mode, combat-feel pass bar) — see `Tycho Roguelite.md` → "Story decisions — resolved", "Combat & presentation", "Pacing, economy & accessibility".
 - **Git repo initialized** (branch `main`, Godot 4 `.gitignore` in place). **No Godot project or code yet.**
-- **Next concrete action:** Phase 0 below — create the Godot 4.6 project, then the combat-feel gate.
+- **Design-input docs drafted (2026-06-12):** v1 content budget, Act I story-beat skeleton (incl. dialogue-system spec), architecture schemas for the prepare-fors, Godot project conventions — all in `design/`. These are the inputs for the PRD, which gets written **after** the Phase 0 gates pass.
+- **Next concrete action:** Phase 0 below — create the Godot 4.6 project (per `design/godot-conventions.md`), then the combat-feel gate (+ asset-pipeline gate in parallel).
 
 ## Working agreement
 - **Documentation is sacred.** Keep `Tycho Roguelite.md` (design bible) and this file accurate and current. A new agent must be able to pick up the project from these two docs alone. Update them as part of any task that changes scope, decisions, or structure.
@@ -33,6 +34,7 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 1. Initialize a git repo and a Godot 4.6 project.
 2. **Combat-feel gate:** one throwaway room, one Tycho, one enemy, dash + light attack, placeholder models. Iterate ONLY on feel. **Pass bar: after the 20th clear of the same room, you still want one more.** It does NOT need to feel like Hades — its own feel is fine (Hades = quality reference, not cloning target). **This is the go/no-go for the entire project** — if a single room can't feel good, no story or tech tree will save it.
 3. **Content gate:** author one complete tech-tree node end-to-end (explanation → puzzle → "aha"); playtest whether it reads as *delight* or *homework*. Fix the format before authoring the rest.
+4. **Asset-pipeline gate** (validate, can run parallel to #2): ONE character Tripo → rig → Quaternius/UAL animation retarget → animated in a Godot scene under the fixed camera. De-risks the 2.5D pipeline assumption before any 3D asset work; failure ≠ no-go (fallback: stock Quaternius models, or learn Blender).
 
 ### Architectural "prepare-for" requirements (bake in from the start)
 v1 builds only the roguelite, but must not paint us into a corner. Set these up early even though their full payoff is later:
@@ -49,5 +51,10 @@ End of Act I — the **evil emperor enters** as the antagonist (cliffhanger into
 
 ## Pointers
 - Design bible / full vision: `Tycho Roguelite.md`
-- Detailed design docs: `design/` (see `design/README.md`). Tech nodes in `design/tech-nodes/` — first authored node (the Content gate): `design/tech-nodes/medieval-masonry-the-arch.md`.
+- Detailed design docs: `design/` (see `design/README.md`):
+  - `design/content-budget.md` — v1 scope by the numbers (the schedule)
+  - `design/act1-story-beats.md` — story spine, character arcs, dialogue-system spec
+  - `design/architecture-schemas.md` — draft schemas for the prepare-fors (save, ledger, ages, tech, achievements, town, dialogue)
+  - `design/godot-conventions.md` — project structure, code rules, testing (read before writing any code)
+  - `design/tech-nodes/` — one file per tech node; first authored node (the Content gate): `medieval-masonry-the-arch.md`
 - Asset resources: `Tycho Roguelite.md` → "notes" (Quaternius, Hotpot, Tripo, Blender)

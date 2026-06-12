@@ -3,6 +3,10 @@
 The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions and the big-picture shape**. To keep it readable, anything that goes into *fine detail* lives here instead, and the bible links to it.
 
 ## What lives here
+- `content-budget.md` — v1 scope by the numbers; **this is the schedule.** Change a count = change the scope.
+- `act1-story-beats.md` — the Act I spine, character arcs, and the dialogue-selection system spec.
+- `architecture-schemas.md` — draft data schemas for the architectural prepare-fors + dialogue.
+- `godot-conventions.md` — project structure, code rules, testing. Read before writing any code.
 - `tech-nodes/` — one file per authored tech-tree node (explanation → puzzle → "aha" → unlock). `_TEMPLATE.md` is the canonical format; copy it to author a new node.
 - (future) `dungeons/`, `etchings/`, `weapons/`, `dialogue/`, `bosses/` — detailed specs as they get authored.
 
@@ -13,3 +17,4 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 
 ## Status
 - `tech-nodes/medieval-masonry-the-arch.md` — **first authored node (the Content gate).** Validates the format before the rest of the tree is authored. Playtest this for *delight vs. homework* before scaling up.
+- `content-budget.md`, `act1-story-beats.md`, `architecture-schemas.md`, `godot-conventions.md` — **drafted 2026-06-12** as PRD inputs. Beats are skeleton-level (gates + intent, not scripts); schemas are shape-contracts, not final field lists.
