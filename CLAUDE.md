@@ -49,4 +49,5 @@ End of Act I — the **evil emperor enters** as the antagonist (cliffhanger into
 
 ## Pointers
 - Design bible / full vision: `Tycho Roguelite.md`
+- Detailed design docs: `design/` (see `design/README.md`). Tech nodes in `design/tech-nodes/` — first authored node (the Content gate): `design/tech-nodes/medieval-masonry-the-arch.md`.
 - Asset resources: `Tycho Roguelite.md` → "notes" (Quaternius, Hotpot, Tripo, Blender)

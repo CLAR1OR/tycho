@@ -276,7 +276,7 @@ Each age has his own screen, so that it is not too overwhelming. We can switch t
 
 **Ages III–V (Industrial / Modern / Future):** data slots only, unauthored in v1. Filled when later acts are built.
 
--> Per-node full descriptions + puzzle authoring: to-do at the Content gate (one node first).
+-> Per-node full descriptions + puzzle authoring live in `design/tech-nodes/` (one file per node; `_TEMPLATE.md` is the format). First authored node (the Content gate): **`design/tech-nodes/medieval-masonry-the-arch.md`** — playtest it for delight-vs-homework before authoring the rest.
 
 
 ### Town Upgrades
