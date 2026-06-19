@@ -17,7 +17,8 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 ## Current status (2026-06-12)
 - **Phase: pre-development.** Design refined, decisions locked, **all four open story threads resolved**, 2.5D rendering confirmed, **pacing/economy/accessibility locked** (1 day = 1 run, 20–25 min runs, 5 floors × 6–10 rooms, no death penalty, no dungeon puzzle rooms, nanobot assist mode, combat-feel pass bar) — see `Tycho Roguelite.md` → "Story decisions — resolved", "Combat & presentation", "Pacing, economy & accessibility".
 - **Git repo initialized** (branch `main`, Godot 4 `.gitignore` in place). **No Godot project or code yet.**
-- **Design-input docs drafted (2026-06-12):** v1 content budget, Act I story-beat skeleton (incl. dialogue-system spec), architecture schemas for the prepare-fors, Godot project conventions — all in `design/`. These are the inputs for the PRD, which gets written **after** the Phase 0 gates pass.
+- **Design-input docs drafted (2026-06-12):** v1 content budget, Act I story-beat skeleton (incl. dialogue-system spec), architecture schemas for the prepare-fors, Godot project conventions — all in `design/`. These are the inputs for the PRD.
+- **PRD drafted (2026-06-19):** `design/prd.md` — the single implementable v1 spec, synthesized from the bible + design docs (systems with trigger/state/resolution, immutable core, MVP scope, balance risks, open questions). **Living doc, pre-development:** to be finalized after the Phase 0 gates pass (gate outcomes may revise counts/feel targets). It synthesizes, never overrides — the bible wins on conflict.
 - **Passive Attunements layer added (2026-06-19):** persistent passive upgrades (max life, dash charges, regen, etc.) alongside the active etchings — bought with Resonance Dust at Thomas's Hut, distinct from in-run Echoes. See `Tycho Roguelite.md` → "Etchings" → "Passive Attunements"; budget in `design/content-budget.md`; save schema in `design/architecture-schemas.md`.
 - **Next concrete action:** Phase 0 below — create the Godot 4.6 project (per `design/godot-conventions.md`), then the combat-feel gate (+ asset-pipeline gate in parallel).
 
@@ -54,6 +55,7 @@ End of Act I — the **evil emperor enters** as the antagonist (cliffhanger into
 ## Pointers
 - Design bible / full vision: `Tycho Roguelite.md`
 - Detailed design docs: `design/` (see `design/README.md`):
+  - `design/prd.md` — **the v1 PRD** (start here to build; synthesizes everything below into an implementable spec)
   - `design/content-budget.md` — v1 scope by the numbers (the schedule)
   - `design/act1-story-beats.md` — story spine, character arcs, dialogue-system spec
   - `design/architecture-schemas.md` — draft schemas for the prepare-fors (save, ledger, ages, tech, achievements, town, dialogue)
