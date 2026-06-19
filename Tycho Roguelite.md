@@ -117,7 +117,7 @@ I want the feeling of this to be similar to that elicited by the game Hades (as 
 	- 1 dungeon floor with 6–10 rooms. which room is coming is rng generated. normal enemy rooms, boss rooms, free upgrade / reprieve rooms. (Puzzle rooms cut 2026-06-12 — the dungeon is pure release per the cognitive pulse.) in-run upgrades can accumulate and synergize, or not, depending on rng and player. anticipation building up to boss room where pressure is highest, relief after boss felled. 
 - Macro Loop
 	- If player dies, run is over and we respawn in the town. If we clear all 5 floors and kill the final boss, we unlock a codex shard that **visibly slots into an artifact standing in the final-boss chamber** — the meta-puzzle assembles in plain sight across runs. as soon as it is complete, we can solve or do more runs to get hints / auto solve it. Solving that puzzle reveals alien origin of artefact, starts space stage (post-v1 — in v1 the growing mystery itself is the payoff). 
-	- We keep **everything** we collected, no matter if we die or if we finish the run (no death penalty): gold, etchings upgrade ressource, weapons upgrade resource, codex shards. those we can spend to upgrade the town, our special abilities, our weapons, the tech tree. 
+	- We keep **everything** we collected, no matter if we die or if we finish the run (no death penalty): gold, etchings upgrade ressource, weapons upgrade resource, codex shards. those we can spend to upgrade the town, our special abilities (active etchings **and persistent passive attunements** — see Etchings), our weapons, the tech tree. 
 
 
 ### Story + Dialogues
@@ -257,6 +257,30 @@ After touching the artefact, Tycho has some etchings on his skin. We immediately
 | R    |      |             |
 | R    |      |             |
 
+#### Passive Attunements (persistent passive upgrades)
+
+**Added 2026-06-19 — new design layer.** Active etchings (above) are the *configured abilities* in slots. Alongside them, Thomas's Hut also lets us unlock and upgrade **Passive Attunements** — always-on bonuses to Tycho's body and base kit that persist across every run. Lore: the nanobots don't just give us abilities to fire, they **reinforce the host** — strengthening the body the longer the connection deepens. (Active = configuring the etchings; passive = the etchings hardening you.)
+
+These are **persistent meta-progression** (kept forever, no death penalty — like everything else), distinct from in-run **Echoes**, which only persist within a single run.
+
+- **Vendor:** Thomas's Hut, as a second tab next to active etchings. (Still never changes across ages — per lore the artefact economy is era-independent.)
+- **Currency:** **Resonance Dust** — the same resource as active etchings. This is deliberate: every Dust spent on a passive (more life) is Dust *not* spent unlocking/upgrading an active ability, so the player makes a meaningful build choice rather than just buying everything. Keeps the resource model lean (no new currency).
+- **Structure:** a small attunement tree/list, each node with a few upgrade levels. Each level is a flat, legible stat bump (no in-run RNG).
+
+Example attunements (final list + numbers TBD in tuning):
+
+| Attunement | Effect (scales per level) |
+| ---------- | ------------------------- |
+| Vitality | +Max Health |
+| Recovery | Health regen / heal-on-clear between rooms |
+| Quickening | +Dash charges (or shorter dash cooldown) |
+| Resonance Flow | Faster ability cooldowns |
+| Focus | +Crit chance / +damage |
+| Resilience | Flat damage reduction / armor |
+| Attunement | +Resonance Dust & Ore find rate (compounding meta) |
+
+These stack *under* the in-run Echoes (a run starts from your attuned baseline, then Echoes build on top).
+
 
 ### Tech Tree
 
@@ -317,7 +341,7 @@ All buildings have **3 levels**. Building = L1; each upgrade bumps the effect, m
 | Woodcutter's Lodge | Production | start | Produces Timber |
 | Farm | Production | start | Produces Food (soft cap on town size / morale) |
 | Mara's Forge | Shop | start | Weapon upgrades; **L2 via Metallurgy** = cheaper/stronger |
-| Thomas's Hut | Shop | start | Etching upgrades. **Never changes across ages** (per lore) |
+| Thomas's Hut | Shop | start | Etching upgrades (active abilities) **+ Passive Attunements** (persistent passive upgrades — more life, etc.). **Never changes across ages** (per lore) |
 | Library | Research | Writing & Parchment | +Knowledge/day |
 | Quarry | Production | Masonry & the Arch | Produces Stone (+ small chance of Resonance Ore) |
 | Town Walls | Infrastructure | Masonry & the Arch | Morale/flavor now; **foreshadows the strategy layer** |

@@ -22,7 +22,7 @@ One file per slot + one shared profile file. Settings/accessibility are profile-
   "tech":    { "researched": ["id"], "in_progress": {"id": 12.5}, "auto_solve_counters": {"id": 3} },
   "ledger":  { "gold": 0, "knowledge": 1.2, "resonance-ore": 0 },   // see §2
   "town":    { /* Town object, §6 */ },
-  "combat":  { "weapons": {"sword": {"flat": 2, "resonance": ["echo-bite"]}}, "etchings": {"slots": {"rmb": "id", "q": "id", "r": "id"}, "unlocked": {"id": 2}}, "assist_mode": {"enabled": false, "stacks": 0} },
+  "combat":  { "weapons": {"sword": {"flat": 2, "resonance": ["echo-bite"]}}, "etchings": {"slots": {"rmb": "id", "q": "id", "r": "id"}, "unlocked": {"id": 2}}, "attunements": {"vitality": 2, "quickening": 1}, "assist_mode": {"enabled": false, "stacks": 0} },
   "codex":   { "shards": 1 },
   "pillars": { "strategy": {}, "space": {} }   // EMPTY in v1. Reserved keys so Acts II/III extend, never migrate.
 }
