@@ -5,14 +5,17 @@ extends Node3D
 ## Pass bar: "after the 20th clear of the same room, you still want one more."
 ## It does NOT need to feel like Hades — its own feel is fine.
 ##
-## Throwaway by design: one room, one Tycho, one enemy, dash + light attack,
-## placeholder primitives. Tune feel in player.gd / enemy_dummy.gd / camera_rig.gd.
-## A clear = killing the enemy; it respawns so you can chase the 20th-clear bar.
+## Throwaway by design: one room, a few enemies, dash + light attack, placeholder
+## primitives. Tune feel in player.gd / enemy_dummy.gd / camera_rig.gd.
+## A clear = killing the whole wave; a fresh wave spawns so you can chase the
+## 20th-clear bar.
 
 const ENEMY_SCENE := preload("res://scenes/combat/enemy_dummy.tscn")
-const RESPAWN_DELAY := 0.8     # FEEL: beat between kill and next spawn (s)
-const SPAWN_POS := Vector3(0.0, 1.0, -9.0)
+const ENEMY_COUNT := 4         # FEEL: enemies per wave (sandbox knob — tune freely)
+const RESPAWN_DELAY := 1.0     # FEEL: beat between clearing a wave and the next (s)
 const SHAKE_ON_HIT := 0.35     # FEEL: camera kick (m) when the player takes a hit
+const SPAWN_SPREAD := 14.0     # FEEL: how wide the wave fans out (m)
+const SPAWN_Z := -9.0          # FEEL: how far ahead the wave spawns (m)
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
@@ -21,7 +24,7 @@ const SHAKE_ON_HIT := 0.35     # FEEL: camera kick (m) when the player takes a h
 @onready var _hint_label: Label = $HUD/Hint
 
 var _clears: int = 0
-var _enemy: EnemyDummy = null
+var _enemies: Array[EnemyDummy] = []
 var _last_hp: int = Player.MAX_HEALTH
 
 
@@ -30,8 +33,8 @@ func _ready() -> void:
 	_player.health_changed.connect(_on_player_health_changed)
 	_player.died.connect(_on_player_died)
 	_clears_label.text = "Clears: 0"
-	_hint_label.text = "WASD move · mouse aim · LMB attack · Space dash · Esc/Enter reset"
-	_spawn_enemy()
+	_hint_label.text = "WASD move - mouse aim - LMB attack - Space dash - Esc/Enter reset"
+	_spawn_wave()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -39,20 +42,33 @@ func _unhandled_input(event: InputEvent) -> void:
 		_reset()
 
 
-func _spawn_enemy() -> void:
-	_enemy = ENEMY_SCENE.instantiate()
-	_enemy.position = SPAWN_POS
-	_enemy.target = _player
-	add_child(_enemy)
-	_enemy.died.connect(_on_enemy_died)
+func _spawn_wave() -> void:
+	for i in ENEMY_COUNT:
+		var enemy := ENEMY_SCENE.instantiate()
+		enemy.position = _wave_spawn_pos(i)
+		enemy.target = _player
+		add_child(enemy)
+		enemy.died.connect(_on_enemy_died.bind(enemy))
+		_enemies.append(enemy)
 
 
-func _on_enemy_died() -> void:
-	_clears += 1
-	_clears_label.text = "Clears: %d" % _clears
-	await get_tree().create_timer(RESPAWN_DELAY).timeout
-	if is_inside_tree():
-		_spawn_enemy()
+func _wave_spawn_pos(i: int) -> Vector3:
+	# Fan the wave out in a staggered row ahead of the player.
+	var t: float = 0.0 if ENEMY_COUNT <= 1 else float(i) / float(ENEMY_COUNT - 1)
+	var x := lerpf(-SPAWN_SPREAD * 0.5, SPAWN_SPREAD * 0.5, t)
+	var z := SPAWN_Z + (2.5 if i % 2 == 1 else 0.0)  # stagger front/back rows
+	return Vector3(x, 1.0, z)
+
+
+func _on_enemy_died(enemy: EnemyDummy) -> void:
+	_enemies.erase(enemy)
+	if _enemies.is_empty():
+		_clears += 1
+		_clears_label.text = "Clears: %d" % _clears
+		await get_tree().create_timer(RESPAWN_DELAY).timeout
+		# Guard against a player reset having already respawned a wave.
+		if is_inside_tree() and _enemies.is_empty():
+			_spawn_wave()
 
 
 func _on_player_health_changed(hp: int, max_hp: int) -> void:
@@ -67,7 +83,9 @@ func _on_player_died() -> void:
 
 
 func _reset() -> void:
-	if _enemy != null and is_instance_valid(_enemy):
-		_enemy.queue_free()
+	for enemy in _enemies:
+		if is_instance_valid(enemy):
+			enemy.queue_free()
+	_enemies.clear()
 	_player.revive()
-	_spawn_enemy()
+	_spawn_wave()

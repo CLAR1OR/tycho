@@ -16,7 +16,7 @@ const FRICTION := 80.0        # FEEL: how fast we stop when no input
 # --- Dash (FEEL) ---
 const DASH_SPEED := 24.0      # FEEL: burst speed during a dash
 const DASH_TIME := 0.15       # FEEL: how long the burst lasts (s)
-const DASH_COOLDOWN := 0.40   # FEEL: time before dash is ready again (s)
+const DASH_COOLDOWN := 0.90   # FEEL: time before dash is ready again (s)
 const DASH_IFRAMES := 0.18    # FEEL: invulnerability window from dash start (s)
 
 # --- Light attack (FEEL) ---
