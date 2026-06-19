@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/combat/slash_fx.gd" id="1"]
+
+[sub_resource type="QuadMesh" id="Quad"]
+size = Vector2(1.8, 0.5)
+
+[sub_resource type="StandardMaterial3D" id="SlashMat"]
+resource_local_to_scene = true
+transparency = 1
+cull_mode = 2
+shading_mode = 0
+albedo_color = Color(0.7, 0.95, 1, 0.9)
+emission_enabled = true
+emission = Color(0.6, 0.9, 1, 1)
+emission_energy_multiplier = 2.0
+
+[node name="SlashFX" type="MeshInstance3D"]
+mesh = SubResource("Quad")
+surface_material_override/0 = SubResource("SlashMat")
+script = ExtResource("1")

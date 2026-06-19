@@ -9,14 +9,17 @@ class_name CameraRig
 const FOLLOW_LERP := 9.0              # FEEL: higher = snappier follow, lower = floatier
 const CAM_OFFSET := Vector3(0, 15, 9) # FEEL: height + pull-back of the fixed camera
 const CAM_PITCH := -58.0              # FEEL: downward tilt in degrees (the 2.5D angle)
+const SHAKE_DECAY := 6.0              # FEEL: how fast a shake settles (higher = snappier)
 
 var _target: Node3D = null
+var _cam: Camera3D = null
+var _shake_strength: float = 0.0
 
 
 func _ready() -> void:
-	var cam: Camera3D = $Camera3D
-	cam.position = CAM_OFFSET
-	cam.rotation_degrees = Vector3(CAM_PITCH, 0.0, 0.0)
+	_cam = $Camera3D
+	_cam.position = CAM_OFFSET
+	_cam.rotation_degrees = Vector3(CAM_PITCH, 0.0, 0.0)
 
 
 func set_target(target: Node3D) -> void:
@@ -25,9 +28,23 @@ func set_target(target: Node3D) -> void:
 		global_position = _target.global_position
 
 
+## Kick the camera. `strength` is in metres of peak offset. FEEL: callers pass small
+## values (~0.2–0.4 for a hit); the rig decays it to zero.
+func shake(strength: float) -> void:
+	_shake_strength = maxf(_shake_strength, strength)
+
+
 func _physics_process(delta: float) -> void:
-	if _target == null:
-		return
-	# Frame-rate independent exponential smoothing toward the target's ground position.
-	var t: float = 1.0 - exp(-FOLLOW_LERP * delta)
-	global_position = global_position.lerp(_target.global_position, t)
+	if _target != null:
+		# Frame-rate independent exponential smoothing toward the target's ground position.
+		var t: float = 1.0 - exp(-FOLLOW_LERP * delta)
+		global_position = global_position.lerp(_target.global_position, t)
+
+	# Screen shake: random in-plane jitter on the camera, decaying to zero.
+	if _shake_strength > 0.001:
+		var offset := Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), 0.0) * _shake_strength
+		_cam.position = CAM_OFFSET + offset
+		_shake_strength = lerpf(_shake_strength, 0.0, 1.0 - exp(-SHAKE_DECAY * delta))
+	else:
+		_shake_strength = 0.0
+		_cam.position = CAM_OFFSET

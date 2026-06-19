@@ -26,8 +26,12 @@ const ATTACK_RECOVER := 0.10  # FEEL: lockout after the swing (s)
 const ATTACK_DAMAGE := 25     # FEEL: damage per light hit
 const ATTACK_MOVE_MULT := 0.35  # FEEL: movement allowed while swinging (0 = rooted)
 const COMBO_BUFFER := 0.20    # FEEL: input buffer to chain the next swing (s)
+const SWING_ARC_DEG := 120.0  # FEEL: total blade sweep angle (degrees)
+const BLADE_ALPHA := 0.85     # FEEL: blade brightness during the swing
 
 const MAX_HEALTH := 100
+
+const SLASH_FX := preload("res://scenes/combat/slash_fx.tscn")
 
 signal health_changed(hp: int, max_hp: int)
 signal died
@@ -43,9 +47,13 @@ var _iframe_t: float = 0.0
 var _attack_t: float = 0.0
 var _hit_this_swing: Array = []
 var _buffered_attack: bool = false
+var _swing_sign: float = 1.0
 
 @onready var _hitbox: Area3D = $Hitbox
 @onready var _mesh: MeshInstance3D = $Body
+@onready var _swing_pivot: Node3D = $SwingPivot
+@onready var _blade: MeshInstance3D = $SwingPivot/Blade
+@onready var _hitbox_viz: MeshInstance3D = $HitboxViz
 var _base_mesh_color: Color = Color(0.85, 0.85, 0.9)
 
 
@@ -107,6 +115,7 @@ func _handle_attacking(delta: float) -> void:
 	if _attack_t >= active_start and _attack_t < active_end:
 		_apply_attack_hits()
 
+	_update_swing_visual()
 	_apply_ground_movement(delta, ATTACK_MOVE_MULT)
 
 	if _attack_t >= active_end + ATTACK_RECOVER:
@@ -134,11 +143,15 @@ func _start_attack() -> void:
 	_attack_t = 0.0
 	_buffered_attack = false
 	_hit_this_swing.clear()
+	_swing_sign = -_swing_sign  # alternate sweep direction each swing
+	_swing_pivot.visible = true
 
 
 func _end_attack() -> void:
 	_state = State.NORMAL
 	_buffered_attack = false
+	_swing_pivot.visible = false
+	_hitbox_viz.visible = false
 
 
 func _apply_attack_hits() -> void:
@@ -148,6 +161,36 @@ func _apply_attack_hits() -> void:
 		if body.has_method("take_damage"):
 			_hit_this_swing.append(body)
 			body.take_damage(ATTACK_DAMAGE, global_position)
+			_spawn_slash(body.global_position)
+
+
+## A swept blade visual + the literal hitbox volume shown during the active window,
+## so you can see exactly what a swing covers and what it hit.
+func _update_swing_visual() -> void:
+	var total_swing := ATTACK_WINDUP + ATTACK_ACTIVE
+	var half := deg_to_rad(SWING_ARC_DEG) * 0.5
+	var alpha := BLADE_ALPHA
+	if _attack_t <= total_swing:
+		var p := ease(_attack_t / total_swing, 0.4)  # ease-out sweep
+		_swing_pivot.rotation.y = lerpf(half, -half, p) * _swing_sign
+	else:
+		_swing_pivot.rotation.y = -half * _swing_sign
+		var rp := clampf((_attack_t - total_swing) / ATTACK_RECOVER, 0.0, 1.0)
+		alpha = lerpf(BLADE_ALPHA, 0.0, rp)
+	var mat := _blade.get_active_material(0)
+	if mat is StandardMaterial3D:
+		mat.albedo_color.a = alpha
+	var active_end := ATTACK_WINDUP + ATTACK_ACTIVE
+	_hitbox_viz.visible = _attack_t >= ATTACK_WINDUP and _attack_t < active_end
+
+
+func _spawn_slash(at: Vector3) -> void:
+	var parent := get_parent()
+	if parent == null:
+		return
+	var fx := SLASH_FX.instantiate()
+	fx.position = at + Vector3.UP * 0.6  # roughly mid-body on the target
+	parent.add_child(fx)
 
 
 # --- Movement helpers -------------------------------------------------------

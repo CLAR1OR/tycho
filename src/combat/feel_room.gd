@@ -12,6 +12,7 @@ extends Node3D
 const ENEMY_SCENE := preload("res://scenes/combat/enemy_dummy.tscn")
 const RESPAWN_DELAY := 0.8     # FEEL: beat between kill and next spawn (s)
 const SPAWN_POS := Vector3(0.0, 1.0, -9.0)
+const SHAKE_ON_HIT := 0.35     # FEEL: camera kick (m) when the player takes a hit
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
@@ -21,6 +22,7 @@ const SPAWN_POS := Vector3(0.0, 1.0, -9.0)
 
 var _clears: int = 0
 var _enemy: EnemyDummy = null
+var _last_hp: int = Player.MAX_HEALTH
 
 
 func _ready() -> void:
@@ -55,6 +57,9 @@ func _on_enemy_died() -> void:
 
 func _on_player_health_changed(hp: int, max_hp: int) -> void:
 	_hp_label.text = "HP: %d / %d" % [hp, max_hp]
+	if hp < _last_hp:
+		_rig.shake(SHAKE_ON_HIT)
+	_last_hp = hp
 
 
 func _on_player_died() -> void:
