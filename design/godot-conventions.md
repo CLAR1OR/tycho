@@ -1,6 +1,8 @@
 # Godot Project Conventions
 
-> How the Godot 4.6 project is structured and how agents work in it. Written 2026-06-12, before the project exists — Phase 0 task 1 creates the project to this spec. Keep this doc in sync with reality once code exists; a new agent should be productive from this page alone.
+> How the Godot 4.6 project is structured and how agents work in it. Written 2026-06-12; **the project now exists (created 2026-06-19 to this spec)** — `project.godot` at the repo root, directory tree below in place. Keep this doc in sync with reality; a new agent should be productive from this page alone.
+>
+> **Run it:** open in the Godot editor and press F5, or headless-validate with `/home/clarior/Godot_v4.6.3-stable_linux.x86_64 --headless --editor --quit` (imports + compiles) / `--headless` (runs the main scene). The current main scene is the Phase 0 combat-feel gate: `scenes/combat/feel_room.tscn`. The autoload split below (EventBus/SaveManager/Ledger/…) is the **target** architecture — those autoloads get built in the Skeleton milestone *after* the combat-feel gate passes, so they do not exist yet.
 
 ## Language & engine
 - **Godot 4.6, GDScript only** (no C#) — best agent fluency, no build toolchain. **Static typing mandatory** (`var x: int`, typed funcs); agents drift less with types, and the editor catches their mistakes.

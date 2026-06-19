@@ -1,0 +1,138 @@
+[gd_scene load_steps=13 format=3]
+
+[ext_resource type="Script" path="res://src/combat/feel_room.gd" id="1"]
+[ext_resource type="PackedScene" path="res://scenes/combat/player.tscn" id="2"]
+[ext_resource type="PackedScene" path="res://scenes/core/camera_rig.tscn" id="3"]
+
+[sub_resource type="Environment" id="Env"]
+background_mode = 1
+background_color = Color(0.1, 0.09, 0.14, 1)
+ambient_light_source = 2
+ambient_light_color = Color(0.45, 0.45, 0.55, 1)
+ambient_light_energy = 0.6
+
+[sub_resource type="BoxMesh" id="FloorMesh"]
+size = Vector3(38, 1, 38)
+
+[sub_resource type="StandardMaterial3D" id="GroundMat"]
+albedo_color = Color(0.22, 0.22, 0.28, 1)
+
+[sub_resource type="BoxShape3D" id="FloorShape"]
+size = Vector3(38, 1, 38)
+
+[sub_resource type="StandardMaterial3D" id="WallMat"]
+albedo_color = Color(0.3, 0.28, 0.36, 1)
+
+[sub_resource type="BoxMesh" id="WallNSMesh"]
+size = Vector3(38, 3, 1)
+
+[sub_resource type="BoxShape3D" id="WallNSShape"]
+size = Vector3(38, 3, 1)
+
+[sub_resource type="BoxMesh" id="WallEWMesh"]
+size = Vector3(1, 3, 38)
+
+[sub_resource type="BoxShape3D" id="WallEWShape"]
+size = Vector3(1, 3, 38)
+
+[node name="FeelRoom" type="Node3D"]
+script = ExtResource("1")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Env")
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.866, -0.35, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 12, 0)
+shadow_enabled = true
+
+[node name="Floor" type="StaticBody3D" parent="."]
+collision_layer = 4
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+mesh = SubResource("FloorMesh")
+surface_material_override/0 = SubResource("GroundMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("FloorShape")
+
+[node name="WallN" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, -18)
+collision_layer = 4
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="WallN"]
+mesh = SubResource("WallNSMesh")
+surface_material_override/0 = SubResource("WallMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallN"]
+shape = SubResource("WallNSShape")
+
+[node name="WallS" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.5, 18)
+collision_layer = 4
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="WallS"]
+mesh = SubResource("WallNSMesh")
+surface_material_override/0 = SubResource("WallMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallS"]
+shape = SubResource("WallNSShape")
+
+[node name="WallE" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 1.5, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="WallE"]
+mesh = SubResource("WallEWMesh")
+surface_material_override/0 = SubResource("WallMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallE"]
+shape = SubResource("WallEWShape")
+
+[node name="WallW" type="StaticBody3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 1.5, 0)
+collision_layer = 4
+collision_mask = 0
+
+[node name="Mesh" type="MeshInstance3D" parent="WallW"]
+mesh = SubResource("WallEWMesh")
+surface_material_override/0 = SubResource("WallMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallW"]
+shape = SubResource("WallEWShape")
+
+[node name="Player" parent="." instance=ExtResource("2")]
+
+[node name="CameraRig" parent="." instance=ExtResource("3")]
+
+[node name="HUD" type="CanvasLayer" parent="."]
+
+[node name="Clears" type="Label" parent="HUD"]
+offset_left = 14.0
+offset_top = 10.0
+offset_right = 314.0
+offset_bottom = 36.0
+text = "Clears: 0"
+
+[node name="HP" type="Label" parent="HUD"]
+offset_left = 14.0
+offset_top = 36.0
+offset_right = 314.0
+offset_bottom = 62.0
+text = "HP: 100 / 100"
+
+[node name="Hint" type="Label" parent="HUD"]
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 14.0
+offset_top = -34.0
+offset_right = 700.0
+offset_bottom = -8.0
+grow_vertical = 0
+text = "WASD move - mouse aim - LMB attack - Space dash - Esc/Enter reset"
