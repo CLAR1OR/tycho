@@ -15,8 +15,8 @@ const ENEMY_SKIRMISHER := preload("res://scenes/combat/enemy_skirmisher.tscn")
 const ENEMY_COUNT := 4         # FEEL: enemies per wave (sandbox knob — tune freely)
 const RESPAWN_DELAY := 1.0     # FEEL: beat between clearing a wave and the next (s)
 const SHAKE_ON_HIT := 0.35     # FEEL: camera kick (m) when the player takes a hit
-const SPAWN_SPREAD := 14.0     # FEEL: how wide the wave fans out (m)
-const SPAWN_Z := -9.0          # FEEL: how far ahead the wave spawns (m)
+const SPAWN_RADIUS := 18.0     # FEEL: how far out around the room the wave scatters (m)
+const SPAWN_JITTER := 3.0      # FEEL: random wobble on each spawn point (m)
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
@@ -56,10 +56,12 @@ func _spawn_wave() -> void:
 
 
 func _wave_spawn_pos(i: int) -> Vector3:
-	# Fan the wave out in a staggered row ahead of the player.
-	var t: float = 0.0 if ENEMY_COUNT <= 1 else float(i) / float(ENEMY_COUNT - 1)
-	var x := lerpf(-SPAWN_SPREAD * 0.5, SPAWN_SPREAD * 0.5, t)
-	var z := SPAWN_Z + (2.5 if i % 2 == 1 else 0.0)  # stagger front/back rows
+	# Scatter the wave around the room so the player has to move in, and some enemies
+	# start behind cover (dormant until seen). Evenly spaced angles + a little jitter.
+	var angle := TAU * float(i) / float(ENEMY_COUNT) + randf_range(-0.3, 0.3)
+	var radius := SPAWN_RADIUS + randf_range(-SPAWN_JITTER, SPAWN_JITTER)
+	var x := cos(angle) * radius
+	var z := sin(angle) * radius
 	return Vector3(x, 1.0, z)
 
 

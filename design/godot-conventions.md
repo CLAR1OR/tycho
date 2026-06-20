@@ -1,11 +1,11 @@
 # Godot Project Conventions
 
-> How the Godot 4.6 project is structured and how agents work in it. Written 2026-06-12; **the project now exists (created 2026-06-19 to this spec)** — `project.godot` at the repo root, directory tree below in place. Keep this doc in sync with reality; a new agent should be productive from this page alone.
+> How the Godot 4.7 project is structured and how agents work in it. Written 2026-06-12; **the project now exists (created 2026-06-19 to this spec, upgraded to Godot 4.7 on 2026-06-20)** — `project.godot` at the repo root, directory tree below in place. Keep this doc in sync with reality; a new agent should be productive from this page alone.
 >
-> **Run it:** open in the Godot editor and press F5, or headless-validate with `/home/clarior/Godot_v4.6.3-stable_linux.x86_64 --headless --editor --quit` (imports + compiles) / `--headless` (runs the main scene). The current main scene is the Phase 0 combat-feel gate: `scenes/combat/feel_room.tscn`. The autoload split below (EventBus/SaveManager/Ledger/…) is the **target** architecture — those autoloads get built in the Skeleton milestone *after* the combat-feel gate passes, so they do not exist yet.
+> **Run it:** open in the Godot editor and press F5, or headless-validate with `/home/clarior/Godot_v4.7-stable_linux.x86_64 --headless --editor --quit` (imports + compiles) / `--headless` (runs the main scene). The current main scene is the Phase 0 combat-feel gate: `scenes/combat/feel_room.tscn`. The autoload split below (EventBus/SaveManager/Ledger/…) is the **target** architecture — those autoloads get built in the Skeleton milestone *after* the combat-feel gate passes, so they do not exist yet.
 
 ## Language & engine
-- **Godot 4.6, GDScript only** (no C#) — best agent fluency, no build toolchain. **Static typing mandatory** (`var x: int`, typed funcs); agents drift less with types, and the editor catches their mistakes.
+- **Godot 4.7, GDScript only** (no C#) — best agent fluency, no build toolchain. **Static typing mandatory** (`var x: int`, typed funcs); agents drift less with types, and the editor catches their mistakes.
 - It is technically a **3D project with a fixed camera** (the 2.5D decision). The camera rig is one reusable scene (`camera_rig.tscn`) — nothing else may assume camera angles.
 
 ## Directory layout

@@ -2,11 +2,14 @@ extends CharacterBody3D
 class_name EnemyDummy
 ## Phase 0 combat-feel prototype enemy.
 ##
-## Behaviour: orbit the player at a stand-off distance (strafing, not beelining);
+## Behaviour: start DORMANT (idle). Only wake when the player is within sight_range
+## AND in clear line of sight (a raycast against the obstacle layer — cover blocks it).
+## Once awake: orbit the player at a stand-off distance (strafing, not beelining);
 ## when a COMMIT TOKEN is free, close in → telegraph → strike → recover → rest,
 ## then back to orbiting. Only MAX_ATTACKERS enemies may be committed at once, so
 ## crowds stay readable (the "token" is just being in a committed state — counted
-## across the "enemies" group, so it can never leak).
+## across the "enemies" group, so it can never leak). Walk far enough away and they
+## lose interest and settle back to idle.
 ##
 ## Stats are @export so VARIANTS are just scenes with different values + mesh/colour
 ## (enemy_dummy.tscn = Brute, enemy_skirmisher.tscn = Skirmisher). Numbers marked
@@ -24,6 +27,7 @@ class_name EnemyDummy
 @export var rest_time: float = 0.9          # FEEL: orbit-and-breathe before re-engaging
 @export var attack_damage: int = 15         # FEEL: damage per strike
 @export var knockback: float = 6.0          # FEEL: how far a player hit shoves it
+@export var sight_range: float = 12.0       # FEEL: how close the player must be to be noticed (m)
 @export var base_color: Color = Color(0.75, 0.25, 0.25)
 
 # Shared so the TELL reads the same on every variant (yellow wind-up, red strike).
@@ -37,14 +41,20 @@ const CLOSE_TIMEOUT := 1.5        # FEEL: give up closing if the player kites th
 const SEPARATION_RADIUS := 2.2    # FEEL: start pushing apart within this distance (m)
 const SEPARATION_FORCE := 7.0     # FEEL: how hard they spread
 
-enum State { ENGAGE, CLOSING, TELEGRAPH, STRIKE, RECOVER, REST }
+# Perception (shared across all variants).
+const OBSTACLE_MASK := 4          # collision layer of walls + cover (blocks sight)
+const SIGHT_HEIGHT := 0.7         # eye height for the line-of-sight ray (m)
+const SIGHT_LOSE_MARGIN := 7.0    # FEEL: lose interest past sight_range + this (m)
+const IDLE_DARKEN := 0.4          # how much dimmer a dormant enemy looks
+
+enum State { IDLE, ENGAGE, CLOSING, TELEGRAPH, STRIKE, RECOVER, REST }
 
 signal died
 
 var target: Node3D = null
 
 var _hp: int = 0
-var _state: int = State.ENGAGE
+var _state: int = State.IDLE
 var _timer: float = 0.0
 var _struck: bool = false
 var _knockback_vel: Vector3 = Vector3.ZERO
@@ -57,7 +67,7 @@ var _flip_timer: float = 0.0
 func _ready() -> void:
 	_hp = max_hp
 	add_to_group("enemies")
-	_set_color(base_color)
+	_set_color(_idle_color())   # dormant until it notices the player
 	_circle_dir = 1.0 if randf() < 0.5 else -1.0
 	_flip_timer = randf_range(1.0, 3.0)
 
@@ -71,6 +81,8 @@ func _physics_process(delta: float) -> void:
 	_knockback_vel = _knockback_vel.move_toward(Vector3.ZERO, 30.0 * delta)
 
 	match _state:
+		State.IDLE:
+			_do_idle(delta)
 		State.ENGAGE:
 			_do_engage(delta)
 		State.CLOSING:
@@ -92,7 +104,18 @@ func _physics_process(delta: float) -> void:
 
 # --- States -----------------------------------------------------------------
 
+func _do_idle(_delta: float) -> void:
+	# Dormant: hold position until the player is seen (in range + clear line of sight).
+	velocity = Vector3.ZERO
+	if _can_see_target():
+		_wake()
+
+
 func _do_engage(delta: float) -> void:
+	# Lose interest if the player gets far enough away.
+	if _dist_to_target() > sight_range + SIGHT_LOSE_MARGIN:
+		_to_idle()
+		return
 	_update_flip(delta)
 	velocity = _orbit_velocity()
 	# Commit to an attack when in range and a token is free.
@@ -153,6 +176,9 @@ func _do_recover(delta: float) -> void:
 
 func _do_rest(delta: float) -> void:
 	# Orbit and breathe — NOT committed, so the token is free for others.
+	if _dist_to_target() > sight_range + SIGHT_LOSE_MARGIN:
+		_to_idle()
+		return
 	_update_flip(delta)
 	velocity = _orbit_velocity()
 	_timer -= delta
@@ -204,6 +230,40 @@ func _separation() -> Vector3:
 	return push * SEPARATION_FORCE
 
 
+# --- Perception -------------------------------------------------------------
+
+## Wake from idle: the player is close enough AND in clear line of sight.
+func _wake() -> void:
+	_state = State.ENGAGE
+	_set_color(base_color)
+
+
+## Lose interest and go dormant again.
+func _to_idle() -> void:
+	_state = State.IDLE
+	velocity = Vector3.ZERO
+	_set_color(_idle_color())
+
+
+func _can_see_target() -> bool:
+	if _dist_to_target() > sight_range:
+		return false
+	return _has_line_of_sight()
+
+
+## Raycast enemy → player against the obstacle layer; cover/walls block it.
+func _has_line_of_sight() -> bool:
+	var space := get_world_3d().direct_space_state
+	var from := global_position + Vector3.UP * SIGHT_HEIGHT
+	var to := target.global_position + Vector3.UP * SIGHT_HEIGHT
+	var query := PhysicsRayQueryParameters3D.create(from, to, OBSTACLE_MASK)
+	return space.intersect_ray(query).is_empty()
+
+
+func _idle_color() -> Color:
+	return base_color.darkened(IDLE_DARKEN)
+
+
 # --- Crowd-control token ----------------------------------------------------
 
 ## A committed enemy is mid-attack-commitment; only MAX_ATTACKERS may be at once.
@@ -223,6 +283,8 @@ func _committed_count() -> int:
 
 func take_damage(amount: int, from: Vector3 = Vector3.ZERO) -> void:
 	_hp = maxi(0, _hp - amount)
+	if _state == State.IDLE:
+		_wake()   # getting hit always rouses a dormant enemy
 	_flash()
 	if from != Vector3.ZERO:
 		var dir := _flat(global_position - from).normalized()
