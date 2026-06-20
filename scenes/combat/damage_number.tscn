@@ -5,9 +5,8 @@
 [node name="DamageNumber" type="Label3D"]
 billboard = 1
 no_depth_test = true
-fixed_size = true
-pixel_size = 0.0075
-font_size = 64
-outline_size = 10
+pixel_size = 0.008
+font_size = 40
+outline_size = 6
 text = "0"
 script = ExtResource("1")

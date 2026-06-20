@@ -13,8 +13,8 @@ var _t: float = 0.0
 func setup(amount: int, color: Color) -> void:
 	text = str(amount)
 	modulate = color
-	# Scatter so stacked hits don't print on top of each other.
-	global_position += Vector3(randf_range(-0.4, 0.4), randf_range(0.0, 0.3), randf_range(-0.2, 0.2))
+	# Small scatter so stacked hits don't print exactly on top of each other.
+	global_position += Vector3(randf_range(-0.25, 0.25), randf_range(0.0, 0.2), randf_range(-0.15, 0.15))
 
 
 func _process(delta: float) -> void:
