@@ -19,19 +19,22 @@ const DASH_TIME := 0.15       # FEEL: how long the burst lasts (s)
 const DASH_COOLDOWN := 0.90   # FEEL: time before dash is ready again (s)
 const DASH_IFRAMES := 0.18    # FEEL: invulnerability window from dash start (s)
 
-# --- Light attack (FEEL) ---
-const ATTACK_WINDUP := 0.05   # FEEL: delay before the hitbox goes live (s)
-const ATTACK_ACTIVE := 0.10   # FEEL: how long the hitbox stays live (s)
-const ATTACK_RECOVER := 0.10  # FEEL: lockout after the swing (s)
-const ATTACK_DAMAGE := 25     # FEEL: damage per light hit
-const ATTACK_MOVE_MULT := 0.35  # FEEL: movement allowed while swinging (0 = rooted)
-const COMBO_BUFFER := 0.20    # FEEL: input buffer to chain the next swing (s)
-const SWING_ARC_DEG := 120.0  # FEEL: total blade sweep angle (degrees)
-const BLADE_ALPHA := 0.85     # FEEL: blade brightness during the swing
+# --- Light attack — 3-hit combo (FEEL) ---
+# Hits 1 & 2 are quick; hit 3 is a finisher: more damage, wider arc, longer recovery.
+# Wait longer than COMBO_CONTINUE_WINDOW between hits and the sequence resets to hit 1.
+const ATTACK_WINDUP := 0.05            # FEEL: delay before the hitbox goes live (s)
+const ATTACK_ACTIVE := 0.10           # FEEL: how long the hitbox stays live (s)
+const ATTACK_RECOVER := 0.10          # FEEL: lockout after hits 1 & 2 (s)
+const ATTACK_RECOVER_FINISHER := 0.45 # FEEL: longer lockout after the 3rd hit (s)
+const ATTACK_DAMAGE := 25             # FEEL: damage of hits 1 & 2
+const ATTACK_DAMAGE_FINISHER := 50    # FEEL: damage of the 3rd hit
+const ATTACK_MOVE_MULT := 0.35        # FEEL: movement allowed while swinging (0 = rooted)
+const COMBO_CONTINUE_WINDOW := 0.35   # FEEL: max gap between hits before the combo resets (s)
+const SWING_ARC_DEG := 120.0          # FEEL: blade sweep for hits 1 & 2 (degrees)
+const SWING_ARC_FINISHER := 210.0     # FEEL: wider sweep for the 3rd hit (degrees)
+const BLADE_ALPHA := 0.85             # FEEL: blade brightness during the swing
 
 const MAX_HEALTH := 100
-
-const SLASH_FX := preload("res://scenes/combat/slash_fx.tscn")
 
 signal health_changed(hp: int, max_hp: int)
 signal died
@@ -48,6 +51,11 @@ var _attack_t: float = 0.0
 var _hit_this_swing: Array = []
 var _buffered_attack: bool = false
 var _swing_sign: float = 1.0
+var _combo_index: int = 0          # which hit the NEXT swing performs (0,1,2)
+var _combo_window_t: float = 0.0   # time left (in NORMAL) to chain before the combo resets
+var _cur_damage: int = ATTACK_DAMAGE
+var _cur_recover: float = ATTACK_RECOVER
+var _cur_arc: float = SWING_ARC_DEG
 
 @onready var _hitbox: Area3D = $Hitbox
 @onready var _mesh: MeshInstance3D = $Body
@@ -81,6 +89,11 @@ func _physics_process(delta: float) -> void:
 # --- States -----------------------------------------------------------------
 
 func _handle_normal(delta: float) -> void:
+	# Tick the combo-continue window; let it lapse and the sequence resets to hit 1.
+	if _combo_window_t > 0.0:
+		_combo_window_t -= delta
+		if _combo_window_t <= 0.0:
+			_combo_index = 0
 	if Input.is_action_just_pressed("dash") and _dash_cd <= 0.0:
 		_start_dash()
 		return
@@ -103,8 +116,9 @@ func _handle_attacking(delta: float) -> void:
 	# Buffer a follow-up swing if the player clicks during the swing.
 	if Input.is_action_just_pressed("attack") and _attack_t >= ATTACK_WINDUP:
 		_buffered_attack = true
-	# Dash cancels the recovery — feels responsive.
+	# Dash cancels the recovery — feels responsive — but breaks the combo.
 	if Input.is_action_just_pressed("dash") and _dash_cd <= 0.0:
+		_reset_combo()
 		_end_attack()
 		_start_dash()
 		return
@@ -118,11 +132,8 @@ func _handle_attacking(delta: float) -> void:
 	_update_swing_visual()
 	_apply_ground_movement(delta, ATTACK_MOVE_MULT)
 
-	if _attack_t >= active_end + ATTACK_RECOVER:
-		if _buffered_attack:
-			_start_attack()
-		else:
-			_end_attack()
+	if _attack_t >= active_end + _cur_recover:
+		_advance_combo()
 
 
 # --- Actions ----------------------------------------------------------------
@@ -142,9 +153,35 @@ func _start_attack() -> void:
 	_state = State.ATTACKING
 	_attack_t = 0.0
 	_buffered_attack = false
+	_combo_window_t = 0.0
 	_hit_this_swing.clear()
 	_swing_sign = -_swing_sign  # alternate sweep direction each swing
 	_swing_pivot.visible = true
+	# Per-hit params for the current combo step (index 2 = finisher).
+	var finisher := _combo_index == 2
+	_cur_damage = ATTACK_DAMAGE_FINISHER if finisher else ATTACK_DAMAGE
+	_cur_recover = ATTACK_RECOVER_FINISHER if finisher else ATTACK_RECOVER
+	_cur_arc = SWING_ARC_FINISHER if finisher else SWING_ARC_DEG
+
+
+## Called when a swing's recovery ends: advance/chain/reset the 3-hit sequence.
+func _advance_combo() -> void:
+	if _combo_index >= 2:
+		# Finisher done → full reset, eat the longer recovery already applied.
+		_reset_combo()
+		_end_attack()
+		return
+	_combo_index += 1  # move to the next hit in the sequence
+	if _buffered_attack:
+		_start_attack()  # chain straight into the next hit
+	else:
+		_end_attack()
+		_combo_window_t = COMBO_CONTINUE_WINDOW  # allow continuing from NORMAL
+
+
+func _reset_combo() -> void:
+	_combo_index = 0
+	_combo_window_t = 0.0
 
 
 func _end_attack() -> void:
@@ -160,37 +197,30 @@ func _apply_attack_hits() -> void:
 			continue
 		if body.has_method("take_damage"):
 			_hit_this_swing.append(body)
-			body.take_damage(ATTACK_DAMAGE, global_position)
-			_spawn_slash(body.global_position)
+			body.take_damage(_cur_damage, global_position)
+			CombatFX.slash(get_parent(), body.global_position + Vector3.UP * 0.6)
+			var col := Color(1.0, 0.85, 0.3) if _combo_index == 2 else Color(1.0, 1.0, 1.0)
+			CombatFX.damage_number(get_parent(), body.global_position + Vector3.UP * 1.4, _cur_damage, col)
 
 
 ## A swept blade visual + the literal hitbox volume shown during the active window,
 ## so you can see exactly what a swing covers and what it hit.
 func _update_swing_visual() -> void:
 	var total_swing := ATTACK_WINDUP + ATTACK_ACTIVE
-	var half := deg_to_rad(SWING_ARC_DEG) * 0.5
+	var half := deg_to_rad(_cur_arc) * 0.5
 	var alpha := BLADE_ALPHA
 	if _attack_t <= total_swing:
 		var p := ease(_attack_t / total_swing, 0.4)  # ease-out sweep
 		_swing_pivot.rotation.y = lerpf(half, -half, p) * _swing_sign
 	else:
 		_swing_pivot.rotation.y = -half * _swing_sign
-		var rp := clampf((_attack_t - total_swing) / ATTACK_RECOVER, 0.0, 1.0)
+		var rp := clampf((_attack_t - total_swing) / _cur_recover, 0.0, 1.0)
 		alpha = lerpf(BLADE_ALPHA, 0.0, rp)
 	var mat := _blade.get_active_material(0)
 	if mat is StandardMaterial3D:
 		mat.albedo_color.a = alpha
 	var active_end := ATTACK_WINDUP + ATTACK_ACTIVE
 	_hitbox_viz.visible = _attack_t >= ATTACK_WINDUP and _attack_t < active_end
-
-
-func _spawn_slash(at: Vector3) -> void:
-	var parent := get_parent()
-	if parent == null:
-		return
-	var fx := SLASH_FX.instantiate()
-	fx.position = at + Vector3.UP * 0.6  # roughly mid-body on the target
-	parent.add_child(fx)
 
 
 # --- Movement helpers -------------------------------------------------------
@@ -251,6 +281,9 @@ func revive() -> void:
 	_state = State.NORMAL
 	velocity = Vector3.ZERO
 	global_position = Vector3(0.0, global_position.y, 0.0)
+	_reset_combo()
+	_swing_pivot.visible = false
+	_hitbox_viz.visible = false
 	health_changed.emit(health, MAX_HEALTH)
 
 
