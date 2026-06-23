@@ -8,6 +8,7 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `act1-story-beats.md` — the Act I spine, character arcs, and the dialogue-selection system spec.
 - `architecture-schemas.md` — draft data schemas for the architectural prepare-fors + dialogue.
 - `godot-conventions.md` — project structure, code rules, testing. Read before writing any code.
+- `feel-tuning.md` — **the dial board for the combat-feel gate.** Every tunable `# FEEL:` number, what it does, and whether you change it in the Godot **Inspector** (`@export`) or the script (`const`). For hands-on playtest tuning.
 - `tech-nodes/` — one file per authored tech-tree node (explanation → puzzle → "aha" → unlock). `_TEMPLATE.md` is the canonical format; copy it to author a new node.
 - (future) `dungeons/`, `etchings/`, `weapons/`, `dialogue/`, `bosses/` — detailed specs as they get authored.
 
