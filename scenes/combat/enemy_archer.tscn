@@ -1,0 +1,39 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/combat/enemy_archer.gd" id="1"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+size = Vector3(0.8, 1.7, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_body"]
+albedo_color = Color(0.35, 0.7, 0.4, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_body"]
+size = Vector3(0.8, 1.7, 0.8)
+
+[node name="EnemyArcher" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 7
+script = ExtResource("1")
+max_hp = 22
+move_speed = 5.5
+engage_dist = 9.0
+telegraph_time = 0.6
+strike_time = 0.15
+recover_time = 0.5
+rest_time = 1.0
+attack_damage = 12
+knockback = 4.0
+sight_range = 14.0
+shoot_range = 11.0
+min_range = 6.0
+base_color = Color(0.35, 0.7, 0.4, 1)
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("BoxMesh_body")
+surface_material_override/0 = SubResource("Mat_body")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+shape = SubResource("Shape_body")

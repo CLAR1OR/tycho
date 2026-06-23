@@ -12,6 +12,7 @@ extends Node3D
 
 const ENEMY_BRUTE := preload("res://scenes/combat/enemy_dummy.tscn")
 const ENEMY_SKIRMISHER := preload("res://scenes/combat/enemy_skirmisher.tscn")
+const ENEMY_ARCHER := preload("res://scenes/combat/enemy_archer.tscn")
 const ENEMY_COUNT := 4         # FEEL: enemies per wave (sandbox knob — tune freely)
 const RESPAWN_DELAY := 1.0     # FEEL: beat between clearing a wave and the next (s)
 const SHAKE_ON_HIT := 0.35     # FEEL: camera kick (m) when the player takes a hit
@@ -45,14 +46,24 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _spawn_wave() -> void:
 	for i in ENEMY_COUNT:
-		# Mix variants: alternate Brute / Skirmisher across the wave.
-		var scene: PackedScene = ENEMY_SKIRMISHER if i % 2 == 1 else ENEMY_BRUTE
-		var enemy: EnemyDummy = scene.instantiate()
+		# Mix variants across the wave: Brute / Skirmisher / Archer.
+		var enemy: EnemyDummy = _scene_for(i).instantiate()
 		enemy.position = _wave_spawn_pos(i)
 		enemy.target = _player
 		add_child(enemy)
 		enemy.died.connect(_on_enemy_died.bind(enemy))
 		_enemies.append(enemy)
+
+
+func _scene_for(i: int) -> PackedScene:
+	# Rotate through the three variants so each wave is a mix.
+	match i % 3:
+		1:
+			return ENEMY_SKIRMISHER
+		2:
+			return ENEMY_ARCHER
+		_:
+			return ENEMY_BRUTE
 
 
 func _wave_spawn_pos(i: int) -> Vector3:

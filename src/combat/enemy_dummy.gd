@@ -41,6 +41,11 @@ const CLOSE_TIMEOUT := 1.5        # FEEL: give up closing if the player kites th
 const SEPARATION_RADIUS := 2.2    # FEEL: start pushing apart within this distance (m)
 const SEPARATION_FORCE := 7.0     # FEEL: how hard they spread
 
+# Idle wander (shared across all variants).
+const WANDER_SPEED_MULT := 0.35   # FEEL: idle stroll speed vs. move_speed
+const WANDER_RADIUS := 6.0        # FEEL: how far each idle stroll point is (m)
+const WANDER_BOUND := 24.0        # keep stroll points inside the room (m from centre)
+
 # Perception (shared across all variants).
 const OBSTACLE_MASK := 4          # collision layer of walls + cover (blocks sight)
 const SIGHT_HEIGHT := 0.7         # eye height for the line-of-sight ray (m)
@@ -60,6 +65,8 @@ var _struck: bool = false
 var _knockback_vel: Vector3 = Vector3.ZERO
 var _circle_dir: float = 1.0
 var _flip_timer: float = 0.0
+var _wander_target: Vector3 = Vector3.ZERO
+var _wander_timer: float = 0.0
 
 @onready var _mesh: MeshInstance3D = $Body
 
@@ -70,6 +77,7 @@ func _ready() -> void:
 	_set_color(_idle_color())   # dormant until it notices the player
 	_circle_dir = 1.0 if randf() < 0.5 else -1.0
 	_flip_timer = randf_range(1.0, 3.0)
+	_pick_wander()
 
 
 func _physics_process(delta: float) -> void:
@@ -98,17 +106,28 @@ func _physics_process(delta: float) -> void:
 
 	velocity += _knockback_vel
 	velocity += _separation()
-	_face_target()
+	if _state == State.IDLE:
+		_face_move()   # a strolling enemy looks where it walks, not at an unseen player
+	else:
+		_face_target()
 	move_and_slide()
 
 
 # --- States -----------------------------------------------------------------
 
-func _do_idle(_delta: float) -> void:
-	# Dormant: hold position until the player is seen (in range + clear line of sight).
-	velocity = Vector3.ZERO
+func _do_idle(delta: float) -> void:
+	# Dormant but alive: stroll slowly between random nearby points until the player
+	# is seen (in range + clear line of sight). Pauses briefly at each point.
 	if _can_see_target():
 		_wake()
+		return
+	_wander_timer -= delta
+	var to_point := _flat(_wander_target - global_position)
+	if to_point.length() < 0.5 or _wander_timer <= 0.0:
+		_pick_wander()  # arrived, or timed out (e.g. blocked by cover) → new point
+		velocity = Vector3.ZERO
+	else:
+		velocity = to_point.normalized() * move_speed * WANDER_SPEED_MULT
 
 
 func _do_engage(delta: float) -> void:
@@ -210,6 +229,17 @@ func _orbit_velocity() -> Vector3:
 	return dir.normalized() * move_speed * CIRCLE_SPEED_MULT
 
 
+## Choose a fresh idle stroll point near the current position, clamped to the room.
+func _pick_wander() -> void:
+	var ang := randf() * TAU
+	var r := randf_range(2.0, WANDER_RADIUS)
+	var t := global_position + Vector3(cos(ang) * r, 0.0, sin(ang) * r)
+	t.x = clampf(t.x, -WANDER_BOUND, WANDER_BOUND)
+	t.z = clampf(t.z, -WANDER_BOUND, WANDER_BOUND)
+	_wander_target = t
+	_wander_timer = randf_range(1.5, 3.5)  # also a stuck-against-cover backstop
+
+
 func _update_flip(delta: float) -> void:
 	_flip_timer -= delta
 	if _flip_timer <= 0.0:
@@ -306,6 +336,13 @@ func _face_target() -> void:
 	var look := Vector3(target.global_position.x, global_position.y, target.global_position.z)
 	if look.distance_to(global_position) > 0.05:
 		look_at(look, Vector3.UP)
+
+
+## Face the current movement direction (used while strolling in idle).
+func _face_move() -> void:
+	var v := _flat(velocity)
+	if v.length() > 0.1:
+		look_at(global_position + v, Vector3.UP)
 
 
 func _flat(v: Vector3) -> Vector3:
