@@ -1,0 +1,10 @@
+{
+	"id": "resonance-ore",
+	"name": "Resonance Ore",
+	"icon": "",
+	"role": "combat",
+	"age_active": 1,
+	"supersedes": null,
+	"retired_by": null,
+	"sources": ["run-drop"]
+}

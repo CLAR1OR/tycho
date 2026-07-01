@@ -16,6 +16,12 @@ run/main_scene="res://scenes/combat/feel_room.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 config/icon="res://icon.svg"
 
+[autoload]
+
+EventBus="*res://src/autoload/event_bus.gd"
+Ledger="*res://src/autoload/ledger.gd"
+SaveManager="*res://src/autoload/save_manager.gd"
+
 [display]
 
 window/size/viewport_width=1280

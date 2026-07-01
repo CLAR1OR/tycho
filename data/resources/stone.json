@@ -1,0 +1,10 @@
+{
+	"id": "stone",
+	"name": "Stone",
+	"icon": "",
+	"role": "material",
+	"age_active": 1,
+	"supersedes": null,
+	"retired_by": null,
+	"sources": ["quarry", "run-drop"]
+}

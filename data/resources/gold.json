@@ -1,0 +1,10 @@
+{
+	"id": "gold",
+	"name": "Gold",
+	"icon": "",
+	"role": "money",
+	"age_active": 1,
+	"supersedes": null,
+	"retired_by": null,
+	"sources": ["run-drop", "town-trade"]
+}

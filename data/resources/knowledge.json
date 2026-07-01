@@ -1,0 +1,10 @@
+{
+	"id": "knowledge",
+	"name": "Knowledge",
+	"icon": "",
+	"role": "research",
+	"age_active": 1,
+	"supersedes": null,
+	"retired_by": null,
+	"sources": ["linneas-study", "run-insight"]
+}

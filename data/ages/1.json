@@ -1,0 +1,9 @@
+{
+	"id": 1,
+	"name": "Medieval",
+	"entered_by": "game-start",
+	"town_skin": "town_medieval",
+	"retires_resources": [],
+	"music": "",
+	"palette": ""
+}
