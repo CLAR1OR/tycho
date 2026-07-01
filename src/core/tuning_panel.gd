@@ -24,7 +24,9 @@ var _rows_box: VBoxContainer = null
 func setup(player: Player, rig: CameraRig, room: Node3D) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS  # must run while the tree is paused
 	visible = false
-	set_anchors_preset(Control.PRESET_RIGHT_WIDE)
+	# NOT set_anchors_preset: that recomputes offsets to preserve the current
+	# (tiny) rect, crushing the panel to min size. This one zeroes the offsets.
+	set_anchors_and_offsets_preset(Control.PRESET_RIGHT_WIDE)
 	offset_left = -PANEL_WIDTH
 
 	_define_entries(player, rig, room)
