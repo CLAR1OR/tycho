@@ -6,6 +6,7 @@
 size = Vector3(0.8, 1.1, 0.8)
 
 [sub_resource type="StandardMaterial3D" id="Mat_body"]
+resource_local_to_scene = true
 albedo_color = Color(0.95, 0.55, 0.2, 1)
 
 [sub_resource type="BoxShape3D" id="Shape_body"]
@@ -26,6 +27,7 @@ recover_time = 0.35
 rest_time = 0.6
 attack_damage = 8
 knockback = 5.0
+stagger_time = 0.25
 base_color = Color(0.95, 0.55, 0.2, 1)
 
 [node name="Body" type="MeshInstance3D" parent="."]

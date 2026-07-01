@@ -6,6 +6,7 @@
 size = Vector3(0.8, 1.7, 0.8)
 
 [sub_resource type="StandardMaterial3D" id="Mat_body"]
+resource_local_to_scene = true
 albedo_color = Color(0.35, 0.7, 0.4, 1)
 
 [sub_resource type="BoxShape3D" id="Shape_body"]
@@ -24,6 +25,7 @@ recover_time = 0.5
 rest_time = 1.0
 attack_damage = 12
 knockback = 4.0
+stagger_time = 0.3
 sight_range = 14.0
 shoot_range = 11.0
 min_range = 6.0

@@ -6,10 +6,14 @@ class_name EnemyDummy
 ## AND in clear line of sight (a raycast against the obstacle layer — cover blocks it).
 ## Once awake: orbit the player at a stand-off distance (strafing, not beelining);
 ## when a COMMIT TOKEN is free, close in → telegraph → strike → recover → rest,
-## then back to orbiting. Only MAX_ATTACKERS enemies may be committed at once, so
+## then back to orbiting. Only max_attackers enemies may be committed at once, so
 ## crowds stay readable (the "token" is just being in a committed state — counted
 ## across the "enemies" group, so it can never leak). Walk far enough away and they
 ## lose interest and settle back to idle.
+##
+## Squishy variants (stagger_time > 0) get INTERRUPTED by player hits: any hit knocks
+## them into a brief STAGGER that cancels a wind-up — so attacking them is also
+## defence. Brutes have stagger_time 0 and power through (armored).
 ##
 ## Stats are @export so VARIANTS are just scenes with different values + mesh/colour
 ## (enemy_dummy.tscn = Brute, enemy_skirmisher.tscn = Skirmisher). Numbers marked
@@ -27,6 +31,7 @@ class_name EnemyDummy
 @export var rest_time: float = 0.9          # FEEL: orbit-and-breathe before re-engaging
 @export var attack_damage: int = 15         # FEEL: damage per strike
 @export var knockback: float = 6.0          # FEEL: how far a player hit shoves it
+@export var stagger_time: float = 0.0       # FEEL: hit-interrupt duration; 0 = armored (Brute)
 @export var sight_range: float = 12.0       # FEEL: how close the player must be to be noticed (m)
 @export var base_color: Color = Color(0.75, 0.25, 0.25)
 
@@ -34,12 +39,13 @@ class_name EnemyDummy
 const COLOR_TELEGRAPH := Color(1.0, 0.85, 0.2)
 const COLOR_STRIKE := Color(1.0, 0.2, 0.1)
 
-# Crowd control (shared across all variants).
-const MAX_ATTACKERS := 2          # FEEL: how many enemies may commit at once
-const CIRCLE_SPEED_MULT := 0.7    # FEEL: orbit speed vs. charge speed
-const CLOSE_TIMEOUT := 1.5        # FEEL: give up closing if the player kites this long (s)
-const SEPARATION_RADIUS := 2.2    # FEEL: start pushing apart within this distance (m)
-const SEPARATION_FORCE := 7.0     # FEEL: how hard they spread
+# Crowd control (shared across all variants; `static var` so the F1 tuning panel
+# can dial them live for the whole class — treat like consts otherwise).
+static var max_attackers: int = 2            # FEEL: how many enemies may commit at once
+static var circle_speed_mult: float = 0.7    # FEEL: orbit speed vs. charge speed
+static var close_timeout: float = 1.5        # FEEL: give up closing if the player kites this long (s)
+static var separation_radius: float = 2.2    # FEEL: start pushing apart within this distance (m)
+static var separation_force: float = 7.0     # FEEL: how hard they spread
 
 # Idle wander (shared across all variants).
 const WANDER_SPEED_MULT := 0.35   # FEEL: idle stroll speed vs. move_speed
@@ -52,7 +58,9 @@ const SIGHT_HEIGHT := 0.7         # eye height for the line-of-sight ray (m)
 const SIGHT_LOSE_MARGIN := 7.0    # FEEL: lose interest past sight_range + this (m)
 const IDLE_DARKEN := 0.4          # how much dimmer a dormant enemy looks
 
-enum State { IDLE, ENGAGE, CLOSING, TELEGRAPH, STRIKE, RECOVER, REST }
+const DEATH_FX_HEIGHT := 0.9      # where the death burst spawns (body-centre height, m)
+
+enum State { IDLE, ENGAGE, CLOSING, TELEGRAPH, STRIKE, RECOVER, REST, STAGGER }
 
 signal died
 
@@ -103,6 +111,8 @@ func _physics_process(delta: float) -> void:
 			_do_recover(delta)
 		State.REST:
 			_do_rest(delta)
+		State.STAGGER:
+			_do_stagger(delta)
 
 	velocity += _knockback_vel
 	velocity += _separation()
@@ -138,9 +148,9 @@ func _do_engage(delta: float) -> void:
 	_update_flip(delta)
 	velocity = _orbit_velocity()
 	# Commit to an attack when in range and a token is free.
-	if _dist_to_target() <= engage_dist + 0.5 and _committed_count() < MAX_ATTACKERS:
+	if _dist_to_target() <= engage_dist + 0.5 and _committed_count() < max_attackers:
 		_state = State.CLOSING
-		_timer = CLOSE_TIMEOUT
+		_timer = close_timeout
 
 
 func _do_closing(delta: float) -> void:
@@ -205,6 +215,16 @@ func _do_rest(delta: float) -> void:
 		_state = State.ENGAGE
 
 
+func _do_stagger(delta: float) -> void:
+	# Hit-interrupted: rooted (knockback still shoves via _knockback_vel), any
+	# wind-up cancelled, commit token released. Back to ENGAGE when it wears off.
+	velocity = Vector3.ZERO
+	_timer -= delta
+	if _timer <= 0.0:
+		_state = State.ENGAGE
+		_set_color(base_color)
+
+
 func _start_rest() -> void:
 	_state = State.REST
 	_timer = rest_time
@@ -226,7 +246,7 @@ func _orbit_velocity() -> Vector3:
 	var dir := tangent + radial * radius_error * 0.9
 	if dir.length() < 0.001:
 		return Vector3.ZERO
-	return dir.normalized() * move_speed * CIRCLE_SPEED_MULT
+	return dir.normalized() * move_speed * circle_speed_mult
 
 
 ## Choose a fresh idle stroll point near the current position, clamped to the room.
@@ -255,9 +275,9 @@ func _separation() -> Vector3:
 			continue
 		var diff := _flat(global_position - (other as Node3D).global_position)
 		var d := diff.length()
-		if d > 0.001 and d < SEPARATION_RADIUS:
-			push += diff.normalized() * (1.0 - d / SEPARATION_RADIUS)
-	return push * SEPARATION_FORCE
+		if d > 0.001 and d < separation_radius:
+			push += diff.normalized() * (1.0 - d / separation_radius)
+	return push * separation_force
 
 
 # --- Perception -------------------------------------------------------------
@@ -296,7 +316,7 @@ func _idle_color() -> Color:
 
 # --- Crowd-control token ----------------------------------------------------
 
-## A committed enemy is mid-attack-commitment; only MAX_ATTACKERS may be at once.
+## A committed enemy is mid-attack-commitment; only max_attackers may be at once.
 func is_committed() -> bool:
 	return _state == State.CLOSING or _state == State.TELEGRAPH or _state == State.STRIKE
 
@@ -311,17 +331,30 @@ func _committed_count() -> int:
 
 # --- Damage -----------------------------------------------------------------
 
-func take_damage(amount: int, from: Vector3 = Vector3.ZERO) -> void:
+## Returns true if this hit killed the enemy (the player uses it to size hitstop).
+func take_damage(amount: int, from: Vector3 = Vector3.ZERO) -> bool:
 	_hp = maxi(0, _hp - amount)
 	if _state == State.IDLE:
 		_wake()   # getting hit always rouses a dormant enemy
-	_flash()
 	if from != Vector3.ZERO:
 		var dir := _flat(global_position - from).normalized()
 		_knockback_vel = dir * knockback
 	if _hp == 0:
+		CombatFX.death_burst(get_parent(), global_position + Vector3.UP * DEATH_FX_HEIGHT, base_color)
 		died.emit()
 		queue_free()
+		return true
+	_flash()
+	# Squishy variants get interrupted: cancels a wind-up and drops the token.
+	if stagger_time > 0.0:
+		_enter_stagger()
+	return false
+
+
+func _enter_stagger() -> void:
+	_state = State.STAGGER
+	_timer = stagger_time
+	_set_color(base_color)  # a cancelled telegraph must stop reading as a threat
 
 
 # --- Misc helpers -----------------------------------------------------------
@@ -358,8 +391,17 @@ func _set_color(c: Color) -> void:
 func _flash() -> void:
 	var mat := _mesh.get_active_material(0)
 	if mat is StandardMaterial3D:
-		var prev: Color = mat.albedo_color
 		mat.albedo_color = Color.WHITE
 		await get_tree().create_timer(0.06).timeout
 		if is_instance_valid(self) and mat is StandardMaterial3D:
-			mat.albedo_color = prev
+			# Restore whatever colour the CURRENT state wants (it may have changed
+			# during the flash — e.g. the hit caused a stagger or a wake).
+			match _state:
+				State.IDLE:
+					mat.albedo_color = _idle_color()
+				State.TELEGRAPH:
+					mat.albedo_color = COLOR_TELEGRAPH
+				State.STRIKE:
+					mat.albedo_color = COLOR_STRIKE
+				_:
+					mat.albedo_color = base_color

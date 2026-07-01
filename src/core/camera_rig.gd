@@ -6,10 +6,11 @@ class_name CameraRig
 ## the fixed top-down-with-tilt offset and pitch.
 
 # FEEL: human-tuned, do not optimize — camera framing is part of combat feel.
-const FOLLOW_LERP := 9.0              # FEEL: higher = snappier follow, lower = floatier
-const CAM_OFFSET := Vector3(0, 15, 9) # FEEL: height + pull-back of the fixed camera
-const CAM_PITCH := -58.0              # FEEL: downward tilt in degrees (the 2.5D angle)
-const SHAKE_DECAY := 6.0              # FEEL: how fast a shake settles (higher = snappier)
+# @export so the Inspector and the F1 tuning panel can dial them live.
+@export var follow_lerp: float = 9.0                # FEEL: higher = snappier follow, lower = floatier
+@export var cam_offset := Vector3(0, 15, 9)         # FEEL: height + pull-back of the fixed camera
+@export var cam_pitch: float = -58.0                # FEEL: downward tilt in degrees (the 2.5D angle)
+@export var shake_decay: float = 6.0                # FEEL: how fast a shake settles (higher = snappier)
 
 var _target: Node3D = null
 var _cam: Camera3D = null
@@ -18,8 +19,7 @@ var _shake_strength: float = 0.0
 
 func _ready() -> void:
 	_cam = $Camera3D
-	_cam.position = CAM_OFFSET
-	_cam.rotation_degrees = Vector3(CAM_PITCH, 0.0, 0.0)
+	_cam.position = cam_offset
 
 
 func set_target(target: Node3D) -> void:
@@ -35,16 +35,19 @@ func shake(strength: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	# Re-applied every frame (not just _ready) so live tuning of the framing works.
+	_cam.rotation_degrees = Vector3(cam_pitch, 0.0, 0.0)
+
 	if _target != null:
 		# Frame-rate independent exponential smoothing toward the target's ground position.
-		var t: float = 1.0 - exp(-FOLLOW_LERP * delta)
+		var t: float = 1.0 - exp(-follow_lerp * delta)
 		global_position = global_position.lerp(_target.global_position, t)
 
 	# Screen shake: random in-plane jitter on the camera, decaying to zero.
 	if _shake_strength > 0.001:
 		var offset := Vector3(randf_range(-1.0, 1.0), randf_range(-1.0, 1.0), 0.0) * _shake_strength
-		_cam.position = CAM_OFFSET + offset
-		_shake_strength = lerpf(_shake_strength, 0.0, 1.0 - exp(-SHAKE_DECAY * delta))
+		_cam.position = cam_offset + offset
+		_shake_strength = lerpf(_shake_strength, 0.0, 1.0 - exp(-shake_decay * delta))
 	else:
 		_shake_strength = 0.0
-		_cam.position = CAM_OFFSET
+		_cam.position = cam_offset

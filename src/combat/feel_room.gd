@@ -6,18 +6,21 @@ extends Node3D
 ## It does NOT need to feel like Hades — its own feel is fine.
 ##
 ## Throwaway by design: one room, a few enemies, dash + light attack, placeholder
-## primitives. Tune feel in player.gd / enemy_dummy.gd / camera_rig.gd.
+## primitives. Tune feel in player.gd / enemy_dummy.gd / camera_rig.gd — or live:
+## F1 opens the runtime tuning panel (pauses the game, sliders for the main dials).
 ## A clear = killing the whole wave; a fresh wave spawns so you can chase the
 ## 20th-clear bar.
 
 const ENEMY_BRUTE := preload("res://scenes/combat/enemy_dummy.tscn")
 const ENEMY_SKIRMISHER := preload("res://scenes/combat/enemy_skirmisher.tscn")
 const ENEMY_ARCHER := preload("res://scenes/combat/enemy_archer.tscn")
-const ENEMY_COUNT := 4         # FEEL: enemies per wave (sandbox knob — tune freely)
-const RESPAWN_DELAY := 1.0     # FEEL: beat between clearing a wave and the next (s)
-const SHAKE_ON_HIT := 0.35     # FEEL: camera kick (m) when the player takes a hit
-const SPAWN_RADIUS := 18.0     # FEEL: how far out around the room the wave scatters (m)
-const SPAWN_JITTER := 3.0      # FEEL: random wobble on each spawn point (m)
+
+# FEEL knobs — @export so the Inspector and the F1 tuning panel can dial them live.
+@export var enemy_count: int = 4         # FEEL: enemies per wave (sandbox knob — tune freely)
+@export var respawn_delay: float = 1.0   # FEEL: beat between clearing a wave and the next (s)
+@export var shake_on_hit: float = 0.35   # FEEL: camera kick (m) when the player takes a hit
+@export var spawn_radius: float = 18.0   # FEEL: how far out around the room the wave scatters (m)
+@export var spawn_jitter: float = 3.0    # FEEL: random wobble on each spawn point (m)
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
@@ -35,8 +38,12 @@ func _ready() -> void:
 	_player.health_changed.connect(_on_player_health_changed)
 	_player.died.connect(_on_player_died)
 	_clears_label.text = "Clears: 0"
-	_hint_label.text = "WASD move - mouse aim - LMB attack - Space dash - Esc/Enter reset"
+	_hint_label.text = "WASD move - mouse aim - LMB attack - Space dash - Esc/Enter reset - F1 tuning"
 	_spawn_wave()
+	# Debug-only runtime feel-tuning panel (F1). Built in code, lives on the HUD layer.
+	var panel := TuningPanel.new()
+	$HUD.add_child(panel)
+	panel.setup(_player, _rig, self)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -45,7 +52,7 @@ func _unhandled_input(event: InputEvent) -> void:
 
 
 func _spawn_wave() -> void:
-	for i in ENEMY_COUNT:
+	for i in enemy_count:
 		# Mix variants across the wave: Brute / Skirmisher / Archer.
 		var enemy: EnemyDummy = _scene_for(i).instantiate()
 		enemy.position = _wave_spawn_pos(i)
@@ -69,8 +76,8 @@ func _scene_for(i: int) -> PackedScene:
 func _wave_spawn_pos(i: int) -> Vector3:
 	# Scatter the wave around the room so the player has to move in, and some enemies
 	# start behind cover (dormant until seen). Evenly spaced angles + a little jitter.
-	var angle := TAU * float(i) / float(ENEMY_COUNT) + randf_range(-0.3, 0.3)
-	var radius := SPAWN_RADIUS + randf_range(-SPAWN_JITTER, SPAWN_JITTER)
+	var angle := TAU * float(i) / float(enemy_count) + randf_range(-0.3, 0.3)
+	var radius := spawn_radius + randf_range(-spawn_jitter, spawn_jitter)
 	var x := cos(angle) * radius
 	var z := sin(angle) * radius
 	return Vector3(x, 1.0, z)
@@ -81,7 +88,7 @@ func _on_enemy_died(enemy: EnemyDummy) -> void:
 	if _enemies.is_empty():
 		_clears += 1
 		_clears_label.text = "Clears: %d" % _clears
-		await get_tree().create_timer(RESPAWN_DELAY).timeout
+		await get_tree().create_timer(respawn_delay).timeout
 		# Guard against a player reset having already respawned a wave.
 		if is_inside_tree() and _enemies.is_empty():
 			_spawn_wave()
@@ -90,7 +97,7 @@ func _on_enemy_died(enemy: EnemyDummy) -> void:
 func _on_player_health_changed(hp: int, max_hp: int) -> void:
 	_hp_label.text = "HP: %d / %d" % [hp, max_hp]
 	if hp < _last_hp:
-		_rig.shake(SHAKE_ON_HIT)
+		_rig.shake(shake_on_hit)
 	_last_hp = hp
 
 

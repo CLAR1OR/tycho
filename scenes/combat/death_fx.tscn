@@ -1,0 +1,42 @@
+[gd_scene load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://src/combat/death_fx.gd" id="1"]
+
+[sub_resource type="StandardMaterial3D" id="ShardMat"]
+vertex_color_use_as_albedo = true
+
+[sub_resource type="BoxMesh" id="ShardMesh"]
+material = SubResource("ShardMat")
+size = Vector3(0.22, 0.22, 0.22)
+
+[sub_resource type="SphereMesh" id="PopMesh"]
+radius = 0.5
+height = 1.0
+
+[sub_resource type="StandardMaterial3D" id="PopMat"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+albedo_color = Color(1, 1, 1, 0.65)
+
+[node name="DeathFX" type="Node3D"]
+script = ExtResource("1")
+
+[node name="Shards" type="CPUParticles3D" parent="."]
+emitting = false
+amount = 16
+lifetime = 0.55
+one_shot = true
+explosiveness = 1.0
+mesh = SubResource("ShardMesh")
+direction = Vector3(0, 1, 0)
+spread = 75.0
+gravity = Vector3(0, -22, 0)
+initial_velocity_min = 5.0
+initial_velocity_max = 9.5
+scale_amount_min = 0.6
+scale_amount_max = 1.3
+
+[node name="Pop" type="MeshInstance3D" parent="."]
+mesh = SubResource("PopMesh")
+surface_material_override/0 = SubResource("PopMat")
