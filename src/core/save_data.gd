@@ -33,6 +33,7 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 		"ledger": {},
 		"town": {"id": "home", "name": "Home", "age": 1, "buildings": [], "map_pos": null},
 		"combat": {
+			"current_weapon": "sword",
 			"weapons": {},
 			"etchings": {"slots": {"rmb": "", "q": "", "r": ""}, "unlocked": {}},
 			"attunements": {},

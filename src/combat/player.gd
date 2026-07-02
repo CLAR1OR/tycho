@@ -64,6 +64,13 @@ enum State { NORMAL, DASHING, ATTACKING }
 ## Live cap — starts at the base and gets buffed by Echoes (and later Attunements).
 var max_health: int = MAX_HEALTH
 var health: int = MAX_HEALTH
+
+# --- Weapon (configured per room by WeaponCore from the save's loadout) ---
+## "melee" = the combo/lunge kit below; "ranged" = draw → loose an arrow → recover.
+var weapon_kind: String = "melee"
+var arrow_speed: float = 22.0  # ranged only; weapon data (projectile.speed)
+
+const ARROW_SCENE := preload("res://scenes/combat/arrow.tscn")
 var _state: int = State.NORMAL
 var _dash_cd: float = 0.0
 var _dash_t: float = 0.0
@@ -80,6 +87,7 @@ var _cur_recover: float = 0.0
 var _cur_arc: float = 0.0
 var _lunge_vel: Vector3 = Vector3.ZERO
 var _ghost_t: float = 0.0
+var _shot_fired: bool = false  # ranged: one arrow per attack
 
 @onready var _hitbox: Area3D = $Hitbox
 @onready var _mesh: MeshInstance3D = $Body
@@ -140,6 +148,9 @@ func _handle_dashing(delta: float) -> void:
 
 
 func _handle_attacking(delta: float) -> void:
+	if weapon_kind == "ranged":
+		_handle_ranged_attacking(delta)
+		return
 	_attack_t += delta
 
 	# Buffer a follow-up swing if the player clicks during the swing.
@@ -172,6 +183,35 @@ func _handle_attacking(delta: float) -> void:
 		_advance_combo()
 
 
+## Ranged attack: draw (windup) → loose one arrow toward facing → recover.
+## No combo, no lunge, no blade sweep — the bow's rhythm is its recover time.
+func _handle_ranged_attacking(delta: float) -> void:
+	_attack_t += delta
+	if Input.is_action_just_pressed("attack") and _attack_t >= attack_windup:
+		_buffered_attack = true
+	if Input.is_action_just_pressed("dash") and _dash_cd <= 0.0:
+		_end_attack()
+		_start_dash()
+		return
+	if not _shot_fired and _attack_t >= attack_windup:
+		_shot_fired = true
+		_fire_arrow()
+	_apply_ground_movement(delta, attack_move_mult)
+	if _attack_t >= attack_windup + attack_active + _cur_recover:
+		_end_attack()
+		if _buffered_attack:
+			_start_attack()
+
+
+func _fire_arrow() -> void:
+	var arrow: Arrow = ARROW_SCENE.instantiate()
+	arrow.collision_mask = 6  # enemies + walls — the player's own arrows never bite back
+	get_parent().add_child(arrow)
+	var dir := _flat(-global_transform.basis.z).normalized()
+	arrow.global_position = global_position + Vector3.UP * 0.9 + dir * 0.8
+	arrow.setup(dir, _cur_damage, arrow_speed, Color.WHITE)
+
+
 # --- Actions ----------------------------------------------------------------
 
 func _start_dash() -> void:
@@ -192,6 +232,12 @@ func _start_attack() -> void:
 	_buffered_attack = false
 	_combo_window_t = 0.0
 	_hit_this_swing.clear()
+	if weapon_kind == "ranged":
+		_shot_fired = false
+		_cur_damage = attack_damage
+		_cur_recover = attack_recover
+		_cur_arc = 0.0
+		return
 	_swing_sign = -_swing_sign  # alternate sweep direction each swing
 	_swing_pivot.visible = true
 	# Per-hit params for the current combo step (index 2 = finisher).

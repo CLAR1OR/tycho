@@ -1,0 +1,9 @@
+{
+	"id": "sword",
+	"name": "Sword",
+	"kind": "melee",
+	"desc": "The baseline blade — balanced arc, weight and reach.",
+	"mods": [],
+	"projectile": null,
+	"flat": {"damage_mult_per_level": 0.15, "costs": [1, 2, 3, 5, 8]}
+}

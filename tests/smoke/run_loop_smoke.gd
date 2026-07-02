@@ -91,11 +91,29 @@ func _run_smoke() -> void:
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 1,
 		"masonry unlock makes the quarry buildable")
 
+	# --- Mara's Forge ----------------------------------------------------------------
+	Ledger.add("resonance-ore", 5.0, "smoke-grant")
+	var ore_before := Ledger.get_amount("resonance-ore")
+	_check(ore_before >= 7.0, "boss dropped guaranteed ore (have %.0f incl. 5 granted)" % ore_before)
+	var forge: ForgePanel = _scene_node().call("open_forge_panel")
+	await _settle(3)
+	forge.upgrade("sword")
+	_check(WeaponCore.flat_level(SaveManager.state["combat"], "sword") == 1,
+		"forge refined the sword to flat L1")
+	_check(Ledger.get_amount("resonance-ore") == ore_before - 1.0, "refine spent 1 ore")
+	forge.equip("daggers")
+	_check(str(SaveManager.state["combat"]["current_weapon"]) == "daggers", "daggers equipped")
+	forge.close()
+	await _settle(3)
+
 	# --- Run 2: death ------------------------------------------------------------
 	_game.call("_start_run")
 	await _settle(10)
 	var player := _find_player()
 	_check(player != null, "run 2 spawned a player")
+	if player != null:
+		_check(player.attack_damage < 25, "daggers kit applied to the run player (damage %d)" % player.attack_damage)
+		_check(player.attack_windup < 0.05, "daggers are faster (windup %.3f)" % player.attack_windup)
 	if player != null:
 		player.take_damage(99999)
 	await _settle(30)

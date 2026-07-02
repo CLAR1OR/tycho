@@ -1,0 +1,14 @@
+{
+	"id": "bow",
+	"name": "Bow",
+	"kind": "ranged",
+	"desc": "Kill it before it reaches you. Slow to draw, no combo — but it works at thirty paces.",
+	"mods": [
+		{"stat": "attack_damage", "mult": 0.9},
+		{"stat": "attack_windup", "mult": 2.6},
+		{"stat": "attack_recover", "mult": 2.4},
+		{"stat": "attack_move_mult", "mult": 0.8}
+	],
+	"projectile": {"speed": 26.0},
+	"flat": {"damage_mult_per_level": 0.15, "costs": [1, 2, 3, 5, 8]}
+}

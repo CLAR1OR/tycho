@@ -31,8 +31,10 @@ const PLAYER_SPAWN := Vector3(0, 0, 18)  # south edge; the wave scatters around 
 # Drop economy — placeholder numbers (economy tuning is an OPEN question, PRD §13).
 @export var gold_per_enemy_min: int = 1
 @export var gold_per_enemy_max: int = 3
+@export var ore_drop_chance: float = 0.12  # Resonance Ore per kill (weapons sink, PRD §7.10)
 @export var boss_gold: int = 25
 @export var boss_shards: int = 1         # Knowledge Shards per stage boss (PRD §7.10)
+@export var boss_ore: int = 2            # guaranteed Resonance Ore per boss
 
 signal cleared        # the wave is down; the orchestrator decides what happens next
 signal exit_entered   # the player stepped into the open exit portal
@@ -76,8 +78,16 @@ func _ready() -> void:
 	else:
 		_room_label.text = "Floor %d — Room %d/%d" % [floor_num, room_index, rooms_this_floor]
 	_hint_label.text = "Clear the room - F1 tuning"
-	# Carry the run's build + wounds onto this room's FRESH player instance:
-	# echoes re-apply from RunState, HP carries over (rooms must not free-heal).
+	# Configure this room's FRESH player instance, in order: the equipped weapon
+	# (baseline kit), then the run's echoes on top, then carried-over HP (rooms
+	# must not free-heal).
+	var combat: Dictionary = SaveManager.state["combat"]
+	var weapon_id := str(combat.get("current_weapon", "sword"))
+	if WeaponCore.defs().has(weapon_id):
+		WeaponCore.apply_to_player(_player, WeaponCore.defs()[weapon_id],
+			WeaponCore.flat_level(combat, weapon_id))
+	else:
+		push_error("CombatRoom: unknown current_weapon \"%s\" — using the base kit" % weapon_id)
 	EchoCore.apply_all_to_player(_player, RunState.echoes)
 	if RunState.player_health > 0:
 		_player.restore_health(RunState.player_health)
@@ -131,12 +141,15 @@ func _wave_spawn_pos(i: int, count: int) -> Vector3:
 
 func _on_enemy_died(enemy: EnemyDummy) -> void:
 	Ledger.add("gold", float(randi_range(gold_per_enemy_min, gold_per_enemy_max)), "run-drop")
+	if randf() < ore_drop_chance:
+		Ledger.add("resonance-ore", 1.0, "run-drop")
 	_enemies.erase(enemy)
 	if _enemies.is_empty() and not _cleared:
 		_cleared = true
 		if kind == RunFlow.KIND_BOSS:
 			Ledger.add("gold", float(boss_gold), "boss-drop")
 			Ledger.add("knowledge-shards", float(boss_shards), "boss-drop")
+			Ledger.add("resonance-ore", float(boss_ore), "boss-drop")
 		cleared.emit()
 
 

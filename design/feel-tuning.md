@@ -34,6 +34,13 @@ resume and *feel* the change — mid-fight, no restart.
 Everything below is the *persistent* home of each knob — where a value lives once you
 commit to it.
 
+> **Weapons vs. these knobs (2026-07-02):** weapon definitions (`data/weapons/`) apply
+> as **relative multipliers over these tuned numbers** — the Sword is the baseline with
+> no mods at all. Tuning the knobs below tunes the whole arsenal proportionally; the
+> F1 panel and "Copy changed" workflow are unaffected. (In a run, the room re-applies
+> weapon+echo mods to each fresh player, so panel edits to modded stats last one room —
+> use the F6 sandbox for uninterrupted dialing.)
+
 ---
 
 ## Three kinds of knob — and where each one lives

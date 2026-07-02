@@ -19,10 +19,12 @@ var _tech_defs: Dictionary = {}
 var _plots: Array[Area3D] = []      # every Area3D with metadata/building_id
 var _in_plot: Area3D = null         # the plot the player is standing in (or null)
 var _in_desk: bool = false
+var _in_forge: bool = false
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
 @onready var _desk: Area3D = $LinneasDesk
+@onready var _forge: Area3D = $MarasForge
 @onready var _portal: Area3D = $DungeonPortal
 @onready var _day_label: Label = $HUD/DayInfo
 @onready var _hint_label: Label = $HUD/Hint
@@ -50,6 +52,12 @@ func _ready() -> void:
 	_desk.body_exited.connect(func(body: Node3D) -> void:
 		if body is Player:
 			_in_desk = false)
+	_forge.body_entered.connect(func(body: Node3D) -> void:
+		if body is Player:
+			_in_forge = true)
+	_forge.body_exited.connect(func(body: Node3D) -> void:
+		if body is Player:
+			_in_forge = false)
 	# A finished research can unlock plots while we stand here — refresh live.
 	EventBus.tech_researched.connect(func(_tech_id: String) -> void: _refresh_plots())
 	var day := int(SaveManager.state["story"]["counters"].get("runs", 0)) + 1
@@ -63,6 +71,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		return
 	if _in_desk:
 		open_tech_panel()
+	elif _in_forge:
+		open_forge_panel()
 	elif _in_plot != null:
 		_try_build(str(_in_plot.get_meta("building_id")))
 
@@ -75,6 +85,14 @@ func _on_portal_body_entered(body: Node3D) -> void:
 ## Public (game flow + smoke driver): open Linnea's research screen.
 func open_tech_panel() -> TechPanel:
 	var panel := TechPanel.new()
+	$HUD.add_child(panel)
+	panel.open()
+	return panel
+
+
+## Public (game flow + smoke driver): open Mara's Forge.
+func open_forge_panel() -> ForgePanel:
+	var panel := ForgePanel.new()
 	$HUD.add_child(panel)
 	panel.open()
 	return panel

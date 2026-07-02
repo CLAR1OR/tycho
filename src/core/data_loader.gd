@@ -47,6 +47,15 @@ const SCHEMAS: Dictionary = {
 		"explanation": {"type": "string"},  # the read-before-the-puzzle text
 		"aha": {"type": "string"},          # the post-solve reveal
 	},
+	"weapons": {  # PRD §7.2 — relative mods over the feel-tuned baseline kit
+		"id": {"type": "string", "required": true},
+		"name": {"type": "string", "required": true},
+		"kind": {"type": "string", "required": true, "one_of": ["melee", "ranged"]},
+		"desc": {"type": "string"},
+		"mods": {"type": "array", "required": true, "array_of": "dict"},  # {stat, add, mult}
+		"projectile": {"type": "dict", "nullable": true},                 # ranged: {speed}
+		"flat": {"type": "dict", "required": true},  # {damage_mult_per_level, costs: [ore/level]}
+	},
 	"echoes": {  # PRD §7.5 — in-run upgrades; picked list lives on RunState, never saved
 		"id": {"type": "string", "required": true},
 		"name": {"type": "string", "required": true},

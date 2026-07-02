@@ -1,0 +1,19 @@
+{
+	"id": "daggers",
+	"name": "Daggers",
+	"kind": "melee",
+	"desc": "Fast, close, vicious — half the bite per cut, twice the cuts.",
+	"mods": [
+		{"stat": "attack_damage", "mult": 0.55},
+		{"stat": "attack_damage_finisher", "mult": 0.55},
+		{"stat": "attack_windup", "mult": 0.6},
+		{"stat": "attack_active", "mult": 0.8},
+		{"stat": "attack_recover", "mult": 0.55},
+		{"stat": "attack_recover_finisher", "mult": 0.6},
+		{"stat": "combo_continue_window", "mult": 1.2},
+		{"stat": "swing_arc_deg", "mult": 0.85},
+		{"stat": "lunge_speed", "mult": 1.2}
+	],
+	"projectile": null,
+	"flat": {"damage_mult_per_level": 0.15, "costs": [1, 2, 3, 5, 8]}
+}
