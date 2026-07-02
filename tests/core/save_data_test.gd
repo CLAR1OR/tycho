@@ -4,7 +4,7 @@ extends "res://tests/test_suite.gd"
 
 func test_default_slot_has_every_section() -> void:
 	var s := SaveData.default_slot("Slot 1", "2026-07-01T12:00:00")
-	for section in ["save_version", "meta", "story", "tech", "ledger", "town", "combat", "codex", "pillars"]:
+	for section in ["save_version", "meta", "story", "tech", "ledger", "town", "combat", "codex", "checkpoint", "pillars"]:
 		check(s.has(section), "default slot has section \"%s\"" % section)
 	check_eq(s["save_version"], SaveData.SAVE_VERSION, "fresh slot is current version")
 	check_eq(s["meta"]["name"], "Slot 1", "slot name lands in meta")
@@ -46,6 +46,19 @@ func test_migrate_slot_handles_unknown_old_version() -> void:
 	var out := SaveData.migrate_slot(ancient)
 	check_eq(out["save_version"], SaveData.SAVE_VERSION, "chain lands on current version")
 	check_eq(out["meta"]["name"], "Ancient", "data survives the forced upgrade")
+
+
+func test_checkpoint_defaults_and_survival() -> void:
+	var s := SaveData.default_slot("X", "2026-07-02T12:00:00")
+	check_eq(s["checkpoint"], null, "fresh slot carries no checkpoint")
+	# Old saves (no checkpoint key) get null; a live checkpoint survives migration.
+	check_eq(SaveData.migrate_slot({"save_version": 1})["checkpoint"], null,
+		"pre-checkpoint save migrates to null")
+	var mid_run := {"save_version": 1,
+		"checkpoint": {"run": {"floor": 2}, "run_number": 3, "echoes": ["swift-step"], "player_health": 60}}
+	var out := SaveData.migrate_slot(mid_run)
+	check_eq(int(out["checkpoint"]["run"]["floor"]), 2, "live checkpoint survives migration")
+	check_eq(out["checkpoint"]["echoes"], ["swift-step"], "checkpoint echoes survive")
 
 
 func test_default_profile_and_migrate() -> void:

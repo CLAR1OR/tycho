@@ -40,6 +40,11 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 			"assist_mode": {"enabled": false, "stacks": 0},
 		},
 		"codex": {"shards": 0},
+		# Per-floor autosave (PRD §7.13: no mid-run saves — quit mid-run resumes at
+		# floor start). null = not in a run. When set: {run, run_number, echoes,
+		# player_health} snapshotted as a floor's first room loads; cleared on run end.
+		# Echoes here never outlive their run, so the in-run-only lock holds.
+		"checkpoint": null,
 		"pillars": {"strategy": {}, "space": {}},  # EMPTY in v1, reserved for Acts II/III
 	}
 

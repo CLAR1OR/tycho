@@ -37,7 +37,8 @@ func has_slot(slot: int) -> bool:
 
 
 ## Slot metadata for the slot-select screen WITHOUT applying anything to live
-## systems. Returns [{ "slot": int, "meta": Dictionary }] sorted by slot.
+## systems. Returns [{ "slot": int, "meta": Dictionary, "checkpoint_floor": int }]
+## sorted by slot (checkpoint_floor 0 = not mid-run, else the floor a resume enters).
 func list_slots() -> Array[Dictionary]:
 	var out: Array[Dictionary] = []
 	var dir := DirAccess.open(SAVE_DIR)
@@ -50,7 +51,11 @@ func list_slots() -> Array[Dictionary]:
 		var data := _read_json(SAVE_DIR + "/" + file)
 		if data.is_empty():
 			continue  # unreadable/corrupt — _read_json already yelled
-		out.append({"slot": slot, "meta": SaveData.migrate_slot(data)["meta"]})
+		var migrated := SaveData.migrate_slot(data)
+		var cp_floor := 0
+		if migrated["checkpoint"] is Dictionary:
+			cp_floor = int(((migrated["checkpoint"] as Dictionary).get("run", {}) as Dictionary).get("floor", 0))
+		out.append({"slot": slot, "meta": migrated["meta"], "checkpoint_floor": cp_floor})
 	out.sort_custom(func(a: Dictionary, b: Dictionary) -> bool: return a["slot"] < b["slot"])
 	return out
 

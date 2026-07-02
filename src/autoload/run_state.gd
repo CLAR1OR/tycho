@@ -3,9 +3,11 @@ extends Node
 ## autoload list). ALL progression logic lives in RunFlow (pure, tested); this node
 ## only keeps the live state dict and emits the EventBus run-lifecycle signals.
 ##
-## In-run-only state (like Echoes later) belongs here, NOT in the save — a run that
-## ends is gone (v1 resumes at floor start via autosave, handled by SaveManager's
-## callers when that lands).
+## In-run-only state (like Echoes) belongs here, NOT in the save — a run that ends
+## is gone. The ONE sanctioned excursion to disk is the per-floor autosave
+## checkpoint (PRD §7.13): to_checkpoint()/resume_from() snapshot and restore this
+## node so a mid-run quit resumes at floor start — still within the same run, so
+## nothing here ever outlives its run.
 
 ## The live RunFlow state dict; {} when not in a run.
 var run: Dictionary = {}
@@ -36,6 +38,28 @@ func start_run(config: Dictionary, rng_seed: int, number: int) -> void:
 
 func pick_echo(id: String) -> void:
 	echoes.append(id)
+
+
+## Snapshot for the per-floor autosave. Call as a floor's first room loads, so the
+## stored run dict is already positioned at floor start.
+func to_checkpoint() -> Dictionary:
+	return {
+		"run": run.duplicate(true),
+		"run_number": run_number,
+		"echoes": echoes.duplicate(),
+		"player_health": player_health,
+	}
+
+
+## Restore a mid-run quit from its checkpoint (JSON round-trip: numbers come back
+## as floats; RunFlow int()-casts everything it reads, we coerce the rest here).
+func resume_from(checkpoint: Dictionary) -> void:
+	run = (checkpoint.get("run", {}) as Dictionary).duplicate(true)
+	run_number = int(checkpoint.get("run_number", 1))
+	echoes.assign(checkpoint.get("echoes", []))
+	echo_offers_made = echoes.size()  # offer RNG continues past the picks made so far
+	player_health = int(checkpoint.get("player_health", -1))
+	EventBus.run_started.emit(run_number)
 
 
 func room_kind() -> String:

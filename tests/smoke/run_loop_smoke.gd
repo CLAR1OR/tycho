@@ -2,13 +2,14 @@ extends Node
 ## Headless END-TO-END smoke of the vertical-slice loop (agent tool, not a unit
 ## test — the unit runner only discovers tests/core/). Runs as a SCENE so the
 ## autoloads exist (`godot -s` never registers them): it boots the REAL game.tscn
-## as a child, then drives it — start a run, slaughter every room, step into the
-## exit portal, and after the final boss check we came back to town with counters,
-## drops, and the codex shard applied. Then a second run that dies on floor 1.
+## as a child, then drives it — choose a slot on the REAL slot-select screen, start
+## a 2-floor run, slaughter every room, quit mid-run at floor 2 and resume from the
+## per-floor checkpoint, and after the final boss check we came back to town with
+## counters, drops, and the codex shard applied. Then a second run that dies.
 ##
 ## Run:  /path/to/godot --headless res://tests/smoke/run_loop_smoke.tscn
-## Uses a THROWAWAY save slot (see SMOKE_SLOT) and deletes it afterwards, so it
-## never touches the human's slot 1. Exits 0 on green / 1 on any failure.
+## Uses a THROWAWAY save slot (see SMOKE_SLOT) and deletes it afterwards; boot
+## itself loads nothing, so the human's slots are never touched. Exits 0/1.
 
 const SMOKE_SLOT := 99
 const MAX_ROOMS := 30  # watchdog: a slice run is ~4 rooms; runaway = fail
@@ -22,28 +23,34 @@ func _ready() -> void:
 
 
 func _run_smoke() -> void:
-	var game_scene: PackedScene = load("res://scenes/core/game.tscn")
-	_game = game_scene.instantiate()
-	add_child(_game)
+	_boot_game()
 	await get_tree().process_frame
 	await get_tree().process_frame
 
-	# game._ready loaded/created slot 1 — switch to the smoke slot instead.
-	SaveManager.create_slot(SMOKE_SLOT, "Smoke")
+	# Boot waits at the slot-select screen — nothing loads until a slot is chosen.
+	_check(_scene_node() == null, "boot waits at slot select, no slot loaded")
+	_game.call("choose_slot", SMOKE_SLOT)
+	await get_tree().process_frame
 	var runs_before := int(SaveManager.state["story"]["counters"]["runs"])
 
-	_check(_scene_file() == "town.tscn", "boots into town (got %s)" % _scene_file())
+	_check(_scene_file() == "town.tscn", "fresh slot enters town (got %s)" % _scene_file())
 
-	# --- Run 1: full clear -------------------------------------------------------
+	# --- Run 1: full clear over 2 floors, with a mid-run quit + resume at floor 2 ---
 	_game.call("_start_run")
 	await get_tree().process_frame
 	var rooms_seen := 0
+	var resume_tested := false
 	while RunState.in_run() and rooms_seen < MAX_ROOMS:
 		rooms_seen += 1
+		if not resume_tested and int(RunState.run["floor"]) == 2:
+			resume_tested = true
+			await _quit_and_resume()
 		await _clear_current_room()
+	_check(resume_tested, "the run reached floor 2 (checkpoint beat exercised)")
 	_check(rooms_seen < MAX_ROOMS, "run finished within the watchdog (%d rooms)" % rooms_seen)
 	await _settle(30)
 	_check(_scene_file() == "town.tscn", "victory returns to town (got %s)" % _scene_file())
+	_check(SaveManager.state["checkpoint"] == null, "run over — checkpoint cleared")
 	var c: Dictionary = SaveManager.state["story"]["counters"]
 	_check(int(c["runs"]) == runs_before + 1, "runs counter ticked (%d)" % int(c["runs"]))
 	_check(int(c["boss_kills"]) >= 1, "boss kill counted (%d)" % int(c["boss_kills"]))
@@ -148,6 +155,7 @@ func _run_smoke() -> void:
 		player.take_damage(99999)
 	await _settle(30)
 	_check(_scene_file() == "town.tscn", "death returns to town (got %s)" % _scene_file())
+	_check(SaveManager.state["checkpoint"] == null, "death clears the checkpoint too")
 	_check(int(c["deaths"]) == 1, "death counted")
 	_check(int(c["runs"]) == runs_before + 2, "died run still ticks the day")
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
@@ -162,6 +170,41 @@ func _run_smoke() -> void:
 		for f in _failures:
 			printerr("SMOKE FAIL: " + f)
 		get_tree().quit(1)
+
+
+func _boot_game() -> void:
+	_game = (load("res://scenes/core/game.tscn") as PackedScene).instantiate()
+	_game.set("run_floors", 2)  # 2 floors so a floor TRANSITION (checkpoint beat) exists
+	add_child(_game)
+
+
+## The mid-run quit: assert the floor-start checkpoint hit the disk, then throw the
+## whole game away and boot a fresh one — choosing the slot must resume the run at
+## floor start with echoes and carried HP intact (PRD §7.13).
+func _quit_and_resume() -> void:
+	var cp: Variant = SaveManager.state["checkpoint"]
+	_check(cp is Dictionary and int((cp["run"] as Dictionary)["floor"]) == 2,
+		"checkpoint snapshotted at floor 2 start")
+	var echoes_before := RunState.echoes.duplicate()
+	var hp_before := RunState.player_health
+	_check(echoes_before.size() >= 1, "picks exist before the quit (floor 1 echo beats)")
+	_game.queue_free()
+	await _settle(5)
+	_boot_game()
+	await _settle(5)
+	_check(_scene_node() == null, "rebooted game waits at slot select")
+	var badge_floor := -1
+	for entry: Dictionary in SaveManager.list_slots():
+		if int(entry["slot"]) == SMOKE_SLOT:
+			badge_floor = int(entry["checkpoint_floor"])
+	_check(badge_floor == 2, "slot list shows the mid-run badge (floor %d)" % badge_floor)
+	_game.call("choose_slot", SMOKE_SLOT)
+	await _settle(10)
+	_check(_scene_file() == "combat_room.tscn", "resume boots into the run (got %s)" % _scene_file())
+	_check(int(RunState.run["floor"]) == 2 and int(RunState.run["room"]) == 1,
+		"resume lands at floor 2, room 1")
+	_check(RunState.echoes == echoes_before, "echo picks survive the quit (via checkpoint)")
+	_check(RunState.player_health == hp_before, "carried HP survives the quit (%d)" % RunState.player_health)
 
 
 ## Kill the current room's wave, wait for the exit to open, walk into it (or, on

@@ -8,15 +8,17 @@ extends Node
 ## Interim ownership notes, to migrate as the real systems land:
 ## - Story counters (runs/deaths/boss_kills/full_clears) are updated here from
 ##   EventBus signals; a StoryState autoload will own them later.
-## - Slot 1 is loaded/created implicitly; a main-menu slot-select screen replaces
-##   that in a later slice.
 ## - Victory == full clear while the slice config is 1 floor; the codex shard drop
 ##   rides on that (PRD §7.11).
+##
+## Boot: the slot-select screen (SlotSelect) → choose_slot() → town, or straight
+## back into a run at floor start if the slot holds a mid-run checkpoint (§7.13).
 
 const TOWN_SCENE := preload("res://scenes/town/town.tscn")
 const ROOM_SCENE := preload("res://scenes/combat/combat_room.tscn")
 
-const SLOT := 1
+const SLOT_COUNT := 3
+const DEFAULT_SLOT_NAME := "Tycho"
 
 ## Run shape for the SLICE — the full game is 5 floors x 6-10 rooms (PRD §7.6).
 @export var run_floors: int = 1
@@ -42,10 +44,32 @@ func _ready() -> void:
 	EventBus.death.connect(_on_death)
 	EventBus.boss_killed.connect(_on_boss_killed)
 	EventBus.tech_researched.connect(_on_tech_researched)
-	if not SaveManager.load_slot(SLOT):
-		SaveManager.create_slot(SLOT, "Tycho")
+	_show_slot_select()
+
+
+## Boot screen: pick/create a slot. Nothing is loaded until the player chooses.
+func _show_slot_select() -> void:
+	var select := SlotSelect.new()
+	select.slot_count = SLOT_COUNT
+	select.slot_chosen.connect(func(slot: int) -> void:
+		select.queue_free()
+		choose_slot(slot))
+	$HUD.add_child(select)
+
+
+## Load (or create) a slot and enter the game: town, or — if the slot carries a
+## mid-run checkpoint — straight back into the run at floor start.
+func choose_slot(slot: int) -> void:
+	if not SaveManager.load_slot(slot):
+		SaveManager.create_slot(slot, DEFAULT_SLOT_NAME)
 	_refresh_resources()
-	_goto_town()
+	var checkpoint: Variant = SaveManager.state.get("checkpoint")
+	if checkpoint is Dictionary and not (checkpoint as Dictionary).is_empty():
+		RunState.resume_from(checkpoint)
+		_refresh_echoes()
+		_next_room()
+	else:
+		_goto_town()
 
 
 func _process(delta: float) -> void:
@@ -74,6 +98,11 @@ func _start_run() -> void:
 
 
 func _next_room() -> void:
+	# Per-floor autosave (PRD §7.13): a floor's first room = the resume point.
+	# RunState is already positioned there, so the snapshot IS the floor start.
+	if int(RunState.run["room"]) == 1:
+		SaveManager.state["checkpoint"] = RunState.to_checkpoint()
+		_save()
 	var room := ROOM_SCENE.instantiate()
 	room.setup(
 		int(RunState.run["floor"]), int(RunState.run["room"]),
@@ -114,6 +143,7 @@ func _on_room_cleared(room: Node) -> void:
 
 
 func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> void:
+	SaveManager.state["checkpoint"] = null  # the run is over — nothing to resume
 	var counters: Dictionary = SaveManager.state["story"]["counters"]
 	counters["runs"] = int(counters["runs"]) + 1
 	SaveManager.state["meta"]["runs"] = counters["runs"]
