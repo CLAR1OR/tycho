@@ -33,6 +33,15 @@ const SCHEMAS: Dictionary = {
 		"unlocked_by": {"type": "dict", "nullable": true},
 		"levels": {"type": "array", "required": true, "array_of": "dict"},  # exactly 3 per the bible
 	},
+	"echoes": {  # PRD §7.5 — in-run upgrades; picked list lives on RunState, never saved
+		"id": {"type": "string", "required": true},
+		"name": {"type": "string", "required": true},
+		"desc": {"type": "string", "required": true},
+		"pool_weight": {"type": "float"},
+		"stackable": {"type": "bool"},
+		"requires": {"type": "array", "array_of": "string"},  # synergy prereq echo ids
+		"mods": {"type": "array", "required": true, "array_of": "dict"},
+	},
 	"ages": {  # architecture-schemas.md §3
 		"id": {"type": "int", "required": true},
 		"name": {"type": "string", "required": true},

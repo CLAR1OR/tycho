@@ -1,0 +1,10 @@
+{
+	"id": "keen-edge",
+	"name": "Keen Edge",
+	"desc": "+6 attack damage, +10 finisher damage",
+	"stackable": true,
+	"mods": [
+		{"stat": "attack_damage", "add": 6},
+		{"stat": "attack_damage_finisher", "add": 10}
+	]
+}

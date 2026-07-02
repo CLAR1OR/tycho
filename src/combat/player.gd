@@ -54,13 +54,15 @@ class_name Player
 @export var ghost_interval: float = 0.035                     # FEEL: seconds between dash after-images
 @export var ghost_color: Color = Color(0.6, 0.85, 1.0)        # FEEL: after-image tint (matches the blade)
 
-const MAX_HEALTH := 100
+const MAX_HEALTH := 100  # base cap; echoes/attunements raise the live max_health
 
 signal health_changed(hp: int, max_hp: int)
 signal died
 
 enum State { NORMAL, DASHING, ATTACKING }
 
+## Live cap — starts at the base and gets buffed by Echoes (and later Attunements).
+var max_health: int = MAX_HEALTH
 var health: int = MAX_HEALTH
 var _state: int = State.NORMAL
 var _dash_cd: float = 0.0
@@ -88,7 +90,7 @@ var _base_mesh_color: Color = Color(0.85, 0.85, 0.9)
 
 
 func _ready() -> void:
-	health_changed.emit(health, MAX_HEALTH)
+	health_changed.emit(health, max_health)
 
 
 func _physics_process(delta: float) -> void:
@@ -347,21 +349,32 @@ func take_damage(amount: int, _from: Vector3 = Vector3.ZERO) -> void:
 		return
 	health = maxi(0, health - amount)
 	_iframe_t = maxf(_iframe_t, hit_grace)  # post-hit grace: crowds can't double-tap
-	health_changed.emit(health, MAX_HEALTH)
+	health_changed.emit(health, max_health)
 	_flash(Color(1.0, 0.3, 0.3))
 	if health == 0:
 		died.emit()
 
 
+func heal(amount: int) -> void:
+	health = mini(max_health, health + amount)
+	health_changed.emit(health, max_health)
+
+
+## Set HP outright (used to carry wounds between rooms of a run). Never kills.
+func restore_health(hp: int) -> void:
+	health = clampi(hp, 1, max_health)
+	health_changed.emit(health, max_health)
+
+
 func revive() -> void:
-	health = MAX_HEALTH
+	health = max_health
 	_state = State.NORMAL
 	velocity = Vector3.ZERO
 	global_position = Vector3(0.0, global_position.y, 0.0)
 	_reset_combo()
 	_swing_pivot.visible = false
 	_hitbox_viz.visible = false
-	health_changed.emit(health, MAX_HEALTH)
+	health_changed.emit(health, max_health)
 
 
 func _flash(color: Color) -> void:

@@ -51,6 +51,8 @@ func _run_smoke() -> void:
 	_check(int(SaveManager.state["codex"]["shards"]) == 1, "codex shard slotted")
 	_check(Ledger.get_amount("gold") > 0.0, "gold dropped (%.0f)" % Ledger.get_amount("gold"))
 	_check(Ledger.get_amount("knowledge-shards") >= 1.0, "boss dropped knowledge shards")
+	_check(RunState.echoes.size() >= 1, "echo picks recorded (%d)" % RunState.echoes.size())
+	_check(RunState.player_health > 0, "player HP carried between rooms (%d)" % RunState.player_health)
 
 	# --- Build in town -------------------------------------------------------------
 	# The wave gold (>= 40) buys Linnea's Study L1; the next day tick must produce.
@@ -95,6 +97,11 @@ func _clear_current_room() -> void:
 			e.take_damage(99999)
 	if not RunState.in_run():
 		return  # that was the final boss — run is over, town swap is in flight
+	# Combat clears pause for the echo offer — pick the first card, like a player.
+	await _settle(10)
+	var offer_panel: Node = get_tree().get_first_node_in_group("echo_offer")
+	if offer_panel != null:
+		offer_panel.call("pick", 0)
 	# Exit opens after the room's respawn_delay beat; give it a generous margin.
 	await _settle(90)
 	var player := _find_player()

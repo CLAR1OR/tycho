@@ -1,0 +1,7 @@
+{
+	"id": "long-reach",
+	"name": "Long Reach",
+	"desc": "+30% attack-lunge range",
+	"stackable": false,
+	"mods": [{"stat": "lunge_range", "mult": 1.3}]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "tempest-stride",
+	"name": "Tempest Stride",
+	"desc": "SYNERGY: +10% move speed and -15% dash cooldown",
+	"stackable": false,
+	"pool_weight": 2.0,
+	"requires": ["swift-step", "quick-dash"],
+	"mods": [
+		{"stat": "move_speed", "mult": 1.1},
+		{"stat": "dash_cooldown", "mult": 0.85}
+	]
+}

@@ -1,0 +1,10 @@
+{
+	"id": "heavy-hand",
+	"name": "Heavy Hand",
+	"desc": "+20 finisher damage, but +15% finisher recovery",
+	"stackable": true,
+	"mods": [
+		{"stat": "attack_damage_finisher", "add": 20},
+		{"stat": "attack_recover_finisher", "mult": 1.15}
+	]
+}

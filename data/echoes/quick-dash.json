@@ -1,0 +1,7 @@
+{
+	"id": "quick-dash",
+	"name": "Quick Dash",
+	"desc": "-20% dash cooldown",
+	"stackable": true,
+	"mods": [{"stat": "dash_cooldown", "mult": 0.8}]
+}

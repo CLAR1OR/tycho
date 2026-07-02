@@ -1,0 +1,7 @@
+{
+	"id": "swift-step",
+	"name": "Swift Step",
+	"desc": "+15% move speed",
+	"stackable": true,
+	"mods": [{"stat": "move_speed", "mult": 1.15}]
+}

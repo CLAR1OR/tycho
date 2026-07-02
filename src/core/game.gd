@@ -31,6 +31,7 @@ var _session_t: float = 0.0   # unsaved playtime (flushed into meta.playtime_s o
 
 @onready var _world: Node = $World
 @onready var _res_label: Label = $HUD/Resources
+@onready var _echo_label: Label = $HUD/Echoes
 
 
 func _ready() -> void:
@@ -59,6 +60,7 @@ func _goto_town() -> void:
 	var town := TOWN_SCENE.instantiate()
 	_swap(town)
 	town.run_requested.connect(func() -> void: call_deferred("_start_run"))
+	_refresh_echoes()  # run is over — the echo readout clears with it
 	_save()
 
 
@@ -91,10 +93,23 @@ func _swap(next_scene: Node) -> void:
 # --- Run events --------------------------------------------------------------------
 
 func _on_room_cleared(room: Node) -> void:
-	var boss_id: String = room.BOSS_ID if room.kind == RunFlow.KIND_BOSS else ""
-	if RunState.room_cleared(boss_id):
+	var was_boss: bool = room.kind == RunFlow.KIND_BOSS
+	var boss_id: String = room.BOSS_ID if was_boss else ""
+	if not RunState.room_cleared(boss_id):
+		return  # the run just ended (final boss) — _on_run_ended takes it from here
+	if was_boss:
+		room.open_exit()  # boss rooms pay in loot; echo beats follow combat rooms
+		return
+	# The echo beat (PRD §7.5): pause, pick 1 of 3, then the exit opens.
+	var offers := EchoCore.generate_offer(
+		EchoCore.defs(), RunState.echoes, int(RunState.run["seed"]), RunState.echo_offers_made)
+	RunState.echo_offers_made += 1
+	if offers.is_empty():
 		room.open_exit()
-	# else the run just ended (final boss) — _on_run_ended takes it from here.
+		return
+	room.present_echo_offer(offers, func(id: String) -> void:
+		RunState.pick_echo(id)
+		_refresh_echoes())
 
 
 func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> void:
@@ -138,3 +153,19 @@ func _refresh_resources() -> void:
 	for id in HUD_RESOURCES:
 		parts.append("%s: %d" % [id, int(Ledger.get_amount(id))])
 	_res_label.text = "\n".join(parts)
+
+
+func _refresh_echoes() -> void:
+	if not RunState.in_run() or RunState.echoes.is_empty():
+		_echo_label.text = ""
+		return
+	# Fold repeats of stackable picks into "name ×n".
+	var counts := {}
+	for id in RunState.echoes:
+		counts[id] = int(counts.get(id, 0)) + 1
+	var defs := EchoCore.defs()
+	var parts := PackedStringArray(["Echoes:"])
+	for id: String in counts:
+		var display := str((defs.get(id, {}) as Dictionary).get("name", id))
+		parts.append(display if int(counts[id]) == 1 else "%s ×%d" % [display, int(counts[id])])
+	_echo_label.text = "\n".join(parts)

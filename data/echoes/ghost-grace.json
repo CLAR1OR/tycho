@@ -1,0 +1,10 @@
+{
+	"id": "ghost-grace",
+	"name": "Ghost Grace",
+	"desc": "+50% dash i-frames, +25% post-hit grace",
+	"stackable": false,
+	"mods": [
+		{"stat": "dash_iframes", "mult": 1.5},
+		{"stat": "hit_grace", "mult": 1.25}
+	]
+}

@@ -1,0 +1,7 @@
+{
+	"id": "vital-core",
+	"name": "Vital Core",
+	"desc": "+25 max health (and heal 25)",
+	"stackable": true,
+	"mods": [{"stat": "max_health", "add": 25}]
+}

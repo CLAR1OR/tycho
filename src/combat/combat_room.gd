@@ -76,6 +76,11 @@ func _ready() -> void:
 	else:
 		_room_label.text = "Floor %d — Room %d/%d" % [floor_num, room_index, rooms_this_floor]
 	_hint_label.text = "Clear the room - F1 tuning"
+	# Carry the run's build + wounds onto this room's FRESH player instance:
+	# echoes re-apply from RunState, HP carries over (rooms must not free-heal).
+	EchoCore.apply_all_to_player(_player, RunState.echoes)
+	if RunState.player_health > 0:
+		_player.restore_health(RunState.player_health)
 	_spawn_wave()
 	# Same live feel-tuning panel as the sandbox (F1) — dials apply to THIS room's
 	# instances plus the shared static knobs (hitstop, crowd rules).
@@ -149,7 +154,24 @@ func open_exit() -> void:
 
 func _on_portal_body_entered(body: Node3D) -> void:
 	if body is Player:
+		RunState.player_health = _player.health  # wounds carry into the next room
 		exit_entered.emit()
+
+
+# --- Echo offer -----------------------------------------------------------------
+
+## Called by the orchestrator after a combat-room clear: pause, offer 3 echoes,
+## apply the pick to this room's player, then open the exit. `on_pick` is the
+## orchestrator's bookkeeping callback (records the pick on RunState).
+func present_echo_offer(offer_ids: Array[String], on_pick: Callable) -> void:
+	var panel := EchoOfferPanel.new()
+	$HUD.add_child(panel)
+	panel.present(offer_ids, func(id: String) -> void:
+		on_pick.call(id)
+		var defs := EchoCore.defs()
+		if defs.has(id):
+			EchoCore.apply_to_player(_player, defs[id])
+		open_exit())
 
 
 # --- HUD -----------------------------------------------------------------------
