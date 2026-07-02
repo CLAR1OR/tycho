@@ -24,6 +24,15 @@ const SCHEMAS: Dictionary = {
 		"retired_by": {"type": "string", "nullable": true},
 		"sources": {"type": "array", "array_of": "string"},
 	},
+	"buildings": {  # architecture-schemas.md §6
+		"id": {"type": "string", "required": true},
+		"name": {"type": "string", "required": true},
+		"category": {"type": "string", "required": true,
+			"one_of": ["production", "research", "infrastructure", "shop"]},
+		"age": {"type": "int", "required": true},
+		"unlocked_by": {"type": "dict", "nullable": true},
+		"levels": {"type": "array", "required": true, "array_of": "dict"},  # exactly 3 per the bible
+	},
 	"ages": {  # architecture-schemas.md §3
 		"id": {"type": "int", "required": true},
 		"name": {"type": "string", "required": true},

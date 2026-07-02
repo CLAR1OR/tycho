@@ -1,0 +1,12 @@
+{
+	"id": "quarry",
+	"name": "Quarry",
+	"category": "production",
+	"age": 1,
+	"unlocked_by": {"type": "tech", "id": "med-masonry-arch"},
+	"levels": [
+		{"cost": {"gold": 50}, "effects": [{"kind": "produce", "resource": "stone", "per_day": 2}], "visual": "quarry_l1"},
+		{"cost": {"gold": 120, "stone": 10}, "effects": [{"kind": "produce", "resource": "stone", "per_day": 5}], "visual": "quarry_l2"},
+		{"cost": {"gold": 250, "stone": 30}, "effects": [{"kind": "produce", "resource": "stone", "per_day": 10}], "visual": "quarry_l3"}
+	]
+}

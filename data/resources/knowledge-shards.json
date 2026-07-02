@@ -1,0 +1,9 @@
+{
+	"id": "knowledge-shards",
+	"name": "Knowledge Shards",
+	"role": "research",
+	"age_active": 1,
+	"supersedes": null,
+	"retired_by": null,
+	"sources": ["boss-drop"]
+}

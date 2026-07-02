@@ -2,7 +2,7 @@
 
 > Draft data schemas for the architectural prepare-fors (CLAUDE.md → "prepare-for" requirements), plus the dialogue schema demanded by `act1-story-beats.md`. Drafted 2026-06-12 — these are contracts of *shape*, not final field lists. Implement as JSON content files + typed GDScript wrappers (see `godot-conventions.md`). Rule of thumb everywhere: **adding content is adding a data entry, never adding code.**
 >
-> **Implementation status (2026-07-02):** §1 save/profile (`src/core/save_data.gd` + `src/autoload/save_manager.gd`), §2 ledger (`src/core/ledger_core.gd` + `src/autoload/ledger.gd`), §5's EventBus (`src/autoload/event_bus.gd`), and the resources/ages data specs (`src/core/data_loader.gd` + `validate.gd`, content in `data/`) are **built and tested**. Tech/buildings/achievements/dialogue land with their systems.
+> **Implementation status (2026-07-02):** §1 save/profile (`src/core/save_data.gd` + `src/autoload/save_manager.gd`), §2 ledger (`src/core/ledger_core.gd` + `src/autoload/ledger.gd`), §5's EventBus (`src/autoload/event_bus.gd`), and the resources/ages/**buildings** data specs (`src/core/data_loader.gd` + `validate.gd`, content in `data/`) are **built and tested**. §6's town-as-data + day tick are live via pure `src/town/town_core.gd` (effect kinds `produce`/`knowledge` only so far; `multiplier`/`capability` land with their consumers); run/floor/room progression is pure `src/core/run_flow.gd` held by the `RunState` autoload. Tech/achievements/dialogue land with their systems.
 
 Notation below is JSON-ish with comments. All ids: kebab-case strings, matching the design docs (`med-masonry-arch` style).
 

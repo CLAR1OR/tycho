@@ -21,8 +21,15 @@ resume and *feel* the change — mid-fight, no restart.
   **Copy changed**: the changed values land in your clipboard (and the console), then
   paste them into the file/scene this doc points at.
 - **Reset all** puts every slider back to the session's starting values.
-- The panel is debug tooling (`src/core/tuning_panel.gd`, spawned by `feel_room.gd`);
-  it dies with the sandbox.
+- The panel is debug tooling (`src/core/tuning_panel.gd`); both the sandbox
+  (`feel_room.gd`) and real dungeon rooms (`combat_room.gd`) spawn it, so F1 works
+  mid-run too. In a run, per-instance dials (player/room `@export`s) reset with each
+  new room — the shared `static var` dials (hitstop, crowd) stick for the session;
+  for uninterrupted tuning use the endless sandbox.
+- **Since 2026-07-02 the main scene (F5) is the real game loop** (`game.tscn`: town →
+  portal → run). The endless-wave sandbox is still there for pure feel work: open
+  `scenes/combat/feel_room.tscn` in the editor and press **F6** (run current scene), or
+  `godot --path . res://scenes/combat/feel_room.tscn`.
 
 Everything below is the *persistent* home of each knob — where a value lives once you
 commit to it.

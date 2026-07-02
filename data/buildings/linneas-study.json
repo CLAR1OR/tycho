@@ -1,0 +1,12 @@
+{
+	"id": "linneas-study",
+	"name": "Linnea's Study",
+	"category": "research",
+	"age": 1,
+	"unlocked_by": null,
+	"levels": [
+		{"cost": {"gold": 40}, "effects": [{"kind": "knowledge", "per_day": 1}], "visual": "study_l1"},
+		{"cost": {"gold": 100, "stone": 8}, "effects": [{"kind": "knowledge", "per_day": 2}], "visual": "study_l2"},
+		{"cost": {"gold": 220, "stone": 20}, "effects": [{"kind": "knowledge", "per_day": 4}], "visual": "study_l3"}
+	]
+}

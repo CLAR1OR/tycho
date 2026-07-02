@@ -2,7 +2,7 @@
 
 > How the Godot 4.7 project is structured and how agents work in it. Written 2026-06-12; **the project now exists (created 2026-06-19 to this spec, upgraded to Godot 4.7 on 2026-06-20)** — `project.godot` at the repo root, directory tree below in place. Keep this doc in sync with reality; a new agent should be productive from this page alone.
 >
-> **Run it:** open in the Godot editor and press F5, or headless-validate with `/home/clarior/Godot_v4.7-stable_linux.x86_64 --headless --editor --quit` (imports + compiles) / `--headless` (runs the main scene). The current main scene is the Phase 0 combat-feel gate: `scenes/combat/feel_room.tscn`. **Skeleton milestone status (2026-07-02):** `EventBus`, `Ledger`, and `SaveManager` autoloads exist and are registered, plus the pure core (`ledger_core.gd`, `save_data.gd`, `validate.gd`, `data_loader.gd`) and first `data/` content. `TechState`/`StoryState`/`RunState` are still target-only.
+> **Run it:** open in the Godot editor and press F5, or headless-validate with `/home/clarior/Godot_v4.7-stable_linux.x86_64 --headless --editor --quit` (imports + compiles) / `--headless` (runs the main scene). **The main scene is the vertical-slice game loop** (`scenes/core/game.tscn`: town → portal → run of rooms → town). The Phase 0 feel sandbox lives on at `scenes/combat/feel_room.tscn` (F6 / run-current-scene). **Milestone status (2026-07-02):** `EventBus`, `Ledger`, `SaveManager`, and `RunState` autoloads exist and are registered, plus the pure core (`ledger_core.gd`, `save_data.gd`, `validate.gd`, `data_loader.gd`, `run_flow.gd`, `town_core.gd`) and first `data/` content (resources, ages, buildings). `TechState`/`StoryState` are still target-only.
 
 ## Language & engine
 - **Godot 4.7, GDScript only** (no C#) — best agent fluency, no build toolchain. **Static typing mandatory** (`var x: int`, typed funcs); agents drift less with types, and the editor catches their mistakes.
@@ -45,6 +45,7 @@ res://
 ## Testing
 - **gdUnit4** (actively maintained for 4.x) is the target framework. Required coverage: everything under rule 3 (pure logic) + save/migration round-trips + data validation. **Not** tested: combat feel, visuals, scene wiring — that's human playtesting.
 - **Interim (2026-07-02):** gdUnit4 is not installed yet — fetching editor-plugin code needs a human in the loop (Godot editor → **AssetLib → "gdUnit4" → install + enable**). Until then a zero-dependency runner covers the same ground: suites in `tests/core/*_test.gd` extend `tests/test_suite.gd`; run `godot --headless -s tests/test_runner.gd` (exit 0/1). On a fresh clone run `--headless --editor --quit` once first (class-name cache). Porting suites to gdUnit4 later is mechanical.
+- **End-to-end smoke (agent tool):** `godot --headless res://tests/smoke/run_loop_smoke.tscn` boots the real game and drives a full run (clear all rooms → boss → town return → build → death run → day tick), exit 0/1. It must run as a SCENE, not `-s` — `-s` scripts never get autoloads. Uses a throwaway save slot (99), never slot 1.
 - Agents run tests before every commit that touches `src/`.
 
 ## Git & workflow
