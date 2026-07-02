@@ -14,8 +14,9 @@ class_name TechPanel
 
 enum Screen { LIST, NODE, READ, QUIZ, AHA }
 
-const PANEL_WIDTH := 660.0
-const PANEL_HEIGHT := 500.0
+# Fullscreen page with side gutters so reading lines stay a comfortable width.
+const GUTTER_X := 240
+const GUTTER_Y := 24
 
 var _defs: Dictionary = {}
 var _screen: int = Screen.LIST
@@ -31,20 +32,25 @@ func _ready() -> void:
 
 func open() -> void:
 	_defs = DataLoader.load_domain("tech")
-	custom_minimum_size = Vector2(PANEL_WIDTH, PANEL_HEIGHT)
+	# Fullscreen (a centered box overflowed the window once real explanation text
+	# was in it). The whole page scrolls, so no screen can ever bleed off-view.
+	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	var margin := MarginContainer.new()
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 16)
+	margin.add_theme_constant_override("margin_left", GUTTER_X)
+	margin.add_theme_constant_override("margin_right", GUTTER_X)
+	margin.add_theme_constant_override("margin_top", GUTTER_Y)
+	margin.add_theme_constant_override("margin_bottom", GUTTER_Y)
 	add_child(margin)
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_child(scroll)
 	_rows = VBoxContainer.new()
+	_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rows.add_theme_constant_override("separation", 8)
-	margin.add_child(_rows)
+	scroll.add_child(_rows)
 	_show_list()
 	get_tree().paused = true
-	set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	await get_tree().process_frame
-	if is_inside_tree():
-		set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 
 
 func close() -> void:
@@ -226,17 +232,14 @@ func _label(text: String) -> void:
 	_rows.add_child(l)
 
 
-## Long-form text in a scroll area (explanations and ahas are essays, by design).
+## Long-form text (explanations and ahas are essays, by design). The PAGE scrolls,
+## so this is just a wrapping label at reading width.
 func _reading(text: String) -> void:
-	var scroll := ScrollContainer.new()
-	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
-	scroll.custom_minimum_size = Vector2(PANEL_WIDTH - 64.0, 240.0)
 	var l := Label.new()
 	l.text = text
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.custom_minimum_size = Vector2(PANEL_WIDTH - 96.0, 0.0)
-	scroll.add_child(l)
-	_rows.add_child(scroll)
+	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	_rows.add_child(l)
 
 
 func _button(text: String, action: Callable) -> void:
