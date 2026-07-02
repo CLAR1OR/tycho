@@ -1,28 +1,28 @@
 extends Node3D
 ## Placeholder town hub (vertical slice, PRD §7.9 upgrade-hub model).
 ##
-## One walkable square with two interactions: a BUILD PLOT (Linnea's Study — the one
-## v1-slice building; walk in, press E to build/upgrade through its 3 levels) and the
-## DUNGEON PORTAL (step in to start a run — signalled up to game.gd, which owns run
-## flow). Vendors, dialogue, and the unlock cascade land in later slices; the plot
-## deliberately ignores `unlocked_by` gating until the cascade exists.
+## Interactions (all placeholder-boxy, E to use):
+## - BUILD PLOTS — any Area3D child with `metadata/building_id`. Walk in, press E
+##   to build/upgrade through the building's 3 levels. Plots gated by tech
+##   (`unlocked_by` via TownCore.is_unlocked) show as locked until researched.
+## - LINNEA'S DESK — opens the research screen (TechPanel: invest Knowledge/Shards
+##   → read → quiz → aha → unlock).
+## - DUNGEON PORTAL — step in to start a run (signalled up to game.gd).
 ##
-## Town STATE is the save's town section (a plain data object, architecture-schemas
-## §6): this scene reads/writes SaveManager.state["town"] via pure TownCore helpers.
-## No TownState autoload yet — one town in v1 doesn't need it.
-
-const BUILDING_ID := "linneas-study"
+## Town STATE is the save's town section (architecture-schemas §6), read/written
+## via pure TownCore helpers. No TownState autoload yet — one town doesn't need it.
 
 signal run_requested  # the player stepped into the dungeon portal
 
-var _defs: Dictionary = {}
-var _in_plot: bool = false
+var _building_defs: Dictionary = {}
+var _tech_defs: Dictionary = {}
+var _plots: Array[Area3D] = []      # every Area3D with metadata/building_id
+var _in_plot: Area3D = null         # the plot the player is standing in (or null)
+var _in_desk: bool = false
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
-@onready var _plot: Area3D = $BuildPlot
-@onready var _plot_label: Label3D = $BuildPlot/Label
-@onready var _building_mesh: MeshInstance3D = $BuildPlot/BuildingMesh
+@onready var _desk: Area3D = $LinneasDesk
 @onready var _portal: Area3D = $DungeonPortal
 @onready var _day_label: Label = $HUD/DayInfo
 @onready var _hint_label: Label = $HUD/Hint
@@ -31,23 +31,40 @@ var _in_plot: bool = false
 func _ready() -> void:
 	_rig.set_target(_player)
 	_player.position = Vector3(0, 0, 8)
-	_defs = DataLoader.load_domain("buildings")
+	_building_defs = DataLoader.load_domain("buildings")
+	_tech_defs = DataLoader.load_domain("tech")
 	_portal.body_entered.connect(_on_portal_body_entered)
-	_plot.body_entered.connect(func(body: Node3D) -> void:
+	for child in get_children():
+		if child is Area3D and child.has_meta("building_id"):
+			var plot := child as Area3D
+			_plots.append(plot)
+			plot.body_entered.connect(func(body: Node3D) -> void:
+				if body is Player:
+					_in_plot = plot)
+			plot.body_exited.connect(func(body: Node3D) -> void:
+				if body is Player and _in_plot == plot:
+					_in_plot = null)
+	_desk.body_entered.connect(func(body: Node3D) -> void:
 		if body is Player:
-			_in_plot = true)
-	_plot.body_exited.connect(func(body: Node3D) -> void:
+			_in_desk = true)
+	_desk.body_exited.connect(func(body: Node3D) -> void:
 		if body is Player:
-			_in_plot = false)
+			_in_desk = false)
+	# A finished research can unlock plots while we stand here — refresh live.
+	EventBus.tech_researched.connect(func(_tech_id: String) -> void: _refresh_plots())
 	var day := int(SaveManager.state["story"]["counters"].get("runs", 0)) + 1
 	_day_label.text = "Home — Day %d" % day
-	_hint_label.text = "WASD move - build at the plot (E) - step into the portal to descend"
-	_refresh_plot()
+	_hint_label.text = "WASD move - E interact (plots, Linnea's desk) - the portal starts a run"
+	_refresh_plots()
 
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("interact") and _in_plot:
-		_try_build()
+	if not event.is_action_pressed("interact"):
+		return
+	if _in_desk:
+		open_tech_panel()
+	elif _in_plot != null:
+		_try_build(str(_in_plot.get_meta("building_id")))
 
 
 func _on_portal_body_entered(body: Node3D) -> void:
@@ -55,43 +72,80 @@ func _on_portal_body_entered(body: Node3D) -> void:
 		run_requested.emit()
 
 
-# --- Build plot ------------------------------------------------------------------
+## Public (game flow + smoke driver): open Linnea's research screen.
+func open_tech_panel() -> TechPanel:
+	var panel := TechPanel.new()
+	$HUD.add_child(panel)
+	panel.open()
+	return panel
 
-func _try_build() -> void:
-	if not _defs.has(BUILDING_ID):
-		push_error("Town: missing building def \"%s\"" % BUILDING_ID)
+
+# --- Build plots ------------------------------------------------------------------
+
+func _try_build(building_id: String) -> void:
+	if not _building_defs.has(building_id):
+		push_error("Town: missing building def \"%s\"" % building_id)
 		return
+	var def: Dictionary = _building_defs[building_id]
+	if not TownCore.is_unlocked(def, SaveManager.state["tech"]["researched"]):
+		return  # the label already says what research it needs
 	var town: Dictionary = SaveManager.state["town"]
-	var level := TownCore.building_level(town, BUILDING_ID)
-	var cost := TownCore.next_level_cost(_defs[BUILDING_ID], level)
+	var level := TownCore.building_level(town, building_id)
+	var cost := TownCore.next_level_cost(def, level)
 	if cost.is_empty():
 		return  # maxed — the label already says so
 	if not Ledger.try_spend_all(cost, "building-cost"):
-		_flash_plot_label("Not enough gold")
+		_flash_plot_label(_plot_for(building_id), "Not enough resources")
 		return
-	SaveManager.state["town"] = TownCore.set_building(town, BUILDING_ID, level + 1)
-	EventBus.building_built.emit(BUILDING_ID, level + 1)
+	SaveManager.state["town"] = TownCore.set_building(town, building_id, level + 1)
+	EventBus.building_built.emit(building_id, level + 1)
 	SaveManager.save_current()  # a built building must never be lost to a crash
-	_refresh_plot()
+	_refresh_plots()
 
 
-func _refresh_plot() -> void:
-	var level := TownCore.building_level(SaveManager.state["town"], BUILDING_ID)
-	var def: Dictionary = _defs.get(BUILDING_ID, {})
-	var display_name := str(def.get("name", BUILDING_ID))
+func _refresh_plots() -> void:
+	for plot in _plots:
+		_refresh_plot(plot)
+
+
+func _refresh_plot(plot: Area3D) -> void:
+	var building_id := str(plot.get_meta("building_id"))
+	var def: Dictionary = _building_defs.get(building_id, {})
+	var display_name := str(def.get("name", building_id))
+	var label := plot.get_node("Label") as Label3D
+	var mesh := plot.get_node("BuildingMesh") as MeshInstance3D
+	var level := TownCore.building_level(SaveManager.state["town"], building_id)
 	# The building visibly grows with its level (placeholder box — PRD: each level
 	# changes the visual).
-	_building_mesh.visible = level > 0
+	mesh.visible = level > 0
 	if level > 0:
 		# Box mesh is origin-centred: scale up per level and lift so it grows upward.
-		_building_mesh.scale = Vector3(1.0, float(level), 1.0)
-		_building_mesh.position = Vector3(0.0, 1.1 * float(level), 0.0)
+		mesh.scale = Vector3(1.0, float(level), 1.0)
+		mesh.position = Vector3(0.0, 1.1 * float(level), 0.0)
+	if not TownCore.is_unlocked(def, SaveManager.state["tech"]["researched"]):
+		label.text = "%s — locked (research: %s)" % [display_name, _gate_name(def)]
+		label.modulate = Color(1, 1, 1, 0.5)
+		return
+	label.modulate = Color.WHITE
 	var cost := TownCore.next_level_cost(def, level)
 	if cost.is_empty():
-		_plot_label.text = "%s (max level)" % display_name
+		label.text = "%s (max level)" % display_name
 	else:
 		var action := "build" if level == 0 else "upgrade to L%d" % (level + 1)
-		_plot_label.text = "%s — E to %s (%s)" % [display_name, action, _cost_text(cost)]
+		label.text = "%s — E to %s (%s)" % [display_name, action, _cost_text(cost)]
+
+
+func _gate_name(def: Dictionary) -> String:
+	var gate: Dictionary = def.get("unlocked_by") if def.get("unlocked_by") != null else {}
+	var tech_id := str(gate.get("id", "?"))
+	return str((_tech_defs.get(tech_id, {}) as Dictionary).get("name", tech_id))
+
+
+func _plot_for(building_id: String) -> Area3D:
+	for plot in _plots:
+		if str(plot.get_meta("building_id")) == building_id:
+			return plot
+	return null
 
 
 func _cost_text(cost: Dictionary) -> String:
@@ -101,8 +155,11 @@ func _cost_text(cost: Dictionary) -> String:
 	return ", ".join(parts)
 
 
-func _flash_plot_label(msg: String) -> void:
-	_plot_label.text = msg
+func _flash_plot_label(plot: Area3D, msg: String) -> void:
+	if plot == null:
+		return
+	var label := plot.get_node("Label") as Label3D
+	label.text = msg
 	await get_tree().create_timer(1.2).timeout
-	if is_instance_valid(self) and _plot_label.text == msg:
-		_refresh_plot()
+	if is_instance_valid(self) and is_instance_valid(plot) and label.text == msg:
+		_refresh_plot(plot)

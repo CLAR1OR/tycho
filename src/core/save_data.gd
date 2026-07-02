@@ -29,7 +29,7 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 			"counters": {"runs": 0, "deaths": 0, "boss_kills": 0, "full_clears": 0},
 			"seen": [],
 		},
-		"tech": {"researched": [], "in_progress": {}, "auto_solve_counters": {}},
+		"tech": {"researched": [], "in_progress": {}, "auto_solve_counters": {}, "active": ""},
 		"ledger": {},
 		"town": {"id": "home", "name": "Home", "age": 1, "buildings": [], "map_pos": null},
 		"combat": {

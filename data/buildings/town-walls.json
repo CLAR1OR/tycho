@@ -1,0 +1,12 @@
+{
+	"id": "town-walls",
+	"name": "Town Walls",
+	"category": "infrastructure",
+	"age": 1,
+	"unlocked_by": {"type": "tech", "id": "med-masonry-arch"},
+	"levels": [
+		{"cost": {"gold": 60, "stone": 12}, "effects": [{"kind": "capability", "id": "walls-1"}], "visual": "walls_l1"},
+		{"cost": {"gold": 150, "stone": 40}, "effects": [{"kind": "capability", "id": "walls-2"}], "visual": "walls_l2"},
+		{"cost": {"gold": 320, "stone": 100}, "effects": [{"kind": "capability", "id": "walls-3"}], "visual": "walls_l3"}
+	]
+}

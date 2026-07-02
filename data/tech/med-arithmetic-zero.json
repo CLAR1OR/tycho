@@ -1,0 +1,40 @@
+{
+	"id": "med-arithmetic-zero",
+	"name": "Arithmetic & Zero",
+	"age": 1,
+	"tier": "support",
+	"cost_knowledge": 20,
+	"prereqs": [],
+	"unlocks": [],
+	"auto_solve_after_runs": 5,
+	"thinking_tool": true,
+	"explanation": "Count on your fingers and you run out at ten. Count with Roman numerals and you can WRITE any number — but try to multiply XLVII by XXIII and you will be reaching for the abacus, because the numerals are labels, not tools.\n\nThe trick arriving in your century — carried from India through the Arab world, crossing into Europe through translation schools like Toledo's — is POSITIONAL notation. Ten digits, 0 through 9, where a digit's PLACE carries its size: the 4 in 47 means forty because it stands in the tens place. The same ten symbols write any number there is, and — this is the miracle — arithmetic becomes a set of small mechanical steps anyone can learn. Digit by digit, carry the overflow. Calculation stops being a craftsman's skill and becomes a school exercise.\n\nAnd the hinge of the whole system is the strangest digit: ZERO. Not 'nothing' — a placeholder that holds a column open. Write 407 without a zero and it collapses into 47; the zero says 'the tens place is empty, keep going.' It took centuries for people to accept a symbol for emptiness as a number in its own right. Once they did, the places could never be confused again — and everything built on reliable calculation (ledgers, surveying, astronomy, engineering) got a foundation.",
+	"puzzle": {
+		"kind": "quiz",
+		"data": {
+			"questions": [
+				{
+					"q": "In the number 407, what work is the 0 doing?",
+					"options": [
+						"It holds the empty tens place open so the 4 still means four hundred",
+						"It marks the number as approximate",
+						"Nothing — 407 and 47 are the same number",
+						"It doubles the number before it"
+					],
+					"correct": 0
+				},
+				{
+					"q": "Why is positional notation so much better for CALCULATING than Roman numerals?",
+					"options": [
+						"Arithmetic becomes small mechanical digit-by-digit steps anyone can learn",
+						"The numbers are shorter to write",
+						"It was invented more recently",
+						"Roman numerals cannot write large numbers"
+					],
+					"correct": 0
+				}
+			]
+		}
+	},
+	"aha": "Here is the quiet part: nothing about the WORLD changed. Every sum a positional numeral computes, Roman numerals could in principle express. What changed is the COST of thinking. A good notation is a thinking tool — it takes work your mind had to do and folds it into the symbols, so your attention is free for the real problem. You will see this trick again and again up the tree: algebra, coordinates, calculus, programming. Each one is the same move — pay once, in notation, and every calculation afterwards is cheaper. This is the first one. It will not be the last."
+}

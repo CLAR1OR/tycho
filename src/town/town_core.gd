@@ -29,6 +29,22 @@ static func set_building(town: Dictionary, building_id: String, level: int) -> D
 	return out
 
 
+## Is this building available to build, given researched tech? `unlocked_by` is a
+## typed gate ({type: "tech", id}) or null (always available). Unknown gate types
+## are LOCKED loudly — a typo must not silently open a building.
+static func is_unlocked(def: Dictionary, researched_tech: Array) -> bool:
+	var gate: Variant = def.get("unlocked_by")
+	if gate == null:
+		return true
+	match str((gate as Dictionary).get("type", "")):
+		"tech":
+			return str((gate as Dictionary).get("id", "")) in researched_tech
+		_:
+			push_error("TownCore: building \"%s\" has unknown unlocked_by type \"%s\"" % [
+				str(def.get("id", "?")), str((gate as Dictionary).get("type", ""))])
+			return false
+
+
 ## Cost of the NEXT level of a building given its current level ({} = maxed out).
 ## Levels are exactly 3 per the bible; levels[current] is the next one to buy.
 static func next_level_cost(def: Dictionary, current_level: int) -> Dictionary:

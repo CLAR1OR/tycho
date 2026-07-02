@@ -33,6 +33,20 @@ const SCHEMAS: Dictionary = {
 		"unlocked_by": {"type": "dict", "nullable": true},
 		"levels": {"type": "array", "required": true, "array_of": "dict"},  # exactly 3 per the bible
 	},
+	"tech": {  # architecture-schemas.md §4 — mirrors design/tech-nodes/<id>.md (the authoring source)
+		"id": {"type": "string", "required": true},
+		"name": {"type": "string", "required": true},
+		"age": {"type": "int", "required": true},
+		"tier": {"type": "string", "required": true, "one_of": ["key", "support"]},
+		"cost_knowledge": {"type": "int", "required": true},
+		"prereqs": {"type": "array", "array_of": "string"},
+		"unlocks": {"type": "array", "required": true, "array_of": "dict"},  # typed {type, id}
+		"puzzle": {"type": "dict", "required": true},  # {kind: quiz, data} | {kind: interactive, scene}
+		"auto_solve_after_runs": {"type": "int"},
+		"thinking_tool": {"type": "bool"},
+		"explanation": {"type": "string"},  # the read-before-the-puzzle text
+		"aha": {"type": "string"},          # the post-solve reveal
+	},
 	"echoes": {  # PRD §7.5 — in-run upgrades; picked list lives on RunState, never saved
 		"id": {"type": "string", "required": true},
 		"name": {"type": "string", "required": true},

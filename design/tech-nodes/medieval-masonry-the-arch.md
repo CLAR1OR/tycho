@@ -13,7 +13,7 @@
 | prerequisites | `med-arithmetic-zero` (Arithmetic & Zero) |
 | unlocks | **Quarry** (Stone resource) + **Town Walls** (the strategy-layer seed) |
 | supersedes / retires | — (Timber/Stone retire later, at the Industrial age) |
-| status | drafted — awaiting playtest |
+| status | drafted — awaiting playtest. **In-game since 2026-07-02** (`data/tech/med-masonry-arch.json`): explanation + aha are playable at Linnea's Desk with an **interim 3-question quiz** standing in for the §5 interactive puzzle, which is not yet built. This .md remains the authoring source. |
 
 ## 2. One-line pitch
 Learn *why* an arch can hold up a cathedral when a flat stone can't span a doorway — and unlock stone construction (Quarry + the first Town Wall).

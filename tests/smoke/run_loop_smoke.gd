@@ -57,10 +57,39 @@ func _run_smoke() -> void:
 	# --- Build in town -------------------------------------------------------------
 	# The wave gold (>= 40) buys Linnea's Study L1; the next day tick must produce.
 	var gold_before_build := Ledger.get_amount("gold")
-	_scene_node().call("_try_build")
+	_scene_node().call("_try_build", "linneas-study")
 	var lvl: int = TownCore.building_level(SaveManager.state["town"], "linneas-study")
 	_check(lvl == 1, "build plot built the study (level %d)" % lvl)
 	_check(Ledger.get_amount("gold") < gold_before_build, "build spent gold")
+
+	# --- Research at Linnea's desk ---------------------------------------------------
+	# Quarry must be tech-gated first; then drive the REAL panel path end-to-end:
+	# arithmetic (prereq) → masonry → quarry buildable. Smoke funds the research.
+	_scene_node().call("_try_build", "quarry")
+	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 0,
+		"quarry blocked before masonry is researched")
+	Ledger.add("knowledge", 100.0, "smoke-grant")
+	Ledger.add("gold", 100.0, "smoke-grant")
+	var panel: TechPanel = _scene_node().call("open_tech_panel")
+	await _settle(3)
+	for node_id in ["med-arithmetic-zero", "med-masonry-arch"]:
+		panel.select_node(node_id)
+		panel.invest_all()
+		panel.begin_read()
+		panel.begin_quiz()
+		panel.answer(1)  # deliberately wrong once — must retry, not advance
+		var questions: int = ((DataLoader.load_domain("tech")[node_id]["puzzle"] as Dictionary)["data"]["questions"] as Array).size()
+		for i in questions:
+			panel.answer(0)  # authored data keeps the correct option at index 0
+		panel.finish()
+	panel.close()
+	await _settle(3)
+	var researched: Array = SaveManager.state["tech"]["researched"]
+	_check(researched.has("med-arithmetic-zero") and researched.has("med-masonry-arch"),
+		"both nodes researched through read → quiz → aha (%s)" % str(researched))
+	_scene_node().call("_try_build", "quarry")
+	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 1,
+		"masonry unlock makes the quarry buildable")
 
 	# --- Run 2: death ------------------------------------------------------------
 	_game.call("_start_run")
@@ -74,6 +103,7 @@ func _run_smoke() -> void:
 	_check(int(c["deaths"]) == 1, "death counted")
 	_check(int(c["runs"]) == runs_before + 2, "died run still ticks the day")
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
+	_check(Ledger.get_amount("stone") >= 2.0, "quarry produced stone on the day tick")
 
 	SaveManager.delete_slot(SMOKE_SLOT)
 	print("---")

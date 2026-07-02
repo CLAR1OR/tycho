@@ -41,6 +41,7 @@ func _ready() -> void:
 	EventBus.run_ended.connect(_on_run_ended)
 	EventBus.death.connect(_on_death)
 	EventBus.boss_killed.connect(_on_boss_killed)
+	EventBus.tech_researched.connect(_on_tech_researched)
 	if not SaveManager.load_slot(SLOT):
 		SaveManager.create_slot(SLOT, "Tycho")
 	_refresh_resources()
@@ -127,6 +128,15 @@ func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> vo
 	var produced := TownCore.tick(SaveManager.state["town"], DataLoader.load_domain("buildings"))
 	for id: String in produced:
 		Ledger.add(id, float(produced[id]), "town-tick")
+	# Linnea works the ACTIVE node between runs; after enough runs she just solves
+	# it — reward thinking, never hard-gate on the puzzle (IC-10, PRD §7.8).
+	var active := str(SaveManager.state["tech"].get("active", ""))
+	if not active.is_empty():
+		SaveManager.state["tech"] = TechCore.tick_auto_solve(SaveManager.state["tech"], active)
+		var tech_defs := DataLoader.load_domain("tech")
+		if tech_defs.has(active) and TechCore.auto_solve_ready(tech_defs[active], SaveManager.state["tech"]):
+			SaveManager.state["tech"] = TechCore.complete(SaveManager.state["tech"], active)
+			EventBus.tech_researched.emit(active)
 	call_deferred("_goto_town")
 
 
@@ -138,6 +148,16 @@ func _on_death(_source_id: String) -> void:
 func _on_boss_killed(_boss_id: String, _floor: int) -> void:
 	var counters: Dictionary = SaveManager.state["story"]["counters"]
 	counters["boss_kills"] = int(counters["boss_kills"]) + 1
+
+
+func _on_tech_researched(tech_id: String) -> void:
+	# The first researched tech of an age turns the town's page to it (schemas §3).
+	var defs := DataLoader.load_domain("tech")
+	var node_age := int((defs.get(tech_id, {}) as Dictionary).get("age", 1))
+	if node_age > int(SaveManager.state["town"]["age"]):
+		SaveManager.state["town"]["age"] = node_age
+		SaveManager.state["meta"]["age"] = node_age
+		EventBus.age_advanced.emit(node_age)
 
 
 # --- Save / HUD ---------------------------------------------------------------------
