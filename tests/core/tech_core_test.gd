@@ -11,9 +11,13 @@ func test_tech_domain_loads() -> void:
 	var defs := DataLoader.load_domain("tech")
 	check(defs.has("med-arithmetic-zero") and defs.has("med-masonry-arch"), "authored nodes load")
 	if defs.has("med-masonry-arch"):
-		var quiz: Dictionary = defs["med-masonry-arch"]["puzzle"]
-		check_eq(str(quiz.get("kind", "")), "quiz", "masonry carries the interim quiz")
-		check((quiz["data"]["questions"] as Array).size() >= 3, "masonry quiz has questions")
+		var puzzle: Dictionary = defs["med-masonry-arch"]["puzzle"]
+		check_eq(str(puzzle.get("kind", "")), "interactive", "masonry carries the real puzzle now")
+		check_eq(str(puzzle.get("scene", "")), "puzzle_arch", "masonry points at the arch scene")
+		check((puzzle["data"]["hints"] as Array).size() >= 3, "Linnea's hints are authored")
+	if defs.has("med-arithmetic-zero"):
+		var quiz: Dictionary = defs["med-arithmetic-zero"]["puzzle"]
+		check_eq(str(quiz.get("kind", "")), "quiz", "arithmetic keeps the quiz form")
 
 
 func test_prereq_gating() -> void:

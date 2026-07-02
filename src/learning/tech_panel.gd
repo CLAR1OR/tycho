@@ -4,15 +4,23 @@ class_name TechPanel
 ## and tuning panels. Pauses the game while open.
 ##
 ## Flow: LIST (pick/see nodes) → NODE (progress + invest Knowledge/Shards) →
-## READ (the authored explanation) → QUIZ (the interim puzzle; the bespoke
-## interactive puzzles replace this per-node later) → AHA (the reveal) → done:
-## TechCore.complete + `tech_researched` on the EventBus + save.
+## READ (the authored explanation) → the node's puzzle, dispatched on
+## `puzzle.kind` (architecture-schemas.md §4): "quiz" → the built-in QUIZ screen;
+## "interactive" → PUZZLE embeds the bespoke scene from PUZZLES and waits for its
+## `solved` signal → AHA (the reveal) → done: TechCore.complete +
+## `tech_researched` on the EventBus + save.
 ##
 ## Logic stays in TechCore (pure, tested); this class is screens and wiring.
 ## All flow methods (select_node / invest_all / begin_read / begin_quiz / answer /
-## finish) are public so the headless smoke can drive the real path.
+## begin_puzzle / finish) are public so the headless smoke can drive the real path.
 
-enum Screen { LIST, NODE, READ, QUIZ, AHA }
+enum Screen { LIST, NODE, READ, QUIZ, PUZZLE, AHA }
+
+## Bespoke interactive puzzles, keyed by the node's `puzzle.scene`. Contract:
+## a Control with `setup(data: Dictionary)` and a `solved` signal.
+const PUZZLES: Dictionary = {
+	"puzzle_arch": preload("res://src/learning/puzzle_arch.gd"),
+}
 
 # Fullscreen page with side gutters so reading lines stay a comfortable width.
 const GUTTER_X := 240
@@ -23,6 +31,7 @@ var _screen: int = Screen.LIST
 var _node_id: String = ""
 var _quiz_index: int = 0
 var _rows: VBoxContainer
+var _puzzle: Control
 
 
 func _ready() -> void:
@@ -89,6 +98,30 @@ func begin_read() -> void:
 func begin_quiz() -> void:
 	_quiz_index = 0
 	_show_quiz()
+
+
+## Embed the node's bespoke interactive puzzle and wait for it to be solved.
+func begin_puzzle() -> void:
+	_screen = Screen.PUZZLE
+	_clear()
+	var def: Dictionary = _defs[_node_id]
+	var puzzle: Dictionary = def["puzzle"]
+	var scene_id := str(puzzle.get("scene", ""))
+	if not PUZZLES.has(scene_id):
+		push_error("TechPanel: unknown puzzle scene \"%s\" on %s" % [scene_id, _node_id])
+		_show_read()
+		return
+	_title(str(def["name"]))
+	_puzzle = (PUZZLES[scene_id] as GDScript).new()
+	_puzzle.call("setup", puzzle.get("data", {}))
+	_puzzle.connect("solved", _show_aha)
+	_rows.add_child(_puzzle)
+	_button("Step away (keeps progress)", close)
+
+
+## The live puzzle Control (smoke driver + debugging).
+func puzzle_node() -> Control:
+	return _puzzle
 
 
 ## Answer the current quiz question with option `index` (in DATA order — the UI
@@ -168,7 +201,10 @@ func _show_read() -> void:
 	var def: Dictionary = _defs[_node_id]
 	_title(str(def["name"]))
 	_reading(str(def.get("explanation", "(no explanation authored yet)")))
-	_button("I have it — ask me", begin_quiz)
+	if str((def["puzzle"] as Dictionary).get("kind", "quiz")) == "interactive":
+		_button("To the gateway — build it", begin_puzzle)
+	else:
+		_button("I have it — ask me", begin_quiz)
 	_button("Close (keeps progress)", close)
 
 

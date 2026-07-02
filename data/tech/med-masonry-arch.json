@@ -13,39 +13,14 @@
 	"thinking_tool": false,
 	"explanation": "You already know stone in your bones: stack it and it only packs tighter — push DOWN on a pile and it grips harder. So why does the same stone that holds up a whole wall SNAP the moment you lay it flat across a doorway and pile a roof on top?\n\nBecause stone keeps two very different promises. Squeeze it and it is almost unbreakable — its strength in COMPRESSION is enormous. PULL it apart and it is feeble — its strength in TENSION is perhaps a tenth as much. A flat stone beam — a lintel — over a gap bends under load, and bending stretches its underside. The bottom fibers go into tension, and that is exactly where stone gives up and cracks.\n\nThe ARCH is the trick that erases the tension. Curve the span into a ring of wedge-shaped stones — voussoirs — and now every stone is driven hard against its neighbors. Nothing bends. The weight runs THROUGH the stones as pure squeeze, following an invisible path — the thrust line — down to the ground. Stone asked to do only the one thing stone is good at.\n\nThe last stone you set is the KEYSTONE, the wedge at the very top. Until it drops home the ring is unfinished, and a half-built arch would simply fall — so masons hold it up on a temporary wooden frame, the centering, until the keystone locks the ring. Seat it, and the arch becomes self-supporting. Pull the frame away. It stands.\n\nThere is a price, and it catches the careless: an arch does not only press DOWN — it shoves OUTWARD at its feet. Span a wide gap and that outward thrust will spread the supports and bring the whole thing down, unless you brace each foot with a heavy abutment or a buttress to take the shove.\n\nAnd your age is the moment this all comes alive. Right now — 1157 — masons are learning that if you make the arch POINTED rather than round, the thrust line runs steeper and the outward shove shrinks. Walls can climb higher and thinner; windows can open wide enough to drown a hall in light. The great cathedrals beginning to rise in this very generation stand on exactly this insight.",
 	"puzzle": {
-		"kind": "quiz",
+		"kind": "interactive",
+		"scene": "puzzle_arch",
 		"data": {
-			"questions": [
-				{
-					"q": "A flat stone lintel over a doorway cracks under load. Where, and why?",
-					"options": [
-						"Along its underside — bending stretches it there, and stone is weak in tension",
-						"At the top — the load crushes it, and stone is weak in compression",
-						"At the ends — the doorposts pinch it",
-						"Anywhere — stone simply cannot span gaps"
-					],
-					"correct": 0
-				},
-				{
-					"q": "When does an arch become self-supporting?",
-					"options": [
-						"Once the keystone closes the ring — until then the centering must hold it",
-						"As soon as both feet are planted",
-						"Once the mortar between the stones dries",
-						"When it is loaded from above"
-					],
-					"correct": 0
-				},
-				{
-					"q": "A finished arch holds its load — but it still shoves OUTWARD at its feet. What takes that shove?",
-					"options": [
-						"Heavy abutments or buttresses braced against each foot",
-						"Nothing — arches only press downward",
-						"The keystone absorbs it",
-						"A second arch built on top"
-					],
-					"correct": 0
-				}
+			"intro": "The palisade is half-rot; Herzog wants STONE. Raise a gateway that can carry the new wall. Try the obvious thing first — then load it and see.",
+			"hints": [
+				"A flat stone over a gap snaps along its underside — that's where it's being pulled apart, and stone hates being pulled. Can you arrange the stones so they're only ever pushed?",
+				"Wedges. If each stone is a wedge leaning on the next, the weight presses them together instead of bending any one of them. But a ring isn't a ring until it's closed.",
+				"Set the top wedge — the keystone — last; that locks it. Then mind the feet: a finished arch shoves outward. Plant something heavy on each side to take the shove."
 			]
 		}
 	},

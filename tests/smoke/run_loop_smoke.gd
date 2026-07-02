@@ -72,15 +72,45 @@ func _run_smoke() -> void:
 	Ledger.add("gold", 100.0, "smoke-grant")
 	var panel: TechPanel = _scene_node().call("open_tech_panel")
 	await _settle(3)
-	for node_id in ["med-arithmetic-zero", "med-masonry-arch"]:
-		panel.select_node(node_id)
-		panel.invest_all()
-		panel.begin_read()
-		panel.begin_quiz()
-		panel.answer(1)  # deliberately wrong once — must retry, not advance
-		var questions: int = ((DataLoader.load_domain("tech")[node_id]["puzzle"] as Dictionary)["data"]["questions"] as Array).size()
-		for i in questions:
-			panel.answer(0)  # authored data keeps the correct option at index 0
+	# Arithmetic: the quiz form, incl. one deliberately wrong answer (must retry).
+	panel.select_node("med-arithmetic-zero")
+	panel.invest_all()
+	panel.begin_read()
+	panel.begin_quiz()
+	panel.answer(1)
+	var questions: int = ((DataLoader.load_domain("tech")["med-arithmetic-zero"]["puzzle"] as Dictionary)["data"]["questions"] as Array).size()
+	for i in questions:
+		panel.answer(0)  # authored data keeps the correct option at index 0
+	panel.finish()
+	# Masonry: the REAL interactive arch puzzle — the full didactic path, all three
+	# authored failures (lintel crack, unkeyed collapse, splay), then the win.
+	panel.select_node("med-masonry-arch")
+	panel.invest_all()
+	panel.begin_read()
+	panel.begin_puzzle()
+	var arch: Node = panel.puzzle_node()
+	_check(arch != null, "the arch puzzle embedded in the panel")
+	if arch != null:
+		_check(str(arch.call("act", "lintel")) == "lintel_placed", "beat 1: lintel laid")
+		_check(str(arch.call("act", "load")) == "lintel_cracked", "beat 1: lintel cracks under load")
+		_check(str(arch.call("act", "arch")) == "arch_chosen", "beat 2: curve the span")
+		_check(str(arch.call("act", "voussoir", 1)) == "voussoir_fell", "wedge falls without centering")
+		arch.call("act", "centering")
+		for i in 6:
+			arch.call("act", "voussoir", i)
+		_check(str(arch.call("act", "load")) == "unkeyed_collapse", "loading the open ring collapses it")
+		for i in 6:
+			arch.call("act", "voussoir", i)
+		_check(str(arch.call("act", "keystone")) == "keystone_seated", "keystone locks the ring")
+		_check(str(arch.call("act", "load")) == "splayed", "beat 3: unbraced arch splays outward")
+		arch.call("act", "abutment", "left")
+		arch.call("act", "abutment", "right")
+		arch.call("act", "centering")
+		for i in 6:
+			arch.call("act", "voussoir", i)
+		arch.call("act", "keystone")
+		_check(str(arch.call("act", "load")) == "holds", "braced + keyed: the gateway holds")
+		await _settle(3)
 		panel.finish()
 	panel.close()
 	await _settle(3)
