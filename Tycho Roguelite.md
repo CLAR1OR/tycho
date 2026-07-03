@@ -255,14 +255,19 @@ We can upgrade each weapon several times, in different categories. Refining the 
 After touching the artefact, Tycho has some etchings on his skin. We immediately can use the dash (space). After talking with Old Thomas and meditating a bit, we realize we can influence the configuration of the etchings -> upgrade screen. We see the etchings on our arms visually represented, with 4 slots. Each slot can hold a special ability from that category that we have to unlock by spending Resonance Dust. Each ability can be upgraded. We can switch out which are active. Some change / have altered effects when used with a specific weapon. Our available slots are space (dash, fixed), Right Mouse Button, Q, R. 
 
 
+**The nine abilities (designed 2026-07-03 — full design, levels, weapon synergies, data shape: `design/etchings.md`).** Slot grammar: RMB = **Strike** (quick, short CD), Q = **Field** (control/utility), R = **Surge** (big moment, long CD); dash stays fixed on Space and outside the nine. Cooldowns only, no mana. Each ability is one real physical principle wearing a magic-deniable name (same deniability rule as the dungeon strata).
+
 | Slot | Name | Description |
 | ---- | ---- | ----------- |
-| RMB  |      |             |
-| RMB  |      |             |
-| Q    |      |             |
-| Q    |      |             |
-| R    |      |             |
-| R    |      |             |
+| RMB  | **Push** | Cone of force — knockback, wall-slam bonus, shove into hazards. Granted free at B2 (the tutorial ability). *Impulse.* |
+| RMB  | **Bolt** | Fast dart of etching-light at the cursor; staggers squishies at range. *Directed energy.* |
+| RMB  | **Afterstrike** | Your last landed melee hit replays itself a beat later. *Stored work.* |
+| Q    | **Snare** | Ground field that heavily slows (roots squishies). *Viscosity.* |
+| Q    | **Ward** | A temporary barrier arc — blocks movement, arrows, and line of sight (cover on demand). *Rapid assembly.* |
+| Q    | **Lodestone** | A planted point that drags enemies together. *Attraction.* |
+| R    | **Shockwave** | Radial blast; the only thing that staggers armored enemies. *Pressure.* |
+| R    | **Surge** | ~5 s of overdrive: speed, attack speed, halved dash CD. *Overdrive.* |
+| R    | **Sentinel** | The nanobots assemble a short-lived fighting construct — **the Act-II summon seed** (`source_etching`). *Self-assembly.* |
 
 #### Passive Attunements (persistent passive upgrades)
 

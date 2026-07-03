@@ -11,7 +11,8 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `feel-tuning.md` — **the dial board for the combat-feel gate.** Every tunable `# FEEL:` number, what it does, and whether you change it in the Godot **Inspector** (`@export`) or the script (`const`). For hands-on playtest tuning.
 - `tech-nodes/` — one file per authored tech-tree node (explanation → puzzle → "aha" → unlock). `_TEMPLATE.md` is the canonical format; copy it to author a new node.
 - `dungeon-strata.md` — **floor differentiation:** the five strata (environment profiles + signature hazards on one geometry kit), the hazard roster + design rules, and the "imitation thins with depth" lore engine. Locked 2026-07-03 (revises IC-5's re-theme reading).
-- (future) `etchings/`, `weapons/`, `dialogue/`, `bosses/` — detailed specs as they get authored.
+- `etchings.md` — **the 9 active abilities** (+ fixed dash): slot grammar (RMB Strike / Q Field / R Surge), per-ability design + levels + weapon synergies, Dust costs, echo handles, the Sentinel summon seed. Drafted 2026-07-03.
+- (future) `weapons/`, `dialogue/`, `bosses/` — detailed specs as they get authored.
 
 ## Rules
 - The bible stays the source of truth for **what the game is**; `design/` is the source of truth for **how a specific piece works in detail**.
@@ -23,3 +24,4 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `content-budget.md`, `act1-story-beats.md`, `architecture-schemas.md`, `godot-conventions.md` — **drafted 2026-06-12** as PRD inputs. Beats are skeleton-level (gates + intent, not scripts); schemas are shape-contracts, not final field lists.
 - `prd.md` — **drafted 2026-06-19** from the above. Status: pre-development; to be finalized after the Phase 0 gates pass (gate outcomes may revise counts/feel targets).
 - `dungeon-strata.md` — **drafted 2026-07-03** (human decision, from the design-review discussion). Strata + hazards are design-locked; all numbers are playtest placeholders; nothing implemented yet.
+- `etchings.md` — **drafted 2026-07-03** (fills the bible's empty etchings table). Names + mechanics are a first authored draft for human review; numbers are placeholders; nothing implemented yet.

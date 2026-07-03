@@ -167,6 +167,22 @@ One abstraction, two contexts (dungeon auto-clearer / army unit): `{ id, tier, s
 
 Enemy-telegraph colors are fixed across strata; palettes are chosen around them (per-floor human legibility pass — see `dungeon-strata.md`). All numbers are `# FEEL:`/tuning placeholders.
 
+## 10. Etching abilities (added 2026-07-03 — design source: `etchings.md`)
+
+The 9 active abilities (3 per slot; dash is fixed and not data). Save already carries `combat.etchings` (§1) — this is the content domain it references. `principle` is the rational-fiction tag (dialogue hooks read it); `summon_seed` marks Sentinel as the ability §8's summons hang off (`source_etching`).
+
+```jsonc
+// data/etchings/<id>.json
+{ "id": "push", "name": "Push", "slot": "rmb",         // rmb | q | r
+  "principle": "impulse",
+  "cooldown_s": 5.0,
+  "granted_by": "b2",                                    // beat id, or null = bought at Thomas's Hut
+  "cost_unlock_dust": 0, "cost_levels_dust": [3, 5],
+  "levels": [ { }, { "damage_mult": 1.3 }, { "rider": "bowling" } ],
+  "weapon_synergy": { "weapon": "sword", "effect": "combo_continues_bonus_finisher" },
+  "summon_seed": false }
+```
+
 ---
 
 ## The decoupling rule (how the pillars stay separable)

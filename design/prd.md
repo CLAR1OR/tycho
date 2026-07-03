@@ -119,11 +119,11 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 ### 7.3 Combat — etchings (active abilities)
 - **Purpose:** Tycho's "magic" loadout — the nanobot abilities.
 - **Trigger:** unlocked at B2; configured at Thomas's Hut; fired in dungeon on RMB/Q/R (Space/dash is fixed and always available from A1).
-- **State:** `etchings.slots {rmb, q, r}`, `etchings.unlocked {id: level}`. **9 abilities** unlockable (3 per slot), each **3 upgrade levels** (Resonance Dust). Some have altered effects with a specific weapon.
-- **Resolution:** spend Resonance Dust to unlock/upgrade; swap which ability fills each slot.
+- **State:** `etchings.slots {rmb, q, r}`, `etchings.unlocked {id: level}`. **9 abilities** unlockable (3 per slot), each **3 upgrade levels** (Resonance Dust). Each has exactly 1 weapon-synergy variant. *(Designed 2026-07-03 — `etchings.md`:)* slot grammar **RMB=Strike / Q=Field / R=Surge**; RMB **Push** (free at B2) / **Bolt** / **Afterstrike**; Q **Snare** / **Ward** / **Lodestone**; R **Shockwave** / **Surge** / **Sentinel**. Cooldowns only, no mana; mouse-aimed.
+- **Resolution:** spend Resonance Dust to unlock/upgrade; swap which ability fills each slot. L3 of each ability adds a small rider behavior. **Sentinel is the Act-II summon seed** (`source_etching`, schema §8; `summon_seed: true` in data).
 - **Player decision:** slot loadout; build identity (which 3 + dash define your kit); active-vs-passive Dust spend (see 7.4).
-- **Content hooks:** ability defs + weapon-synergy variants.
-- **Risk:** shares Dust with attunements — must be tuned so neither starves the other into a no-brainer.
+- **Content hooks:** `data/etchings/` ability defs + weapon-synergy variants; the Echo pool's etching-mod category authors against these handles (`etchings.md`).
+- **Risk:** shares Dust with attunements — must be tuned so neither starves the other into a no-brainer. Ward vs ranged pressure, Lodestone→Shockwave dominance, rotation homogenization — watch-list in `etchings.md`.
 
 ### 7.4 Combat — Passive Attunements (persistent passive upgrades) *(added 2026-06-19)*
 - **Purpose:** always-on growth to Tycho's body/base kit — the nanobots *reinforcing the host* (vs. etchings *configuring* abilities).

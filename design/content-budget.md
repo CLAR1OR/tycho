@@ -19,7 +19,7 @@ Completionists stretch further via difficulty tiers; the spine fits the budget.
 | Item | Count | Notes |
 | --- | --- | --- |
 | **Weapons** | **3** — Sword, Bow, Daggers | Spear = designed-for data slot, post-v1. Each weapon: light combo + 1 special, **flat upgrade track (5 levels)**, **resonance track (4 effects)**. No aspects/forms in v1. Feel-tuning is human work — budget it per weapon. |
-| **Etching abilities** (active) | **9** unlockable (3 per slot: RMB / Q / R) + dash (fixed) | Each: 3 upgrade levels (Resonance Dust). ~1 weapon-synergy variant per ability (flagged in data, cheap). |
+| **Etching abilities** (active) | **9** unlockable (3 per slot: RMB / Q / R) + dash (fixed) | Each: 3 upgrade levels (Resonance Dust). 1 weapon-synergy variant per ability (flagged in data, cheap). **Designed 2026-07-03: `etchings.md`** (Push/Bolt/Afterstrike, Snare/Ward/Lodestone, Shockwave/Surge/Sentinel). |
 | **Passive Attunements** | **~7** persistent passive upgrades (max health, dash charges, regen, cooldowns, crit, armor, find-rate) | Each: 3 levels (Resonance Dust — shared currency with active etchings = build-choice tension). Flat stat bumps, no new art; cheap data. Vendor: Thomas's Hut, 2nd tab. |
 | **Echo pool (in-run upgrades)** | **~50** | Categories: weapon mods, etching mods, dash mods, stat boosts, + ~8 synergy echoes (require 2 prior picks). Enough variety for ~40 runs without exhaustion. |
 | **Enemy types** | **12** base | ~4–5 per floor with overlap; one dungeon theme so reuse is lore-correct. Elites = modifier system on base types (no new art), NOT new enemies. |
