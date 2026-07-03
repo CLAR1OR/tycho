@@ -441,3 +441,9 @@ ressources
 https://quaternius.com/index.html
 https://quaternius.itch.io/universal-animation-library
 
+## on audio (pipeline decided 2026-07-03 — `design/audio.md`)
+
+- SFX: Kenney CC0 packs (kenney.nl) + jfxr/bfxr one-offs; feel-critical subset human-tuned
+- Music: AI-generated (Suno or Udio, subscription) — human-curated; CC0/FreePD placeholders first
+- Don't judge the combat-feel gate silent — placeholder hit/dash SFX before the 20th-clear verdict
+

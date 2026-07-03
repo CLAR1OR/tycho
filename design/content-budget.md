@@ -63,8 +63,8 @@ Volume model: **Hades-style high volume** — fresh contextual dialogue on nearl
 
 | Item | Count | Notes |
 | --- | --- | --- |
-| Music | **~10 tracks** | Town (2: calm/late-act tension), dungeon (3 intensity layers), boss (2, reused), climax, dream theme, title. |
-| SFX | ~120 | Combat-feel critical subset (hits, dashes, pickups) gets human tuning time. |
+| Music | **~10 tracks** | Town (2: calm/late-act tension), dungeon (per-stratum tracks in v1 — the "3 intensity layers" moved post-v1, see `audio.md`), boss (2, reused), climax, dream theme, title. **Pipeline (2026-07-03): AI-gen (Suno/Udio) human-curated; CC0 placeholders first — `audio.md`.** |
+| SFX | ~120 | Combat-feel critical subset (hits, dashes, pickups) gets human tuning time. **Pipeline (2026-07-03): Kenney/CC0 packs + jfxr one-offs; sfx-map as data — `audio.md`. Get placeholders in BEFORE the 20th-clear verdict.** |
 | Achievements | **~25** at v1 | Event-hook system built early (prepare-for); achievement list itself is cheap data. |
 
 ## What's expensive vs. cheap (for sequencing)
