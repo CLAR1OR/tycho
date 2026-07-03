@@ -161,6 +161,25 @@ func _run_smoke() -> void:
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
 	_check(Ledger.get_amount("stone") >= 2.0, "quarry produced stone on the day tick")
 
+	# --- Cheat panel (F2 playtest tool) — must mirror the real paths exactly --------
+	var cheats: CheatPanel = get_tree().get_first_node_in_group("cheat_panel")
+	_check(cheats != null, "cheat panel lives on the HUD layer")
+	if cheats != null:
+		var gold_now := Ledger.get_amount("gold")
+		cheats.grant("gold", 100.0)
+		_check(Ledger.get_amount("gold") == gold_now + 100.0, "cheat grants gold via the Ledger")
+		var stone_now := Ledger.get_amount("stone")
+		cheats.simulate_run(true)
+		await _settle(10)
+		_check(int(c["runs"]) == runs_before + 3, "simulated run ticks the runs counter")
+		_check(int(c["full_clears"]) == 2, "simulated run counts a full clear")
+		_check(int(c["boss_kills"]) >= 2, "simulated run counts the boss kill")
+		_check(int(SaveManager.state["codex"]["shards"]) == 2, "simulated run slots a codex shard")
+		_check(Ledger.get_amount("stone") > stone_now, "simulated run still ticks the day (quarry)")
+		_check(_scene_file() == "town.tscn", "simulated run lands back in town")
+		cheats.grant_codex_shard()
+		_check(int(SaveManager.state["codex"]["shards"]) == 3, "codex shard cheat applies")
+
 	SaveManager.delete_slot(SMOKE_SLOT)
 	print("---")
 	if _failures.is_empty():

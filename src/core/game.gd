@@ -44,6 +44,10 @@ func _ready() -> void:
 	EventBus.death.connect(_on_death)
 	EventBus.boss_killed.connect(_on_boss_killed)
 	EventBus.tech_researched.connect(_on_tech_researched)
+	# Playtest cheat panel (F2) — lives on the HUD layer so it survives scene swaps.
+	var cheats := CheatPanel.new()
+	cheats.setup(self)
+	$HUD.add_child(cheats)
 	_show_slot_select()
 
 
