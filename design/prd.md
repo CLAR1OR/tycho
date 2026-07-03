@@ -21,7 +21,7 @@
 - **Genre / subgenre:** Action roguelite (Hades-style feel) + light upgrade-hub meta + edutainment (history of technology, hard-science principles, rationality/thinking skills).
 - **Core differentiator:** Combat does **not carry** the learning — it **rewards** it. The "cognitive pulse" deliberately alternates cerebral tension (town/tech/puzzles) with reflexive release (the dungeon). You think hard in town so you feel powerful in the dungeon. Players learn things that are actually true.
 - **Target session length:** A successful run ≈ **20–25 min** (early deaths 10–15 min). Full v1 first playthrough = **10–15 hours**.
-- **Target platform:** Linux desktop, single-player, Godot 4.6, GDScript. Keyboard + mouse (Space/dash, LMB/attack, RMB/Q/R abilities).
+- **Target platform:** Linux desktop, single-player, Godot 4.7 (upgraded from 4.6 on 2026-06-20), GDScript. Keyboard + mouse (Space/dash, LMB/attack, RMB/Q/R abilities).
 
 ---
 
@@ -270,7 +270,7 @@ Per `content-budget.md` (the schedule): authored for **10–15 h** first playthr
 ---
 
 ## 12. Production Notes
-- **Stack:** Godot 4.6, **GDScript only, static typing mandatory.** Technically a 3D project with one reusable `camera_rig.tscn` (the 2.5D decision); nothing else assumes camera angles.
+- **Stack:** Godot 4.7, **GDScript only, static typing mandatory.** Technically a 3D project with one reusable `camera_rig.tscn` (the 2.5D decision); nothing else assumes camera angles.
 - **Data-driven:** all content is JSON in `data/`; `src/core/validate.gd` validates against schema on load in debug builds. Autoloads are thin state-holders; logic in plain classes (testable).
 - **Architecture rules:** EventBus is the only cross-domain channel; pure-function core (dialogue eligibility, town tick, tech costs, echo offers); decoupling test "could I delete the dungeon and still run the town?"
 - **Directory layout & naming:** per `godot-conventions.md` (`src/` by domain, `scenes/`, `data/`, `assets/`, `tests/`; snake_case files, PascalCase classes, past-tense typed signals).

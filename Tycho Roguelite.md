@@ -286,7 +286,7 @@ These stack *under* the in-run Echoes (a run starts from your attuned baseline, 
 
 Technology is divided in distinctive ages, each with a few key technologies and many supporting technologies / nodes. Every technology unlocks something in the game when we have researched it, e.g. a new building, new resource, etc. 
 
-The player chooses which node is active. A node costs knowledge, which is generated automatically in small amounts by Linnea at first, later increasing with upgrades and new buildings. We can also spend our knowledge shards to make knowledge and  progress -> early game this is the main way to make progress. E.g. we start with Linnea 0.1 knowledge / day (1 day = 1 run — the tick fires when a run ends, never in real time). 1 knowledge shard = 1 knowledge. When we have put enough knowledge into a technology to research it, we can unlock it by reading the description of the technology and then answering a small quiz or solving a puzzle related to it. 
+The player chooses which node is active. A node costs knowledge, which is generated automatically in small amounts by Linnea at first, later increasing with upgrades and new buildings. We can also spend our knowledge shards to make knowledge and  progress -> early game this is the main way to make progress. E.g. we start with Linnea 0.1 knowledge / day (1 day = 1 run — the tick fires when a run ends, never in real time). 1 knowledge shard = 5 knowledge (updated 2026-07-03 to match the implemented placeholder — `TechCore.SHARD_KNOWLEDGE_VALUE`; a shard must be worth clearly more than a passive day tick for run loot to stay the main early driver. Both numbers are tuning placeholders). When we have put enough knowledge into a technology to research it, we can unlock it by reading the description of the technology and then answering a small quiz or solving a puzzle related to it. 
 
 Each age has his own screen, so that it is not too overwhelming. We can switch through the ages by clicking on their icons on the left, as soon as they are unlocked. The screen is filled with cards/nodes, the key techonologies bigger than the smaller technologies surrounding it. Each card has a stylistic visual representation of the technology and its name on it. Clicking on it brings up its menu / more details. What it is, what it unlocks, current progress. If it is already researched, the description/explanation of it. Locked nodes where we dont have the prerequisites are greyed out, available are normal looking, researched ones have green border/fill, currently researched one blue. 
 
@@ -395,7 +395,7 @@ Not sure how to do this, or if at all. This is hard to tie into the other two ea
 # Meta / Implementation
 
 - This project is a solodev project and will rely heavily on AI Agents, will be completely vibecoded. Human for ideas and story, AI agents for the implementation. Make sure that documentation is thourough, clear and alway up to date, so that new agents can pick up tasks easily. 
-- we will be using godot 4.6
+- we will be using godot 4.7 (project created on 4.6, upgraded 2026-06-20)
 - Always commit your changes with git
 - Push back if there is something that doesn't make sense, e.g. in a workflow or when to do what. 
 - I am willing to pay some subscriptions to generate the assets used for this game, e.g. Tripo for 3d assets. I am also willing to learn a bit of 3d design or something, depending on what is needed, what AI cannot do as easily. 

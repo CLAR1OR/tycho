@@ -45,8 +45,10 @@ Phases overlap in play — gates, not a strict sequence. `[cutscene]` = painterl
 | D1 | **Tilly connects the dots.** The "not-men" armies match Tycho's dungeon creatures. Someone out there *summons*. Tilly briefs Herzog; the town starts taking the west seriously. | C3 done + Gunpowder research **started** |
 | D2 | **Gunpowder.** Researched → cannon on the new wall. The town can now imagine *war*. | tech `ren-gunpowder` |
 | D3 | **The emissary.** A rider under a black-and-gold banner. Ultimatum: submit to **the Emperor** — first time the name is said aloud. Herzog refuses, flatly. Stakes go local → world. [cutscene] | D1 + D2 |
-| D4 | **The dream-glimpse.** That night: the woman, clearer than ever — and behind her, *his* banner. The emperor's power has a source, and it is *her*. She mouths something. Cut to black. [cutscene] | D3 |
+| D4 | **The dream-glimpse.** That night: the woman, clearer than ever — and behind her, *his* banner. The emperor's power has a source, and it is *her*. She mouths something. Cut to black. [cutscene] | D3 **+ C4** |
 | D5 | **Cliffhanger close.** Tilly promoted to organize defense; Linnea looks west; "armies, not just a sword." **End of v1.** | D4 |
+
+> **Gate fix (2026-07-03):** D4 now also requires `flag(c4)`. Without it, D4 was reachable via D3 → D1 → C3 → C1 with only **one** full clear, while C4 (the *first* dream) needs `codex_shards >= 2` — so a steady researcher could hit "the woman, clearer than ever" having never dreamt of her at all, and the reveal of her as the emperor's source would land with zero setup. The dream escalation (C4 → C5 → D4) must be unskippable.
 
 ---
 
