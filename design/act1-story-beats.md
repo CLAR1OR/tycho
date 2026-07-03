@@ -8,7 +8,7 @@
 
 ---
 
-## The spine (~20 scenes)
+## The spine (~22 scenes — Phase E added 2026-07-03)
 
 Phases overlap in play — gates, not a strict sequence. `[cutscene]` = painterly stills + narration.
 
@@ -49,6 +49,18 @@ Phases overlap in play — gates, not a strict sequence. `[cutscene]` = painterl
 | D5 | **Cliffhanger close.** Tilly promoted to organize defense; Linnea looks west; "armies, not just a sword." **End of v1.** | D4 |
 
 > **Gate fix (2026-07-03):** D4 now also requires `flag(c4)`. Without it, D4 was reachable via D3 → D1 → C3 → C1 with only **one** full clear, while C4 (the *first* dream) needs `codex_shards >= 2` — so a steady researcher could hit "the woman, clearer than ever" having never dreamt of her at all, and the reveal of her as the emperor's source would land with zero setup. The dream escalation (C4 → C5 → D4) must be unskippable.
+
+### Phase E — after the climax (the v1 endgame state — added 2026-07-03)
+
+The cliffhanger is the *finish line*, not a wall: the player can keep running, researching, and completing the codex. Phase E makes that post-climax state **designed** instead of a dangle — the game must never feel like it silently ran out.
+
+| # | Beat | Gate |
+| --- | --- | --- |
+| E1 | **A town that drills.** Force-plays once on the next town return after D5: the town has *changed posture* — Tilly runs guard drills by the wall, Herzog requisitions, the cannon is manned. Sets `act1_complete` (save meta → "Act I complete" badge on the slot screen). Ends on the standing invitation: the portal still glows; the shards still teach; the west will take time to arrive. | D5 + next town visit |
+| E2 | **The artifact waits.** The final shard slots in — the artifact assembles fully, turns once, hums… and *stops*. It is complete, and it is **waiting**. Linnea: "It's finished. And it's — listening? For what?" Thomas (if seen after): "A finished question is still a question." Explicit, honest, in-fiction "not yet" — solving it is Act II+'s door (per IC-6: v1's payoff is the grown mystery). Written **order-safe**: no emperor references unless `d5` is set (it can fire pre-climax for a completionist rusher). [cutscene] | codex shards = max (all slots filled) |
+| E3 | *(a state, not a scene)* **One more run.** What remains playable and *acknowledged*: difficulty tiers (the space reconfigures — strata lore already covers this), unfinished tech nodes, arc beats not yet fired, and a small **post-climax bark set (~10)** so the town talks about drills/watch-rotas/the west instead of being frozen pre-war. | after E1 |
+
+**Order note:** E2 is gated only on shard count, so E1/E2 can occur in either order — both scripts must stand alone (E2 references no war unless flagged; E1 references no artifact state).
 
 ---
 

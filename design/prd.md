@@ -82,7 +82,7 @@ Enter floor → traverse **6–10 rooms** of RNG-ordered types (combat / boss / 
 
 ### 6.3 Full-run / meta (macro — between runs, in town)
 Respawn/return to town → **dialogue** (story + arcs + contextual) → spend resources: **weapons** (Mara, Resonance Ore), **etchings + attunements** (Thomas, Resonance Dust), **tech research** (read + puzzle; Knowledge + Knowledge Shards), **town buildings** (Herzog, Gold + materials) → next run is stronger. Story unlocks new systems via a cascade (see §7.1). Loop tightens: stronger runs → more resources + faster research → stronger runs.
-- **Win state (v1):** reach the Act I climax cascade (emperor named, ultimatum, dream-glimpse) → cliffhanger close. There is no "lose" state — death is a setback, not a loss.
+- **Win state (v1):** reach the Act I climax cascade (emperor named, ultimatum, dream-glimpse) → cliffhanger close. There is no "lose" state — death is a setback, not a loss. **Post-climax is a designed state** (Phase E, 2026-07-03): the town changes posture (E1, sets `act1_complete` → slot badge), the completed artifact visibly *waits* (E2 — complete ≠ solved, order-safe vs the climax), and tiers/remaining tech/post-climax barks keep the world alive (E3).
 
 ---
 
@@ -188,7 +188,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 - **Purpose:** v1's payoff — the growing mystery itself (solving it = the alien reveal, post-v1).
 - **Trigger:** each **full clear** drops a Codex Shard → it **visibly slots into the artifact** in the final-boss chamber.
 - **State:** `codex.shards` count; 5–7 shard visual states.
-- **Resolution:** v1 only *assembles* it in plain sight; once complete, the player may solve or do more runs for hints/auto-solve (the reveal is post-v1). Dream-link beats escalate per shard (story).
+- **Resolution:** v1 only *assembles* it in plain sight; completion has a designed beat (**E2 "The artifact waits"**, 2026-07-03 — it assembles fully, turns, hums, and *listens*; explicit in-fiction "not yet"; solving = post-v1). Dream-link beats escalate per shard (story).
 - **Risk:** none mechanical; ensure the visible assembly reads as meaningful, not a collectible counter.
 
 ### 7.12 Dialogue system
@@ -196,7 +196,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 - **Trigger:** on each town visit, build the eligible set per character; spine/cutscene beats can **force-play** (banner icon), max **1 forced scene per visit**.
 - **State:** every snippet is data: `id, speakers[], source (spine|arc|contextual|bark), conditions[], priority, once, cooldown_runs, force_play, sets_flag, scene`. `story.seen[]` tracks shown.
 - **Resolution:** each character offers their single highest-priority eligible item; **priority spine > arc > contextual > bark**; `cooldown_runs` prevents back-to-back same-arc beats; barks repeatable. Selector is a **pure function `(save_state, character) -> snippet`** (unit-testable). Conditions read only EventBus-maintained state (flags/counters/ledger/tech). **Dialogues are fully scripted — the player never chooses** (all decisions happen in other systems). Supports 3+ speakers and cutscenes (painterly stills + narration).
-- **Content hooks:** ~20 spine + ~28 arc (4 full arcs: Linnea, Tilly, Mara, Thomas) + ~250 contextual + ~60 barks + ~8 cutscenes. Condition vocabulary in `act1-story-beats.md` §spec is the engine contract.
+- **Content hooks:** ~22 spine (incl. Phase E post-climax, 2026-07-03) + ~28 arc (4 full arcs: Linnea, Tilly, Mara, Thomas) + ~250 contextual + ~70 barks (incl. ~10 post-climax) + ~8 cutscenes. Condition vocabulary in `act1-story-beats.md` §spec is the engine contract.
 - **Risk:** dumping multiple story scenes after one run (mitigated by 1-forced-per-visit rule); content volume (agent-drafted, human-curated).
 
 ### 7.13 Save system & accessibility

@@ -18,7 +18,7 @@ One file per slot + one shared profile file. Settings/accessibility are profile-
   "save_version": 1,            // int, bump on schema change; loader runs migration chain v1→v2→…
   "meta": {                     // shown on the slot-select screen WITHOUT loading the full save
     "name": "…", "created_at": "…", "updated_at": "…",
-    "playtime_s": 0, "age": 1, "act": 1, "runs": 0
+    "playtime_s": 0, "age": 1, "act": 1, "runs": 0, "act1_complete": false   // set by beat E1 → slot-screen badge (2026-07-03)
   },
   "story":   { "flags": {"a1": true}, "counters": {"runs": 0, "deaths": 0, "boss_kills": 0, "full_clears": 0}, "seen": ["snippet-id"] },
   "tech":    { "researched": ["id"], "in_progress": {"id": 12.5}, "auto_solve_counters": {"id": 3} },
