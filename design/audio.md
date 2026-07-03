@@ -34,9 +34,9 @@
 - **Music, phase 1:** one `Music` autoload streaming per-scene tracks — town, dungeon (per-floor via the stratum profile's existing `music_layer` field), boss, title. **Crossfade on scene swap (~1 s).** The budget's "3 intensity layers" for dungeon music = **post-v1 nicety**; per-stratum tracks deliver the same felt progression for a fraction of the plumbing (and the strata want to *sound* like the imitation thinning — drones deepen with depth).
 - **Not in v1:** adaptive/vertical layering, reverb zones, footstep surface switching, sidechain ducking.
 
-## Why the first pass is NOT implemented in this change
+## Why the first pass was NOT implemented with this spec
 
-The natural first audio chunk touches `project.godot` (bus layout, autoload registration) and the combat scenes — and the working copy currently has **uncommitted human edits to `project.godot` and `feel_room.tscn`** (live feel-tuning). Building it now from a branch would collide with that work at merge. **Spec below; build it as its own chunk once the tuning session's keepers are committed.**
+The natural first audio chunk touches `project.godot` (bus layout, autoload registration) and the combat scenes — and at drafting time the working copy had **uncommitted human edits to `project.godot` and `feel_room.tscn`**. *(Resolved 2026-07-03: those edits turned out to be the gdUnit4 plugin install + an editor resave, both committed — the blocker is gone and the chunk below is buildable as-is.)*
 
 ## The first implementation chunk (spec for the next agent)
 

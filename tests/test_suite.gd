@@ -1,29 +1,28 @@
-extends RefCounted
+extends GdUnitTestSuite
 class_name TestSuite
-## Minimal test-suite base for the interim runner (tests/test_runner.gd).
+## Project test-suite base over gdUnit4 (godot-conventions.md → Testing).
 ##
-## INTERIM: godot-conventions.md mandates gdUnit4, but installing an editor plugin
-## needs a human in the loop (Godot editor → AssetLib → "gdUnit4" → install/enable).
-## Until then this zero-dependency harness keeps the required coverage real: suites
-## in tests/core/ extend this, name methods test_*, and use the check helpers.
-## Porting to gdUnit4 later = mechanical (check → assert_that).
-
-var failures: PackedStringArray = []
-var checks: int = 0
+## History: this began as the base class of a zero-dependency interim runner,
+## because installing the gdUnit4 editor plugin needed a human in the loop —
+## done 2026-07-03, and the interim runner (tests/test_runner.gd) is retired.
+## The suites keep the compact check()/check_eq() helpers; both now report
+## through real gdUnit4 asserts, so failures land in the editor test UI and
+## the CLI runner alike. New tests may use the native assert_that(...) API
+## directly — either style is fine.
 
 
 func check(cond: bool, msg: String) -> void:
-	checks += 1
-	if not cond:
-		failures.append(msg)
+	assert_bool(cond).override_failure_message(msg).is_true()
 
 
+## Equality with the original runner's exact semantics, preserved so the port
+## changed zero checks: float pairs compare via is_equal_approx, everything
+## else via `==` (Godot deep-compares Dictionaries/Arrays by value).
 func check_eq(got: Variant, want: Variant, msg: String) -> void:
 	var equal: bool
 	if got is float and want is float:
 		equal = is_equal_approx(got, want)
 	else:
 		equal = got == want
-	checks += 1
-	if not equal:
-		failures.append("%s (got %s, want %s)" % [msg, got, want])
+	assert_bool(equal).override_failure_message(
+		"%s (got %s, want %s)" % [msg, got, want]).is_true()

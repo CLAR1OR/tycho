@@ -15,6 +15,9 @@ export_presets.cfg
 data_*/
 mono_crash.*.json
 
+# gdUnit4 CLI test reports
+/reports/
+
 # Claude Code local settings (machine-specific)
 .claude/settings.local.json
 
