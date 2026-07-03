@@ -15,6 +15,7 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `run-structure.md` — **the meso loop's decision layer:** sigil-marked door choice (reward previews, peril marks, pity rules, Cartography foresight), the echo-cadence decision (~12–17 picks/run), and the in-run healing economy (no full heals; % of missing HP via Wellsprings / boss clears / Recovery / healing echoes). Drafted 2026-07-03.
 - `food-upkeep.md` — **the Well-Fed mechanic:** Food = day-tick town upkeep → production/Knowledge bonus (never a penalty); the `upkeep` effect kind is the Act-II army/city provisioning prepare-for. Drafted 2026-07-03.
 - `audio.md` — **the audio pipeline:** SFX (Kenney CC0 + jfxr, sfx-map as data, human-tuned feel subset), music (AI-gen Suno/Udio human-curated, .ogg loops, per-stratum tracks), buses/formats/licensing, and the first-implementation-chunk spec. Drafted 2026-07-03.
+- `voice-guides.md` — **how everyone talks:** house style (plain timeless, written-to-be-said, banned AI constructions), per-character stance/tell/approved-lines, the tech-unlocked vocabulary table, drafting workflow. **All dialogue writing goes through this doc.** Locked with the human 2026-07-03.
 - (future) `weapons/`, `dialogue/`, `bosses/` — detailed specs as they get authored.
 
 ## Rules
@@ -31,3 +32,4 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `run-structure.md` — **drafted 2026-07-03.** NOTE it decides an echo-cadence change (doors + post-boss instead of every-room) that retires current slice behavior when door choice gets built; nothing implemented yet.
 - `food-upkeep.md` — **drafted 2026-07-03.** Fixes the dead Food resource; the `upkeep` effect kind lands in TownCore with its consumer; nothing implemented yet.
 - `audio.md` — **drafted 2026-07-03.** Pipeline decided; first implementation chunk deliberately deferred (working copy has uncommitted human edits to `project.godot` + `feel_room.tscn` — the files an audio pass touches). Human actions: download Kenney packs; pick Suno vs Udio.
+- `voice-guides.md` — **locked 2026-07-03**, worked out live with the human (sample lines are human-approved anchors; register, humor density, Sophia naming, and the vocabulary-table idea are human decisions). Unblocks batch snippet drafting.

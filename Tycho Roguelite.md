@@ -56,6 +56,7 @@ The game deliberately alternates two opposite headspaces:
 - **Evil emperor's motive = an ordinary conqueror, no alien foreknowledge.** He does not know about the aliens; he is a tyrant who captured a bearer and exploits her power for world domination. [A mundane motive contrasts sharply with the cosmic reveal — petty human ambition against galactic stakes. The cosmic dread is the *player's* discovery, never his.]
 - **Monomyth / Wren meta-narration = light and diegetic.** No fourth-wall breaks, no commenting on game mechanics. Wren notices patterns "ahead of his time" as eccentric in-world genius (monomyth as anthropology, evo-psych of wonder) — a wink to the player that never says "you're in a game." On the refusal-of-the-call: Tycho doesn't refuse, and Wren can lampshade that genuinely curious people never do (the monomyth is descriptive, not a law).
 - **Act I climax beat (= v1 finish line): the emperor gets a face.** The Tilly/city-guard intel thread resolves — scattered reports of summon-armies become a *named* antagonist. An emissary delivers an ultimatum (stakes go from local to world-scale); the beat seeds the strategy layer (you now need armies, not just a sword → summons unlock); and through the dream-link Tycho glimpses the captured bearer behind the emperor's power. Cut to black — cliffhanger into Act II.
+- **The second bearer is named Sophia — but never in Act I (decided 2026-07-03).** Named after Sophia Brahe, Tycho Brahe's sister and astronomical collaborator (the protagonist is Tycho Brahe coded — his historical partner-in-observation becomes the second bearer). `sophia` is the data id; Act I UI and dialogue call her only "the woman". **Her name arrives with Act II** (candidate beat: when the dream-link channel improves, the first thing she sends is one word — her name). Character voices for all speakers: `design/voice-guides.md` (locked house style + per-character tells, approved 2026-07-03).
 
 ---
 
@@ -80,6 +81,7 @@ Tycho, the protagonist, lives in a medieval town. He is out there researching wh
 
 # Characters
 
+> **How they talk:** `design/voice-guides.md` (locked 2026-07-03) — house style, per-character syntactic tells, approved sample lines, and the tech-unlocked vocabulary table. All dialogue drafting goes through it.
 
 - Tycho
 	- protagonist, player character. he is smart, rational optimist, witty, warm. taking everything as it is, quick to make a joke about the situation, taking it light. But also deeply caring when it matters, with a big moral circle, wants to help the whole world be better. Out there in the field type of researcher, making observations. 
@@ -95,8 +97,8 @@ Tycho, the protagonist, lives in a medieval town. He is out there researching wh
 	- mayor of the town. no bullshit, matter of fact kind of man. sees what needs to be done and does it. realist. bit of werner herzog vibe. 
 - Wren
 	- gives random takes, explanations for phenomena that are ahead of his time: evo psych explanation for why we feel wonder (mild suprise, experiencing something without cached thoughts), stories all having the same structure (monomyth)
-- mysterious woman (second artifact bearer)
-	- *captured* by the evil emperor — the source of his artefact-power and summons — but not a passive victim: she plays a long game from inside his lands, feeds Tycho intel through the dream-link, and engineers her own rescue. Tycho's intellectual equal. We have a connection through our artefacts. (Resolved 2026-06-12 — see "Story decisions — resolved".)
+- mysterious woman (second artifact bearer) — **Sophia** (named 2026-07-03, after Sophia Brahe; NEVER named in Act I — see "Story decisions — resolved")
+	- *captured* by the evil emperor — the source of his artefact-power and summons — but not a passive victim: she plays a long game from inside his lands, feeds Tycho intel through the dream-link, and engineers her own rescue. Tycho's intellectual equal. We have a connection through our artefacts. (Resolved 2026-06-12 — see "Story decisions — resolved".) Voice: telegram compression, every word costs (`design/voice-guides.md`).
 - evil emperor
 	- an **ordinary conqueror — no alien foreknowledge.** A tyrant who captured the second bearer and exploits her power for world domination. The cosmic dread is the *player's* discovery, never his; his petty human ambition contrasts with the galactic stakes. (Resolved 2026-06-12 — see "Story decisions — resolved".)
 

@@ -48,7 +48,7 @@ Completionists stretch further via difficulty tiers; the spine fits the budget.
 
 ## Story & dialogue (the big one)
 
-Volume model: **Hades-style high volume** — fresh contextual dialogue on nearly every run return. This is v1's largest writing line item. Production approach per the working agreement: human owns voice, beats, and curation; agents batch-draft contextual snippets against the character voice guides for human edit/approval. Budget assumes heavy agent drafting.
+Volume model: **Hades-style high volume** — fresh contextual dialogue on nearly every run return. This is v1's largest writing line item. Production approach per the working agreement: human owns voice, beats, and curation; agents batch-draft contextual snippets against the character voice guides for human edit/approval. Budget assumes heavy agent drafting. **The voice guides exist (2026-07-03): `voice-guides.md`** — house style, per-character tells + human-approved sample lines, tech-unlocked vocabulary; snippet drafting is unblocked.
 
 | Item | Count | Notes |
 | --- | --- | --- |
