@@ -27,7 +27,7 @@ func test_set_building_is_pure() -> void:
 
 func test_next_level_cost() -> void:
 	var defs := DataLoader.load_domain("buildings")
-	check(defs.has("quarry") and defs.has("linneas-study"), "sample buildings load")
+	check(defs.has("quarry") and defs.has("sophias-study"), "sample buildings load")
 	if not defs.has("quarry"):
 		return
 	var quarry: Dictionary = defs["quarry"]
@@ -41,7 +41,7 @@ func test_tick_produces() -> void:
 	var town := _empty_town()
 	check(TownCore.tick(town, defs).is_empty(), "empty town produces nothing")
 	town = TownCore.set_building(town, "quarry", 1)
-	town = TownCore.set_building(town, "linneas-study", 2)
+	town = TownCore.set_building(town, "sophias-study", 2)
 	var produced := TownCore.tick(town, defs)
 	check_eq(float(produced.get("stone", 0)), 2.0, "quarry L1 produces 2 stone/day")
 	check_eq(float(produced.get("knowledge", 0)), 2.0, "study L2 produces 2 knowledge/day")

@@ -62,14 +62,14 @@ func _run_smoke() -> void:
 	_check(RunState.player_health > 0, "player HP carried between rooms (%d)" % RunState.player_health)
 
 	# --- Build in town -------------------------------------------------------------
-	# The wave gold (>= 40) buys Linnea's Study L1; the next day tick must produce.
+	# The wave gold (>= 40) buys Sophia's Study L1; the next day tick must produce.
 	var gold_before_build := Ledger.get_amount("gold")
-	_scene_node().call("_try_build", "linneas-study")
-	var lvl: int = TownCore.building_level(SaveManager.state["town"], "linneas-study")
+	_scene_node().call("_try_build", "sophias-study")
+	var lvl: int = TownCore.building_level(SaveManager.state["town"], "sophias-study")
 	_check(lvl == 1, "build plot built the study (level %d)" % lvl)
 	_check(Ledger.get_amount("gold") < gold_before_build, "build spent gold")
 
-	# --- Research at Linnea's desk ---------------------------------------------------
+	# --- Research at Sophia's desk ---------------------------------------------------
 	# Quarry must be tech-gated first; then drive the REAL panel path end-to-end:
 	# arithmetic (prereq) → masonry → quarry buildable. Smoke funds the research.
 	_scene_node().call("_try_build", "quarry")

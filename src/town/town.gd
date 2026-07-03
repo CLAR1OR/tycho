@@ -5,7 +5,7 @@ extends Node3D
 ## - BUILD PLOTS — any Area3D child with `metadata/building_id`. Walk in, press E
 ##   to build/upgrade through the building's 3 levels. Plots gated by tech
 ##   (`unlocked_by` via TownCore.is_unlocked) show as locked until researched.
-## - LINNEA'S DESK — opens the research screen (TechPanel: invest Knowledge/Shards
+## - SOPHIA'S DESK — opens the research screen (TechPanel: invest Knowledge/Shards
 ##   → read → quiz → aha → unlock).
 ## - NPCS — any Area3D child with `metadata/npc_id`. E to talk: DialogueCore picks
 ##   their single best eligible snippet (PRD §7.12). Spine beats with force_play
@@ -28,7 +28,7 @@ var _in_forge: bool = false
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
-@onready var _desk: Area3D = $LinneasDesk
+@onready var _desk: Area3D = $SophiasDesk
 @onready var _forge: Area3D = $MarasForge
 @onready var _portal: Area3D = $DungeonPortal
 @onready var _day_label: Label = $HUD/DayInfo
@@ -102,7 +102,7 @@ func _on_portal_body_entered(body: Node3D) -> void:
 		run_requested.emit()
 
 
-## Public (game flow + smoke driver): open Linnea's research screen.
+## Public (game flow + smoke driver): open Sophia's research screen.
 func open_tech_panel() -> TechPanel:
 	var panel := TechPanel.new()
 	$HUD.add_child(panel)

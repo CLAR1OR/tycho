@@ -1,6 +1,6 @@
 extends PanelContainer
 class_name TechPanel
-## Linnea's research screen (PRD §7.8) — placeholder UI, code-built like the echo
+## Sophia's research screen (PRD §7.8) — placeholder UI, code-built like the echo
 ## and tuning panels. Pauses the game while open.
 ##
 ## Flow: LIST (pick/see nodes) → NODE (progress + invest Knowledge/Shards) →
@@ -71,7 +71,7 @@ func close() -> void:
 
 func select_node(id: String) -> void:
 	_node_id = id
-	# Selecting makes it the ACTIVE node — the one Linnea auto-solves over runs.
+	# Selecting makes it the ACTIVE node — the one Sophia auto-solves over runs.
 	SaveManager.state["tech"]["active"] = id
 	_show_node()
 
@@ -153,7 +153,7 @@ func finish() -> void:
 func _show_list() -> void:
 	_screen = Screen.LIST
 	_clear()
-	_title("Linnea's Desk — Research")
+	_title("Sophia's Desk — Research")
 	var tech: Dictionary = SaveManager.state["tech"]
 	_label("You carry: %d Knowledge, %d Knowledge Shards (worth %d each)" % [
 		int(Ledger.get_amount("knowledge")), int(Ledger.get_amount("knowledge-shards")),
@@ -187,7 +187,7 @@ func _show_node() -> void:
 	_label("You carry: %d Knowledge, %d Shards" % [
 		int(Ledger.get_amount("knowledge")), int(Ledger.get_amount("knowledge-shards"))])
 	if TechCore.is_ready(def, tech):
-		_label("It's ready. Linnea lays out what the shards revealed —")
+		_label("It's ready. Sophia lays out what the shards revealed —")
 		_button("Read & solve", begin_read)
 	else:
 		_button("Invest everything you carry", invest_all)

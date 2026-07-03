@@ -135,7 +135,7 @@ func _show_hint() -> void:
 	if hints.is_empty():
 		return
 	_hint_index = mini(_hint_index + 1, hints.size() - 1)
-	_hint_label.text = "Linnea: “%s”" % str(hints[_hint_index])
+	_hint_label.text = "Sophia: “%s”" % str(hints[_hint_index])
 
 
 func _shake() -> void:
@@ -171,7 +171,7 @@ func _refresh() -> void:
 			_add_button("Brace the right foot", "abutment", "right")
 	if beat < 4:
 		_add_button("⚒ Load it!", "load")
-		_add_button("Ask Linnea", "hint")
+		_add_button("Ask Sophia", "hint")
 	_diagram.queue_redraw()
 
 

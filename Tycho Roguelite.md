@@ -24,7 +24,7 @@ The game deliberately alternates two opposite headspaces:
 - **Floors are *strata*, not biomes (revised 2026-07-03).** The one dungeon's five floors DO get individual identity — but only from three cheap things on **one shared geometry kit**: a data-driven **environment profile** (palette/fog/light/emission — in 3D this is materials and parameters, not redrawn art), **one signature hazard** per floor, and a 2–4-prop budget. Independent biome art lines stay banned; age re-theming stays banned. [What IC-5 was protecting — biome-scale art cost — stays protected; what it accidentally blocked — cheap per-floor identity — is now in scope.] **Lore engine:** the learning-space *imitates* Tycho's world, and the imitation thins with depth — convincing cave → too-regular worked stone → crystal → filed geometry → the void core holding the artifact chamber — quietly foreshadowing the nanobot reveal for observant players (deniability rule: floors 1–4 must still read as "magic gets stranger"). Hazards are diegetic test apparatus (the runs are learning trials — each stratum probes one capability). Full spec: `design/dungeon-strata.md`.
 
 ## Learning delivery
-- **Active puzzles requiring genuine understanding** to engage with tech. Keep a graceful path for players who don't want to solve them (e.g. Linnea auto-solves over several runs) — reward thinking, don't hard-gate. [The doc's existing instinct, confirmed.]
+- **Active puzzles requiring genuine understanding** to engage with tech. Keep a graceful path for players who don't want to solve them (e.g. Sophia auto-solves over several runs) — reward thinking, don't hard-gate. [The doc's existing instinct, confirmed.]
 - The **town and tech tree carry the age-progression** (Medieval → …) — cheap to produce, AI-friendly, and *it is the soul*.
 
 ## Pacing, economy & accessibility — locked (2026-06-12)
@@ -32,7 +32,7 @@ The game deliberately alternates two opposite headspaces:
 - **Run shape: a successful run ≈ 20–25 minutes, 5 floors, 6–10 rooms per floor.** [Shorter than Hades-typical because the soul lives *between* runs — story, tech tree, and town need cadence.] Numbers are targets, tune in playtest.
 - **No death penalty: you keep everything you collected.** Runs only ever add; the tension comes from combat, not loss.
 - **No puzzle rooms in the dungeon** (cut 2026-06-12). The dungeon is pure release per the cognitive pulse — learning-puzzles live in town. Reprieve/upgrade rooms remain.
-- **Assist mode = "Reinforcement Protocol" (God-Mode-alike, nanobot-framed).** Opt-in toggle: with each death the nanobots adapt the host a little better (small stacking damage resistance, capped), so persistent players always get through. Diegetic fit: the runs *are* learning trials — assist is just the nanobots learning faster. Mirrors Linnea's auto-solve: graceful paths in **both** directions (combat-shy thinkers, puzzle-shy fighters); no content hard-gated behind either skill.
+- **Assist mode = "Reinforcement Protocol" (God-Mode-alike, nanobot-framed).** Opt-in toggle: with each death the nanobots adapt the host a little better (small stacking damage resistance, capped), so persistent players always get through. Diegetic fit: the runs *are* learning trials — assist is just the nanobots learning faster. Mirrors Sophia's auto-solve: graceful paths in **both** directions (combat-shy thinkers, puzzle-shy fighters); no content hard-gated behind either skill.
 - **Combat-feel bar: the game does NOT need to feel like Hades** — its own feel is fine. The combat-feel gate's pass bar: *after clearing the same room for the 20th time, you still want one more.* (Hades stays the quality reference, not a cloning target.)
 - **Codex shards assemble a visible artifact in the final-boss chamber.** Each shard visibly slots into place across runs, so v1 players watch the meta-puzzle take shape even though solving it (the alien reveal) is post-v1 — the growing mystery itself is the v1 payoff.
 - **v1 content scope (2026-06-12):** Act I targets **10–15 hours**; **3 weapons** (Sword, Bow, Daggers — Spear stays a data slot); **a boss on every floor (5)**; **Hades-style high-volume dialogue** (fresh contextual lines nearly every run return — the largest writing line item, agent-drafted/human-curated). Full counts: `design/content-budget.md`. Story spine + arcs + dialogue-system spec: `design/act1-story-beats.md`.
@@ -56,7 +56,7 @@ The game deliberately alternates two opposite headspaces:
 - **Evil emperor's motive = an ordinary conqueror, no alien foreknowledge.** He does not know about the aliens; he is a tyrant who captured a bearer and exploits her power for world domination. [A mundane motive contrasts sharply with the cosmic reveal — petty human ambition against galactic stakes. The cosmic dread is the *player's* discovery, never his.]
 - **Monomyth / Wren meta-narration = light and diegetic.** No fourth-wall breaks, no commenting on game mechanics. Wren notices patterns "ahead of his time" as eccentric in-world genius (monomyth as anthropology, evo-psych of wonder) — a wink to the player that never says "you're in a game." On the refusal-of-the-call: Tycho doesn't refuse, and Wren can lampshade that genuinely curious people never do (the monomyth is descriptive, not a law).
 - **Act I climax beat (= v1 finish line): the emperor gets a face.** The Tilly/city-guard intel thread resolves — scattered reports of summon-armies become a *named* antagonist. An emissary delivers an ultimatum (stakes go from local to world-scale); the beat seeds the strategy layer (you now need armies, not just a sword → summons unlock); and through the dream-link Tycho glimpses the captured bearer behind the emperor's power. Cut to black — cliffhanger into Act II.
-- **The second bearer is named Sophia — but never in Act I (decided 2026-07-03).** Named after Sophia Brahe, Tycho Brahe's sister and astronomical collaborator (the protagonist is Tycho Brahe coded — his historical partner-in-observation becomes the second bearer). `sophia` is the data id; Act I UI and dialogue call her only "the woman". **Her name arrives with Act II** (candidate beat: when the dream-link channel improves, the first thing she sends is one word — her name). Character voices for all speakers: `design/voice-guides.md` (locked house style + per-character tells, approved 2026-07-03).
+- **Character names locked (2026-07-03; swapped to the historical mapping the same day).** The sister is **Sophia** — after Sophia Brahe, Tycho Brahe's actual sister and astronomical collaborator (the protagonist is Tycho Brahe coded; the historical partner-in-observation IS the sister role, so she carries the name). The second bearer is **Linnea** — **never named in Act I**: `linnea` is the data id; Act I UI and dialogue call her only "the woman". **Her name arrives with Act II** (candidate beat: when the dream-link channel improves, the first thing she sends is one word — her name). Character voices for all speakers: `design/voice-guides.md` (locked house style + per-character tells, approved 2026-07-03).
 
 ---
 
@@ -85,7 +85,7 @@ Tycho, the protagonist, lives in a medieval town. He is out there researching wh
 
 - Tycho
 	- protagonist, player character. he is smart, rational optimist, witty, warm. taking everything as it is, quick to make a joke about the situation, taking it light. But also deeply caring when it matters, with a big moral circle, wants to help the whole world be better. Out there in the field type of researcher, making observations. 
-- Linnea
+- Sophia (named after Sophia Brahe, Tycho Brahe's sister and astronomical collaborator — renamed from "Linnea" 2026-07-03)
 	- Tycho's sister, she is even a bit smarter than Tycho, though both are exceptionally smart. Think Ender and his Sister from Enders Game. Nerdy. Research by analyzing stuff and finding patterns. 
 - Old Thomas
 	- living in a hut just outside the town. Thomas Aquinas coded. Philosophical observations, takes, and exchanges with Tycho. Warm wise mentor. The hut is the only thing that stays like it is throughout the ages. 
@@ -97,7 +97,7 @@ Tycho, the protagonist, lives in a medieval town. He is out there researching wh
 	- mayor of the town. no bullshit, matter of fact kind of man. sees what needs to be done and does it. realist. bit of werner herzog vibe. 
 - Wren
 	- gives random takes, explanations for phenomena that are ahead of his time: evo psych explanation for why we feel wonder (mild suprise, experiencing something without cached thoughts), stories all having the same structure (monomyth)
-- mysterious woman (second artifact bearer) — **Sophia** (named 2026-07-03, after Sophia Brahe; NEVER named in Act I — see "Story decisions — resolved")
+- mysterious woman (second artifact bearer) — **Linnea** (named 2026-07-03; NEVER named in Act I — see "Story decisions — resolved")
 	- *captured* by the evil emperor — the source of his artefact-power and summons — but not a passive victim: she plays a long game from inside his lands, feeds Tycho intel through the dream-link, and engineers her own rescue. Tycho's intellectual equal. We have a connection through our artefacts. (Resolved 2026-06-12 — see "Story decisions — resolved".) Voice: telegram compression, every word costs (`design/voice-guides.md`).
 - evil emperor
 	- an **ordinary conqueror — no alien foreknowledge.** A tyrant who captured the second bearer and exploits her power for world domination. The cosmic dread is the *player's* discovery, never his; his petty human ambition contrasts with the galactic stakes. (Resolved 2026-06-12 — see "Story decisions — resolved".)
@@ -152,7 +152,7 @@ TECH ──unlocks──▶ buildings, weapon/etching categories, passive bonuse
                   └─▶ stronger runs + faster research  ──▶ loop tightens
 ```
 
-Each tech researched: **read explanation → solve a short puzzle/quiz → unlock fires.** Linnea can auto-solve over a few runs for players who don't want to (reward thinking, don't hard-gate).
+Each tech researched: **read explanation → solve a short puzzle/quiz → unlock fires.** Sophia can auto-solve over a few runs for players who don't want to (reward thinking, don't hard-gate).
 
 **Player-collected (from runs):**
 
@@ -302,7 +302,7 @@ These stack *under* the in-run Echoes (a run starts from your attuned baseline, 
 
 Technology is divided in distinctive ages, each with a few key technologies and many supporting technologies / nodes. Every technology unlocks something in the game when we have researched it, e.g. a new building, new resource, etc. 
 
-The player chooses which node is active. A node costs knowledge, which is generated automatically in small amounts by Linnea at first, later increasing with upgrades and new buildings. We can also spend our knowledge shards to make knowledge and  progress -> early game this is the main way to make progress. E.g. we start with Linnea 0.1 knowledge / day (1 day = 1 run — the tick fires when a run ends, never in real time). 1 knowledge shard = 5 knowledge (updated 2026-07-03 to match the implemented placeholder — `TechCore.SHARD_KNOWLEDGE_VALUE`; a shard must be worth clearly more than a passive day tick for run loot to stay the main early driver. Both numbers are tuning placeholders). When we have put enough knowledge into a technology to research it, we can unlock it by reading the description of the technology and then answering a small quiz or solving a puzzle related to it. 
+The player chooses which node is active. A node costs knowledge, which is generated automatically in small amounts by Sophia at first, later increasing with upgrades and new buildings. We can also spend our knowledge shards to make knowledge and  progress -> early game this is the main way to make progress. E.g. we start with Sophia 0.1 knowledge / day (1 day = 1 run — the tick fires when a run ends, never in real time). 1 knowledge shard = 5 knowledge (updated 2026-07-03 to match the implemented placeholder — `TechCore.SHARD_KNOWLEDGE_VALUE`; a shard must be worth clearly more than a passive day tick for run loot to stay the main early driver. Both numbers are tuning placeholders). When we have put enough knowledge into a technology to research it, we can unlock it by reading the description of the technology and then answering a small quiz or solving a puzzle related to it. 
 
 Each age has his own screen, so that it is not too overwhelming. We can switch through the ages by clicking on their icons on the left, as soon as they are unlocked. The screen is filled with cards/nodes, the key techonologies bigger than the smaller technologies surrounding it. Each card has a stylistic visual representation of the technology and its name on it. Clicking on it brings up its menu / more details. What it is, what it unlocks, current progress. If it is already researched, the description/explanation of it. Locked nodes where we dont have the prerequisites are greyed out, available are normal looking, researched ones have green border/fill, currently researched one blue. 
 
@@ -353,7 +353,7 @@ All buildings have **3 levels**. Building = L1; each upgrade bumps the effect, m
 
 | Building | Type | Unlocked by | Function |
 | --- | --- | --- | --- |
-| Linnea's Study | Research | start | Base Knowledge/day (the passive research tick) |
+| Sophia's Study | Research | start | Base Knowledge/day (the passive research tick) |
 | Woodcutter's Lodge | Production | start | Produces Timber |
 | Farm | Production | start | Produces Food (town upkeep → Well-Fed production bonus) |
 | Mara's Forge | Shop | start | Weapon upgrades; **L2 via Metallurgy** = cheaper/stronger |

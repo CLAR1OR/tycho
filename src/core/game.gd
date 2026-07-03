@@ -169,7 +169,7 @@ func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> vo
 	var produced := TownCore.tick(SaveManager.state["town"], DataLoader.load_domain("buildings"))
 	for id: String in produced:
 		Ledger.add(id, float(produced[id]), "town-tick")
-	# Linnea works the ACTIVE node between runs; after enough runs she just solves
+	# Sophia works the ACTIVE node between runs; after enough runs she just solves
 	# it — reward thinking, never hard-gate on the puzzle (IC-10, PRD §7.8).
 	var active := str(SaveManager.state["tech"].get("active", ""))
 	if not active.is_empty():

@@ -1,7 +1,7 @@
 {
 	"id": "b5-the-first-wall",
 	"source": "spine",
-	"speakers": ["herzog", "linnea", "tycho"],
+	"speakers": ["herzog", "sophia", "tycho"],
 	"priority": 95,
 	"force_play": true,
 	"conditions": [{"tech": "med-masonry-arch"}],
@@ -11,7 +11,7 @@
 		"lines": [
 			{"who": "", "text": "The rotten palisade comes down in an afternoon. The wall goes up over a week — grey stone out of the new quarry, wedge-cut, course on course. Where the road passes through, the masons raise a gateway: a ring of stones, and a keystone dropped home at the top."},
 			{"who": "herzog", "text": "…Huh. It holds."},
-			{"who": "linnea", "text": "It holds because every stone in that ring is being squeezed, and squeezing is the one thing stone can't lose at. Ask it to bend and it snaps. We stopped asking."},
+			{"who": "sophia", "text": "It holds because every stone in that ring is being squeezed, and squeezing is the one thing stone can't lose at. Ask it to bend and it snaps. We stopped asking."},
 			{"who": "herzog", "text": "I understood 'it holds'."},
 			{"who": "tycho", "text": "That's the part that matters."},
 			{"who": "", "text": "For the first time since the artefact, the town looks different from the hill: a stone ring where the wooden one stood. It is a small wall. It is a beginning."}

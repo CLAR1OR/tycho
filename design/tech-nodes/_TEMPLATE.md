@@ -31,7 +31,7 @@ The readable real history + hard science the player sees when the node is ready 
 - **Win condition:** what counts as solved.
 - **Principle tested:** the true idea the puzzle forces them to grasp.
 - **Failure feedback:** what wrong attempts show (teach through failure).
-- **Difficulty / graceful path:** Linnea's hints (escalating) + auto-solve after ~N runs, with her actual lines. Reward thinking; never hard-gate.
+- **Difficulty / graceful path:** Sophia's hints (escalating) + auto-solve after ~N runs, with her actual lines. Reward thinking; never hard-gate.
 
 ## 6. The "aha" (post-solve)
 The payoff reveal delivered *after* solving — the deeper unity or "oh, THAT's why." The "release" of the cerebral beat. This is the soul; spend effort here.

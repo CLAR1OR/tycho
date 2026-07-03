@@ -7,7 +7,7 @@ class_name TechCore
 ##
 ## Flow: pick an active node → pour Knowledge (+ Knowledge Shards) into it →
 ## at cost threshold it's READY → read explanation → solve puzzle/quiz → complete()
-## → the typed unlocks fire (dispatched by the caller). Linnea auto-solves the
+## → the typed unlocks fire (dispatched by the caller). Sophia auto-solves the
 ## active node after `auto_solve_after_runs` runs (IC-10: reward thinking, never
 ## hard-gate on it).
 
@@ -77,7 +77,7 @@ static func tick_auto_solve(tech: Dictionary, id: String) -> Dictionary:
 	return out
 
 
-## Linnea finishes it for you once the counter reaches the node's threshold —
+## Sophia finishes it for you once the counter reaches the node's threshold —
 ## but only when the node is READY (fully funded); reading/solving is what's
 ## being waived, not the Knowledge cost.
 static func auto_solve_ready(def: Dictionary, tech: Dictionary) -> bool:

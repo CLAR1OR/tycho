@@ -17,7 +17,7 @@ UI: one small **Well-Fed indicator** on the day-tick summary / town HUD (a full 
 
 ## Why this is on-theme (the rational-fiction dividend)
 
-Well-Fed boosting *Knowledge* teaches a true thing: **agricultural surplus is the precondition of scholarship** — calories fund specialists; the plow pays for the scribe. This is real economic history delivered as a game rule, and it retroactively gives the **Three-Field Rotation** tech node (Farm boost) a *felt* payoff: better rotation → reliable surplus → the town thinks faster. Dialogue hooks: Herzog on granaries ("An army marches on its stomach. So does a library."), Linnea on who fed the monks who copied the books.
+Well-Fed boosting *Knowledge* teaches a true thing: **agricultural surplus is the precondition of scholarship** — calories fund specialists; the plow pays for the scribe. This is real economic history delivered as a game rule, and it retroactively gives the **Three-Field Rotation** tech node (Farm boost) a *felt* payoff: better rotation → reliable surplus → the town thinks faster. Dialogue hooks: Herzog on granaries ("An army marches on its stomach. So does a library."), Sophia on who fed the monks who copied the books.
 
 ## The Act II fold-forward (the real prepare-for)
 

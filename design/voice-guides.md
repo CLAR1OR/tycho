@@ -13,13 +13,13 @@
    - No mirrored aphorisms ("X is Y. But Y is Z."). Nobody speaks like that.
    - No line that would work as an inspirational post. If it sounds deep out of context, cut it or dirty it up.
    - Cleverness only where the *character* would reach for it (see humor map), never because the writer could.
-4. **Humor map:** Tycho and Mara joke on purpose (spice, not sauce — not every line). Linnea is dry. Herzog is funny only by omission. Thomas has gentle irony. Tilly is never witty; her comedy is earnestness. Wren is funny-strange, not funny-haha.
+4. **Humor map:** Tycho and Mara joke on purpose (spice, not sauce — not every line). Sophia is dry. Herzog is funny only by omission. Thomas has gentle irony. Tilly is never witty; her comedy is earnestness. Wren is funny-strange, not funny-haha.
 5. **The cover-the-name test:** every character has a syntactic tell (below). A drafted line should identify its speaker with the name hidden. If it could be anyone, it's no one — redraft.
-6. **Deniability vocabulary.** Words nobody says (pre-reveal, any character except Wren/Sophia per their licenses): *data, percent, energy* (physics sense), *information, system, signal*. The ideas can be modern; the words never are.
+6. **Deniability vocabulary.** Words nobody says (pre-reveal, any character except Wren/Linnea per their licenses): *data, percent, energy* (physics sense), *information, system, signal*. The ideas can be modern; the words never are.
 
 ## Tech-unlocked vocabulary
 
-The town's *language* modernizes with its tech (a quiet reward for researching). Applies to town characters; **Wren is exempt** (his ahead-of-his-time license is locked) and **Sophia is exempt** (different world). Used as a review checklist: a snippet gated on/after a tech may use its column; a snippet reachable before it may not.
+The town's *language* modernizes with its tech (a quiet reward for researching). Applies to town characters; **Wren is exempt** (his ahead-of-his-time license is locked) and **Linnea is exempt** (different world). Used as a review checklist: a snippet gated on/after a tech may use its column; a snippet reachable before it may not.
 
 | Tech researched | Before | After |
 | --- | --- | --- |
@@ -44,10 +44,10 @@ Format per character: **stance** (how they meet the world) · **tell** (the synt
 - **Approved:**
   - (death return) "Back again. Made it to the third room this time, so, progress."
   - (handing over shards) "Here. They hum when you hold them. If yours starts glowing, that's normal. Probably."
-  - (serious) "Someone built that place, Linnea. Rooms don't sort themselves by how hard they kill you."
+  - (serious) "Someone built that place, Sophia. Rooms don't sort themselves by how hard they kill you."
   - (bark) "One more run. Then dinner. Possibly in that order."
 
-### Linnea (sister; the method)
+### Sophia (sister; the method)
 - **Stance:** serious, dedicated to the craft and to bettering everyone's life. Even smarter than Tycho and not performing it.
 - **Tell:** precision that sharpens instead of softens. Exact hedges. Excitement shows as speed, never volume. Teases Tycho by correcting him.
 - **Do:** ask for the plain version; quantify; care about him sideways (chair, notes, food).
@@ -65,7 +65,7 @@ Format per character: **stance** (how they meet the world) · **tell** (the synt
 - **Approved:**
   - "You died and came back. Again. So tell me, what kind of thing keeps a man, and why would it bother?"
   - "People are calling your portal a miracle. Maybe. But a miracle that runs on schedule, twice a day. What would you call that?"
-  - (on Sophia, later) "You dream of her and she dreams of you. Two lamps don't share a flame by accident, boy."
+  - (on Linnea, later) "You dream of her and she dreams of you. Two lamps don't share a flame by accident, boy."
 
 ### Tilly (guard → general; competence)
 - **Stance:** always eager, earnest to a fault, growing in competence across the act. Comedy only ever from earnestness.
@@ -107,8 +107,8 @@ Format per character: **stance** (how they meet the world) · **tell** (the synt
   - "...same story though, every one of them. Fellow leaves home, finds trouble, comes back different. Count them yourself if you don't believe me."
   - "You ever notice Thomas's hut doesn't age? No. Nobody notices. That's what's odd about it."
 
-### Sophia (the second bearer — UNNAMED in Act I)
-- **Name rule (decided 2026-07-03):** her name is **Sophia** (after Sophia Brahe, Tycho Brahe's sister-collaborator) — but it is **never spoken or shown in Act I**. `sophia` is the data id; UI/portraits label her "the woman" or nothing. **The name arrives with Act II** (candidate beat: the first thing she sends when the dream-link channel improves is one word, her name).
+### Linnea (the second bearer — UNNAMED in Act I)
+- **Name rule (decided 2026-07-03; names swapped to the historical mapping the same day):** her name is **Linnea** — but it is **never spoken or shown in Act I**. `linnea` is the data id; UI/portraits label her "the woman" or nothing. **The name arrives with Act II** (candidate beat: the first thing she sends when the dream-link channel improves is one word, her name). The sister carries the historical name: **Sophia**, after Sophia Brahe, Tycho Brahe's actual sister and astronomical collaborator.
 - **Stance:** every word costs her. Captured but executing a plan; Tycho's intellectual equal.
 - **Tell:** telegram compression. Imperatives, information density, no pleasantries. Reads as dream-logic pre-reveal, as *bandwidth* post-reveal (the same deniability trick as the strata and the etchings).
 - **Do:** ration words; make each transmission actionable or orienting; let competence show through economy.

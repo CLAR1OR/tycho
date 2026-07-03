@@ -19,10 +19,10 @@
 Learn *why* an arch can hold up a cathedral when a flat stone can't span a doorway — and unlock stone construction (Quarry + the first Town Wall).
 
 ## 3. Framing / trigger
-Available once Arithmetic & Zero is researched (the tree is open by then — Linnea unlocked it after the third boss). The motivation is concrete and pulls toward the strategy seed:
+Available once Arithmetic & Zero is researched (the tree is open by then — Sophia unlocked it after the third boss). The motivation is concrete and pulls toward the strategy seed:
 
 - **Herzog (mayor):** "The palisade's half-rot and a hard winter from falling over. Wood won't hold what's coming. We need *stone*." *(He doesn't yet know what's coming. The player will.)*
-- **Linnea:** "Stone's easy — you just stack it. The trouble is the *gateway*. Lay a stone flat across the opening and it cracks under its own roof. There's a trick to it, and I think the shards have the shape of it. Let me show you."
+- **Sophia:** "Stone's easy — you just stack it. The trouble is the *gateway*. Lay a stone flat across the opening and it cracks under its own roof. There's a trick to it, and I think the shards have the shape of it. Let me show you."
 
 Tycho-the-observer hook (optional flavor): Tycho recalls the cave he fell into — a natural rock span overhead that *didn't* fall. "Why does the cave hold up its own ceiling, when our doorway lintel won't?"
 
@@ -55,11 +55,11 @@ A small, scripted **build-the-gateway** sandbox (not a full physics sim — see 
 - **Principle tested:** stone fails in tension, not compression; an arch routes load as pure compression; the ring is only stable once closed by the keystone; arches thrust *outward* and must be braced.
 - **Failure feedback (teach through failure):** the lintel cracks on its underside; the unkeyed half-arch falls; the unbraced arch splays at the feet. Each failure shows *where* and *why*, not just "wrong."
 
-- **Difficulty / graceful path (Linnea's hints, 1 per run; auto-solves after ~5):**
+- **Difficulty / graceful path (Sophia's hints, 1 per run; auto-solves after ~5):**
   1. "A flat stone over a gap snaps along its *underside* — that's where it's being pulled apart, and stone hates being pulled. Can you arrange the stones so they're only ever *pushed*?"
   2. "Wedges. If each stone is a wedge leaning on the next, the weight presses them together instead of bending any one of them. But a ring isn't a ring until it's closed."
   3. "Set the top wedge — the keystone — *last*; that locks it. Then mind the feet: a finished arch shoves outward. Plant something heavy on each side to take the shove."
-  - **Auto-solve (after ~5 runs):** *Linnea, at the riddle-wall in your home* — "Here — I worked it through. Wedge-stones, keystone last, brace the feet, and point the arch to spare the buttresses. The gate'll hold. Go raise your wall." *(Unlock granted; no delight lost — she shows her reasoning, so even the auto-path teaches.)*
+  - **Auto-solve (after ~5 runs):** *Sophia, at the riddle-wall in your home* — "Here — I worked it through. Wedge-stones, keystone last, brace the feet, and point the arch to spare the buttresses. The gate'll hold. Go raise your wall." *(Unlock granted; no delight lost — she shows her reasoning, so even the auto-path teaches.)*
 
 ## 6. The "aha" (post-solve)
 *Delivered as the gateway holds and light catches the new stone.*
@@ -85,7 +85,7 @@ The builders raising the great cathedrals don't have this. They work by inherite
 - The puzzle is a **scripted state machine, not a physics simulation** — three discrete beats with pre-baked "hold / crack / splay" outcomes triggered by the player's choices. Cheap to build, fully art-directable, and it can't get into ambiguous physics states. (Vibecode-friendly; do NOT reach for a rigid-body sim.)
 - **Assets:** gateway frame; a set of flat-slab and wedge-voussoir pieces; keystone; centering (wooden frame); abutment/buttress block; a "wall section" load; crack decal; splay/collapse animation (can be simple). The cathedral/light "aha" moment can be a painterly 2D still (matches the static-screens decision) rather than 3D.
 - **UI:** drag-place stones into snap slots; a "Load it" test button; profile toggle (round ↔ pointed) for the optional mastery beat; the explanation and "aha" use the standard tech-node reading panel.
-- **Reusable pieces this node establishes:** the tech-node reading panel, the hint/auto-solve flow (Linnea, 1/run, full solve after N), the post-solve "aha" reveal screen, and the "town silhouette changes on unlock" hook. Build these generically — every node reuses them.
+- **Reusable pieces this node establishes:** the tech-node reading panel, the hint/auto-solve flow (Sophia, 1/run, full solve after N), the post-solve "aha" reveal screen, and the "town silhouette changes on unlock" hook. Build these generically — every node reuses them.
 
 ## 10. Open questions / tuning
 - Knowledge cost (40) and auto-solve threshold (~5 runs) are placeholders — tune in playtest.

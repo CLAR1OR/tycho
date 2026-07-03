@@ -73,8 +73,8 @@ Enemy telegraph and body colors are **fixed across all strata**; every floor pal
 - **Difficulty tiers:** the space *reconfiguring* — trial intensity raised for a host that keeps passing. Same strata, no new lore needed.
 - **Contextual dialogue hooks** (candidates for the snippet pool):
   - Wren: "The deeper halls have straighter walls, you say. Nature doesn't file her corners — so who does?"
-  - Linnea (stratum first-visit reports): "You said the third level *hums*? Rock doesn't hum, Tycho. Instruments hum."
-  - Linnea, floor 4: "Identical, every arch? I couldn't draw two identical arches if I traced them. Whoever built that doesn't *draw* — it *repeats*."
+  - Sophia (stratum first-visit reports): "You said the third level *hums*? Rock doesn't hum, Tycho. Instruments hum."
+  - Sophia, floor 4: "Identical, every arch? I couldn't draw two identical arches if I traced them. Whoever built that doesn't *draw* — it *repeats*."
   - Thomas, late: "A trial has a shape to it. And where there is a shape, there is a hand that shaped it." *(use at most one of these per act — the deniability rule applies to dialogue too)*
 
 ## Cost envelope (why this doesn't reopen the art risk)

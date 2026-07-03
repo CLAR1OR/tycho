@@ -110,7 +110,7 @@ One generic evaluator reads these; new achievements are data entries. Unlocks li
 ```jsonc
 // in save: instantiated once in v1, N times in Act II
 { "id": "home", "name": "…", "age": 1,
-  "buildings": [{"id": "linneas-study", "level": 1}],
+  "buildings": [{"id": "sophias-study", "level": 1}],
   "map_pos": null }                  // null until the strategy layer's overworld exists
 
 // data/buildings/<id>.json
@@ -129,12 +129,12 @@ One generic evaluator reads these; new achievements are data entries. Unlocks li
 ```jsonc
 // data/dialogue/<id>.json
 { "id": "c4-first-dream", "source": "spine",      // spine|arc|contextual|bark
-  "speakers": ["tycho", "linnea"],
+  "speakers": ["tycho", "sophia"],
   "priority": 100, "once": true, "cooldown_runs": 0,
   "conditions": [ {"counter": "codex_shards", "gte": 2} ],   // vocabulary per act1-story-beats.md — flags, counters, tech, economy, has, talked_to
   "force_play": true,                              // spine cutscene-beats interrupt; max 1 per town visit
   "sets_flag": "c4",
-  "scene": {"kind": "cutscene", "stills": ["…"], "lines": [{"who": "linnea", "text": "…"}]}   // or {"kind": "talk", lines:[…]} — supports 3+ speakers
+  "scene": {"kind": "cutscene", "stills": ["…"], "lines": [{"who": "sophia", "text": "…"}]}   // or {"kind": "talk", lines:[…]} — supports 3+ speakers
 }
 ```
 

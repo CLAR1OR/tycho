@@ -15,7 +15,7 @@ func _save_state() -> Dictionary:
 		},
 		"tech": {"researched": ["med-arithmetic-zero"], "in_progress": {"med-masonry-arch": 5.0}},
 		"ledger": {"gold": 80.0},
-		"town": {"age": 1, "buildings": [{"id": "linneas-study", "level": 2}]},
+		"town": {"age": 1, "buildings": [{"id": "sophias-study", "level": 2}]},
 		"codex": {"shards": 2},
 	}
 
@@ -43,7 +43,7 @@ func test_condition_vocabulary() -> void:
 	check(not DialogueCore.eval_condition({"age": 2}, s), "age too low")
 	check(DialogueCore.eval_condition({"resource": "gold", "gte": 80}, s), "resource gte")
 	check(not DialogueCore.eval_condition({"resource": "gold", "gte": 81}, s), "resource miss")
-	check(DialogueCore.eval_condition({"building": "linneas-study", "gte": 2}, s), "building level")
+	check(DialogueCore.eval_condition({"building": "sophias-study", "gte": 2}, s), "building level")
 	check(not DialogueCore.eval_condition({"building": "quarry", "gte": 1}, s), "missing building")
 	check(DialogueCore.eval_condition({"has": "resonance-ore"}, s), "has-flag pickup")
 	check(not DialogueCore.eval_condition({"has": "stone"}, s), "never picked up")
@@ -81,10 +81,10 @@ func test_bark_cooldown() -> void:
 
 func test_arc_no_back_to_back() -> void:
 	var s := _save_state()  # runs = 10
-	var beat := _def("linnea-arc-3", {"source": "arc", "speakers": ["linnea"]})
-	(s["story"]["arc_last"] as Dictionary)["linnea"] = 10
+	var beat := _def("sophia-arc-3", {"source": "arc", "speakers": ["sophia"]})
+	(s["story"]["arc_last"] as Dictionary)["sophia"] = 10
 	check(not DialogueCore.eligible(beat, s), "same-arc beat blocked this run")
-	(s["story"]["arc_last"] as Dictionary)["linnea"] = 9
+	(s["story"]["arc_last"] as Dictionary)["sophia"] = 9
 	check(DialogueCore.eligible(beat, s), "one run later the arc may continue")
 
 

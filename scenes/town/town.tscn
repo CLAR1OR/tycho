@@ -194,7 +194,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 2)
 collision_layer = 0
 collision_mask = 1
 monitorable = false
-metadata/building_id = "linneas-study"
+metadata/building_id = "sophias-study"
 
 [node name="PlotMarker" type="MeshInstance3D" parent="BuildPlot"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
@@ -247,25 +247,25 @@ text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="LinneasDesk" type="Area3D" parent="."]
+[node name="SophiasDesk" type="Area3D" parent="."]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -8)
 collision_layer = 0
 collision_mask = 1
 monitorable = false
 
-[node name="Mesh" type="MeshInstance3D" parent="LinneasDesk"]
+[node name="Mesh" type="MeshInstance3D" parent="SophiasDesk"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
 mesh = SubResource("DeskMesh")
 surface_material_override/0 = SubResource("DeskMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="LinneasDesk"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SophiasDesk"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="LinneasDesk"]
+[node name="Label" type="Label3D" parent="SophiasDesk"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
 billboard = 1
-text = "Linnea's Desk — E to research"
+text = "Sophia's Desk — E to research"
 font_size = 40
 outline_size = 8
 

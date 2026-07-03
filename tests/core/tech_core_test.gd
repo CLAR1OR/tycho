@@ -14,7 +14,7 @@ func test_tech_domain_loads() -> void:
 		var puzzle: Dictionary = defs["med-masonry-arch"]["puzzle"]
 		check_eq(str(puzzle.get("kind", "")), "interactive", "masonry carries the real puzzle now")
 		check_eq(str(puzzle.get("scene", "")), "puzzle_arch", "masonry points at the arch scene")
-		check((puzzle["data"]["hints"] as Array).size() >= 3, "Linnea's hints are authored")
+		check((puzzle["data"]["hints"] as Array).size() >= 3, "Sophia's hints are authored")
 	if defs.has("med-arithmetic-zero"):
 		var quiz: Dictionary = defs["med-arithmetic-zero"]["puzzle"]
 		check_eq(str(quiz.get("kind", "")), "quiz", "arithmetic keeps the quiz form")
@@ -67,7 +67,7 @@ func test_auto_solve() -> void:
 		tech = TechCore.tick_auto_solve(tech, "med-arithmetic-zero")
 	check(not TechCore.auto_solve_ready(def, tech), "unfunded node never auto-solves")
 	tech = TechCore.invest(tech, def, 20.0)["tech"]
-	check(TechCore.auto_solve_ready(def, tech), "funded + 5 runs → Linnea solves it")
+	check(TechCore.auto_solve_ready(def, tech), "funded + 5 runs → Sophia solves it")
 	check(str(TechCore.tick_auto_solve(tech, "")) == str(tech), "no active node → no tick")
 
 
@@ -81,7 +81,7 @@ func test_shards_needed() -> void:
 
 func test_building_unlock_gate() -> void:
 	var bdefs := DataLoader.load_domain("buildings")
-	check(TownCore.is_unlocked(bdefs["linneas-study"], []), "ungated building always available")
+	check(TownCore.is_unlocked(bdefs["sophias-study"], []), "ungated building always available")
 	check(not TownCore.is_unlocked(bdefs["quarry"], []), "quarry locked without masonry")
 	check(TownCore.is_unlocked(bdefs["quarry"], ["med-masonry-arch"]), "quarry opens with masonry")
 	check(not TownCore.is_unlocked(bdefs["town-walls"], []), "town-walls locked without masonry")

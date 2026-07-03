@@ -39,7 +39,7 @@ The Cartography tech node ("maps as models — reveals dungeon layout/hints") ge
 
 ### Diegetic frame (deniability rule applies)
 
-The learning-space *offers* trials — the sigils are etching-glyphs Tycho learns to read (first encounter of each gets a one-line tooltip; after that, icon only). The swarm pays the host in what it chases — which is, quietly, a reward schedule shaping varied behavior. Dialogue hook candidates (late-act, use sparingly): Linnea — "It pays you in whatever you're short of, have you noticed? That's not treasure, that's *provisioning*."
+The learning-space *offers* trials — the sigils are etching-glyphs Tycho learns to read (first encounter of each gets a one-line tooltip; after that, icon only). The swarm pays the host in what it chases — which is, quietly, a reward schedule shaping varied behavior. Dialogue hook candidates (late-act, use sparingly): Sophia — "It pays you in whatever you're short of, have you noticed? That's not treasure, that's *provisioning*."
 
 ### The Echo cadence change (affects current code — deferred, but decided)
 
