@@ -90,6 +90,36 @@ const SCHEMAS: Dictionary = {
 }
 
 
+# The SFX map (design/audio.md) is deliberately ONE file mapping id -> params —
+# a sound entry has no life of its own, and hand-balancing a mix wants one page.
+const SFX_MAP_PATH := "res://data/audio/sfx-map.json"
+const SFX_SPEC: Dictionary = {
+	"file": {"type": "string", "required": true},        # res:// path to the stream
+	"volume_db": {"type": "float"},                      # placeholder mix values
+	"pitch_jitter": {"type": "float"},                   # ± fraction, anti-repetition
+	"bus": {"type": "string", "one_of": ["Music", "SFX", "UI"]},  # default SFX
+}
+
+
+## Load + validate data/audio/sfx-map.json: {id: {file, volume_db, pitch_jitter,
+## bus}}. Invalid entries are skipped LOUDLY, like load_domain.
+static func load_sfx_map() -> Dictionary:
+	var out := {}
+	var parsed := _read_entry(SFX_MAP_PATH)
+	for id: Variant in parsed:
+		var where := "%s#%s" % [SFX_MAP_PATH, id]
+		if not (parsed[id] is Dictionary):
+			push_error("DataLoader: %s must be an object" % where)
+			continue
+		var errors := DataValidator.validate(parsed[id], SFX_SPEC, where)
+		if not errors.is_empty():
+			for e in errors:
+				push_error("DataLoader: " + e)
+			continue
+		out[str(id)] = parsed[id]
+	return out
+
+
 ## Load every entry of a domain: {id: entry}. Invalid files are skipped with errors.
 static func load_domain(domain: String) -> Dictionary:
 	var out := {}

@@ -58,6 +58,7 @@ func present(offer_ids: Array[String], on_pick: Callable) -> void:
 
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER)
 	get_tree().paused = true
+	Sfx.play("echo-open")
 	# Recenter once the container has computed its real size — a freshly built
 	# Control has no rect yet (the tuning-panel layout lesson).
 	await get_tree().process_frame
@@ -72,6 +73,7 @@ func pick(index: int) -> void:
 		return
 	var id := _ids[index]
 	var cb := _on_pick
+	Sfx.play("echo-pick")
 	get_tree().paused = false
 	queue_free()
 	if cb.is_valid():

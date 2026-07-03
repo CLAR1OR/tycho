@@ -1,0 +1,17 @@
+{
+  "hit-1": {"file": "res://assets/audio/sfx/hit-1.wav", "volume_db": -6.0, "pitch_jitter": 0.08},
+  "hit-2": {"file": "res://assets/audio/sfx/hit-2.wav", "volume_db": -6.0, "pitch_jitter": 0.08},
+  "hit-finisher": {"file": "res://assets/audio/sfx/hit-finisher.wav", "volume_db": -3.0, "pitch_jitter": 0.06},
+  "kill": {"file": "res://assets/audio/sfx/kill.wav", "volume_db": -4.0, "pitch_jitter": 0.08},
+  "player-hurt": {"file": "res://assets/audio/sfx/player-hurt.wav", "volume_db": -4.0, "pitch_jitter": 0.05},
+  "dash": {"file": "res://assets/audio/sfx/dash.wav", "volume_db": -10.0, "pitch_jitter": 0.1},
+  "arrow-loose": {"file": "res://assets/audio/sfx/arrow-loose.wav", "volume_db": -8.0, "pitch_jitter": 0.08},
+  "arrow-impact": {"file": "res://assets/audio/sfx/arrow-impact.wav", "volume_db": -8.0, "pitch_jitter": 0.08},
+  "pickup": {"file": "res://assets/audio/sfx/pickup.wav", "volume_db": -12.0, "pitch_jitter": 0.04},
+  "echo-open": {"file": "res://assets/audio/sfx/echo-open.wav", "volume_db": -8.0, "pitch_jitter": 0.0, "bus": "UI"},
+  "echo-pick": {"file": "res://assets/audio/sfx/echo-pick.wav", "volume_db": -8.0, "pitch_jitter": 0.0, "bus": "UI"},
+  "door-open": {"file": "res://assets/audio/sfx/door-open.wav", "volume_db": -6.0, "pitch_jitter": 0.0},
+  "boss-kill": {"file": "res://assets/audio/sfx/boss-kill.wav", "volume_db": -2.0, "pitch_jitter": 0.0},
+  "ui-click": {"file": "res://assets/audio/sfx/ui-click.wav", "volume_db": -14.0, "pitch_jitter": 0.0, "bus": "UI"},
+  "day-chime": {"file": "res://assets/audio/sfx/day-chime.wav", "volume_db": -8.0, "pitch_jitter": 0.0, "bus": "UI"}
+}

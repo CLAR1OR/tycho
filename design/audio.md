@@ -1,6 +1,6 @@
 # Audio — pipeline & integration
 
-> Closes the "budgeted but no pipeline" gap: ~10 music tracks + ~120 SFX exist in `content-budget.md` with no stated production path. **Drafted 2026-07-03.** Decisions here; the first implementation pass is specced at the bottom (deliberately not built yet — see the note). Philosophy matches the asset rule: **placeholder-first, never block a system on final audio** — and one addition: **the combat-feel gate should not be judged silent.** Hit/dash/kill sounds are a large fraction of perceived game feel; hitstop and screen-shake are currently compensating for a missing channel. Get placeholder SFX in before calling the 20th-clear bar.
+> Closes the "budgeted but no pipeline" gap: ~10 music tracks + ~120 SFX exist in `content-budget.md` with no stated production path. **Drafted 2026-07-03; the SFX half of the first chunk is BUILT 2026-07-04** (buses, `Sfx` autoload over pure `SfxCore`, `data/audio/sfx-map.json`, all phase-1 hooks, 15 agent-synthesized placeholder wavs — see the chunk spec below for what's done vs. open). Philosophy matches the asset rule: **placeholder-first, never block a system on final audio** — and one addition: **the combat-feel gate should not be judged silent.** Hit/dash/kill sounds are a large fraction of perceived game feel; hitstop and screen-shake are currently compensating for a missing channel. Placeholder SFX are now in — the 20th-clear bar can be judged with sound.
 
 ---
 
@@ -38,12 +38,14 @@
 
 The natural first audio chunk touches `project.godot` (bus layout, autoload registration) and the combat scenes — and at drafting time the working copy had **uncommitted human edits to `project.godot` and `feel_room.tscn`**. *(Resolved 2026-07-03: those edits turned out to be the gdUnit4 plugin install + an editor resave, both committed — the blocker is gone and the chunk below is buildable as-is.)*
 
-## The first implementation chunk (spec for the next agent)
+## The first implementation chunk (status 2026-07-04)
 
-1. Human (once): download 2–3 Kenney CC0 packs → drop into `assets/audio/sfx/raw/`; note pack names in `SOURCES.md`.
-2. Agent: bus layout; `Sfx` autoload + `data/audio/sfx-map.json` (DataLoader spec + validation); wire the phase-1 hook points; pitch jitter; a headless smoke check that every mapped file exists + loads.
-3. Agent: `Music` autoload + town/dungeon/boss placeholder tracks (FreePD) with crossfade; volumes in profile settings (data only — the settings UI can lag).
-4. Human: run the feel sandbox with sound; re-judge the 20th-clear bar. **The gate verdict should postdate this chunk.**
+1. Human (once): download 2–3 Kenney CC0 packs → drop into `assets/audio/sfx/raw/`; note pack names in `SOURCES.md`. **Still open** — meanwhile the 15 placeholder wavs in `assets/audio/sfx/` are **agent-synthesized** (deterministic script, the jfxr register this doc sanctions; provenance in `SOURCES.md`). Replacing one = editing its `sfx-map.json` row.
+2. Agent: bus layout; `Sfx` autoload + `data/audio/sfx-map.json` (DataLoader spec + validation); wire the phase-1 hook points; pitch jitter; a headless check that every mapped file exists + loads. **DONE 2026-07-04** — `default_bus_layout.tres` (Master→Music/SFX/UI); pure `src/core/sfx_core.gd` (resolve + jitter math) under thin `src/autoload/sfx.gd` (3D/2D player pools, PROCESS_MODE_ALWAYS so pause-panel UIs still click; pickup + boss-kill ride EventBus); `DataLoader.load_sfx_map()` (single-file map — a deliberate exception to one-file-per-entity: a mix wants one page); hooks: combo hits ×3 + kill (beside hitstop in `_apply_attack_hits`), dash, player-hurt, arrow loose/impact, exit-portal open, echo offer open/pick, day-tick chime, ui-click via the three panels' `_button` factories; tests in `tests/core/sfx_core_test.gd` incl. the exists+loads sweep and a feel-critical-ids guard.
+3. Agent: `Music` autoload + town/dungeon/boss placeholder tracks (FreePD) with crossfade; volumes in profile settings (data only — the settings UI can lag). **Still open — the next audio chunk.**
+4. Human: run the feel sandbox with sound; re-judge the 20th-clear bar. **The gate verdict should postdate this chunk.** Ready now — F6 the sandbox; dial a sound in `data/audio/sfx-map.json` (volume_db/pitch_jitter/file), no code.
+
+Known shutdown notice: sounds mid-play at quit print "N resources still in use at exit" — AudioServer playback release order, engine noise, not a leak (documented in `sfx.gd`).
 
 ## Open questions
 

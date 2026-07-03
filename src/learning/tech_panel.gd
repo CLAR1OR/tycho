@@ -281,6 +281,7 @@ func _reading(text: String) -> void:
 func _button(text: String, action: Callable) -> void:
 	var b := Button.new()
 	b.text = text
+	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
 	b.pressed.connect(action)
 	_rows.add_child(b)
 

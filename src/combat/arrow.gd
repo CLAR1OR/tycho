@@ -43,4 +43,5 @@ func _on_body_entered(body: Node) -> void:
 	if body.has_method("take_damage"):
 		body.take_damage(_damage, global_position)
 		CombatFX.damage_number(get_parent(), body.global_position + Vector3.UP * 1.6, _damage, _hit_color)
+	Sfx.play("arrow-impact", global_position)
 	queue_free()  # also dies on hitting a wall / cover (which has no take_damage)

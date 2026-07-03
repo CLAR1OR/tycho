@@ -210,6 +210,7 @@ func _fire_arrow() -> void:
 	var dir := _flat(-global_transform.basis.z).normalized()
 	arrow.global_position = global_position + Vector3.UP * 0.9 + dir * 0.8
 	arrow.setup(dir, _cur_damage, arrow_speed, Color.WHITE)
+	Sfx.play("arrow-loose", global_position)
 
 
 # --- Actions ----------------------------------------------------------------
@@ -224,6 +225,7 @@ func _start_dash() -> void:
 	_dash_cd = dash_cooldown
 	_iframe_t = dash_iframes
 	_ghost_t = 0.0  # first after-image immediately
+	Sfx.play("dash", global_position)
 
 
 func _start_attack() -> void:
@@ -307,18 +309,30 @@ func _end_attack() -> void:
 
 func _apply_attack_hits() -> void:
 	var stop := 0.0
+	var landed := false
+	var any_kill := false
+	var hit_pos := global_position
 	for body in _hitbox.get_overlapping_bodies():
 		if body in _hit_this_swing:
 			continue
 		if body.has_method("take_damage"):
 			_hit_this_swing.append(body)
 			var killed: bool = body.take_damage(_cur_damage, global_position)
+			landed = true
+			any_kill = any_kill or killed
+			hit_pos = body.global_position
 			CombatFX.slash(get_parent(), body.global_position + Vector3.UP * 0.6)
 			var col := Color(1.0, 0.85, 0.3) if _combo_index == 2 else Color(1.0, 1.0, 1.0)
 			CombatFX.damage_number(get_parent(), body.global_position + Vector3.UP * 1.4, _cur_damage, col)
 			# Hitstop: kills freeze longest, then finishers, then normal hits.
 			var dur := CombatFX.hitstop_finisher if _combo_index == 2 else CombatFX.hitstop_light
 			stop = maxf(stop, CombatFX.hitstop_kill if killed else dur)
+	if landed:
+		# The sound IS part of the hit weight (audio.md) — one per swing-frame,
+		# scaled with the combo like hitstop; kills add their own layer.
+		Sfx.play(["hit-1", "hit-2", "hit-finisher"][_combo_index], hit_pos)
+		if any_kill:
+			Sfx.play("kill", hit_pos)
 	if stop > 0.0:
 		CombatFX.hitstop(self, stop)
 
@@ -396,6 +410,7 @@ func take_damage(amount: int, _from: Vector3 = Vector3.ZERO) -> void:
 	health = maxi(0, health - amount)
 	_iframe_t = maxf(_iframe_t, hit_grace)  # post-hit grace: crowds can't double-tap
 	health_changed.emit(health, max_health)
+	Sfx.play("player-hurt", global_position)
 	_flash(Color(1.0, 0.3, 0.3))
 	if health == 0:
 		died.emit()

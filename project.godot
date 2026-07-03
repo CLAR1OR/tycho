@@ -22,6 +22,7 @@ EventBus="*res://src/autoload/event_bus.gd"
 Ledger="*res://src/autoload/ledger.gd"
 SaveManager="*res://src/autoload/save_manager.gd"
 RunState="*res://src/autoload/run_state.gd"
+Sfx="*res://src/autoload/sfx.gd"
 
 [display]
 

@@ -90,6 +90,7 @@ func _slot_row(slot: int, entry: Dictionary) -> Control:
 func _button(text: String, action: Callable) -> Button:
 	var b := Button.new()
 	b.text = text
+	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
 	b.pressed.connect(action)
 	return b
 

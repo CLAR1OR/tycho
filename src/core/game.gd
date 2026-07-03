@@ -166,6 +166,7 @@ func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> vo
 		SaveManager.state["codex"]["shards"] = shards
 		EventBus.codex_shard_added.emit(shards)
 	# The day tick: 1 day = 1 run, win OR die (locked decision, PRD §6.2).
+	Sfx.play("day-chime")
 	var produced := TownCore.tick(SaveManager.state["town"], DataLoader.load_domain("buildings"))
 	for id: String in produced:
 		Ledger.add(id, float(produced[id]), "town-tick")

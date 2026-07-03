@@ -162,6 +162,7 @@ func open_exit() -> void:
 		return
 	_portal.visible = true
 	_portal.monitoring = true
+	Sfx.play("door-open", _portal.global_position)
 	_hint_label.text = "Exit open — step into the light"
 
 
