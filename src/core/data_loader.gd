@@ -65,6 +65,19 @@ const SCHEMAS: Dictionary = {
 		"requires": {"type": "array", "array_of": "string"},  # synergy prereq echo ids
 		"mods": {"type": "array", "required": true, "array_of": "dict"},
 	},
+	"dialogue": {  # architecture-schemas.md §7 — spec + condition vocabulary in act1-story-beats.md
+		"id": {"type": "string", "required": true},
+		"source": {"type": "string", "required": true,
+			"one_of": ["spine", "arc", "contextual", "bark"]},
+		"speakers": {"type": "array", "required": true, "array_of": "string"},  # [0] = owner
+		"priority": {"type": "float"},        # tiebreak within a source rank
+		"once": {"type": "bool"},             # default: true except barks
+		"cooldown_runs": {"type": "int"},
+		"conditions": {"type": "array", "array_of": "dict"},  # ALL must hold
+		"force_play": {"type": "bool"},
+		"sets_flag": {"type": "string", "nullable": true},
+		"scene": {"type": "dict", "required": true},  # {kind: talk|cutscene, lines: [{who, text}]}
+	},
 	"ages": {  # architecture-schemas.md §3
 		"id": {"type": "int", "required": true},
 		"name": {"type": "string", "required": true},

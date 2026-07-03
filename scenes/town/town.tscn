@@ -1,4 +1,4 @@
-[gd_scene load_steps=25 format=3]
+[gd_scene load_steps=30 format=3]
 
 [ext_resource type="Script" path="res://src/town/town.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/combat/player.tscn" id="2"]
@@ -81,6 +81,22 @@ albedo_color = Color(0.25, 0.25, 0.3, 1)
 emission_enabled = true
 emission = Color(0.9, 0.35, 0.1, 1)
 emission_energy_multiplier = 0.4
+
+[sub_resource type="CapsuleMesh" id="NpcMesh"]
+radius = 0.45
+height = 1.7
+
+[sub_resource type="StandardMaterial3D" id="HerzogMat"]
+albedo_color = Color(0.5, 0.2, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="MaraMat"]
+albedo_color = Color(0.6, 0.35, 0.2, 1)
+
+[sub_resource type="StandardMaterial3D" id="TillyMat"]
+albedo_color = Color(0.25, 0.35, 0.55, 1)
+
+[sub_resource type="StandardMaterial3D" id="WrenMat"]
+albedo_color = Color(0.3, 0.5, 0.3, 1)
 
 [node name="Town" type="Node3D"]
 script = ExtResource("1")
@@ -273,6 +289,98 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
 billboard = 1
 text = "Mara's Forge — E for weapons"
 font_size = 40
+outline_size = 8
+
+[node name="NpcHerzog" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+metadata/npc_id = "herzog"
+
+[node name="Mesh" type="MeshInstance3D" parent="NpcHerzog"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("NpcMesh")
+surface_material_override/0 = SubResource("HerzogMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcHerzog"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("PlotShape")
+
+[node name="Label" type="Label3D" parent="NpcHerzog"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 1
+text = "Herzog — E to talk"
+font_size = 36
+outline_size = 8
+
+[node name="NpcMara" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -4)
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+metadata/npc_id = "mara"
+
+[node name="Mesh" type="MeshInstance3D" parent="NpcMara"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("NpcMesh")
+surface_material_override/0 = SubResource("MaraMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcMara"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("PlotShape")
+
+[node name="Label" type="Label3D" parent="NpcMara"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 1
+text = "Mara — E to talk"
+font_size = 36
+outline_size = 8
+
+[node name="NpcTilly" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 10)
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+metadata/npc_id = "tilly"
+
+[node name="Mesh" type="MeshInstance3D" parent="NpcTilly"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("NpcMesh")
+surface_material_override/0 = SubResource("TillyMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcTilly"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("PlotShape")
+
+[node name="Label" type="Label3D" parent="NpcTilly"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 1
+text = "Tilly — E to talk"
+font_size = 36
+outline_size = 8
+
+[node name="NpcWren" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 10)
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+metadata/npc_id = "wren"
+
+[node name="Mesh" type="MeshInstance3D" parent="NpcWren"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("NpcMesh")
+surface_material_override/0 = SubResource("WrenMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcWren"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("PlotShape")
+
+[node name="Label" type="Label3D" parent="NpcWren"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 1
+text = "Wren — E to talk"
+font_size = 36
 outline_size = 8
 
 [node name="Player" parent="." instance=ExtResource("2")]

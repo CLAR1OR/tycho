@@ -1,0 +1,18 @@
+{
+	"id": "a4-herzog-fetch",
+	"source": "spine",
+	"speakers": ["herzog", "tycho"],
+	"priority": 100,
+	"conditions": [{"counter": "runs", "gte": 2}],
+	"sets_flag": "a4",
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "herzog", "text": "So. The hole in the hill eats you, spits you back, and Linnea says you bring things out of it."},
+			{"who": "tycho", "text": "Sometimes. If I get far enough."},
+			{"who": "herzog", "text": "Then get far enough. Winter doesn't care where the firewood comes from, and I don't care where the gold does. Can you fetch things from in there? Then fetch useful ones."},
+			{"who": "tycho", "text": "That's it? No questions about what it is?"},
+			{"who": "herzog", "text": "When the roof leaks I don't interrogate the rain. Bring what the town can use. That's the whole speech."}
+		]
+	}
+}

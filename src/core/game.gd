@@ -39,6 +39,13 @@ var _session_t: float = 0.0   # unsaved playtime (flushed into meta.playtime_s o
 func _ready() -> void:
 	EventBus.resource_changed.connect(func(_id: String, _o: float, _n: float, _r: String) -> void:
 		_refresh_resources())
+	# First-time-pickup flags for the dialogue `has(<resource>)` conditions
+	# (act1-story-beats.md vocabulary) — set once, never cleared.
+	EventBus.resource_changed.connect(func(id: String, _o: float, new_amount: float, _r: String) -> void:
+		if new_amount > 0.0 and not SaveManager.state.is_empty():
+			var flags: Dictionary = SaveManager.state["story"]["flags"]
+			if not bool(flags.get("has-" + id, false)):
+				flags["has-" + id] = true)
 	EventBus.save_loaded.connect(func(_slot: int) -> void: _refresh_resources())
 	EventBus.run_ended.connect(_on_run_ended)
 	EventBus.death.connect(_on_death)

@@ -7,6 +7,9 @@ extends Node3D
 ##   (`unlocked_by` via TownCore.is_unlocked) show as locked until researched.
 ## - LINNEA'S DESK — opens the research screen (TechPanel: invest Knowledge/Shards
 ##   → read → quiz → aha → unlock).
+## - NPCS — any Area3D child with `metadata/npc_id`. E to talk: DialogueCore picks
+##   their single best eligible snippet (PRD §7.12). Spine beats with force_play
+##   auto-play on town entry, max 1 per visit (spec).
 ## - DUNGEON PORTAL — step in to start a run (signalled up to game.gd).
 ##
 ## Town STATE is the save's town section (architecture-schemas §6), read/written
@@ -16,8 +19,10 @@ signal run_requested  # the player stepped into the dungeon portal
 
 var _building_defs: Dictionary = {}
 var _tech_defs: Dictionary = {}
+var _dialogue_defs: Dictionary = {}
 var _plots: Array[Area3D] = []      # every Area3D with metadata/building_id
 var _in_plot: Area3D = null         # the plot the player is standing in (or null)
+var _in_npc: Area3D = null          # the NPC the player is standing at (or null)
 var _in_desk: bool = false
 var _in_forge: bool = false
 
@@ -35,6 +40,7 @@ func _ready() -> void:
 	_player.position = Vector3(0, 0, 8)
 	_building_defs = DataLoader.load_domain("buildings")
 	_tech_defs = DataLoader.load_domain("tech")
+	_dialogue_defs = DataLoader.load_domain("dialogue")
 	_portal.body_entered.connect(_on_portal_body_entered)
 	for child in get_children():
 		if child is Area3D and child.has_meta("building_id"):
@@ -46,6 +52,14 @@ func _ready() -> void:
 			plot.body_exited.connect(func(body: Node3D) -> void:
 				if body is Player and _in_plot == plot:
 					_in_plot = null)
+		if child is Area3D and child.has_meta("npc_id"):
+			var npc := child as Area3D
+			npc.body_entered.connect(func(body: Node3D) -> void:
+				if body is Player:
+					_in_npc = npc)
+			npc.body_exited.connect(func(body: Node3D) -> void:
+				if body is Player and _in_npc == npc:
+					_in_npc = null)
 	_desk.body_entered.connect(func(body: Node3D) -> void:
 		if body is Player:
 			_in_desk = true)
@@ -62,8 +76,12 @@ func _ready() -> void:
 	EventBus.tech_researched.connect(func(_tech_id: String) -> void: _refresh_plots())
 	var day := int(SaveManager.state["story"]["counters"].get("runs", 0)) + 1
 	_day_label.text = "Home — Day %d" % day
-	_hint_label.text = "WASD move - E interact (plots, Linnea's desk) - the portal starts a run"
+	_hint_label.text = "WASD move - E interact (plots, desk, forge, people) - the portal starts a run"
 	_refresh_plots()
+	# Spine/cutscene beats can force-play on a town visit — max 1 (spec): this runs
+	# once per town instance, so one visit = at most one forced scene. Deferred a
+	# frame so the scene (and any save/swap in flight) settles first.
+	call_deferred("_check_force_play")
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -73,6 +91,8 @@ func _unhandled_input(event: InputEvent) -> void:
 		open_tech_panel()
 	elif _in_forge:
 		open_forge_panel()
+	elif _in_npc != null:
+		talk_to(str(_in_npc.get_meta("npc_id")))
 	elif _in_plot != null:
 		_try_build(str(_in_plot.get_meta("building_id")))
 
@@ -95,6 +115,34 @@ func open_forge_panel() -> ForgePanel:
 	var panel := ForgePanel.new()
 	$HUD.add_child(panel)
 	panel.open()
+	return panel
+
+
+# --- Dialogue (PRD §7.12) -----------------------------------------------------------
+
+## Public (interact + smoke driver): the character offers their single best
+## eligible snippet; nothing eligible = a shrug, not a panel.
+func talk_to(npc_id: String) -> DialoguePanel:
+	var snippet_id := DialogueCore.select(_dialogue_defs, SaveManager.state, npc_id)
+	if snippet_id.is_empty():
+		return null
+	return _play_snippet(_dialogue_defs[snippet_id], true)
+
+
+func _check_force_play() -> void:
+	var snippet_id := DialogueCore.select_forced(_dialogue_defs, SaveManager.state)
+	if not snippet_id.is_empty():
+		_play_snippet(_dialogue_defs[snippet_id], false)
+
+
+func _play_snippet(def: Dictionary, count_talk: bool) -> DialoguePanel:
+	var panel := DialoguePanel.new()
+	$HUD.add_child(panel)
+	panel.play(def)
+	panel.finished.connect(func() -> void:
+		SaveManager.state["story"] = DialogueCore.mark_shown(
+			SaveManager.state["story"], def, count_talk)
+		SaveManager.save_current())
 	return panel
 
 

@@ -161,6 +161,38 @@ func _run_smoke() -> void:
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
 	_check(Ledger.get_amount("stone") >= 2.0, "quarry produced stone on the day tick")
 
+	# --- Dialogue (PRD §7.12): masonry was researched during this save, so B5 ("the
+	# first wall", force_play) must have auto-played on THIS town return.
+	var dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(dlg != null, "B5 'the first wall' force-played on town entry")
+	_check(bool(SaveManager.state["story"]["flags"].get("has-resonance-ore", false)),
+		"first-pickup flag set from the run's ore drop")
+	if dlg != null:
+		var b5_lines: int = ((DataLoader.load_domain("dialogue")["b5-the-first-wall"]["scene"] as Dictionary)["lines"] as Array).size()
+		for i in b5_lines:
+			dlg.advance()
+		await _settle(3)
+		_check(not get_tree().paused, "finished dialogue unpauses the game")
+		_check(bool(SaveManager.state["story"]["flags"].get("b5", false)), "B5 set its flag")
+		_check((SaveManager.state["story"]["seen"] as Array).has("b5-the-first-wall"),
+			"B5 marked seen (a spine beat never repeats)")
+	# Talking: Herzog offers his single highest-priority eligible snippet — A4
+	# (spine, runs >= 2) outranks the gold-gated contextual.
+	var talk: DialoguePanel = _scene_node().call("talk_to", "herzog")
+	_check(talk != null, "Herzog has something to say")
+	if talk != null:
+		var a4_lines: int = ((DataLoader.load_domain("dialogue")["a4-herzog-fetch"]["scene"] as Dictionary)["lines"] as Array).size()
+		for i in a4_lines:
+			talk.advance()
+		await _settle(3)
+		_check(bool(SaveManager.state["story"]["flags"].get("a4", false)),
+			"A4 played first (spine > contextual) and set its flag")
+		_check(int((SaveManager.state["story"]["talked_to"] as Dictionary).get("herzog", 0)) == 1,
+			"talked_to counted")
+
+	# mark_shown replaces the story section (pure copy) — re-grab the counters ref.
+	c = SaveManager.state["story"]["counters"]
+
 	# --- Cheat panel (F2 playtest tool) — must mirror the real paths exactly --------
 	var cheats: CheatPanel = get_tree().get_first_node_in_group("cheat_panel")
 	_check(cheats != null, "cheat panel lives on the HUD layer")

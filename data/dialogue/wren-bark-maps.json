@@ -1,0 +1,15 @@
+{
+	"id": "wren-bark-maps",
+	"source": "bark",
+	"speakers": ["wren"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "wren", "text": "I've been thinking: every tale the traders tell has the same bones. Someone leaves home, gets ruined, comes back changed. Different names, same shape. If you drew a map of stories instead of roads… you'd only need the one map."}
+		]
+	}
+}

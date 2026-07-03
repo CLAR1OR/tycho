@@ -1,6 +1,8 @@
 # Act I — Story-Beat Skeleton
 
 > The ordered spine from "Tycho finds the artefact" to "the emperor gets a face," what gates each beat, the four character arcs, and the dialogue-selection rules. This doc doubles as the **dialogue system spec** — the condition vocabulary at the bottom is what the engine must implement. Drafted 2026-06-12. Beats are skeleton-level: scene intent + gate, not scripts. Scripts get authored per-beat later (human voice, agent drafts, human curation).
+>
+> **Implementation status (2026-07-03):** the selection system below is BUILT — full condition vocabulary + priority/once/cooldown/force-play rules in pure `src/dialogue/dialogue_core.gd` (tested), playback in `dialogue_panel.gd`, NPC talk spots + 1-forced-per-visit in `town.gd`, content as `data/dialogue/*.json`. First authored snippets: A4, B1, B5 (force-play cutscene), C3, one Herzog contextual, one Wren bark — agent drafts, awaiting human curation. Deferred: banner icons, painterly stills, `talked_to` location conditions.
 
 **Decisions baked in (from 2026-06-12 scope answers):** mixed gating (milestones + tech + run-counters); the mysterious woman arrives **mid-act** — the early game stays purely local; full arcs for **Linnea, Tilly, Mara, Old Thomas**; Wren + Herzog are flavor tracks.
 
