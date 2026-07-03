@@ -27,6 +27,7 @@ Completionists stretch further via difficulty tiers; the spine fits the budget.
 | **Room layouts** | **~30** combat layouts (shared across floors) + 5 boss arenas + 3 reprieve layouts + entry/exit rooms | One geometry kit (the nanobot learning-space). Floors differentiate by enemy mix + stratum profile + signature hazard (see rows below), never by biome art. |
 | **Hazards** *(added 2026-07-03)* | **5 signature** (1/floor: vent plates, watcher nodes, burst crystals, sweep beams, drift fields) **+ 1 shared** (denial mist) | Scripted (timer + volume + telegraph, no physics/AI), dual-use (hurt enemies too). The cheap multiplier on layouts × enemies. Design rules + roster: `dungeon-strata.md`. |
 | **Floor strata profiles** *(added 2026-07-03)* | **5** environment profiles + 2–4 unique props each | Pure data on the shared kit (palette/fog/light/emission — `data/floors/`). Lore: the imitation of Tycho's world thins with depth (reveal foreshadowing). Includes **5 human legibility passes** (telegraphs must stay readable per palette). Spec: `dungeon-strata.md`. |
+| **Run structure** *(added 2026-07-03)* | **6 door sigils** + 1 peril mark (icons) + **1 Wellspring prop** (tinted per stratum) | Door-choice branching + the in-run healing economy — all cheap (icons + one prop + pure-function door generation). Spec: `run-structure.md`. |
 
 ## Learning layer
 

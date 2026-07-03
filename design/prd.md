@@ -136,7 +136,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 
 ### 7.5 In-run upgrades — Echoes
 - **Purpose:** run-to-run variety and the synergy high; the roguelite's build-of-the-run.
-- **Trigger:** Tycho's etchings glow at intervals in the dungeon (nanobots trying configurations) → HUD auto-opens with **3 choices**; also reprieve/upgrade rooms.
+- **Trigger:** *(cadence designed 2026-07-03 — `run-structure.md`:)* **Echo doors** (≥2 offered per floor, pity-weighted) + **one guaranteed pick after every floor boss** → HUD auto-opens with **3 choices**. Target ≈ 12–17 picks per full run. (The slice's every-combat-room offer is a placeholder, retired when door choice is built.) Diegetically the etchings glow — nanobots trying configurations.
 - **State:** in-run only (NOT persisted past the run) — sits on top of the persistent attunement baseline.
 - **Resolution:** pick 1 of 3. **~50 echoes**: weapon mods, etching mods, dash mods, stat boosts, + **~8 synergy echoes** that require 2 prior picks.
 - **Player decision:** chase a synergy vs. take safe value; commit to a build mid-run.
@@ -148,9 +148,9 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 - **Trigger:** run start; floor entry.
 - **State:** current floor (1–5), room index, room type sequence (RNG), difficulty tier.
 - **Resolution:** **5 floors × 6–10 rooms**, RNG-ordered from **~30 shared combat layouts** + 5 boss arenas + 3 reprieve layouts + entry/exit. One geometry kit; each floor is a **stratum** (IC-5 as revised 2026-07-03, spec `dungeon-strata.md`): a data-driven environment profile (palette/fog/light) + **one signature hazard** + 2–4 props. Floors differ by **enemy mix + stratum profile + signature hazard**, never by biome art. Hazards are scripted (timer + volume + telegraph), dual-use (hurt enemies too), density-tuned per floor. Boss at the end of every floor.
-- **Player decision:** route choices where rooms branch (risk/reward room types); positioning play around dual-use hazards.
-- **Content hooks:** layouts, room-type weights per floor, floor profiles (`data/floors/`), hazards (`data/hazards/`).
-- **Risk:** repetition fatigue (mitigated by Echoes + hazards + dialogue novelty + tiers); generation producing unfair/empty rooms (hazards must never block the only path — §10); stratum palettes drowning enemy telegraphs (fixed telegraph colors + a human legibility pass per floor — `dungeon-strata.md`).
+- **Player decision:** **door choice** *(designed 2026-07-03 — `run-structure.md`)*: after each clear, two sigil-marked exit doors preview the next room's **reward** (gold/ore/dust/echo/reprieve-heal; boss door alone at floor end; peril marks = elite modifiers + boosted pay = the risk/reward lever); choice is final. **In-run healing** rides the same system: no full heals, all healing = % of *missing* HP (Wellspring behind Reprieve doors ~40%, floor-boss clear ~30%, Recovery attunement, 2–3 healing echoes) — damage costs choices, not progress. Cartography's effect = door **foresight** (sigils one room further ahead). Positioning play around dual-use hazards.
+- **Content hooks:** layouts, room-type weights per floor, floor profiles (`data/floors/` — now incl. `door_weights` + `peril_chance`), hazards (`data/hazards/`), 6 door sigils + Wellspring prop.
+- **Risk:** repetition fatigue (mitigated by Echoes + hazards + dialogue novelty + tiers); generation producing unfair/empty rooms (hazards must never block the only path — §10); stratum palettes drowning enemy telegraphs (fixed telegraph colors + a human legibility pass per floor — `dungeon-strata.md`); door pity rules per §10 (≥2 echo + ≥1 reprieve per floor); heal-stacking cap watch (`run-structure.md`).
 
 ### 7.7 Enemies & bosses
 - **Purpose:** the pattern-mastery substrate.
@@ -218,7 +218,7 @@ All content = **JSON in `data/`, one file per entity, filename = kebab-case id**
 ---
 
 ## 9. UX & Feedback
-- **Must be visible:** current HP / resources / active Echoes (in-run HUD); room/floor progress + minimap (Cartography tech reveals more); active tech node + progress; building costs vs. owned resources; which dialogue is a forced story beat (banner icon).
+- **Must be visible:** current HP / resources / active Echoes (in-run HUD); room/floor progress + minimap (Cartography tech reveals more — incl. door foresight, `run-structure.md`); **door reward sigils** (+ peril marks; first encounter of each sigil gets a one-line tooltip); active tech node + progress; building costs vs. owned resources; which dialogue is a forced story beat (banner icon).
 - **Must be immediate:** hit/dash/pickup feedback (the feel-critical SFX subset gets human tuning); ability cooldown states; Echo-pick HUD (auto-opens).
 - **Needs recap/history:** codex shard assembly (visible artifact); achievements page; tech tree per-age screens (researched=green, current=blue, available=normal, locked=greyed); seen-dialogue tracking (no repeats of `once` snippets).
 - **Must be explainable on failure:** death cause readable (what hit you); why a tech/building is locked (missing prereq/resource shown); why a dialogue/system isn't available yet (gated).

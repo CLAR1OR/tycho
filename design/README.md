@@ -12,6 +12,7 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `tech-nodes/` — one file per authored tech-tree node (explanation → puzzle → "aha" → unlock). `_TEMPLATE.md` is the canonical format; copy it to author a new node.
 - `dungeon-strata.md` — **floor differentiation:** the five strata (environment profiles + signature hazards on one geometry kit), the hazard roster + design rules, and the "imitation thins with depth" lore engine. Locked 2026-07-03 (revises IC-5's re-theme reading).
 - `etchings.md` — **the 9 active abilities** (+ fixed dash): slot grammar (RMB Strike / Q Field / R Surge), per-ability design + levels + weapon synergies, Dust costs, echo handles, the Sentinel summon seed. Drafted 2026-07-03.
+- `run-structure.md` — **the meso loop's decision layer:** sigil-marked door choice (reward previews, peril marks, pity rules, Cartography foresight), the echo-cadence decision (~12–17 picks/run), and the in-run healing economy (no full heals; % of missing HP via Wellsprings / boss clears / Recovery / healing echoes). Drafted 2026-07-03.
 - (future) `weapons/`, `dialogue/`, `bosses/` — detailed specs as they get authored.
 
 ## Rules
@@ -25,3 +26,4 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `prd.md` — **drafted 2026-06-19** from the above. Status: pre-development; to be finalized after the Phase 0 gates pass (gate outcomes may revise counts/feel targets).
 - `dungeon-strata.md` — **drafted 2026-07-03** (human decision, from the design-review discussion). Strata + hazards are design-locked; all numbers are playtest placeholders; nothing implemented yet.
 - `etchings.md` — **drafted 2026-07-03** (fills the bible's empty etchings table). Names + mechanics are a first authored draft for human review; numbers are placeholders; nothing implemented yet.
+- `run-structure.md` — **drafted 2026-07-03.** NOTE it decides an echo-cadence change (doors + post-boss instead of every-room) that retires current slice behavior when door choice gets built; nothing implemented yet.

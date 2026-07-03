@@ -156,6 +156,8 @@ One abstraction, two contexts (dungeon auto-clearer / army unit): `{ id, tier, s
   "props": ["crystal-seam", "crystal-cluster"],
   "hazards": { "signature": "burst-crystal", "pool": ["vent-plate", "denial-mist"],
                "density": { "early_rooms": 0.2, "late_rooms": 0.5 } },
+  "door_weights": { "gold": 3, "ore": 2, "dust": 1, "echo": 3, "reprieve": 2 },  // added 2026-07-03 — run-structure.md (door choice; pity: ≥2 echo + ≥1 reprieve per floor)
+  "peril_chance": 0.25,                                                          // elite-modifier doors with boosted rewards
   "music_layer": "dungeon_3" }
 
 // data/hazards/<id>.json
