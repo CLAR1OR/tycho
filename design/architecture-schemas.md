@@ -122,7 +122,7 @@ One generic evaluator reads these; new achievements are data entries. Unlocks li
   ] }
 ```
 
-`effects[].kind` is a small typed set (`produce | knowledge | multiplier | capability`) — strategy-era kinds (`defense`, `summon-capacity`) extend the set later. Production resolves on the **end-of-run tick** (1 day = 1 run, per locked decision): one `TownTick` pass that reads buildings → writes ledger → emits events.
+`effects[].kind` is a small typed set (`produce | knowledge | multiplier | capability | upkeep`) — `upkeep` added 2026-07-03 (consumes a resource per tick, grants a status other effects read — Food/Well-Fed in v1, army/city provisioning in Act II; `food-upkeep.md`); strategy-era kinds (`defense`, `summon-capacity`) extend the set later. Production resolves on the **end-of-run tick** (1 day = 1 run, per locked decision): one `TownTick` pass that reads buildings → writes ledger → emits events — order: produce → upkeep/status → status-modified totals.
 
 ## 7. Dialogue (contract with `act1-story-beats.md`)
 

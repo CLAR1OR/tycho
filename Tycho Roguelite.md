@@ -169,7 +169,7 @@ Each tech researched: **read explanation → solve a short puzzle/quiz → unloc
 | I   | Knowledge | Study → Library → Observatory → University | Research (the passive tick) |
 | I   | Timber    | Woodcutter's Lodge         | Construction material |
 | I   | Stone     | Quarry (unlocked by Masonry) | Construction material (+ small chance of Resonance Ore) |
-| I   | Food      | Farm                       | Soft cap on town size / morale (no worker micro) |
+| I   | Food      | Farm                       | Day-tick **upkeep → Well-Fed bonus** (+% to all other production incl. Knowledge; never a penalty — designed 2026-07-03, `design/food-upkeep.md`) |
 | I   | Gold      | Market (sells surplus)     | Construction & upgrades |
 
 
@@ -183,6 +183,7 @@ The roles:
 | --- | --- | --- |
 | **Research** | Knowledge (+ Knowledge Shards from runs) | No — same currency, generated faster by better buildings |
 | **Money** | Gold | No — money is money the whole way through |
+| **Upkeep** *(added 2026-07-03)* | Food — feeds the town (day-tick upkeep → **Well-Fed** production bonus; Act II: provisions armies & cities — see `design/food-upkeep.md`) | No — Food stays Food; only the scale grows |
 | **Material** | what you build with | **Yes** — Timber/Stone → (Iron) → Steel → Oil/composites → Nanomaterial |
 | **Energy** | powers production; born as a *tracked* resource in the Industrial age | **Yes** — implicit (water/muscle) → Coal → Electricity → Fusion |
 | **Military input** | feeds summons/armies; born when the strategy layer seeds (Renaissance) | **Yes** — Saltpeter → Munitions → … |
@@ -352,7 +353,7 @@ All buildings have **3 levels**. Building = L1; each upgrade bumps the effect, m
 | --- | --- | --- | --- |
 | Linnea's Study | Research | start | Base Knowledge/day (the passive research tick) |
 | Woodcutter's Lodge | Production | start | Produces Timber |
-| Farm | Production | start | Produces Food (soft cap on town size / morale) |
+| Farm | Production | start | Produces Food (town upkeep → Well-Fed production bonus) |
 | Mara's Forge | Shop | start | Weapon upgrades; **L2 via Metallurgy** = cheaper/stronger |
 | Thomas's Hut | Shop | start | Etching upgrades (active abilities) **+ Passive Attunements** (persistent passive upgrades — more life, etc.). **Never changes across ages** (per lore) |
 | Library | Research | Writing & Parchment | +Knowledge/day |

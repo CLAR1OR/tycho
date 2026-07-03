@@ -180,7 +180,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 - **Purpose:** connect runs → upgrades → stronger runs; lean, anti-overwhelm.
 - **Model:** **fixed roles, evolving instances** — the player tracks ~5–6 *roles*; what fills each modernizes per age; resources **retire** (fold to baseline), they don't accumulate endlessly.
 - **Player-collected (from runs):** Knowledge Shards (stage bosses → research, main early driver), Codex Shards (final boss → meta-puzzle, story only), Resonance Dust (rare drops → etchings + attunements), Resonance Ore (find/harvest → weapons), Gold (drops + market → buildings).
-- **Town-produced (day tick):** Knowledge (Study→Library→Observatory→University), Timber (Lodge), Stone (Quarry), Food (Farm, soft cap/morale), Gold (Market).
+- **Town-produced (day tick):** Knowledge (Study→Library→Observatory→University), Timber (Lodge), Stone (Quarry), Food (Farm — **upkeep → Well-Fed bonus**: town consumes Food per tick; covered = +% to all other production incl. Knowledge, short = no bonus, never a penalty; the upkeep mechanism is the Act-II army/city prepare-for — `food-upkeep.md`, designed 2026-07-03), Gold (Market).
 - **Resolution:** generic ledger; resource defs carry `role`, `age_active`, `supersedes`, `retired_by`. **Resonance + Knowledge + Gold roles never change** (IC-14); **Material/Energy/Military roles modernize** (Energy/Military are born in later ages — data slots now). The **Industrial age is the deliberate complexity spike**; other ages stay light; Future eases (post-scarcity).
 - **Risk:** too many simultaneous resources → overwhelm (mitigated by retirement/fold UI). Resonance economy starvation across two sinks (weapons vs. etchings/attunements).
 
@@ -234,7 +234,7 @@ All content = **JSON in `data/`, one file per entity, filename = kebab-case id**
 - **Dominant-strategy risks:** a best weapon/effect, a best etching loadout, or a degenerate Echo synergy chain. Mitigation: offer-weighting, synergy prerequisites as data (tunable), human feel-tuning, and tier modifiers that punish one-note builds.
 - **Dead-roll / unwinnable risks:** Echo offers of 3 useless picks → guarantee at least one build-relevant offer via weighting; dungeon generation must never produce impassable/empty rooms (validate layouts). **There is no unwinnable run** — death has no penalty and assist mode guarantees eventual clears.
 - **RNG protection:** weighted (not uniform) Echo/room generation; pity rules for rare drops if playtest shows starvation (esp. Resonance Dust feeding two sinks).
-- **Caps / soft caps:** Food is a soft cap on town size/morale (no micro); buildings cap at L3; attunements/etchings cap at 3 levels; weapons flat at 5 / resonance at 4 effects; assist-mode resist capped.
+- **Caps / soft caps:** Food upkeep is bonus-only (Well-Fed or not — no starvation state, no spiral; `food-upkeep.md`); buildings cap at L3; attunements/etchings cap at 3 levels; weapons flat at 5 / resonance at 4 effects; assist-mode resist capped.
 - **Tuning is human-gated:** all feel numbers + the economy curve are playtest-tuned, not solved on paper. Numbers in the bible/budget are **targets**.
 
 ---
