@@ -10,7 +10,8 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `godot-conventions.md` — project structure, code rules, testing. Read before writing any code.
 - `feel-tuning.md` — **the dial board for the combat-feel gate.** Every tunable `# FEEL:` number, what it does, and whether you change it in the Godot **Inspector** (`@export`) or the script (`const`). For hands-on playtest tuning.
 - `tech-nodes/` — one file per authored tech-tree node (explanation → puzzle → "aha" → unlock). `_TEMPLATE.md` is the canonical format; copy it to author a new node.
-- (future) `dungeons/`, `etchings/`, `weapons/`, `dialogue/`, `bosses/` — detailed specs as they get authored.
+- `dungeon-strata.md` — **floor differentiation:** the five strata (environment profiles + signature hazards on one geometry kit), the hazard roster + design rules, and the "imitation thins with depth" lore engine. Locked 2026-07-03 (revises IC-5's re-theme reading).
+- (future) `etchings/`, `weapons/`, `dialogue/`, `bosses/` — detailed specs as they get authored.
 
 ## Rules
 - The bible stays the source of truth for **what the game is**; `design/` is the source of truth for **how a specific piece works in detail**.
@@ -21,3 +22,4 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `tech-nodes/medieval-masonry-the-arch.md` — **first authored node (the Content gate).** Validates the format before the rest of the tree is authored. Playtest this for *delight vs. homework* before scaling up.
 - `content-budget.md`, `act1-story-beats.md`, `architecture-schemas.md`, `godot-conventions.md` — **drafted 2026-06-12** as PRD inputs. Beats are skeleton-level (gates + intent, not scripts); schemas are shape-contracts, not final field lists.
 - `prd.md` — **drafted 2026-06-19** from the above. Status: pre-development; to be finalized after the Phase 0 gates pass (gate outcomes may revise counts/feel targets).
+- `dungeon-strata.md` — **drafted 2026-07-03** (human decision, from the design-review discussion). Strata + hazards are design-locked; all numbers are playtest placeholders; nothing implemented yet.

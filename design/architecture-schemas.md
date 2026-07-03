@@ -144,6 +144,29 @@ Eligibility evaluation reads ONLY `story.flags/counters` + ledger + tech state �
 
 One abstraction, two contexts (dungeon auto-clearer / army unit): `{ id, tier, source_etching, stats {…}, contexts: ["dungeon","army"] }`. v1 ships zero summons and zero code — this entry exists so nobody designs etchings data in a shape that can't express them later.
 
+## 9. Floor strata + hazards (added 2026-07-03 — design source: `dungeon-strata.md`)
+
+"Floor as data", sibling of §3's "age as data": each floor of the one dungeon is a **stratum profile** — environment (palette/fog/light on the shared geometry kit), a signature hazard, a small prop list. Hazards are their own data domain (scripted: timer + volume + telegraph; dual-use — `hurts_enemies` defaults true).
+
+```jsonc
+// data/floors/<n>.json
+{ "id": 3, "name": "The Resonant Stratum",
+  "environment": { "palette": "resonant", "fog_color": "#1a2438", "fog_density": 0.04,
+                   "light_temp": 0.35, "emission": "crystal_teal" },
+  "props": ["crystal-seam", "crystal-cluster"],
+  "hazards": { "signature": "burst-crystal", "pool": ["vent-plate", "denial-mist"],
+               "density": { "early_rooms": 0.2, "late_rooms": 0.5 } },
+  "music_layer": "dungeon_3" }
+
+// data/hazards/<id>.json
+{ "id": "burst-crystal", "name": "Burst Crystal",
+  "kind": "burst",                     // vent | node | burst | beam | drift | mist
+  "telegraph_s": 0.6, "cycle_s": 0.0,  // cycle 0 = triggered, not periodic
+  "damage": 20, "radius": 2.5, "hurts_enemies": true }
+```
+
+Enemy-telegraph colors are fixed across strata; palettes are chosen around them (per-floor human legibility pass — see `dungeon-strata.md`). All numbers are `# FEEL:`/tuning placeholders.
+
 ---
 
 ## The decoupling rule (how the pillars stay separable)

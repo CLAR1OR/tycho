@@ -33,7 +33,7 @@
   - A town that **visibly transforms** as you advance the ages — progression you can see.
   - A mystery that **assembles in plain sight** (the codex artifact) and pays off as *wonder*.
 - **Replayability goals:** Run-to-run variety from the **Echo** in-run upgrade system (~50 echoes, synergy chains); persistent power growth (weapons, etchings, attunements, tech, town); Hades-style fresh dialogue nearly every return; difficulty tiers for completionists.
-- **Constraints (hard):** Solo dev + AI agents; **game feel cannot be vibecoded** (human-tuned). Bounded, un-re-themed dungeon (one "nanobot learning-space"). Documentation is sacred. Build the roguelite only — do not build strategy/space gameplay, but architect so they slot in.
+- **Constraints (hard):** Solo dev + AI agents; **game feel cannot be vibecoded** (human-tuned). Bounded dungeon: one world, one geometry kit — floors differ as data-driven *strata*, never as biome art lines (IC-5 as revised 2026-07-03). Documentation is sacred. Build the roguelite only — do not build strategy/space gameplay, but architect so they slot in.
 
 ---
 
@@ -53,7 +53,7 @@ The non-negotiables. Each: **what is fixed / why / what may still expand.** (All
 | IC-2 | **The cognitive pulse:** cerebral tension (town) alternates with reflexive release (dungeon). Combat rewards learning; it does not carry it. | Reconciles real-time combat with a thinking-themed soul. | Tuning of the alternation cadence. |
 | IC-3 | **Real-time action roguelite, Hades-style *feel*** (own feel is fine). | Load-bearing to the fantasy; chosen over turn-based/deckbuilder. | Specific combat verbs, weapons, enemy design. |
 | IC-4 | **2.5D: 3D models on a fixed camera.** Static screens (portraits, cutscenes, tech cards) are painterly 2D. | 3D models dodge the 2D per-direction animation explosion for a solo dev; AI tooling is strong for 3D models + 2D images, weak for 2D sprite sheets. | Later camera flourishes; the eventual space stage. |
-| IC-5 | **One dungeon** ("nanobot learning-space"), does NOT re-theme across ages; scales by **difficulty tier, not age.** | Bounds the expensive, un-vibecodeable content. | Enemy mix, hazards, layouts, tiers. |
+| IC-5 | **One dungeon world, one geometry kit** ("nanobot learning-space"); never re-themes by age; scales by **difficulty tier, not age.** *(Revised 2026-07-03:)* floors are **strata** — per-floor environment profiles (data) + 1 signature hazard + a small prop budget; independent biome art lines stay banned. | Bounds the expensive, un-vibecodeable content; the strata gradient (the imitation of Tycho's world thins with depth) doubles as reveal foreshadowing (`dungeon-strata.md`). | Enemy mix, hazards, layouts, tiers, stratum profiles. |
 | IC-6 | **One endgame meta-puzzle**, assembled from codex shards **visibly in the final-boss chamber** — not a puzzle-door per level. | A single, watchable mystery; v1 payoff is the *growing* mystery (solving it is post-v1). | Number of shard states (5–7), the eventual reveal. |
 | IC-7 | **1 in-game day = 1 run.** All "per day" passives fire on run completion (win or die). Nothing advances in real time. | Kills idle-game waiting; runs stay the heartbeat. | Production/research numbers. |
 | IC-8 | **No death penalty — you keep everything.** Runs only ever add. | Tension comes from combat, not loss. | What drops, drop rates. |
@@ -147,10 +147,10 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 - **Purpose:** the release space; structured variety without bespoke per-run authoring.
 - **Trigger:** run start; floor entry.
 - **State:** current floor (1–5), room index, room type sequence (RNG), difficulty tier.
-- **Resolution:** **5 floors × 6–10 rooms**, RNG-ordered from **~30 shared combat layouts** + 5 boss arenas + 3 reprieve layouts + entry/exit. One visual theme (no re-theme, IC-5). Floors differ by **enemy mix + hazard density**, not art. Boss at the end of every floor.
-- **Player decision:** route choices where rooms branch (risk/reward room types).
-- **Content hooks:** layouts, room-type weights per floor, hazard sets.
-- **Risk:** repetition fatigue (mitigated by Echoes + dialogue novelty + tiers); generation producing unfair/empty rooms.
+- **Resolution:** **5 floors × 6–10 rooms**, RNG-ordered from **~30 shared combat layouts** + 5 boss arenas + 3 reprieve layouts + entry/exit. One geometry kit; each floor is a **stratum** (IC-5 as revised 2026-07-03, spec `dungeon-strata.md`): a data-driven environment profile (palette/fog/light) + **one signature hazard** + 2–4 props. Floors differ by **enemy mix + stratum profile + signature hazard**, never by biome art. Hazards are scripted (timer + volume + telegraph), dual-use (hurt enemies too), density-tuned per floor. Boss at the end of every floor.
+- **Player decision:** route choices where rooms branch (risk/reward room types); positioning play around dual-use hazards.
+- **Content hooks:** layouts, room-type weights per floor, floor profiles (`data/floors/`), hazards (`data/hazards/`).
+- **Risk:** repetition fatigue (mitigated by Echoes + hazards + dialogue novelty + tiers); generation producing unfair/empty rooms (hazards must never block the only path — §10); stratum palettes drowning enemy telegraphs (fixed telegraph colors + a human legibility pass per floor — `dungeon-strata.md`).
 
 ### 7.7 Enemies & bosses
 - **Purpose:** the pattern-mastery substrate.
@@ -209,7 +209,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 ## 8. Content Model
 All content = **JSON in `data/`, one file per entity, filename = kebab-case id**; code is generic; **adding content must never require code** (if it does, fix the schema/dispatch). Debug builds validate every file against its schema on load.
 
-- **Entities:** resources, tech nodes, buildings, dialogue snippets, achievements, ages, echoes, enemies, weapons, etchings/attunements, summons (reserved, unimplemented).
+- **Entities:** resources, tech nodes, buildings, dialogue snippets, achievements, ages, echoes, enemies, weapons, etchings/attunements, floor strata profiles, hazards, summons (reserved, unimplemented).
 - **Typed extensibility (load-bearing):** tech `unlocks[]` is a typed list; building `effects[].kind` is a typed set; both extend for Acts II/III by adding match arms, not data shapes.
 - **Theme-agnostic vs. theme-bound:** system semantics (roles, effect kinds, unlock types) are theme-free; *content skinning* (names, icons, age palettes, town skins) is data — an age is a "turn-the-page" bundle (`town_skin`, `palette`, `music`, `retires_resources`).
 - **Rarity / weighting:** Echo offers and room-type sequences are weighted (data); no formal rarity tiers in v1 beyond echo synergy prerequisites.
@@ -242,7 +242,7 @@ All content = **JSON in `data/`, one file per entity, filename = kebab-case id**
 ## 11. MVP Scope
 
 ### Must-have systems (v1)
-EventBus + Ledger; save/slots/migration + profile; the unlock cascade; combat (3 weapons, 9 etchings, ~7 attunements, dash); Echoes (~50); dungeon gen (5 floors); 12 enemies + 5 bosses + elite modifiers; tech tree (14 nodes, 8 bespoke + 6 light puzzles, auto-solve); town (13 buildings × 3 levels) + day tick; resource economy (Medieval roles + retirement scaffolding); codex assembly; dialogue system (~358 pieces total) + cutscenes; achievements (~25); assist mode + auto-solve; 2.5D rendering + painterly static screens.
+EventBus + Ledger; save/slots/migration + profile; the unlock cascade; combat (3 weapons, 9 etchings, ~7 attunements, dash); Echoes (~50); dungeon gen (5 floors as strata: profiles + 5 signature hazards + 1 shared); 12 enemies + 5 bosses + elite modifiers; tech tree (14 nodes, 8 bespoke + 6 light puzzles, auto-solve); town (13 buildings × 3 levels) + day tick; resource economy (Medieval roles + retirement scaffolding); codex assembly; dialogue system (~358 pieces total) + cutscenes; achievements (~25); assist mode + auto-solve; 2.5D rendering + painterly static screens.
 
 ### Recommended first content volume
 Per `content-budget.md` (the schedule): authored for **10–15 h** first playthrough. Author **one** of each expensive type to validate format **before** scaling (one tech node — done: Masonry; then one weapon, one boss, one cutscene). **Sequencing rule: never start an expensive line item before its gate validates the format** (combat gate → weapons/bosses; content gate → puzzles; pipeline gate → all 3D asset lines).

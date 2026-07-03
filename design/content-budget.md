@@ -24,7 +24,9 @@ Completionists stretch further via difficulty tiers; the spine fits the budget.
 | **Echo pool (in-run upgrades)** | **~50** | Categories: weapon mods, etching mods, dash mods, stat boosts, + ~8 synergy echoes (require 2 prior picks). Enough variety for ~40 runs without exhaustion. |
 | **Enemy types** | **12** base | ~4–5 per floor with overlap; one dungeon theme so reuse is lore-correct. Elites = modifier system on base types (no new art), NOT new enemies. |
 | **Bosses** | **5** — one per floor | The most expensive single items in the budget (design + arena + feel + tells). Floor-5 boss = final boss, drops Codex Shards. Difficulty tiers reuse all 5 with new patterns/modifiers, not new bosses. |
-| **Room layouts** | **~30** combat layouts (shared across floors) + 5 boss arenas + 3 reprieve layouts + entry/exit rooms | One visual theme (the nanobot learning-space). Floors differentiate by enemy mix + hazard density, not by art re-theme. |
+| **Room layouts** | **~30** combat layouts (shared across floors) + 5 boss arenas + 3 reprieve layouts + entry/exit rooms | One geometry kit (the nanobot learning-space). Floors differentiate by enemy mix + stratum profile + signature hazard (see rows below), never by biome art. |
+| **Hazards** *(added 2026-07-03)* | **5 signature** (1/floor: vent plates, watcher nodes, burst crystals, sweep beams, drift fields) **+ 1 shared** (denial mist) | Scripted (timer + volume + telegraph, no physics/AI), dual-use (hurt enemies too). The cheap multiplier on layouts × enemies. Design rules + roster: `dungeon-strata.md`. |
+| **Floor strata profiles** *(added 2026-07-03)* | **5** environment profiles + 2–4 unique props each | Pure data on the shared kit (palette/fog/light/emission — `data/floors/`). Lore: the imitation of Tycho's world thins with depth (reveal foreshadowing). Includes **5 human legibility passes** (telegraphs must stay readable per palette). Spec: `dungeon-strata.md`. |
 
 ## Learning layer
 
@@ -66,6 +68,6 @@ Volume model: **Hades-style high volume** — fresh contextual dialogue on nearl
 
 ## What's expensive vs. cheap (for sequencing)
 
-- **Expensive / human-gated:** weapon feel ×3, boss design ×5, the 8 bespoke puzzles, voice/curation of 250+ snippets. These dominate the calendar.
-- **Cheap / agent-friendly:** all data tables, support quizzes, snippet drafting, buildings-as-data, achievements, UI plumbing.
+- **Expensive / human-gated:** weapon feel ×3, boss design ×5, the 8 bespoke puzzles, voice/curation of 250+ snippets, the 5 per-stratum legibility passes. These dominate the calendar.
+- **Cheap / agent-friendly:** all data tables, support quizzes, snippet drafting, buildings-as-data, achievements, UI plumbing, hazards (scripted timer+volume scenes), floor strata profiles (pure data).
 - **Sequencing rule:** never start a new expensive line item before the relevant gate has validated its format (combat gate → weapons/bosses; content gate → puzzles; pipeline gate → all 3D asset lines).
