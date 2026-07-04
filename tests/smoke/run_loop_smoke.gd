@@ -3,7 +3,7 @@ extends Node
 ## test — the unit runner only discovers tests/core/). Runs as a SCENE so the
 ## autoloads exist (`godot -s` never registers them): it boots the REAL game.tscn
 ## as a child, then drives it — choose a slot on the REAL slot-select screen, start
-## a 2-floor run, slaughter every room, quit mid-run at floor 2 and resume from the
+## a 3-floor run, slaughter every room, quit mid-run at floor 2 and resume from the
 ## per-floor checkpoint, and after the final boss check we came back to town with
 ## counters, drops, and the codex shard applied. Then a second run that dies.
 ##
@@ -36,7 +36,18 @@ func _run_smoke() -> void:
 	_check(_scene_file() == "town.tscn", "fresh slot enters town (got %s)" % _scene_file())
 	_check(Music.current_id == "town", "town scene plays town music (%s)" % Music.current_id)
 
-	# --- Run 1: full clear over 2 floors, with a mid-run quit + resume at floor 2 ---
+	# --- Unlock cascade (PRD §7.1): a fresh save opens nothing. The forge, the
+	# research desk, and the build plots are all shut until their story beats fire. ---
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "weapons"), "fresh save: forge locked")
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "tech"), "fresh save: research desk locked")
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "building"), "fresh save: build plots locked")
+	_check(_scene_node().call("open_forge_panel") == null, "forge panel refuses while locked")
+	_check(_scene_node().call("open_tech_panel") == null, "research panel refuses while locked")
+	_scene_node().call("_try_build", "sophias-study")
+	_check(TownCore.building_level(SaveManager.state["town"], "sophias-study") == 0,
+		"build refused while the building system is locked")
+
+	# --- Run 1: full clear over 3 floors, with a mid-run quit + resume at floor 2 ---
 	_game.call("_start_run")
 	await get_tree().process_frame
 	var rooms_seen := 0
@@ -73,6 +84,43 @@ func _run_smoke() -> void:
 	_check(Ledger.get_amount("knowledge-shards") >= 1.0, "boss dropped knowledge shards")
 	_check(RunState.echoes.size() >= 1, "echo picks recorded (%d)" % RunState.echoes.size())
 	_check(RunState.player_health > 0, "player HP carried between rooms (%d)" % RunState.player_health)
+
+	# --- The unlock cascade fires on the run-1 town return (PRD §7.1) ---------------
+	# B3 (Sophia cracks the shards) force-plays because run 1's 3 boss kills tripped
+	# its gate; then B1 (Mara, talk) and B4 (Herzog, talk) open the forge and plots.
+	await _settle(5)
+	var dlg_defs: Dictionary = DataLoader.load_domain("dialogue")
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "tech"), "desk still locked as B3 opens")
+	var b3dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(b3dlg != null, "B3 'Sophia cracks the shards' force-played (3rd boss kill)")
+	if b3dlg != null:
+		for i in ((dlg_defs["b3-sophia-shards"]["scene"] as Dictionary)["lines"] as Array).size():
+			b3dlg.advance()
+		await _settle(3)
+	_check(bool(SaveManager.state["story"]["flags"].get("b3", false)), "B3 set its flag")
+	_check(UnlocksCore.is_unlocked(SaveManager.state, "tech"), "research desk unlocked after B3")
+
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "weapons"), "forge locked before B1")
+	var b1dlg: DialoguePanel = _scene_node().call("talk_to", "mara")
+	_check(b1dlg != null, "Mara offers B1 (resonance ore is in the pack from the boss drops)")
+	if b1dlg != null:
+		for i in ((dlg_defs["b1-mara-ore"]["scene"] as Dictionary)["lines"] as Array).size():
+			b1dlg.advance()
+		await _settle(3)
+	_check(bool(SaveManager.state["story"]["flags"].get("b1", false)), "B1 set its flag")
+	_check(UnlocksCore.is_unlocked(SaveManager.state, "weapons"), "forge unlocked after B1")
+
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "building"), "build plots locked before B4")
+	var b4dlg: DialoguePanel = _scene_node().call("talk_to", "herzog")
+	_check(b4dlg != null, "Herzog offers B4 (gold over the cheapest building cost; A4 needs runs>=2)")
+	if b4dlg != null:
+		for i in ((dlg_defs["b4-herzog-ledger"]["scene"] as Dictionary)["lines"] as Array).size():
+			b4dlg.advance()
+		await _settle(3)
+	_check(bool(SaveManager.state["story"]["flags"].get("b4", false)), "B4 set its flag")
+	_check(UnlocksCore.is_unlocked(SaveManager.state, "building"), "build plots unlocked after B4")
+	# mark_shown replaced the story dict three times — re-grab the counters ref.
+	c = SaveManager.state["story"]["counters"]
 
 	# --- Build in town -------------------------------------------------------------
 	# The wave gold (>= 40) buys Sophia's Study L1; the next day tick must produce.
@@ -199,9 +247,9 @@ func _run_smoke() -> void:
 			talk.advance()
 		await _settle(3)
 		_check(bool(SaveManager.state["story"]["flags"].get("a4", false)),
-			"A4 played first (spine > contextual) and set its flag")
-		_check(int((SaveManager.state["story"]["talked_to"] as Dictionary).get("herzog", 0)) == 1,
-			"talked_to counted")
+			"A4 played first (spine > contextual, B4 already seen) and set its flag")
+		_check(int((SaveManager.state["story"]["talked_to"] as Dictionary).get("herzog", 0)) == 2,
+			"talked_to counted (B4 earlier + A4 now)")
 
 	# mark_shown replaces the story section (pure copy) — re-grab the counters ref.
 	c = SaveManager.state["story"]["counters"]
@@ -238,7 +286,10 @@ func _run_smoke() -> void:
 
 func _boot_game() -> void:
 	_game = (load("res://scenes/core/game.tscn") as PackedScene).instantiate()
-	_game.set("run_floors", 2)  # 2 floors so a floor TRANSITION (checkpoint beat) exists
+	# 3 floors: a floor TRANSITION exists (checkpoint beat), AND one full clear scores
+	# 3 cumulative boss kills — which trips the B3 cascade gate (boss_kills >= 3), so
+	# the smoke exercises the tech-desk unlock naturally on the run-1 town return.
+	_game.set("run_floors", 3)
 	add_child(_game)
 
 

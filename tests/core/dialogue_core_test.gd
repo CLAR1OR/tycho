@@ -117,6 +117,44 @@ func test_select_forced() -> void:
 	check_eq(DialogueCore.select_forced(defs, s), "banner", "eligible forced scene fires")
 
 
+func test_sets_flag_suppression() -> void:
+	# A snippet whose sets_flag is already set has nothing left to say — inert. This
+	# is how the two B3 twin beats (a beat + its runs>=6 fallback copy, both setting
+	# "b3") never both play: once one sets the flag, the other is suppressed.
+	var s := _save_state()  # boss_kills=3, runs=10 → both twins' gates hold
+	var main := _def("b3-shards", {"source": "spine", "sets_flag": "b3",
+		"conditions": [{"counter": "boss_kills", "gte": 3}]})
+	var alt := _def("b3-shards-alt", {"source": "spine", "sets_flag": "b3",
+		"conditions": [{"counter": "runs", "gte": 6}]})
+	# Both eligible up front (flag unset).
+	check(DialogueCore.eligible(main, s), "main twin eligible before the flag is set")
+	check(DialogueCore.eligible(alt, s), "alt twin eligible before the flag is set")
+	# One plays → sets b3. Now the other is inert even though its own gate still holds
+	# and it was never itself marked seen.
+	s["story"] = DialogueCore.mark_shown(s["story"], main, false)
+	check(not DialogueCore.eligible(main, s), "played twin: suppressed (seen + flag)")
+	check(not DialogueCore.eligible(alt, s), "unplayed twin: suppressed by the shared flag")
+
+
+func test_twin_forced_plays_exactly_once() -> void:
+	# End-to-end over select_forced: both force_play twins eligible → exactly one is
+	# chosen, and after it's marked shown the pool has nothing forced left.
+	var s := _save_state()
+	var defs := {
+		"b3-shards": _def("b3-shards", {"source": "spine", "force_play": true,
+			"sets_flag": "b3", "speakers": ["sophia"],
+			"conditions": [{"counter": "boss_kills", "gte": 3}]}),
+		"b3-shards-alt": _def("b3-shards-alt", {"source": "spine", "force_play": true,
+			"sets_flag": "b3", "speakers": ["sophia"],
+			"conditions": [{"counter": "runs", "gte": 6}]}),
+	}
+	var first := DialogueCore.select_forced(defs, s)
+	check_eq(first, "b3-shards", "id-asc tiebreak picks the primary twin first")
+	s["story"] = DialogueCore.mark_shown(s["story"], defs[first], false)
+	check_eq(DialogueCore.select_forced(defs, s), "",
+		"after one twin plays, no forced scene remains (the other is suppressed)")
+
+
 func test_mark_shown() -> void:
 	var s := _save_state()
 	var def := _def("b5", {"source": "arc", "sets_flag": "b5"})

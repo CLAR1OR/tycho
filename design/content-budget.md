@@ -52,7 +52,7 @@ Volume model: **Hades-style high volume** — fresh contextual dialogue on nearl
 
 | Item | Count | Notes |
 | --- | --- | --- |
-| **Story-spine scenes** | **~22** | The Act I skeleton incl. Phase E post-climax endgame beats (added 2026-07-03) — see `act1-story-beats.md`. |
+| **Story-spine scenes** | **~22** | The Act I skeleton incl. Phase E post-climax endgame beats (added 2026-07-03) — see `act1-story-beats.md`. *Authored so far: A4, B1, B3, B4, B5 (+ the B3 runs≥6 fallback twin, a copy — not a new scene, so the ~22 count is unchanged).* |
 | **Character-arc scenes** | **~28** (4 arcs × 6–8 beats) | Full arcs: Sophia, Tilly, Mara, Old Thomas. Wren + Herzog get flavor tracks only (escalating lines, no arc payoff in v1). **First 17 beats drafted + integrated 2026-07-04 (curation pending — `design/dialogue/drafts-review-2026-07-04.md`); the rest need beat definitions in `act1-story-beats.md` first (trajectories alone aren't draftable).** |
 | **Contextual snippet pool** | **~250** | Reactions to: deaths (per floor/boss), first kills, tech unlocks (1+ per node), building completions, resource milestones, age turn, weapon unlocks, codex shards. The Hades-vibrancy layer. |
 | **Flavor barks** | **~70** | Repeatable per-character idle lines so the town is never mute when the pool runs dry — incl. ~10 post-climax barks (drills, watch-rotas, the west) so the endgame town isn't frozen pre-war (added 2026-07-03). **First 20 drafted + integrated 2026-07-04 (curation pending).** |

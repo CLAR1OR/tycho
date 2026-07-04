@@ -1,0 +1,17 @@
+{
+	"id": "b4-herzog-ledger",
+	"source": "spine",
+	"speakers": ["herzog", "tycho"],
+	"priority": 88,
+	"conditions": [{"resource": "gold", "gte": 40}],
+	"sets_flag": "b4",
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "herzog", "text": "You've hauled up enough coin that I can't call it luck anymore. So I've opened the ledger. Proper books."},
+			{"who": "herzog", "text": "Bring gold and stone and tell me what you want raised. The town raises it. A study, a quarry, a wall. Whatever the coin covers."},
+			{"who": "tycho", "text": "That's it? No terms?"},
+			{"who": "herzog", "text": "The ledger doesn't argue terms. It only adds. Go pick a plot."}
+		]
+	}
+}

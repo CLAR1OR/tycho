@@ -69,6 +69,13 @@ static func eligible(def: Dictionary, save_state: Dictionary) -> bool:
 	var is_bark := str(def.get("source", "")) == "bark"
 	if bool(def.get("once", not is_bark)) and (story.get("seen", []) as Array).has(id):
 		return false
+	# A snippet whose `sets_flag` flag is ALREADY set has nothing left to say — skip
+	# it. Small, general rule that keeps two twin-gated beats (a beat + its fallback
+	# copy, both setting the same flag; the AND-only vocabulary has no negation to do
+	# this in data) from BOTH playing: once either sets the flag, the other is inert.
+	var sets_flag := str(def.get("sets_flag", "")) if def.get("sets_flag") != null else ""
+	if not sets_flag.is_empty() and bool((story.get("flags", {}) as Dictionary).get(sets_flag, false)):
+		return false
 	# cooldown_runs: min runs between repeats (barks / repeatables)…
 	var cooldown := int(def.get("cooldown_runs", 1 if str(def.get("source", "")) == "arc" else 0))
 	var last_run: Dictionary = story.get("dialogue_last", {})

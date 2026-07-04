@@ -1,0 +1,19 @@
+{
+	"id": "b3-sophia-shards-alt",
+	"source": "spine",
+	"speakers": ["sophia", "tycho"],
+	"priority": 92,
+	"force_play": true,
+	"conditions": [{"counter": "runs", "gte": 6}],
+	"sets_flag": "b3",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{"who": "", "text": "Sophia has been up three nights with the shards from the deep floors. When Tycho comes in she doesn't look up. She turns a shard to the candle, sets it down, and taps a page covered edge to edge in her own small hand."},
+			{"who": "sophia", "text": "They aren't stones with scratches on them. They're written. Every one says something, and the somethings fit. Start one and the next one carries it further."},
+			{"who": "tycho", "text": "Written by who?"},
+			{"who": "sophia", "text": "I don't know yet. But nobody cuts this into rock by accident. It's deliberate, it's ordered, and it's teaching. Keep bringing them up and I can start to read it properly. All of it."},
+			{"who": "", "text": "She finally looks at him. There is something new in her face, and it isn't fear. It's appetite."}
+		]
+	}
+}

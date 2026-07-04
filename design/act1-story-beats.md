@@ -2,7 +2,7 @@
 
 > The ordered spine from "Tycho finds the artefact" to "the emperor gets a face," what gates each beat, the four character arcs, and the dialogue-selection rules. This doc doubles as the **dialogue system spec** — the condition vocabulary at the bottom is what the engine must implement. Drafted 2026-06-12. Beats are skeleton-level: scene intent + gate, not scripts. Scripts get authored per-beat later (human voice, agent drafts, human curation).
 >
-> **Implementation status (2026-07-03):** the selection system below is BUILT — full condition vocabulary + priority/once/cooldown/force-play rules in pure `src/dialogue/dialogue_core.gd` (tested), playback in `dialogue_panel.gd`, NPC talk spots + 1-forced-per-visit in `town.gd`, content as `data/dialogue/*.json`. First authored snippets: A4, B1, B5 (force-play cutscene), C3, one Herzog contextual, one Wren bark — agent drafts, awaiting human curation. Deferred: banner icons, painterly stills, `talked_to` location conditions.
+> **Implementation status (2026-07-03):** the selection system below is BUILT — full condition vocabulary + priority/once/cooldown/force-play rules in pure `src/dialogue/dialogue_core.gd` (tested), playback in `dialogue_panel.gd`, NPC talk spots + 1-forced-per-visit in `town.gd`, content as `data/dialogue/*.json`. First authored snippets: A4, B1, B5 (force-play cutscene), C3, one Herzog contextual, one Wren bark — agent drafts, awaiting human curation. **Unlock cascade wired (2026-07-04):** the Phase B beats now actually gate their systems via pure `UnlocksCore` (weapons←b1, etchings←b2 [dormant], tech←b3, building←b4) checked in `town.gd`; B3 (`b3-sophia-shards` + fallback twin) and B4 (`b4-herzog-ledger`) authored; `eligible` gained a `sets_flag`-already-set suppression rule (twin safety). Deferred: banner icons, painterly stills, `talked_to` location conditions.
 
 **Decisions baked in (from 2026-06-12 scope answers):** mixed gating (milestones + tech + run-counters); the mysterious woman arrives **mid-act** — the early game stays purely local; full arcs for **Sophia, Tilly, Mara, Old Thomas**; Wren + Herzog are flavor tracks.
 
@@ -25,8 +25,8 @@ Phases overlap in play — gates, not a strict sequence. `[cutscene]` = painterl
 | --- | --- | --- |
 | B1 | **Mara and the ore.** First Resonance Ore → forge scene → **weapons system unlocks**. | first Resonance Ore in inventory |
 | B2 | **Thomas and the meditation.** Tycho mentions the etchings itch; Thomas teaches stillness → **etchings/abilities screen unlocks**. | first Resonance Dust + visited Thomas once |
-| B3 | **Sophia cracks the shards.** "There's *knowledge* in them — structured, deliberate." → **tech tree unlocks**. [cutscene] | 3rd boss kill (any floors, cumulative) |
-| B4 | **Herzog opens the ledger.** Gold threshold → **town building unlocks**. | gold ≥ first building cost |
+| B3 | **Sophia cracks the shards.** "There's *knowledge* in them — structured, deliberate." → **tech tree unlocks**. [cutscene] *(authored 2026-07-04: `b3-sophia-shards` + fallback twin `b3-sophia-shards-alt`)* | 3rd boss kill (any floors, cumulative) **OR runs ≥ 6** (fallback, see open questions) |
+| B4 | **Herzog opens the ledger.** Gold threshold → **town building unlocks**. *(authored 2026-07-04: `b4-herzog-ledger`)* | gold ≥ first building cost (= 40, the cheapest L1 building) |
 | B5 | **The first stone wall.** Masonry researched → palisade comes down, wall goes up. Herzog: "Huh. It holds." (per the masonry node) | tech `med-masonry-arch` |
 
 ### Phase C — Momentum (the town transforms)
@@ -106,6 +106,6 @@ cooldown_runs       — min runs between repeats (barks) / between two scenes of
 This vocabulary is the contract for `architecture-schemas.md` (dialogue schema + the event bus that updates counters/flags).
 
 ## Open questions (resolve in playtest, not now)
-- Does B3's "3rd boss kill" gate the tree too late if a player rushes floor depth? Fallback gate: `OR runs >= 6` — exception to the no-OR rule, or just a second copy of the beat with the alternate gate.
+- Does B3's "3rd boss kill" gate the tree too late if a player rushes floor depth? Fallback gate: `OR runs >= 6` — exception to the no-OR rule, or just a second copy of the beat with the alternate gate. **Resolved 2026-07-04 (implemented):** went with the **second-copy** route — `b3-sophia-shards` (gate boss_kills≥3) + `b3-sophia-shards-alt` (identical scene, gate runs≥6), both `sets_flag: "b3"`. To stop both from playing on successive visits (the AND-only vocabulary has no negation to express "unless b3"), `DialogueCore.eligible` now suppresses any snippet whose `sets_flag` is already set — a small general rule that makes twin-gated beats safe. See CLAUDE.md status (unlock cascade) + `design/dialogue/drafts-review-2026-07-04b.md`.
 - C4's `codex_shards >= 2` means two full clears before the woman appears — confirm that lands mid-act at real play pace (~run 15–20).
 - Whether D5 plays as one scene or a short playable epilogue walk through the changed town (cost: one scripted sequence — decide after the climax is drafted).

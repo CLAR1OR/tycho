@@ -101,7 +101,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 ### 7.1 Progression & the unlock cascade
 - **Purpose:** pace complexity — systems come online one at a time via the story, never all at once.
 - **Trigger:** mixed gates (milestones + tech + run counters), per `act1-story-beats.md`. E.g. first Resonance Ore → weapons (Mara, B1); first Resonance Dust + visited Thomas → etchings/attunements screen (B2); 3rd cumulative boss kill → tech tree (Sophia, B3); gold ≥ first cost → town building (Herzog, B4).
-- **State:** `story.flags`, `story.counters` in save; system-unlocked flags derived from them.
+- **State:** `story.flags`, `story.counters` in save; system-unlocked flags derived from them. *(Implemented 2026-07-04 — pure `UnlocksCore` maps weapons←b1 / etchings←b2 [dormant, system unbuilt] / tech←b3 / building←b4, checked in `town.gd`; B3 (`b3-sophia-shards` + a runs≥6 fallback twin) and B4 (`b4-herzog-ledger`) authored; B1 already existed. Twin beats made safe by a `sets_flag`-already-set suppression rule in DialogueCore.)*
 - **Resolution:** a gated scene fires, sets a flag, and the corresponding screen/vendor becomes available.
 - **Player decision:** which systems to invest in first once unlocked.
 - **Content hooks:** each unlock = a scripted scene (the cascade beats).

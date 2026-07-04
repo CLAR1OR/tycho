@@ -77,7 +77,7 @@ func _ready() -> void:
 	var day := int(SaveManager.state["story"]["counters"].get("runs", 0)) + 1
 	_day_label.text = "Home — Day %d" % day
 	_hint_label.text = "WASD move - E interact (plots, desk, forge, people) - the portal starts a run"
-	_refresh_plots()
+	_refresh_facilities()
 	# Spine/cutscene beats can force-play on a town visit — max 1 (spec): this runs
 	# once per town instance, so one visit = at most one forced scene. Deferred a
 	# frame so the scene (and any save/swap in flight) settles first.
@@ -87,10 +87,14 @@ func _ready() -> void:
 func _unhandled_input(event: InputEvent) -> void:
 	if not event.is_action_pressed("interact"):
 		return
+	# Facilities re-check their story-flag gate on every press — a beat could have
+	# fired mid-visit (a talk sets a flag) and opened the door since you walked in.
 	if _in_desk:
-		open_tech_panel()
+		if open_tech_panel() == null:
+			_flash_facility(_desk, "Sophia: not yet.")
 	elif _in_forge:
-		open_forge_panel()
+		if open_forge_panel() == null:
+			_flash_facility(_forge, "Mara: not yet.")
 	elif _in_npc != null:
 		talk_to(str(_in_npc.get_meta("npc_id")))
 	elif _in_plot != null:
@@ -102,16 +106,22 @@ func _on_portal_body_entered(body: Node3D) -> void:
 		run_requested.emit()
 
 
-## Public (game flow + smoke driver): open Sophia's research screen.
+## Public (game flow + smoke driver): open Sophia's research screen, or null if the
+## tech system hasn't been unlocked yet (B3 — Sophia cracks the shards).
 func open_tech_panel() -> TechPanel:
+	if not UnlocksCore.is_unlocked(SaveManager.state, "tech"):
+		return null
 	var panel := TechPanel.new()
 	$HUD.add_child(panel)
 	panel.open()
 	return panel
 
 
-## Public (game flow + smoke driver): open Mara's Forge.
+## Public (game flow + smoke driver): open Mara's Forge, or null if the weapons
+## system hasn't been unlocked yet (B1 — Mara and the ore).
 func open_forge_panel() -> ForgePanel:
+	if not UnlocksCore.is_unlocked(SaveManager.state, "weapons"):
+		return null
 	var panel := ForgePanel.new()
 	$HUD.add_child(panel)
 	panel.open()
@@ -142,7 +152,10 @@ func _play_snippet(def: Dictionary, count_talk: bool) -> DialoguePanel:
 	panel.finished.connect(func() -> void:
 		SaveManager.state["story"] = DialogueCore.mark_shown(
 			SaveManager.state["story"], def, count_talk)
-		SaveManager.save_current())
+		SaveManager.save_current()
+		# A cascade beat (b1/b3/b4) may have just set its flag — reopen the facility
+		# it gates without waiting for the next town visit.
+		_refresh_facilities())
 	return panel
 
 
@@ -151,6 +164,11 @@ func _play_snippet(def: Dictionary, count_talk: bool) -> DialoguePanel:
 func _try_build(building_id: String) -> void:
 	if not _building_defs.has(building_id):
 		push_error("Town: missing building def \"%s\"" % building_id)
+		return
+	# The build plots stay shut until Herzog opens the ledger (B4, PRD §7.1). The
+	# label already says so; a press just flashes the hint.
+	if not UnlocksCore.is_unlocked(SaveManager.state, "building"):
+		_flash_plot_label(_plot_for(building_id), "Herzog: not yet.")
 		return
 	var def: Dictionary = _building_defs[building_id]
 	if not TownCore.is_unlocked(def, SaveManager.state["tech"]["researched"]):
@@ -167,6 +185,37 @@ func _try_build(building_id: String) -> void:
 	EventBus.building_built.emit(building_id, level + 1)
 	SaveManager.save_current()  # a built building must never be lost to a crash
 	_refresh_plots()
+
+
+## Re-label the three story-gated facilities (forge, desk, and every plot) against
+## the current unlock flags. Called on entry and after any beat that sets a flag.
+func _refresh_facilities() -> void:
+	_refresh_facility(_forge, "weapons", "Mara's Forge", "E for weapons",
+		"Mara hasn't offered her services")
+	_refresh_facility(_desk, "tech", "Sophia's Desk", "E to research",
+		"Sophia hasn't cracked the shards")
+	_refresh_plots()
+
+
+func _refresh_facility(area: Area3D, system: String, display_name: String,
+		open_hint: String, locked_reason: String) -> void:
+	var label := area.get_node("Label") as Label3D
+	if UnlocksCore.is_unlocked(SaveManager.state, system):
+		label.text = "%s — %s" % [display_name, open_hint]
+		label.modulate = Color.WHITE
+	else:
+		label.text = "%s — locked (%s)" % [display_name, locked_reason]
+		label.modulate = Color(1, 1, 1, 0.5)
+
+
+## Brief acknowledgment flash when a locked facility is pressed (the permanent label
+## carries the diegetic reason; this just confirms the press registered).
+func _flash_facility(area: Area3D, msg: String) -> void:
+	var label := area.get_node("Label") as Label3D
+	label.text = msg
+	await get_tree().create_timer(1.2).timeout
+	if is_instance_valid(self) and is_instance_valid(area):
+		_refresh_facilities()
 
 
 func _refresh_plots() -> void:
@@ -188,6 +237,12 @@ func _refresh_plot(plot: Area3D) -> void:
 		# Box mesh is origin-centred: scale up per level and lift so it grows upward.
 		mesh.scale = Vector3(1.0, float(level), 1.0)
 		mesh.position = Vector3(0.0, 1.1 * float(level), 0.0)
+	# The whole build system is gated on B4 (Herzog opens the ledger) — that gate
+	# reads first, before any per-building tech gate.
+	if not UnlocksCore.is_unlocked(SaveManager.state, "building"):
+		label.text = "%s — locked (Herzog hasn't opened the ledger)" % display_name
+		label.modulate = Color(1, 1, 1, 0.5)
+		return
 	if not TownCore.is_unlocked(def, SaveManager.state["tech"]["researched"]):
 		label.text = "%s — locked (research: %s)" % [display_name, _gate_name(def)]
 		label.modulate = Color(1, 1, 1, 0.5)

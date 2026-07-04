@@ -3,11 +3,11 @@
 	"source": "contextual",
 	"speakers": ["herzog"],
 	"priority": 20,
-	"conditions": [{"resource": "gold", "gte": 50}],
+	"conditions": [{"resource": "gold", "gte": 50}, {"flag": "b4"}],
 	"scene": {
 		"kind": "talk",
 		"lines": [
-			{"who": "herzog", "text": "You're carrying more coin than the town saw all last winter. I've opened the ledger. Proper books, proper prices. If you want walls, wells, or workshops, the town will build what you can pay for."},
+			{"who": "herzog", "text": "You're carrying more coin than the town saw all last winter. The ledger's open and the prices are set. If you want walls, wells, or workshops, the town will build what you can pay for."},
 			{"who": "herzog", "text": "And before you ask: no, I don't think a hole in the ground should fund public works either. The ledger doesn't have a column for 'should'."}
 		]
 	}

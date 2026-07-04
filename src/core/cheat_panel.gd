@@ -98,6 +98,19 @@ func simulate_runs(count: int, victory: bool = true) -> void:
 		simulate_run(victory)
 
 
+## Raw-set a story flag (b1..b5) in the save. Rationale: the unlock cascade (PRD
+## §7.1) gates the forge/desk/plots behind story beats, so an OLD dev save from
+## before the cascade lands locked out of its own facilities. This is the no-grind
+## escape hatch — poke the flag and walk back in. Bypasses the beat deliberately
+## (it's a debug tool); the real path is replaying the beat.
+func set_story_flag(flag: String) -> void:
+	if SaveManager.state.is_empty():
+		return
+	(SaveManager.state["story"]["flags"] as Dictionary)[flag] = true
+	SaveManager.save_current()
+	_rebuild_if_open()
+
+
 ## Instantly research a node — the real completion path (TechCore + the event), so
 ## unlocks, age advance, and the town plots all react as if it were earned.
 func research(id: String) -> void:
@@ -171,6 +184,20 @@ func _rebuild() -> void:
 	var counters: Dictionary = SaveManager.state["story"]["counters"]
 	_note("runs %d · clears %d · deaths %d · boss kills %d" % [int(counters["runs"]),
 		int(counters["full_clears"]), int(counters["deaths"]), int(counters["boss_kills"])])
+
+	_header("Set story flag (raw)")
+	_note("Reopens cascade-gated facilities on an old save (b1 forge · b3 desk · b4 build)")
+	var flags: Dictionary = SaveManager.state["story"]["flags"]
+	var flag_row := HBoxContainer.new()
+	flag_row.add_theme_constant_override("separation", 4)
+	for flag: String in ["b1", "b2", "b3", "b4", "b5"]:
+		var b := Button.new()
+		b.text = "%s%s" % [flag, " ✓" if bool(flags.get(flag, false)) else ""]
+		b.add_theme_font_size_override("font_size", FONT_SIZE)
+		b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		b.pressed.connect(set_story_flag.bind(flag))
+		flag_row.add_child(b)
+	_rows.add_child(flag_row)
 
 	_header("Tech — instant research")
 	var defs := DataLoader.load_domain("tech")
