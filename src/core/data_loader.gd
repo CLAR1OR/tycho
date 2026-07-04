@@ -104,14 +104,36 @@ const SFX_SPEC: Dictionary = {
 ## Load + validate data/audio/sfx-map.json: {id: {file, volume_db, pitch_jitter,
 ## bus}}. Invalid entries are skipped LOUDLY, like load_domain.
 static func load_sfx_map() -> Dictionary:
+	return _load_single_file_map(SFX_MAP_PATH, SFX_SPEC)
+
+
+# The music map (design/audio.md § Music) is ONE file like the SFX map — the same
+# deliberate exception to one-file-per-entity (a track entry has no life of its
+# own; a soundtrack wants one page). id -> {file, volume_db}.
+const MUSIC_MAP_PATH := "res://data/audio/music-map.json"
+const MUSIC_SPEC: Dictionary = {
+	"file": {"type": "string", "required": true},  # res:// path to the .ogg loop
+	"volume_db": {"type": "float"},                # placeholder mix / fade ceiling
+}
+
+
+## Load + validate data/audio/music-map.json: {id: {file, volume_db}}. Invalid
+## entries are skipped LOUDLY, like the SFX map.
+static func load_music_map() -> Dictionary:
+	return _load_single_file_map(MUSIC_MAP_PATH, MUSIC_SPEC)
+
+
+## Shared reader for the single-file id->params maps (SFX, music): parse, then
+## per-entry validate against `spec`; bad entries skip loudly, never half-valid.
+static func _load_single_file_map(path: String, spec: Dictionary) -> Dictionary:
 	var out := {}
-	var parsed := _read_entry(SFX_MAP_PATH)
+	var parsed := _read_entry(path)
 	for id: Variant in parsed:
-		var where := "%s#%s" % [SFX_MAP_PATH, id]
+		var where := "%s#%s" % [path, id]
 		if not (parsed[id] is Dictionary):
 			push_error("DataLoader: %s must be an object" % where)
 			continue
-		var errors := DataValidator.validate(parsed[id], SFX_SPEC, where)
+		var errors := DataValidator.validate(parsed[id], spec, where)
 		if not errors.is_empty():
 			for e in errors:
 				push_error("DataLoader: " + e)

@@ -1,0 +1,6 @@
+{
+  "title": {"file": "res://assets/audio/music/title.ogg", "volume_db": 0.0},
+  "town": {"file": "res://assets/audio/music/town.ogg", "volume_db": 0.0},
+  "dungeon": {"file": "res://assets/audio/music/dungeon.ogg", "volume_db": 0.0},
+  "boss": {"file": "res://assets/audio/music/boss.ogg", "volume_db": 0.0}
+}

@@ -55,7 +55,12 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 static func default_profile() -> Dictionary:
 	return {
 		"profile_version": PROFILE_VERSION,
-		"settings": {},       # audio, controls, accessibility — profile-level, survive slot deletion
+		# Profile-level (survive slot deletion): audio, controls, accessibility.
+		# Audio volumes are LINEAR 0..1 (Music autoload converts to bus dB); the
+		# settings UI can lag (design/audio.md) — data-only for now. Controls +
+		# accessibility land with their screens; defaults-merge fills them for
+		# existing profiles that predate a key.
+		"settings": {"music_volume": 1.0, "sfx_volume": 1.0, "ui_volume": 1.0},
 		"achievements": {},   # id -> {unlocked_at, progress}
 	}
 

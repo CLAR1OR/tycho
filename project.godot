@@ -23,6 +23,7 @@ Ledger="*res://src/autoload/ledger.gd"
 SaveManager="*res://src/autoload/save_manager.gd"
 RunState="*res://src/autoload/run_state.gd"
 Sfx="*res://src/autoload/sfx.gd"
+Music="*res://src/autoload/music.gd"
 
 [display]
 

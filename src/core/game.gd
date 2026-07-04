@@ -60,6 +60,7 @@ func _ready() -> void:
 
 ## Boot screen: pick/create a slot. Nothing is loaded until the player chooses.
 func _show_slot_select() -> void:
+	Music.play("title")
 	var select := SlotSelect.new()
 	select.slot_count = SLOT_COUNT
 	select.slot_chosen.connect(func(slot: int) -> void:
@@ -93,6 +94,7 @@ func _process(delta: float) -> void:
 # not safe.
 
 func _goto_town() -> void:
+	Music.play("town")
 	var town := TOWN_SCENE.instantiate()
 	_swap(town)
 	town.run_requested.connect(func() -> void: call_deferred("_start_run"))
@@ -114,6 +116,7 @@ func _next_room() -> void:
 	if int(RunState.run["room"]) == 1:
 		SaveManager.state["checkpoint"] = RunState.to_checkpoint()
 		_save()
+	Music.play("boss" if RunState.room_kind() == RunFlow.KIND_BOSS else "dungeon")
 	var room := ROOM_SCENE.instantiate()
 	room.setup(
 		int(RunState.run["floor"]), int(RunState.run["room"]),

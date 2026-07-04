@@ -34,19 +34,32 @@ func _run_smoke() -> void:
 	var runs_before := int(SaveManager.state["story"]["counters"]["runs"])
 
 	_check(_scene_file() == "town.tscn", "fresh slot enters town (got %s)" % _scene_file())
+	_check(Music.current_id == "town", "town scene plays town music (%s)" % Music.current_id)
 
 	# --- Run 1: full clear over 2 floors, with a mid-run quit + resume at floor 2 ---
 	_game.call("_start_run")
 	await get_tree().process_frame
 	var rooms_seen := 0
 	var resume_tested := false
+	var music_dungeon_ok := false
+	var music_boss_ok := false
 	while RunState.in_run() and rooms_seen < MAX_ROOMS:
 		rooms_seen += 1
+		# The run swaps music per room kind (game.gd _next_room) — sample it once
+		# each while we sit in a dungeon room and in a boss room.
+		if _scene_file() == "combat_room.tscn":
+			if RunState.room_kind() == RunFlow.KIND_BOSS and not music_boss_ok:
+				music_boss_ok = true
+				_check(Music.current_id == "boss", "boss room plays boss music (%s)" % Music.current_id)
+			elif RunState.room_kind() == RunFlow.KIND_COMBAT and not music_dungeon_ok:
+				music_dungeon_ok = true
+				_check(Music.current_id == "dungeon", "dungeon room plays dungeon music (%s)" % Music.current_id)
 		if not resume_tested and int(RunState.run["floor"]) == 2:
 			resume_tested = true
 			await _quit_and_resume()
 		await _clear_current_room()
 	_check(resume_tested, "the run reached floor 2 (checkpoint beat exercised)")
+	_check(music_dungeon_ok and music_boss_ok, "both dungeon and boss music beats sampled")
 	_check(rooms_seen < MAX_ROOMS, "run finished within the watchdog (%d rooms)" % rooms_seen)
 	await _settle(30)
 	_check(_scene_file() == "town.tscn", "victory returns to town (got %s)" % _scene_file())

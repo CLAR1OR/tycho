@@ -65,3 +65,16 @@ func test_default_profile_and_migrate() -> void:
 	var p := SaveData.migrate_profile({})
 	check_eq(p["profile_version"], SaveData.PROFILE_VERSION, "empty profile gets defaults (first launch)")
 	check(p.has("settings") and p.has("achievements"), "profile sections present")
+	# Audio volumes (linear 0..1) exist from day one so Music._ready can read them.
+	for key in ["music_volume", "sfx_volume", "ui_volume"]:
+		check_eq(float(p["settings"][key]), 1.0, "settings default %s = 1.0" % key)
+
+
+func test_profile_migrate_fills_missing_audio_settings() -> void:
+	# A profile written before the audio-volume keys existed must gain them via
+	# defaults-merge, while any value the player already set survives.
+	var old := {"profile_version": 1, "settings": {"music_volume": 0.4}, "achievements": {}}
+	var out := SaveData.migrate_profile(old)
+	check_eq(float(out["settings"]["music_volume"]), 0.4, "existing volume preserved")
+	check_eq(float(out["settings"]["sfx_volume"]), 1.0, "missing sfx volume filled from defaults")
+	check_eq(float(out["settings"]["ui_volume"]), 1.0, "missing ui volume filled from defaults")
