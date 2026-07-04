@@ -1,0 +1,15 @@
+{
+	"id": "wren-bark-monomyth",
+	"source": "bark",
+	"speakers": ["wren"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 3,
+	"conditions": [{"counter": "runs", "gte": 5}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "wren", "text": "...you, again. Out the door, into the dark, back wearing a different face. Five times now, or near it, and I don't lose count, I never lose count. Every hero the traders sing about has the exact same bones. I'm starting to think you're not living a life. I think you're living a story, and something out there is turning the pages."}
+		]
+	}
+}

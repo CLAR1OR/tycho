@@ -1,0 +1,15 @@
+{
+	"id": "herzog-bark-quarry",
+	"source": "bark",
+	"speakers": ["herzog"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"building": "quarry", "gte": 1}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "herzog", "text": "The quarry takes stone out of the hill and the hill doesn't complain. Good arrangement. I've had partners I trusted a good deal less than that hill."}
+		]
+	}
+}

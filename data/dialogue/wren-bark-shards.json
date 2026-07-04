@@ -1,0 +1,15 @@
+{
+	"id": "wren-bark-shards",
+	"source": "bark",
+	"speakers": ["wren"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"counter": "codex_shards", "gte": 1}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "wren", "text": "...the shards, though. They never repeat. Scribes make mistakes, and the mistakes breed, that's how you know a thing was copied by a human hand. These have no mistakes in them at all. Nobody writes that clean. Nobody. That's the part that keeps me awake."}
+		]
+	}
+}

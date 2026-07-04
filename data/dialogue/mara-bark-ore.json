@@ -1,0 +1,15 @@
+{
+	"id": "mara-bark-ore",
+	"source": "bark",
+	"speakers": ["mara"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"has": "resonance-ore"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "Every bar of your ore cools a little different. Same fire, same beating on the anvil, and it still catches me out. I've stopped expecting it to behave. I have not stopped watching it."}
+		]
+	}
+}

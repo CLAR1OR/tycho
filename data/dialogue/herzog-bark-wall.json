@@ -1,0 +1,15 @@
+{
+	"id": "herzog-bark-wall",
+	"source": "bark",
+	"speakers": ["herzog"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"building": "town-walls", "gte": 1}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "herzog", "text": "People walk taller past the new wall. Same people. Same road. The wall did that. I've stopped being surprised by what a wall does to a man."}
+		]
+	}
+}

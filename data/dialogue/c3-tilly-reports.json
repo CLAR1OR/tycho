@@ -8,10 +8,10 @@
 	"scene": {
 		"kind": "talk",
 		"lines": [
-			{"who": "tilly", "text": "Three families on the west road this week. Walking, not trading. They don't stop here — they look at our wall, and they keep walking east."},
+			{"who": "tilly", "text": "Three families on the west road this week. Walking, not trading. They don't stop here. They look at our wall, and they keep walking east."},
 			{"who": "tycho", "text": "Refugees? From what?"},
 			{"who": "tilly", "text": "Burned villages, they say. Far west, past the river country. And they all say the same strange thing about the armies: that they weren't men. Then they stop talking and walk faster."},
-			{"who": "tilly", "text": "I'm writing it down. Dates, names, directions. Somebody in this town should be keeping a record that isn't gossip — might as well be the one who patrols anyway."}
+			{"who": "tilly", "text": "I'm writing it down. Dates, names, directions. Somebody in this town should be keeping a record that isn't gossip. Might as well be the one who patrols anyway."}
 		]
 	}
 }

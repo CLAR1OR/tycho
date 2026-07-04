@@ -1,0 +1,15 @@
+{
+	"id": "arc-mara-sings",
+	"source": "arc",
+	"priority": 55,
+	"speakers": ["mara", "tycho"],
+	"conditions": [{"flag": "b1"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "First blade out of your ore. Take it. Now tap the flat and hold still."},
+			{"who": "tycho", "text": "It's humming."},
+			{"who": "mara", "text": "Same note every time. I've made blades my whole life. Not one of them ever had an opinion. This one rang before I'd even finished it, like it already knew what it wanted to be."}
+		]
+	}
+}

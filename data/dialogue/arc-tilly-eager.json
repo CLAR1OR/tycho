@@ -1,0 +1,15 @@
+{
+	"id": "arc-tilly-eager",
+	"source": "arc",
+	"priority": 55,
+	"speakers": ["tilly", "tycho"],
+	"conditions": [{"counter": "runs", "gte": 1}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tilly", "text": "I walked the border twice today. Sighted, let me see, no threats. One fox. I logged the fox. Herzog says a quiet post is a good post."},
+			{"who": "tycho", "text": "He's not wrong."},
+			{"who": "tilly", "text": "I know. I'm trying to feel that way about it. I trained for the loud kind."}
+		]
+	}
+}

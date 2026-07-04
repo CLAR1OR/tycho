@@ -1,0 +1,15 @@
+{
+	"id": "arc-tilly-failure",
+	"source": "arc",
+	"priority": 50,
+	"speakers": ["tilly", "tycho"],
+	"conditions": [{"counter": "runs", "gte": 3}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tilly", "text": "So the report is this. I caught the thief by the store. Held him. For a moment there I really had him."},
+			{"who": "tycho", "text": "And then?"},
+			{"who": "tilly", "text": "And then he had me, and then he had the far side of the wall. I'm putting 'ongoing' in the log. It felt more honest than the alternative."}
+		]
+	}
+}

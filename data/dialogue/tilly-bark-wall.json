@@ -1,0 +1,15 @@
+{
+	"id": "tilly-bark-wall",
+	"source": "bark",
+	"speakers": ["tilly"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"building": "town-walls", "gte": 1}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tilly", "text": "I've paced the new wall end to end. To hold it right you'd want more of us than we've got. For now it's me and Bram and a lot of walking. We manage. I'm just glad it's stone we're walking behind now, and not the old sticks."}
+		]
+	}
+}

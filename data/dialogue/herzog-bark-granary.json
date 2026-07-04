@@ -1,0 +1,15 @@
+{
+	"id": "herzog-bark-granary",
+	"source": "bark",
+	"speakers": ["herzog"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "herzog", "text": "The granary's full and the roof doesn't leak. That's the whole report. Some winters, that's a triumph."}
+		]
+	}
+}

@@ -1,0 +1,15 @@
+{
+	"id": "tilly-bark-patrol",
+	"source": "bark",
+	"speakers": ["tilly"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tilly", "text": "Walked the full round twice. Nothing to report. I write the nothing down anyway, so if one day it turns into something, I'll know when it started."}
+		]
+	}
+}

@@ -1,0 +1,15 @@
+{
+	"id": "mara-bark-song",
+	"source": "bark",
+	"speakers": ["mara"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"flag": "b1"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "Listen to the shop a moment. Iron clangs. Your ore rings. Two different arguments going at once, and I get to settle both of them. Best work in the whole town, and I'm the only one who wants it."}
+		]
+	}
+}

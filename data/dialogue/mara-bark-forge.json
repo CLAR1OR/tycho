@@ -1,0 +1,15 @@
+{
+	"id": "mara-bark-forge",
+	"source": "bark",
+	"speakers": ["mara"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"flag": "b1"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "Feel that heat? I've had the forge going since the grey hour. There's a shape hiding in your ore, I can nearly hear it, and I'm not stopping till I've hammered it out into the open."}
+		]
+	}
+}

@@ -53,9 +53,9 @@ Volume model: **Hades-style high volume** — fresh contextual dialogue on nearl
 | Item | Count | Notes |
 | --- | --- | --- |
 | **Story-spine scenes** | **~22** | The Act I skeleton incl. Phase E post-climax endgame beats (added 2026-07-03) — see `act1-story-beats.md`. |
-| **Character-arc scenes** | **~28** (4 arcs × 6–8 beats) | Full arcs: Sophia, Tilly, Mara, Old Thomas. Wren + Herzog get flavor tracks only (escalating lines, no arc payoff in v1). |
+| **Character-arc scenes** | **~28** (4 arcs × 6–8 beats) | Full arcs: Sophia, Tilly, Mara, Old Thomas. Wren + Herzog get flavor tracks only (escalating lines, no arc payoff in v1). **First 17 beats drafted + integrated 2026-07-04 (curation pending — `design/dialogue/drafts-review-2026-07-04.md`); the rest need beat definitions in `act1-story-beats.md` first (trajectories alone aren't draftable).** |
 | **Contextual snippet pool** | **~250** | Reactions to: deaths (per floor/boss), first kills, tech unlocks (1+ per node), building completions, resource milestones, age turn, weapon unlocks, codex shards. The Hades-vibrancy layer. |
-| **Flavor barks** | **~70** | Repeatable per-character idle lines so the town is never mute when the pool runs dry — incl. ~10 post-climax barks (drills, watch-rotas, the west) so the endgame town isn't frozen pre-war (added 2026-07-03). |
+| **Flavor barks** | **~70** | Repeatable per-character idle lines so the town is never mute when the pool runs dry — incl. ~10 post-climax barks (drills, watch-rotas, the west) so the endgame town isn't frozen pre-war (added 2026-07-03). **First 20 drafted + integrated 2026-07-04 (curation pending).** |
 | **Cutscenes** | **~8** (opening, tree-unlock, first clear, first dream, age turn, ultimatum, climax, +1 spare) | Painterly stills + narration. ~2 stills each ≈ **16 images**. |
 | **Character portraits** | **9 speakers** × ~3 expressions ≈ **27 images** | Tycho, Sophia, Thomas, Tilly, Mara, Herzog, Wren, the woman (dream-blurred variant), the emissary. The emperor stays faceless-until-named: 1 silhouette/banner image. |
 

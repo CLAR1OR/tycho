@@ -1,0 +1,15 @@
+{
+	"id": "arc-thomas-deaths",
+	"source": "arc",
+	"priority": 50,
+	"speakers": ["thomas", "tycho"],
+	"conditions": [{"counter": "deaths", "gte": 2}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "thomas", "text": "You've died and come home more than once now. Sit. Here's the question I can't get past, boy. A stone that falls stays fallen. You don't."},
+			{"who": "tycho", "text": "Lucky, I suppose."},
+			{"who": "thomas", "text": "Something catches you and sets you back on your feet. What kind of thing does that? And harder than that: why would it trouble itself over you?"}
+		]
+	}
+}

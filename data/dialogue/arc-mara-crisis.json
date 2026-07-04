@@ -1,0 +1,15 @@
+{
+	"id": "arc-mara-crisis",
+	"source": "arc",
+	"priority": 50,
+	"speakers": ["mara", "tycho"],
+	"conditions": [{"flag": "b1"}, {"counter": "runs", "gte": 4}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "My father worked iron his whole life. He could tell you what a bar would do before it touched the fire, because iron always does the same thing."},
+			{"who": "tycho", "text": "And this doesn't."},
+			{"who": "mara", "text": "This does what it likes. So his knowing doesn't cover it, and half of mine doesn't either. I'm good at this, Tycho. I just found out I don't know what 'this' even is anymore."}
+		]
+	}
+}

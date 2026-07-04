@@ -1,0 +1,15 @@
+{
+	"id": "arc-sophia-method",
+	"source": "arc",
+	"speakers": ["sophia", "tycho"],
+	"priority": 55,
+	"conditions": [{"flag": "b3"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "sophia", "text": "I've started keeping a book. Before I read a new shard, I write down what I think it'll say. Then I read it and mark every place I was wrong."},
+			{"who": "tycho", "text": "Why guess? Just read them."},
+			{"who": "sophia", "text": "Because if I only read, I learn what the shard knows. If I guess first, I find out what I know. Those aren't the same thing, and only the second one is mine."}
+		]
+	}
+}

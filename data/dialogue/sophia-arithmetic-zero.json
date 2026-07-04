@@ -1,0 +1,15 @@
+{
+	"id": "sophia-arithmetic-zero",
+	"source": "contextual",
+	"priority": 20,
+	"speakers": ["sophia", "tycho"],
+	"conditions": [{"tech": "med-arithmetic-zero"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "sophia", "text": "Watch. I take everything the granary holds, and I take all of it away. What's left?"},
+			{"who": "tycho", "text": "Nothing."},
+			{"who": "sophia", "text": "There's a mark for nothing now. Zero. It sounds like a small thing. It isn't. Once you can write down having none of a thing, the arithmetic finally holds together."}
+		]
+	}
+}

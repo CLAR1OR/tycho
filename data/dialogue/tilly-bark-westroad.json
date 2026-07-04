@@ -1,0 +1,15 @@
+{
+	"id": "tilly-bark-westroad",
+	"source": "bark",
+	"speakers": ["tilly"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"flag": "c3"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tilly", "text": "Two more came up the west road today, near sundown. I logged it. Who they were, which way they turned, that the light was going. It's a thin record so far. It gets less thin if I just keep it."}
+		]
+	}
+}

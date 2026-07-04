@@ -7,7 +7,7 @@
 	"scene": {
 		"kind": "talk",
 		"lines": [
-			{"who": "herzog", "text": "You're carrying more coin than the town saw all last winter. I've opened the ledger — proper books, proper prices. If you want walls, wells, or workshops, the town will build what you can pay for."},
+			{"who": "herzog", "text": "You're carrying more coin than the town saw all last winter. I've opened the ledger. Proper books, proper prices. If you want walls, wells, or workshops, the town will build what you can pay for."},
 			{"who": "herzog", "text": "And before you ask: no, I don't think a hole in the ground should fund public works either. The ledger doesn't have a column for 'should'."}
 		]
 	}

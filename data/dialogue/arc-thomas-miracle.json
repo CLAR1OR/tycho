@@ -1,0 +1,15 @@
+{
+	"id": "arc-thomas-miracle",
+	"source": "arc",
+	"priority": 50,
+	"speakers": ["thomas", "tycho"],
+	"conditions": [{"flag": "a4"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "thomas", "text": "The women at the well are calling your portal a miracle. Perhaps it is. But tell me this, boy. When did you last hear of a miracle you could set your chores by?"},
+			{"who": "tycho", "text": "It does keep regular hours."},
+			{"who": "thomas", "text": "It opens at the same grey hour and closes when the light goes. A miracle that runs to a schedule. I don't know what to call that yet. I only know it's worth the wondering."}
+		]
+	}
+}

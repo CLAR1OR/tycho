@@ -1,0 +1,15 @@
+{
+	"id": "wren-bark-waking",
+	"source": "bark",
+	"speakers": ["wren"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 3,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "wren", "text": "...nobody planned it, but the whole town wakes at the same grey hour now, ever since the hole opened. All at once. Like a bell nobody rang. I asked the baker. He hadn't even noticed he'd changed his hours. Doesn't that trouble you? No. Just me, then. Fine."}
+		]
+	}
+}

@@ -1,0 +1,15 @@
+{
+	"id": "arc-sophia-outpaced",
+	"source": "arc",
+	"priority": 50,
+	"speakers": ["sophia", "tycho"],
+	"conditions": [{"flag": "b3"}, {"counter": "codex_shards", "gte": 3}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "sophia", "text": "I spent three nights working out how the arch throws its weight outward. I was proud of it. Then the next shard just said it, in one line, like it was nothing."},
+			{"who": "tycho", "text": "So you were right."},
+			{"who": "sophia", "text": "I was right and I was slow. Whatever writes these is never slow. I still can't tell if I'm learning from a teacher or racing one."}
+		]
+	}
+}

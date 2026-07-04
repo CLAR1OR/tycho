@@ -1,0 +1,15 @@
+{
+	"id": "arc-mara-cannon",
+	"source": "arc",
+	"priority": 55,
+	"speakers": ["mara", "tycho"],
+	"conditions": [{"tech": "ren-gunpowder"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "Look up at the wall. See the iron throat sticking out over the gate? That one's mine. Powder goes in one end, and the whole hillside hears about it."},
+			{"who": "tycho", "text": "Your father would faint."},
+			{"who": "mara", "text": "My father made horseshoes his whole life, good ones. I made a thing that talks back to armies. Don't you dare tell him."}
+		]
+	}
+}

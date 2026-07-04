@@ -1,0 +1,15 @@
+{
+	"id": "herzog-bark-desert",
+	"source": "bark",
+	"speakers": ["herzog"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "herzog", "text": "I crossed a desert once with more men than walked out the far side of it. It wasn't cruelty. The desert just doesn't keep a ledger. Bring the gold inside before dark."}
+		]
+	}
+}

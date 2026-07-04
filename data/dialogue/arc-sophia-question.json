@@ -1,0 +1,15 @@
+{
+	"id": "arc-sophia-question",
+	"source": "arc",
+	"priority": 45,
+	"speakers": ["sophia", "tycho"],
+	"conditions": [{"flag": "c2"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "sophia", "text": "The shards are true. I've checked them every way I know. But true things don't put themselves in a stone and wait to be found. Somebody set them there for us."},
+			{"who": "tycho", "text": "Maybe it's a gift."},
+			{"who": "sophia", "text": "A gift still comes from somebody. I'd sleep a lot better if I knew what they were after."}
+		]
+	}
+}

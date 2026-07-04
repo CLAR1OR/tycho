@@ -1,0 +1,15 @@
+{
+	"id": "mara-bark-coldend",
+	"source": "bark",
+	"speakers": ["mara"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "Hold this. No, the cold end, hero. You've got all the reach of a man who's never once been burned, and I mean to keep you that way."}
+		]
+	}
+}

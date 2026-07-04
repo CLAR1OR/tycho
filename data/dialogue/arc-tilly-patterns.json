@@ -1,0 +1,15 @@
+{
+	"id": "arc-tilly-patterns",
+	"source": "arc",
+	"priority": 45,
+	"speakers": ["tilly", "tycho"],
+	"conditions": [{"counter": "runs", "gte": 6}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tilly", "text": "You said the ones in the dark don't rush you. They wait for you to rush them. So I tried it on the drunks outside the tavern. Stood still. Let them come to me."},
+			{"who": "tycho", "text": "Did it work?"},
+			{"who": "tilly", "text": "It worked. I've never won anything by standing still before. So I've been doing bravery backwards this whole time. Noted. I can learn that."}
+		]
+	}
+}

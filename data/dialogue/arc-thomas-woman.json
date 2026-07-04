@@ -1,0 +1,15 @@
+{
+	"id": "arc-thomas-woman",
+	"source": "arc",
+	"priority": 55,
+	"speakers": ["thomas", "tycho"],
+	"conditions": [{"flag": "c4"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "thomas", "text": "You dream of a woman you've never met, and you say she seems to look back at you. Love at that distance is a strange crop, boy."},
+			{"who": "tycho", "text": "I don't know that it's love."},
+			{"who": "thomas", "text": "Then call it what you like. But two people don't happen onto the same dream by chance. Who lit the lamp between you? And who do you suppose it serves?"}
+		]
+	}
+}

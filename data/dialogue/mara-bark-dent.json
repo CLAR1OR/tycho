@@ -1,0 +1,15 @@
+{
+	"id": "mara-bark-dent",
+	"source": "bark",
+	"speakers": ["mara"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "You bring that blade back dented like a cat bringing in a bird, proud as anything. Set it down, I'll see to it. Try to remember the pointy end goes in them, not the wall."}
+		]
+	}
+}

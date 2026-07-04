@@ -1,0 +1,15 @@
+{
+	"id": "wren-bark-roads",
+	"source": "bark",
+	"speakers": ["wren"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "wren", "text": "...and the roads, have you ever looked, they all bend around the same three hills. Every map the traders carry. Same three hills, every time. As if the roads are remembering something the hills already forgot."}
+		]
+	}
+}

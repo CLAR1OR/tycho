@@ -1,0 +1,15 @@
+{
+	"id": "tilly-bark-gate",
+	"source": "bark",
+	"speakers": ["tilly"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tilly", "text": "Herzog gave me the west gate to mind. I've never minded a gate before. Turns out it's mostly standing, and knowing exactly who went through and when. I'm good at the writing-down part. I'm working on the standing."}
+		]
+	}
+}

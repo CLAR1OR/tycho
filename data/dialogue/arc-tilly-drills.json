@@ -1,0 +1,15 @@
+{
+	"id": "arc-tilly-drills",
+	"source": "arc",
+	"priority": 55,
+	"speakers": ["tilly", "tycho"],
+	"conditions": [{"flag": "c3"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tilly", "text": "Morning drill went clean. Twelve on the wall, two on the gate, reliefs on the half-watch. Everyone knew their post before I said it."},
+			{"who": "tycho", "text": "You've done this before."},
+			{"who": "tilly", "text": "Every morning for a while now. It used to take me three tries to get the words right. Now the words are just true."}
+		]
+	}
+}

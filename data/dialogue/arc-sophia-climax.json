@@ -1,0 +1,15 @@
+{
+	"id": "arc-sophia-climax",
+	"source": "arc",
+	"priority": 60,
+	"speakers": ["sophia", "tycho"],
+	"conditions": [{"flag": "d3"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "sophia", "text": "Think it through. The same kind of knowledge reached the emperor and reached us. He built an army out of his. We built a school out of ours."},
+			{"who": "tycho", "text": "You sound like that bothers you."},
+			{"who": "sophia", "text": "It bothers me that it was a choice. Somebody decided he got a weapon and we got a lesson. I want to know who decides that, and why they bothered with us at all."}
+		]
+	}
+}

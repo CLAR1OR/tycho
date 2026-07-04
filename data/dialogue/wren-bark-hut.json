@@ -1,0 +1,15 @@
+{
+	"id": "wren-bark-hut",
+	"source": "bark",
+	"speakers": ["wren"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 3,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "wren", "text": "...Thomas's hut. Nobody's ever mended it, and it's never once needed mending. Same nail-heads, same lean, year on year. Everything in this town weathers except that one roof. I mention it to people. They nod, and they've forgotten by supper. That's the strange part. Not the hut. The forgetting."}
+		]
+	}
+}

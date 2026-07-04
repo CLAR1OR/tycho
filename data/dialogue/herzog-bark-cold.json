@@ -1,0 +1,15 @@
+{
+	"id": "herzog-bark-cold",
+	"source": "bark",
+	"speakers": ["herzog"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "herzog", "text": "Cold's coming. I can feel it in the hinges of the gate. Buy firewood before you buy anything that glows. The glow will keep until spring."}
+		]
+	}
+}

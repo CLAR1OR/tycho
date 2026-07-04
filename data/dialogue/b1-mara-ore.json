@@ -8,11 +8,11 @@
 	"scene": {
 		"kind": "talk",
 		"lines": [
-			{"who": "mara", "text": "Where did you get this. Don't shrug at me — the lump in your pack. It's ringing."},
+			{"who": "mara", "text": "Where did you get this. Don't shrug at me. The lump in your pack. It's ringing."},
 			{"who": "tycho", "text": "Ringing?"},
 			{"who": "mara", "text": "Put it on the anvil and it hums back at the hammer, a note early, like it knows what I'm about to do. Iron never once asked my opinion. This stuff is having a conversation."},
 			{"who": "tycho", "text": "Can you work it?"},
-			{"who": "mara", "text": "I can try. Bring me every piece you find. If a blade comes out of this, it won't be my father's kind of blade — and I need to know whose kind it is."}
+			{"who": "mara", "text": "I can try. Bring me every piece you find. If a blade comes out of this, it won't be my father's kind of blade, and I need to know whose kind it is."}
 		]
 	}
 }

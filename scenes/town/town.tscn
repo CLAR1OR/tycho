@@ -1,4 +1,4 @@
-[gd_scene load_steps=30 format=3]
+[gd_scene load_steps=31 format=3]
 
 [ext_resource type="Script" path="res://src/town/town.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/combat/player.tscn" id="2"]
@@ -97,6 +97,9 @@ albedo_color = Color(0.25, 0.35, 0.55, 1)
 
 [sub_resource type="StandardMaterial3D" id="WrenMat"]
 albedo_color = Color(0.3, 0.5, 0.3, 1)
+
+[sub_resource type="StandardMaterial3D" id="ThomasMat"]
+albedo_color = Color(0.45, 0.35, 0.22, 1)
 
 [node name="Town" type="Node3D"]
 script = ExtResource("1")
@@ -380,6 +383,29 @@ shape = SubResource("PlotShape")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 billboard = 1
 text = "Wren — E to talk"
+font_size = 36
+outline_size = 8
+
+[node name="NpcThomas" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+metadata/npc_id = "thomas"
+
+[node name="Mesh" type="MeshInstance3D" parent="NpcThomas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("NpcMesh")
+surface_material_override/0 = SubResource("ThomasMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcThomas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("PlotShape")
+
+[node name="Label" type="Label3D" parent="NpcThomas"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 1
+text = "Thomas — E to talk"
 font_size = 36
 outline_size = 8
 

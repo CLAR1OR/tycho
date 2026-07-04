@@ -1,0 +1,15 @@
+{
+	"id": "herzog-bark-gold",
+	"source": "bark",
+	"speakers": ["herzog"],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [{"resource": "gold", "gte": 100}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "herzog", "text": "You keep hauling coin out of that hill. I keep writing it in the book. Neither of us has said the word 'why' out loud, and I'd like to keep it that way."}
+		]
+	}
+}

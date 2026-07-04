@@ -1,0 +1,15 @@
+{
+	"id": "arc-thomas-final",
+	"source": "arc",
+	"priority": 60,
+	"speakers": ["thomas", "tycho"],
+	"conditions": [{"flag": "d4"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "thomas", "text": "So it's her behind the emperor's strength, and the same strength keeps carrying you home each time you fall. Sit down, boy."},
+			{"who": "tycho", "text": "You've got that look."},
+			{"who": "thomas", "text": "If one hand shaped both of you, then you and she are kin of a sort, and so is whatever the emperor holds. I don't know whose hand it was. Neither do you. That's the thing worth your sleep, not the emperor."}
+		]
+	}
+}

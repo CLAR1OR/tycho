@@ -1,0 +1,15 @@
+{
+	"id": "arc-mara-lab",
+	"source": "arc",
+	"priority": 45,
+	"speakers": ["mara", "tycho"],
+	"conditions": [{"flag": "b1"}, {"counter": "runs", "gte": 8}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "See the marks on the wall there? Every bar I've cooled, I write it down. Fast quench, slow quench, which way it rang after. Sophia does this with her shards. I used to laugh at her for it."},
+			{"who": "tycho", "text": "Not laughing now."},
+			{"who": "mara", "text": "Not laughing now. If the ore won't hand me its rules the way iron did, I'll catch them one blade at a time."}
+		]
+	}
+}

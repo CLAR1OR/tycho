@@ -1,0 +1,15 @@
+{
+	"id": "arc-thomas-purpose",
+	"source": "arc",
+	"priority": 50,
+	"speakers": ["thomas", "tycho"],
+	"conditions": [{"flag": "b3"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "thomas", "text": "Sophia tells me the shards teach true things. Good. Let me set you a small one, boy. A hammer is for hitting."},
+			{"who": "tycho", "text": "It is."},
+			{"who": "thomas", "text": "But is that in the hammer, or in the smith who shaped it for hitting? Where does a made thing keep its purpose, in the thing, or in the hand that meant it? Carry that one out the door with you."}
+		]
+	}
+}
