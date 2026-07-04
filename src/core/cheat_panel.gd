@@ -71,9 +71,7 @@ func grant(id: String, amount: float) -> void:
 
 
 func grant_codex_shard() -> void:
-	var shards := int(SaveManager.state["codex"]["shards"]) + 1
-	SaveManager.state["codex"]["shards"] = shards
-	EventBus.codex_shard_added.emit(shards)
+	StoryState.grant_codex_shard()  # same codex bump + codex_shard_added the win path uses
 	_rebuild_if_open()
 
 
@@ -106,7 +104,7 @@ func simulate_runs(count: int, victory: bool = true) -> void:
 func set_story_flag(flag: String) -> void:
 	if SaveManager.state.is_empty():
 		return
-	(SaveManager.state["story"]["flags"] as Dictionary)[flag] = true
+	StoryState.set_flag(flag)  # route the raw poke through the story owner
 	SaveManager.save_current()
 	_rebuild_if_open()
 

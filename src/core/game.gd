@@ -2,14 +2,16 @@ extends Node
 ## Game root — the vertical-slice orchestrator (PRD §12 milestone 3).
 ##
 ## Owns the macro loop: boot a save slot → town → (portal) → run of combat rooms →
-## victory or death → day tick + counters → back to town → save. Scenes below it
-## (town, combat_room) signal UP; cross-domain bookkeeping flows through EventBus.
+## victory or death → day tick → back to town → save. Scenes below it (town,
+## combat_room) signal UP; cross-domain bookkeeping flows through EventBus.
 ##
-## Interim ownership notes, to migrate as the real systems land:
-## - Story counters (runs/deaths/boss_kills/full_clears) are updated here from
-##   EventBus signals; a StoryState autoload will own them later.
-## - Victory == full clear while the slice config is 1 floor; the codex shard drop
-##   rides on that (PRD §7.11).
+## Story bookkeeping (run/death/boss-kill counters, the has-<resource> pickup flags,
+## the full-clear codex shard) now lives in the StoryState autoload over pure
+## StoryCore — game.gd keeps only scene flow. ORDERING: StoryState is an autoload, so
+## it subscribes to run_ended BEFORE this scene does; its counters are therefore
+## already updated when _on_run_ended defers the town swap + slot save. See
+## story_state.gd's header for the full guarantee (the smoke re-reads the file to
+## prove it).
 ##
 ## Boot: the slot-select screen (SlotSelect) → choose_slot() → town, or straight
 ## back into a run at floor start if the slot holds a mid-run checkpoint (§7.13).
@@ -39,17 +41,10 @@ var _session_t: float = 0.0   # unsaved playtime (flushed into meta.playtime_s o
 func _ready() -> void:
 	EventBus.resource_changed.connect(func(_id: String, _o: float, _n: float, _r: String) -> void:
 		_refresh_resources())
-	# First-time-pickup flags for the dialogue `has(<resource>)` conditions
-	# (act1-story-beats.md vocabulary) — set once, never cleared.
-	EventBus.resource_changed.connect(func(id: String, _o: float, new_amount: float, _r: String) -> void:
-		if new_amount > 0.0 and not SaveManager.state.is_empty():
-			var flags: Dictionary = SaveManager.state["story"]["flags"]
-			if not bool(flags.get("has-" + id, false)):
-				flags["has-" + id] = true)
+	# The has-<resource> pickup flags + all story counters now ride StoryState (an
+	# autoload, so it subscribes before this scene) — game.gd only reacts to the HUD.
 	EventBus.save_loaded.connect(func(_slot: int) -> void: _refresh_resources())
 	EventBus.run_ended.connect(_on_run_ended)
-	EventBus.death.connect(_on_death)
-	EventBus.boss_killed.connect(_on_boss_killed)
 	EventBus.tech_researched.connect(_on_tech_researched)
 	# Playtest cheat panel (F2) — lives on the HUD layer so it survives scene swaps.
 	var cheats := CheatPanel.new()
@@ -156,18 +151,10 @@ func _on_room_cleared(room: Node) -> void:
 		_refresh_echoes())
 
 
-func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> void:
+func _on_run_ended(_victory: bool, _floor_reached: int, _stats: Dictionary) -> void:
+	# The counters + the full-clear codex shard rode StoryState (fired already — it
+	# subscribed first as an autoload). game.gd handles only the scene-flow tail.
 	SaveManager.state["checkpoint"] = null  # the run is over — nothing to resume
-	var counters: Dictionary = SaveManager.state["story"]["counters"]
-	counters["runs"] = int(counters["runs"]) + 1
-	SaveManager.state["meta"]["runs"] = counters["runs"]
-	if victory:
-		# Slice config is one floor, so a victory IS a full clear → codex shard
-		# (PRD §7.11). With more floors this stays correct: victory means all floors.
-		counters["full_clears"] = int(counters["full_clears"]) + 1
-		var shards := int(SaveManager.state["codex"]["shards"]) + 1
-		SaveManager.state["codex"]["shards"] = shards
-		EventBus.codex_shard_added.emit(shards)
 	# The day tick: 1 day = 1 run, win OR die (locked decision, PRD §6.2).
 	Sfx.play("day-chime")
 	var produced := TownCore.tick(SaveManager.state["town"], DataLoader.load_domain("buildings"))
@@ -183,16 +170,6 @@ func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> vo
 			SaveManager.state["tech"] = TechCore.complete(SaveManager.state["tech"], active)
 			EventBus.tech_researched.emit(active)
 	call_deferred("_goto_town")
-
-
-func _on_death(_source_id: String) -> void:
-	var counters: Dictionary = SaveManager.state["story"]["counters"]
-	counters["deaths"] = int(counters["deaths"]) + 1
-
-
-func _on_boss_killed(_boss_id: String, _floor: int) -> void:
-	var counters: Dictionary = SaveManager.state["story"]["counters"]
-	counters["boss_kills"] = int(counters["boss_kills"]) + 1
 
 
 func _on_tech_researched(tech_id: String) -> void:

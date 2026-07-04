@@ -85,6 +85,17 @@ func _run_smoke() -> void:
 	_check(RunState.echoes.size() >= 1, "echo picks recorded (%d)" % RunState.echoes.size())
 	_check(RunState.player_health > 0, "player HP carried between rooms (%d)" % RunState.player_health)
 
+	# StoryState (autoload) updates the counters BEFORE game.gd's deferred town-swap
+	# save runs — re-read the slot file from disk to prove the ordering guarantee: the
+	# persisted counters must match the in-memory ones, not the pre-run values.
+	var on_disk := _read_slot_from_disk()
+	var disk_c: Dictionary = on_disk["story"]["counters"]
+	_check(int(disk_c["runs"]) == runs_before + 1, "disk: runs counter persisted (%d)" % int(disk_c["runs"]))
+	_check(int(disk_c["full_clears"]) == 1, "disk: full clear persisted")
+	_check(int(disk_c["boss_kills"]) >= 1, "disk: boss kills persisted (%d)" % int(disk_c["boss_kills"]))
+	_check(int(on_disk["codex"]["shards"]) == 1, "disk: codex shard persisted")
+	_check(int(on_disk["meta"]["runs"]) == runs_before + 1, "disk: meta.runs mirror persisted")
+
 	# --- The unlock cascade fires on the run-1 town return (PRD §7.1) ---------------
 	# B3 (Sophia cracks the shards) force-plays because run 1's 3 boss kills tripped
 	# its gate; then B1 (Mara, talk) and B4 (Herzog, talk) open the forge and plots.
@@ -344,6 +355,17 @@ func _clear_current_room() -> void:
 	if player != null:
 		player.global_position = Vector3(0, 0.1, -23)  # the exit portal's spot
 	await _settle(20)
+
+
+## Re-read the smoke slot straight off disk (bypassing SaveManager.state) — used to
+## prove StoryState's counter writes are persisted, not just held in memory.
+func _read_slot_from_disk() -> Dictionary:
+	var f := FileAccess.open(SaveManager.slot_path(SMOKE_SLOT), FileAccess.READ)
+	if f == null:
+		_check(false, "could not re-read the slot file from disk")
+		return {}
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	return parsed if parsed is Dictionary else {}
 
 
 func _settle(frames: int) -> void:
