@@ -8,8 +8,14 @@ extends Node3D
 ##
 ## Lifecycle: game.gd calls setup(...) before adding to the tree → wave spawns →
 ## last kill emits `cleared` → game decides; if the run continues it calls
-## open_exit() and the portal lights up → player steps in → `exit_entered`.
+## present_doors() (1-2 sigil doors — design/run-structure.md) or, after a boss,
+## open_exit() (a single plain portal) → player steps through → `exit_entered`.
 ## Boss rooms spawn the placeholder boss + escorts and pay the boss bounty.
+##
+## The INCOMING door (the sigil the player chose to enter here) is passed to setup():
+## `reprieve` makes this a breather room (no wave, a Wellspring instead), `peril` makes
+## the wave elite (runtime stat mults over the exports — never the .tscn). What THIS
+## room PAYS on clear is decided by game.gd from that same incoming door.
 
 const ENEMY_BRUTE := preload("res://scenes/combat/enemy_dummy.tscn")
 const ENEMY_SKIRMISHER := preload("res://scenes/combat/enemy_skirmisher.tscn")
@@ -46,8 +52,14 @@ var room_index: int = 1
 var rooms_this_floor: int = 1
 var kind: String = RunFlow.KIND_COMBAT
 
+# The door that led INTO this room {sigil, peril} ({} for a floor's first room).
+var incoming_door: Dictionary = {}
+var _peril: bool = false      # elite wave (incoming_door.peril)
+var _reprieve: bool = false   # breather room: no wave, a Wellspring instead
+
 var _enemies: Array[EnemyDummy] = []
 var _cleared: bool = false
+var _door_chosen: bool = false  # first door walked wins — no backtracking
 var _last_hp: int = Player.MAX_HEALTH
 
 @onready var _player: Player = $Player
@@ -58,11 +70,18 @@ var _last_hp: int = Player.MAX_HEALTH
 @onready var _hint_label: Label = $HUD/Hint
 
 
-func setup(p_floor: int, p_room: int, p_rooms_this_floor: int, p_kind: String) -> void:
+func setup(p_floor: int, p_room: int, p_rooms_this_floor: int, p_kind: String,
+		p_incoming: Dictionary = {}) -> void:
 	floor_num = p_floor
 	room_index = p_room
 	rooms_this_floor = p_rooms_this_floor
 	kind = p_kind
+	incoming_door = p_incoming.duplicate()
+	# Reprieve/peril come from the CHOSEN sigil, never from RunFlow position; a boss room
+	# is always a straight fight (its incoming door is the plain boss door).
+	if kind != RunFlow.KIND_BOSS:
+		_reprieve = str(incoming_door.get("sigil", "")) == DoorCore.SIGIL_REPRIEVE
+		_peril = bool(incoming_door.get("peril", false))
 
 
 func _ready() -> void:
@@ -75,8 +94,11 @@ func _ready() -> void:
 	_portal.body_entered.connect(_on_portal_body_entered)
 	if kind == RunFlow.KIND_BOSS:
 		_room_label.text = "Floor %d — BOSS" % floor_num
+	elif _reprieve:
+		_room_label.text = "Floor %d — Reprieve" % floor_num
 	else:
-		_room_label.text = "Floor %d — Room %d/%d" % [floor_num, room_index, rooms_this_floor]
+		var suffix := "  ⚠ peril" if _peril else ""
+		_room_label.text = "Floor %d — Room %d/%d%s" % [floor_num, room_index, rooms_this_floor, suffix]
 	_hint_label.text = "Clear the room - F1 tuning"
 	# Configure this room's FRESH player instance, in order: the equipped weapon
 	# (baseline kit), then the run's echoes on top, then carried-over HP (rooms
@@ -102,6 +124,14 @@ func _ready() -> void:
 # --- Wave ---------------------------------------------------------------------
 
 func _spawn_wave() -> void:
+	if _reprieve:
+		# A breather: no fight. Spawn the Wellspring and clear at once so game.gd shows
+		# the next doors; the heal is the reward, taken by touching the pool.
+		_spawn_wellspring()
+		_cleared = true
+		cleared.emit.call_deferred()
+		_hint_label.text = "Breather — touch the Wellspring, then choose a door"
+		return
 	if kind == RunFlow.KIND_BOSS:
 		_spawn_enemy(ENEMY_BOSS, Vector3(0, 1.0, -14))
 		_spawn_enemy(ENEMY_SKIRMISHER, Vector3(-8, 1.0, -10))
@@ -117,6 +147,11 @@ func _spawn_enemy(scene: PackedScene, pos: Vector3) -> void:
 	var enemy: EnemyDummy = scene.instantiate()
 	enemy.position = pos
 	enemy.target = _player
+	# Peril = the elite-modifier stub (PRD §7.7): scale the exports at spawn, before
+	# _ready reads max_hp — a runtime mod like WeaponCore/echoes, never a .tscn edit.
+	if _peril:
+		enemy.max_hp = DoorCore.peril_hp(enemy.max_hp)
+		enemy.attack_damage = DoorCore.peril_damage(enemy.attack_damage)
 	add_child(enemy)
 	enemy.died.connect(_on_enemy_died.bind(enemy))
 	_enemies.append(enemy)
@@ -153,9 +188,9 @@ func _on_enemy_died(enemy: EnemyDummy) -> void:
 		cleared.emit()
 
 
-# --- Exit ----------------------------------------------------------------------
+# --- Exit & doors ----------------------------------------------------------------
 
-## Called by the orchestrator when the run continues past this room.
+## Boss rooms (and any plain continue) use the single scene portal — no choice.
 func open_exit() -> void:
 	await get_tree().create_timer(respawn_delay).timeout
 	if not is_inside_tree():
@@ -172,12 +207,140 @@ func _on_portal_body_entered(body: Node3D) -> void:
 		exit_entered.emit()
 
 
+## Door choice (design/run-structure.md): after a beat, open the offer's 1-2 sigil
+## doors; walking into one commits it (no backtracking). `on_choose` gets the chosen
+## door dict {sigil, peril}; the room then emits exit_entered as with the plain exit.
+func present_doors(offer: Array, on_choose: Callable) -> void:
+	await get_tree().create_timer(respawn_delay).timeout
+	if not is_inside_tree():
+		return
+	_portal.visible = false
+	_portal.monitoring = false  # the scene's single portal is unused when doors are shown
+	var xs := [0.0] if offer.size() == 1 else [-6.0, 6.0]
+	for i in offer.size():
+		_make_door(Vector3(float(xs[i]), 1.75, -23.0), offer[i], on_choose)
+	Sfx.play("door-open", Vector3(0, 1.75, -23))
+	_hint_label.text = "Choose a door — the sigil is what the next room pays"
+
+
+func _make_door(pos: Vector3, door: Dictionary, on_choose: Callable) -> void:
+	var area := Area3D.new()
+	area.add_to_group("door_portal")
+	area.set_meta("door", door)
+	area.position = pos
+	area.collision_layer = 0
+	area.collision_mask = 1
+	var shape := CollisionShape3D.new()
+	var cyl := CylinderShape3D.new()
+	cyl.radius = 1.3
+	cyl.height = 3.5
+	shape.shape = cyl
+	area.add_child(shape)
+	var mesh := MeshInstance3D.new()
+	var cm := CylinderMesh.new()
+	cm.top_radius = 1.3
+	cm.bottom_radius = 1.3
+	cm.height = 3.5
+	mesh.mesh = cm
+	mesh.material_override = _door_material(door)
+	area.add_child(mesh)
+	var label := Label3D.new()
+	label.text = _door_label(door)
+	label.position = Vector3(0, 2.6, 0)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	area.add_child(label)
+	area.body_entered.connect(func(body: Node3D) -> void:
+		if body is Player and not _door_chosen:
+			_door_chosen = true
+			RunState.player_health = _player.health  # wounds carry into the next room
+			on_choose.call(door)
+			exit_entered.emit())
+	add_child(area)
+
+
+func _door_material(door: Dictionary) -> StandardMaterial3D:
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	var col := Color(0.4, 0.85, 1.0)  # default portal blue
+	match str(door.get("sigil", "")):
+		DoorCore.SIGIL_REPRIEVE:
+			col = Color(0.4, 1.0, 0.7)
+		DoorCore.SIGIL_ECHO:
+			col = Color(0.85, 0.6, 1.0)
+		DoorCore.SIGIL_BOSS:
+			col = Color(0.9, 0.3, 0.85)
+	if bool(door.get("peril", false)):
+		col = col.lerp(Color(1.0, 0.35, 0.2), 0.5)  # peril shoves it toward danger-red
+	mat.albedo_color = Color(col.r, col.g, col.b, 0.35)
+	mat.emission = col
+	mat.emission_energy_multiplier = 2.0
+	return mat
+
+
+func _door_label(door: Dictionary) -> String:
+	var sigil := str(door.get("sigil", ""))
+	return sigil.capitalize() + (" ⚠" if bool(door.get("peril", false)) else "")
+
+
+## A healing valve (design/run-structure.md Part 2): heal a % of MISSING hp through the
+## real player API so RunState's carried HP stays correct. Returns the amount healed.
+func apply_missing_heal(pct: float) -> int:
+	var amount := DoorCore.heal_missing(_player.health, _player.max_health, pct)
+	if amount > 0:
+		_player.heal(amount)
+	return amount
+
+
+# --- Wellspring (Reprieve room) --------------------------------------------------
+
+func _spawn_wellspring() -> void:
+	var well := Area3D.new()
+	well.add_to_group("wellspring")
+	well.position = Vector3(0, 1.0, -2)
+	well.collision_layer = 0
+	well.collision_mask = 1
+	var shape := CollisionShape3D.new()
+	var sph := SphereShape3D.new()
+	sph.radius = 1.8
+	shape.shape = sph
+	well.add_child(shape)
+	var mesh := MeshInstance3D.new()
+	var sm := SphereMesh.new()
+	sm.radius = 1.4
+	sm.height = 2.8
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.emission_enabled = true
+	mat.emission = Color(0.4, 1.0, 0.7)
+	mat.albedo_color = Color(0.4, 1.0, 0.7, 0.55)
+	mesh.mesh = sm
+	mesh.material_override = mat
+	well.add_child(mesh)
+	var label := Label3D.new()
+	label.text = "Wellspring"
+	label.position = Vector3(0, 2.4, 0)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	well.add_child(label)
+	var spent := [false]  # one use; boxed so the lambda can flip it
+	# The distance re-check rejects Godot's spurious first-frame body_entered (fired when
+	# the area + a far-off body enter the tree the same frame) — heal only on real contact.
+	well.body_entered.connect(func(body: Node3D) -> void:
+		if body is Player and not spent[0] \
+				and body.global_position.distance_to(well.global_position) < 2.5:
+			spent[0] = true
+			apply_missing_heal(DoorCore.WELLSPRING_HEAL_PCT)
+			label.text = "Wellspring (spent)")
+	add_child(well)
+
+
 # --- Echo offer -----------------------------------------------------------------
 
-## Called by the orchestrator after a combat-room clear: pause, offer 3 echoes,
-## apply the pick to this room's player, then open the exit. `on_pick` is the
-## orchestrator's bookkeeping callback (records the pick on RunState).
-func present_echo_offer(offer_ids: Array[String], on_pick: Callable) -> void:
+## Called by the orchestrator on an echo-door clear or after a boss kill: pause, offer
+## 3 echoes, apply the pick to this room's player, then run `on_done` (which shows the
+## next doors, or opens the boss exit). `on_pick` records the pick on RunState.
+func present_echo_offer(offer_ids: Array[String], on_pick: Callable, on_done: Callable) -> void:
 	var panel := EchoOfferPanel.new()
 	$HUD.add_child(panel)
 	panel.present(offer_ids, func(id: String) -> void:
@@ -185,7 +348,7 @@ func present_echo_offer(offer_ids: Array[String], on_pick: Callable) -> void:
 		var defs := EchoCore.defs()
 		if defs.has(id):
 			EchoCore.apply_to_player(_player, defs[id])
-		open_exit())
+		on_done.call())
 
 
 # --- HUD -----------------------------------------------------------------------

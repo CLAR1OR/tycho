@@ -111,17 +111,43 @@ func _next_room() -> void:
 	# Per-floor autosave (PRD §7.13): a floor's first room = the resume point.
 	# RunState is already positioned there, so the snapshot IS the floor start.
 	if int(RunState.run["room"]) == 1:
+		# A new floor: no incoming door yet, and (re)generate this floor's door plan.
+		# Deterministic in the run seed, so a resume rebuilds the identical plan — the
+		# checkpoint carries none of this (design/run-structure.md).
+		RunState.pending_door = {}
+		var profile := _floor_profile(int(RunState.run["floor"]))
+		RunState.build_floor_doors(profile["door_weights"], float(profile["peril_chance"]))
 		SaveManager.state["checkpoint"] = RunState.to_checkpoint()
 		_save()
 	Music.play("boss" if RunState.room_kind() == RunFlow.KIND_BOSS else "dungeon")
 	var room := ROOM_SCENE.instantiate()
 	room.setup(
 		int(RunState.run["floor"]), int(RunState.run["room"]),
-		int(RunState.run["rooms_this_floor"]), RunState.room_kind())
+		int(RunState.run["rooms_this_floor"]), RunState.room_kind(), RunState.pending_door)
 	_swap(room)
 	room.cleared.connect(_on_room_cleared.bind(room))
 	room.exit_entered.connect(func() -> void: call_deferred("_next_room"))
 	room.player_died.connect(func() -> void: RunState.player_died())
+
+
+## The floor profile (door weights + peril chance), clamped to the highest authored
+## file for floors past the last one (design/run-structure.md; strata env fields land
+## in these same files later).
+func _floor_profile(floor_num: int) -> Dictionary:
+	var floors := DataLoader.load_domain("floors")
+	if floors.has(str(floor_num)):
+		return floors[str(floor_num)]
+	var best := {}
+	var highest := 0
+	for id: String in floors:
+		if int(floors[id]["id"]) >= highest:
+			highest = int(floors[id]["id"])
+			best = floors[id]
+	if best.is_empty():
+		push_error("game.gd: no floor profiles in data/floors/ — using inert defaults")
+		return {"door_weights": {"gold": 1, "echo": 1, "reprieve": 1}, "peril_chance": 0.0}
+	push_warning("game.gd: floor %d beyond authored profiles — clamping to floor %d" % [floor_num, highest])
+	return best
 
 
 func _swap(next_scene: Node) -> void:
@@ -136,21 +162,64 @@ func _swap(next_scene: Node) -> void:
 func _on_room_cleared(room: Node) -> void:
 	var was_boss: bool = room.kind == RunFlow.KIND_BOSS
 	var boss_id: String = room.BOSS_ID if was_boss else ""
+	# The door that led INTO this room decides what it PAYS (design/run-structure.md).
+	# Captured before RunState.room_cleared advances / a new door is picked.
+	var incoming: Dictionary = RunState.pending_door.duplicate()
+	var cleared_floor := int(RunState.run["floor"])
 	if not RunState.room_cleared(boss_id):
 		return  # the run just ended (final boss) — _on_run_ended takes it from here
 	if was_boss:
-		room.open_exit()  # boss rooms pay in loot; echo beats follow combat rooms
+		# Boss valve (PRD §7.7 heal): repair 30% of missing HP, then the GUARANTEED
+		# post-boss echo (the new cadence), then the plain exit to the next floor.
+		room.apply_missing_heal(DoorCore.BOSS_HEAL_PCT)
+		_offer_echo(room, func() -> void: room.open_exit())
 		return
-	# The echo beat (PRD §7.5): pause, pick 1 of 3, then the exit opens.
+	# Non-boss: pay the incoming door's reward, then show the next room's doors.
+	var next_offer := DoorCore.offer_for_room(RunState.door_plan, room.room_index)
+	var after_reward := func() -> void: _present_doors(room, next_offer)
+	if str(incoming.get("sigil", "")) == DoorCore.SIGIL_ECHO:
+		# Echo door: the pick IS the reward (echoes now come only from echo doors + the
+		# post-boss guarantee — the old every-room offer is retired).
+		_offer_echo(room, after_reward)
+	else:
+		_pay_cache(incoming, cleared_floor)
+		after_reward.call()
+
+
+## Pay a cache door's resource on clear (gold/ore/dust caches; reprieve/boss/empty pay
+## nothing here — the heal / boss loot are handled elsewhere). Peril doubles it.
+func _pay_cache(door: Dictionary, floor_num: int) -> void:
+	if door.is_empty():
+		return  # a floor's first room has no incoming door
+	var reward := DoorCore.cache_reward(
+		str(door.get("sigil", "")), floor_num, bool(door.get("peril", false)))
+	if reward.is_empty():
+		return
+	Ledger.add(str(reward["resource"]), float(reward["amount"]), "door-reward")
+
+
+## Roll and present an echo offer, then run `on_done` (echo picks feed the same
+## deterministic RNG; an empty pool just falls through).
+func _offer_echo(room: Node, on_done: Callable) -> void:
 	var offers := EchoCore.generate_offer(
 		EchoCore.defs(), RunState.echoes, int(RunState.run["seed"]), RunState.echo_offers_made)
 	RunState.echo_offers_made += 1
 	if offers.is_empty():
-		room.open_exit()
+		on_done.call()
 		return
 	room.present_echo_offer(offers, func(id: String) -> void:
 		RunState.pick_echo(id)
-		_refresh_echoes())
+		_refresh_echoes(), on_done)
+
+
+## Open the next room's doors; walking into one records the chosen door on RunState so
+## the next room spawns from it (reprieve/peril) and pays from it on clear.
+func _present_doors(room: Node, offer: Array) -> void:
+	if offer.is_empty():
+		room.open_exit()  # no offer (shouldn't happen off the boss path) — plain exit
+		return
+	room.present_doors(offer, func(door: Dictionary) -> void:
+		RunState.pending_door = door.duplicate())
 
 
 func _on_run_ended(_victory: bool, _floor_reached: int, _stats: Dictionary) -> void:

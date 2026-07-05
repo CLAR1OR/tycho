@@ -12,10 +12,17 @@ extends Node
 ## itself loads nothing, so the human's slots are never touched. Exits 0/1.
 
 const SMOKE_SLOT := 99
-const MAX_ROOMS := 30  # watchdog: a slice run is ~4 rooms; runaway = fail
+const MAX_ROOMS := 40  # watchdog: run 1 is 3 floors x 5 rooms (+ a resume replay); runaway = fail
 
 var _game: Node
 var _failures: PackedStringArray = []
+
+# Door-choice coverage flags — each mechanic is exercised once, then skipped (below).
+var _door_offer_checked: bool = false
+var _dust_tested: bool = false
+var _wellspring_tested: bool = false
+var _boss_heal_tested: bool = false
+var _postboss_echo_tested: bool = false
 
 
 func _ready() -> void:
@@ -56,22 +63,30 @@ func _run_smoke() -> void:
 	var music_boss_ok := false
 	while RunState.in_run() and rooms_seen < MAX_ROOMS:
 		rooms_seen += 1
-		# The run swaps music per room kind (game.gd _next_room) — sample it once
-		# each while we sit in a dungeon room and in a boss room.
+		# The run swaps music per room kind (game.gd _next_room) — sample it once each.
+		# Read the SCENE's kind, not RunState's: reprieve rooms auto-clear and advance
+		# RunState, so it can point a room ahead of what is on screen.
 		if _scene_file() == "combat_room.tscn":
-			if RunState.room_kind() == RunFlow.KIND_BOSS and not music_boss_ok:
+			var scene_kind: String = str(_scene_node().get("kind"))
+			if scene_kind == RunFlow.KIND_BOSS and not music_boss_ok:
 				music_boss_ok = true
 				_check(Music.current_id == "boss", "boss room plays boss music (%s)" % Music.current_id)
-			elif RunState.room_kind() == RunFlow.KIND_COMBAT and not music_dungeon_ok:
+			elif scene_kind == RunFlow.KIND_COMBAT and not music_dungeon_ok:
 				music_dungeon_ok = true
 				_check(Music.current_id == "dungeon", "dungeon room plays dungeon music (%s)" % Music.current_id)
 		if not resume_tested and int(RunState.run["floor"]) == 2:
 			resume_tested = true
 			await _quit_and_resume()
-		await _clear_current_room()
+		await _play_room()
 	_check(resume_tested, "the run reached floor 2 (checkpoint beat exercised)")
 	_check(music_dungeon_ok and music_boss_ok, "both dungeon and boss music beats sampled")
 	_check(rooms_seen < MAX_ROOMS, "run finished within the watchdog (%d rooms)" % rooms_seen)
+	# Door-choice coverage (design/run-structure.md) — each path was hit during the run.
+	_check(_door_offer_checked, "a door offer with 1-2 distinct sigils was shown")
+	_check(_dust_tested, "a paying door granted its cache on clear (reason door-reward)")
+	_check(_wellspring_tested, "a reprieve door's Wellspring healed 40% of missing")
+	_check(_boss_heal_tested, "a boss kill healed 30% of missing")
+	_check(_postboss_echo_tested, "the guaranteed post-boss echo offer fired")
 	await _settle(30)
 	_check(_scene_file() == "town.tscn", "victory returns to town (got %s)" % _scene_file())
 	_check(SaveManager.state["checkpoint"] == null, "run over — checkpoint cleared")
@@ -332,6 +347,10 @@ func _boot_game() -> void:
 	# 3 cumulative boss kills — which trips the B3 cascade gate (boss_kills >= 3), so
 	# the smoke exercises the tech-desk unlock naturally on the run-1 town return.
 	_game.set("run_floors", 3)
+	# 5 rooms/floor → each floor has 3 ordinary door offers, enough for the door pity to
+	# guarantee a Reprieve door (design/run-structure.md) so the Wellspring path is hit.
+	_game.set("rooms_min", 5)
+	_game.set("rooms_max", 5)
 	add_child(_game)
 
 
@@ -344,6 +363,10 @@ func _quit_and_resume() -> void:
 		"checkpoint snapshotted at floor 2 start")
 	var echoes_before := RunState.echoes.duplicate()
 	var hp_before := RunState.player_health
+	# The door plan is NOT in the checkpoint — it must regenerate identically from the
+	# run seed when the resumed floor's first room loads (design/run-structure.md).
+	var plan_before := RunState.door_plan.duplicate(true)
+	_check(not (plan_before.get("offers", []) as Array).is_empty(), "floor 2 has a door plan before the quit")
 	_check(echoes_before.size() >= 1, "picks exist before the quit (floor 1 echo beats)")
 	_game.queue_free()
 	await _settle(5)
@@ -362,30 +385,130 @@ func _quit_and_resume() -> void:
 		"resume lands at floor 2, room 1")
 	_check(RunState.echoes == echoes_before, "echo picks survive the quit (via checkpoint)")
 	_check(RunState.player_health == hp_before, "carried HP survives the quit (%d)" % RunState.player_health)
+	_check(RunState.door_plan == plan_before, "the floor-2 door plan regenerates identically on resume")
 
 
-## Kill the current room's wave, wait for the exit to open, walk into it (or, on
-## the final boss, just wait for the town swap).
-func _clear_current_room() -> void:
-	await _settle(10)
+## Play one room to completion: clear it (or drive its Wellspring), take any echo
+## offer, then walk out through a door (design/run-structure.md). On the final boss the
+## run ends here (town swap in flight).
+func _play_room() -> void:
+	await _settle(12)
 	if _scene_file() != "combat_room.tscn":
 		return
+	var room := _scene_node()
+	var boss: bool = room.get("kind") == RunFlow.KIND_BOSS
+	var well := get_tree().get_first_node_in_group("wellspring")
+	if well != null:
+		await _drive_reprieve(room, well)
+	elif boss:
+		await _clear_boss(room)
+	else:
+		await _clear_combat(room)
+	if not RunState.in_run():
+		return  # the final boss — run over, town swap deferred
+	await _settle(8)
+	var echo_panel: Node = get_tree().get_first_node_in_group("echo_offer")
+	if boss and not _postboss_echo_tested:
+		_postboss_echo_tested = true
+		_check(echo_panel != null, "guaranteed post-boss echo offer fired")
+	if echo_panel != null:
+		echo_panel.call("pick", 0)  # take the offered echo, like a player
+		await _settle(6)
+	await _walk_out(room)
+
+
+## A normal combat room. On the FIRST one, override the incoming door to a Dust cache so
+## the clear pays an unconfounded cache (dust has no other combat source) — exercises
+## game.gd's door-reward payment deterministically.
+func _clear_combat(_room: Node) -> void:
+	if not _dust_tested:
+		_dust_tested = true
+		var floor_now := int(RunState.run["floor"])
+		RunState.pending_door = {"sigil": "dust", "peril": false}
+		var dust_before := Ledger.get_amount("resonance-dust")
+		_kill_wave()
+		await _settle(10)
+		var want: float = float(DoorCore.cache_reward("dust", floor_now, false)["amount"])
+		_check(absf(Ledger.get_amount("resonance-dust") - (dust_before + want)) < 0.001,
+			"dust door paid its cache on clear (+%.0f)" % want)
+		return
+	_kill_wave()
+	await _settle(10)
+
+
+## A boss room. On the FIRST one, wound the player to a known HP and assert the boss
+## kill repairs 30% of the missing amount (the auto floor-boss valve).
+func _clear_boss(_room: Node) -> void:
+	var player := _find_player()
+	if player != null and not _boss_heal_tested:
+		_boss_heal_tested = true
+		player.restore_health(60)  # deterministic: 40 missing of 100
+		var want: int = 60 + DoorCore.heal_missing(60, player.max_health, DoorCore.BOSS_HEAL_PCT)
+		_kill_wave()
+		await _settle(12)
+		_check(player.health == want, "boss kill healed 30%% of missing (60 -> %d, want %d)" % [player.health, want])
+		return
+	_kill_wave()
+	await _settle(12)
+
+
+## A reprieve room (no wave). Wound the player, touch the Wellspring, assert 40% heal.
+func _drive_reprieve(_room: Node, well: Node) -> void:
+	var player := _find_player()
+	if player != null and not _wellspring_tested:
+		_wellspring_tested = true
+		player.restore_health(60)  # deterministic: 40 missing of 100
+		var want: int = 60 + DoorCore.heal_missing(60, player.max_health, DoorCore.WELLSPRING_HEAL_PCT)
+		var wp: Vector3 = (well as Node3D).global_position
+		(player as Node3D).global_position = Vector3(wp.x, 0.1, wp.z)  # walk into it (as with doors)
+		await _settle(20)
+		_check(player.health == want, "Wellspring healed 40%% of missing (60 -> %d, want %d)" % [player.health, want])
+
+
+## Kill everything in the current room.
+func _kill_wave() -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(e):
 			e.take_damage(99999)
-	if not RunState.in_run():
-		return  # that was the final boss — run is over, town swap is in flight
-	# Combat clears pause for the echo offer — pick the first card, like a player.
-	await _settle(10)
-	var offer_panel: Node = get_tree().get_first_node_in_group("echo_offer")
-	if offer_panel != null:
-		offer_panel.call("pick", 0)
-	# Exit opens after the room's respawn_delay beat; give it a generous margin.
-	await _settle(90)
+
+
+## Walk out through a door (or the plain boss exit). Checks the offer shape once, then
+## picks a door — preferring a Reprieve door until the Wellspring is tested, otherwise
+## a real fight (never Reprieve/Boss when a loot/echo door is on offer).
+func _walk_out(_room: Node) -> void:
+	await _settle(90)  # doors / the exit open after the room's respawn_delay beat
+	var doors := get_tree().get_nodes_in_group("door_portal")
 	var player := _find_player()
+	if doors.is_empty():
+		if player != null:
+			(player as Node3D).global_position = Vector3(0, 0.1, -23)  # the plain boss exit
+		await _settle(20)
+		return
+	if not _door_offer_checked:
+		_door_offer_checked = true
+		_check(doors.size() >= 1 and doors.size() <= 2, "door offer shows 1-2 doors (%d)" % doors.size())
+		if doors.size() == 2:
+			var s0 := str((doors[0].get_meta("door") as Dictionary)["sigil"])
+			var s1 := str((doors[1].get_meta("door") as Dictionary)["sigil"])
+			_check(s0 != s1, "the two doors show distinct sigils (%s / %s)" % [s0, s1])
+	var chosen := _choose_door(doors)
 	if player != null:
-		player.global_position = Vector3(0, 0.1, -23)  # the exit portal's spot
+		var pos: Vector3 = (chosen as Node3D).global_position
+		pos.y = 0.1
+		(player as Node3D).global_position = pos
 	await _settle(20)
+
+
+func _choose_door(doors: Array) -> Node:
+	if not _wellspring_tested:
+		for d in doors:
+			if str((d.get_meta("door") as Dictionary)["sigil"]) == DoorCore.SIGIL_REPRIEVE:
+				return d
+	for d in doors:
+		var sig := str((d.get_meta("door") as Dictionary)["sigil"])
+		if sig != DoorCore.SIGIL_REPRIEVE and sig != DoorCore.SIGIL_BOSS:
+			return d
+	return doors[0]
 
 
 ## Re-read the smoke slot straight off disk (bypassing SaveManager.state) — used to

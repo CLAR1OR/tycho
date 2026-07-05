@@ -1,0 +1,10 @@
+{
+	"id": "resonance-dust",
+	"name": "Resonance Dust",
+	"icon": "",
+	"role": "combat",
+	"age_active": 1,
+	"supersedes": null,
+	"retired_by": null,
+	"sources": ["door-reward"]
+}

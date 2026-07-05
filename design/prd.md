@@ -136,7 +136,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 
 ### 7.5 In-run upgrades — Echoes
 - **Purpose:** run-to-run variety and the synergy high; the roguelite's build-of-the-run.
-- **Trigger:** *(cadence designed 2026-07-03 — `run-structure.md`:)* **Echo doors** (≥2 offered per floor, pity-weighted) + **one guaranteed pick after every floor boss** → HUD auto-opens with **3 choices**. Target ≈ 12–17 picks per full run. (The slice's every-combat-room offer is a placeholder, retired when door choice is built.) Diegetically the etchings glow — nanobots trying configurations.
+- **Trigger:** *(cadence designed 2026-07-03 — `run-structure.md`:)* **Echo doors** (≥2 offered per floor, pity-weighted) + **one guaranteed pick after every floor boss** → HUD auto-opens with **3 choices**. Target ≈ 12–17 picks per full run. (**Built 2026-07-05:** the every-combat-room offer is RETIRED — echoes now come only from echo-door rooms + the post-boss guarantee; `run-structure.md`.) Diegetically the etchings glow — nanobots trying configurations.
 - **State:** in-run only (NOT persisted past the run) — sits on top of the persistent attunement baseline.
 - **Resolution:** pick 1 of 3. **~50 echoes**: weapon mods, etching mods, dash mods, stat boosts, + **~8 synergy echoes** that require 2 prior picks.
 - **Player decision:** chase a synergy vs. take safe value; commit to a build mid-run.
@@ -154,7 +154,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 
 ### 7.7 Enemies & bosses
 - **Purpose:** the pattern-mastery substrate.
-- **State:** **12 base enemy types** (~4–5 per floor with overlap); **elites = a modifier system on base types** (no new art); **5 bosses, one per floor**, floor-5 = final boss (drops Codex Shards). Difficulty tiers reuse all 5 with new patterns/modifiers.
+- **State:** **12 base enemy types** (~4–5 per floor with overlap); **elites = a modifier system on base types** (no new art) — **first concrete stub built 2026-07-05:** a **peril door** (`run-structure.md`) spawns an elite wave, runtime stat mults (placeholder `hp ×1.5 / dmg ×1.25`, applied at spawn over the exports, never a `.tscn` edit) for a doubled reward; the full modifier roster is later; **5 bosses, one per floor**, floor-5 = final boss (drops Codex Shards). Difficulty tiers reuse all 5 with new patterns/modifiers.
 - **Resolution:** standard real-time AI (telegraphed attacks, tells); boss = arena + multi-phase patterns.
 - **Risk:** bosses are the **most expensive single budget items** (design + arena + feel + tells) — human-gated. Elite modifiers must not produce unfair combos.
 

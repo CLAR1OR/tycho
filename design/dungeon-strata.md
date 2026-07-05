@@ -43,6 +43,9 @@ Each floor **introduces** its signature hazard and may sprinkle *earlier* floors
 
 ```jsonc
 // data/floors/<n>.json — the stratum profile ("floor as data", sibling of "age as data")
+// NOTE: this file EXISTS as of 2026-07-05, but only with the DOOR fields (door_weights +
+// peril_chance — run-structure.md, pure DoorCore). The environment/props/hazards/
+// music_layer fields below land with the strata build; adding them is purely additive.
 {
   "id": 3, "name": "The Resonant Stratum",
   "environment": { "palette": "resonant", "fog_color": "#1a2438", "fog_density": 0.04,

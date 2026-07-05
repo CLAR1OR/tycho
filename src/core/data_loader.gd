@@ -78,6 +78,14 @@ const SCHEMAS: Dictionary = {
 		"sets_flag": {"type": "string", "nullable": true},
 		"scene": {"type": "dict", "required": true},  # {kind: talk|cutscene, lines: [{who, text}]}
 	},
+	"floors": {  # design/run-structure.md Part 1 + architecture-schemas.md §9 (floor profile).
+		# Door + peril data lives here now; the dungeon-strata env fields (palette/fog/
+		# hazard/props) land LATER — adding them is purely ADDITIVE (a new spec row per
+		# field + the JSON key), so this spec grows, it never reshapes.
+		"id": {"type": "int", "required": true},
+		"door_weights": {"type": "dict", "required": true},  # {sigil: weight} over the 5 loot sigils
+		"peril_chance": {"type": "float", "required": true},  # per-door elite-modifier probability [0,1]
+	},
 	"ages": {  # architecture-schemas.md §3
 		"id": {"type": "int", "required": true},
 		"name": {"type": "string", "required": true},

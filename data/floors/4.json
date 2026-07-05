@@ -1,0 +1,5 @@
+{
+	"id": 4,
+	"door_weights": { "gold": 3, "ore": 2, "dust": 2, "echo": 3, "reprieve": 2 },
+	"peril_chance": 0.25
+}
