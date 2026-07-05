@@ -30,7 +30,7 @@ const DEFAULT_SLOT_NAME := "Tycho"
 @export var rooms_max: int = 4
 
 ## Ledger readout order for the HUD (resource meaning stays in data/resources/).
-const HUD_RESOURCES: Array[String] = ["gold", "stone", "knowledge", "knowledge-shards"]
+const HUD_RESOURCES: Array[String] = ["gold", "stone", "food", "knowledge", "knowledge-shards"]
 
 var _scene: Node = null       # the live town or combat room
 var _session_t: float = 0.0   # unsaved playtime (flushed into meta.playtime_s on save)
@@ -158,11 +158,19 @@ func _on_run_ended(_victory: bool, _floor_reached: int, _stats: Dictionary) -> v
 	# auto-solve rode TechState (both fired already — they subscribed first as
 	# autoloads). game.gd handles only the scene-flow tail.
 	SaveManager.state["checkpoint"] = null  # the run is over — nothing to resume
-	# The day tick: 1 day = 1 run, win OR die (locked decision, PRD §6.2).
+	# The day tick: 1 day = 1 run, win OR die (locked decision, PRD §6.2). The tick
+	# also runs the Food upkeep pass (design/food-upkeep.md): production comes in, the
+	# town eats, and covered → Well-Fed → +25% to all other production (already folded
+	# into `produced`). Spend Food AFTER adding production so the stock math matches
+	# the core's "harvest first" rule.
 	Sfx.play("day-chime")
-	var produced := TownCore.tick(SaveManager.state["town"], DataLoader.load_domain("buildings"))
+	var tick := TownCore.tick(
+		SaveManager.state["town"], DataLoader.load_domain("buildings"), Ledger.get_amount("food"))
+	var produced: Dictionary = tick["produced"]
 	for id: String in produced:
 		Ledger.add(id, float(produced[id]), "town-tick")
+	Ledger.try_spend("food", float(tick["food_consumed"]), "upkeep")
+	SaveManager.state["town"]["well_fed"] = bool(tick["well_fed"])
 	call_deferred("_goto_town")
 
 

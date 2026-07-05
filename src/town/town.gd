@@ -32,6 +32,7 @@ var _in_forge: bool = false
 @onready var _forge: Area3D = $MarasForge
 @onready var _portal: Area3D = $DungeonPortal
 @onready var _day_label: Label = $HUD/DayInfo
+@onready var _food_label: Label = $HUD/FoodStatus
 @onready var _hint_label: Label = $HUD/Hint
 
 
@@ -76,6 +77,13 @@ func _ready() -> void:
 	EventBus.tech_researched.connect(func(_tech_id: String) -> void: _refresh_plots())
 	var day := int(SaveManager.state["story"]["counters"].get("runs", 0)) + 1
 	_day_label.text = "Home — Day %d" % day
+	# Food upkeep (design/food-upkeep.md): the Well-Fed indicator only means something
+	# once a day has ticked (day 1 = no tick yet); reads the last tick's stored status.
+	if day > 1:
+		var fed := bool(SaveManager.state["town"].get("well_fed", false))
+		_food_label.text = "Well-Fed (+25% production)" if fed else "Short on food (no bonus)"
+	else:
+		_food_label.text = ""
 	_hint_label.text = "WASD move - E interact (plots, desk, forge, people) - the portal starts a run"
 	_refresh_facilities()
 	# Spine/cutscene beats can force-play on a town visit — max 1 (spec): this runs

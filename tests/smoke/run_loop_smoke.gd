@@ -200,6 +200,13 @@ func _run_smoke() -> void:
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 1,
 		"masonry unlock makes the quarry buildable")
 
+	# --- Farm (Food upkeep, design/food-upkeep.md) ---------------------------------
+	# Ungated by tech (agriculture is day-0; the build SYSTEM gate — B4 — covers it),
+	# so it builds straight away now that plots are open.
+	Ledger.add("gold", 40.0, "smoke-grant")
+	_scene_node().call("_try_build", "farm")
+	_check(TownCore.building_level(SaveManager.state["town"], "farm") == 1, "farm built (ungated)")
+
 	# TechState (autoload) owns the tech-section writes now — the panel's finish() and
 	# Sophia's auto-solve both route through it. Re-read the slot straight off disk to
 	# prove the TechState-mutated tech dict lands there (same ordering proof as the
@@ -285,6 +292,12 @@ func _run_smoke() -> void:
 		cheats.grant("gold", 100.0)
 		_check(Ledger.get_amount("gold") == gold_now + 100.0, "cheat grants gold via the Ledger")
 		var stone_now := Ledger.get_amount("stone")
+		# Food upkeep (design/food-upkeep.md): grant a fat granary so this day tick is
+		# well-fed. Buildings = study + quarry + farm (3) → upkeep 2 + 3 = 5; farm L1
+		# makes 3 food; stock (50+) covers upkeep with room to spare.
+		Ledger.add("food", 50.0, "smoke-grant")
+		var food_before := Ledger.get_amount("food")
+		var built_count := (SaveManager.state["town"]["buildings"] as Array).size()
 		cheats.simulate_run(true)
 		await _settle(10)
 		_check(int(c["runs"]) == runs_before + 3, "simulated run ticks the runs counter")
@@ -293,6 +306,12 @@ func _run_smoke() -> void:
 		_check(int(SaveManager.state["codex"]["shards"]) == 2, "simulated run slots a codex shard")
 		_check(Ledger.get_amount("stone") > stone_now, "simulated run still ticks the day (quarry)")
 		_check(_scene_file() == "town.tscn", "simulated run lands back in town")
+		# food = prior stock + farm harvest (3) - upkeep (2 base + 1/building).
+		var expected_food := food_before + 3.0 - (2.0 + 1.0 * float(built_count))
+		_check(absf(Ledger.get_amount("food") - expected_food) < 0.001,
+			"food = stock + farm harvest - upkeep (%.1f)" % Ledger.get_amount("food"))
+		_check(bool(SaveManager.state["town"]["well_fed"]), "well-fed with a full granary")
+		_check(bool(_read_slot_from_disk()["town"]["well_fed"]), "disk: well_fed status persisted")
 		cheats.grant_codex_shard()
 		_check(int(SaveManager.state["codex"]["shards"]) == 3, "codex shard cheat applies")
 

@@ -1,0 +1,10 @@
+{
+	"id": "food",
+	"name": "Food",
+	"icon": "",
+	"role": "material",
+	"age_active": 1,
+	"supersedes": null,
+	"retired_by": null,
+	"sources": ["farm"]
+}

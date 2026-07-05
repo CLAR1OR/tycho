@@ -34,7 +34,10 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 		},
 		"tech": {"researched": [], "in_progress": {}, "auto_solve_counters": {}, "active": ""},
 		"ledger": {},
-		"town": {"id": "home", "name": "Home", "age": 1, "buildings": [], "map_pos": null},
+		# well_fed: last day-tick Food-upkeep status (design/food-upkeep.md). false
+		# until the town has ever ticked with food covering upkeep; defaults-merge
+		# fills it for old saves.
+		"town": {"id": "home", "name": "Home", "age": 1, "buildings": [], "map_pos": null, "well_fed": false},
 		"combat": {
 			"current_weapon": "sword",
 			"weapons": {},

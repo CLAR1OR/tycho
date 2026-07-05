@@ -39,10 +39,12 @@ func test_next_level_cost() -> void:
 func test_tick_produces() -> void:
 	var defs := DataLoader.load_domain("buildings")
 	var town := _empty_town()
-	check(TownCore.tick(town, defs).is_empty(), "empty town produces nothing")
+	# food_stock 0 → not well-fed → no bonus, so the raw production numbers hold.
+	check((TownCore.tick(town, defs, 0.0)["produced"] as Dictionary).is_empty(),
+		"empty town produces nothing")
 	town = TownCore.set_building(town, "quarry", 1)
 	town = TownCore.set_building(town, "sophias-study", 2)
-	var produced := TownCore.tick(town, defs)
+	var produced: Dictionary = TownCore.tick(town, defs, 0.0)["produced"]
 	check_eq(float(produced.get("stone", 0)), 2.0, "quarry L1 produces 2 stone/day")
 	check_eq(float(produced.get("knowledge", 0)), 2.0, "study L2 produces 2 knowledge/day")
 
@@ -51,5 +53,70 @@ func test_tick_bad_building_is_loud_but_safe() -> void:
 	var defs := DataLoader.load_domain("buildings")
 	var town := TownCore.set_building(_empty_town(), "no-such-building", 1)
 	town = TownCore.set_building(town, "quarry", 99)  # invalid level
-	var produced := TownCore.tick(town, defs)  # push_errors fire (visible), result safe
-	check(produced.is_empty(), "unknown building / bad level produce nothing")
+	var result := TownCore.tick(town, defs, 0.0)  # push_errors fire (visible), result safe
+	check((result["produced"] as Dictionary).is_empty(),
+		"unknown building / bad level produce nothing")
+
+
+# --- Food upkeep (design/food-upkeep.md) --------------------------------------------
+
+func test_upkeep_scales_with_building_count() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Empty town: base upkeep 2, no food → not well-fed, but eats what it has (0).
+	var r0 := TownCore.tick(_empty_town(), defs, 0.0)
+	check_eq(float(r0["food_consumed"]), 0.0, "empty town with no food consumes nothing (never negative)")
+	check(not bool(r0["well_fed"]), "empty starving town is not well-fed")
+	# One building, plenty of food: upkeep = 2 base + 1 = 3.
+	var town := TownCore.set_building(_empty_town(), "sophias-study", 1)
+	var r1 := TownCore.tick(town, defs, 50.0)
+	check_eq(float(r1["food_consumed"]), 3.0, "1 building → upkeep 3 (2 base + 1)")
+	# Two buildings: upkeep = 2 base + 2 = 4.
+	town = TownCore.set_building(town, "quarry", 1)
+	var r2 := TownCore.tick(town, defs, 50.0)
+	check_eq(float(r2["food_consumed"]), 4.0, "2 buildings → upkeep 4 (2 base + 2)")
+
+
+func test_well_fed_coverage_boundary() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Base upkeep 2 for an empty town. Exactly 2 food available = well-fed (>=).
+	var at := TownCore.tick(_empty_town(), defs, 2.0)
+	check(bool(at["well_fed"]), "exactly enough food (2 == upkeep 2) is well-fed")
+	check_eq(float(at["food_consumed"]), 2.0, "at the boundary the town eats the full upkeep")
+	# One under the line is not well-fed.
+	var under := TownCore.tick(_empty_town(), defs, 1.99)
+	check(not bool(under["well_fed"]), "just short of upkeep is not well-fed")
+	check_eq(float(under["food_consumed"]), 1.99, "short town eats all it has, no more")
+
+
+func test_farm_harvest_counts_before_the_town_eats() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Farm L1 makes 3 food. With 0 stock, available = 0 + 3 = 3 ≥ upkeep 3 (2+1) → fed.
+	var town := TownCore.set_building(_empty_town(), "farm", 1)
+	var r := TownCore.tick(town, defs, 0.0)
+	check(bool(r["well_fed"]), "the harvest arrives before upkeep — a lone farm feeds the town")
+	check_eq(float((r["produced"] as Dictionary).get("food", 0)), 3.0, "farm L1 produces 3 food")
+
+
+func test_well_fed_bonus_applies_to_others_never_food() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Farm L1 (3 food) + study L2 (2 knowledge) + quarry L1 (2 stone), fat food stock.
+	var town := TownCore.set_building(_empty_town(), "farm", 1)
+	town = TownCore.set_building(town, "sophias-study", 2)
+	town = TownCore.set_building(town, "quarry", 1)
+	var r := TownCore.tick(town, defs, 100.0)
+	check(bool(r["well_fed"]), "stocked town is well-fed")
+	var p: Dictionary = r["produced"]
+	check_eq(float(p.get("knowledge", 0)), 2.5, "well-fed +25% lifts knowledge 2 → 2.5")
+	check_eq(float(p.get("stone", 0)), 2.5, "well-fed +25% lifts stone 2 → 2.5")
+	check_eq(float(p.get("food", 0)), 3.0, "food itself is never boosted (stays 3)")
+
+
+func test_short_town_gets_no_penalty() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Study L2 (2 knowledge), no food at all: not well-fed → raw numbers, no penalty.
+	var town := TownCore.set_building(_empty_town(), "sophias-study", 2)
+	var r := TownCore.tick(town, defs, 0.0)
+	check(not bool(r["well_fed"]), "no food → not well-fed")
+	check_eq(float((r["produced"] as Dictionary).get("knowledge", 0)), 2.0,
+		"short on food = no bonus, but never a penalty (knowledge stays 2)")
+	check_eq(float(r["food_consumed"]), 0.0, "no food to eat → consumes 0, no negative")

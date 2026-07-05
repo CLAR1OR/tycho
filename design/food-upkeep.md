@@ -1,6 +1,8 @@
 # Food & Upkeep — the Well-Fed mechanic
 
 > Fixes the dead resource: Food's stated purpose ("soft cap on town size / morale") referenced a population system the lean upgrade-hub town doesn't have — so Food had no sink and no effect. **Drafted 2026-07-03.** The fix gives Food one legible job in v1 **and** establishes the *upkeep mechanism* the strategy layer will reuse for armies and cities (the actual prepare-for). Numbers are placeholders.
+>
+> **First implementation built 2026-07-05:** the upkeep pass lives in pure `TownCore.tick` (`src/town/town_core.gd`, now `tick(town, building_defs, food_stock)`) — economy constants `UPKEEP_BASE` / `UPKEEP_PER_BUILDING` / `WELL_FED_BONUS` at the top of that file; `data/resources/food.json` + `data/buildings/farm.json` (ungated) are the content; the day tick in `game.gd` spends Food upkeep and stores `state.town.well_fed`; the town shows a Well-Fed / Short-on-food indicator.
 
 ---
 
