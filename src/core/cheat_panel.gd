@@ -112,8 +112,7 @@ func set_story_flag(flag: String) -> void:
 ## Instantly research a node — the real completion path (TechCore + the event), so
 ## unlocks, age advance, and the town plots all react as if it were earned.
 func research(id: String) -> void:
-	SaveManager.state["tech"] = TechCore.complete(SaveManager.state["tech"], id)
-	EventBus.tech_researched.emit(id)
+	TechState.complete(id)  # route the raw poke through the tech owner (complete + emit)
 	SaveManager.save_current()
 	_rebuild_if_open()
 

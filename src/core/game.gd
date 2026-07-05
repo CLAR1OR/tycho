@@ -7,11 +7,13 @@ extends Node
 ##
 ## Story bookkeeping (run/death/boss-kill counters, the has-<resource> pickup flags,
 ## the full-clear codex shard) now lives in the StoryState autoload over pure
-## StoryCore — game.gd keeps only scene flow. ORDERING: StoryState is an autoload, so
-## it subscribes to run_ended BEFORE this scene does; its counters are therefore
-## already updated when _on_run_ended defers the town swap + slot save. See
-## story_state.gd's header for the full guarantee (the smoke re-reads the file to
-## prove it).
+## StoryCore, and the tech auto-solve moved to the TechState autoload over pure
+## TechCore — game.gd keeps only scene flow. ORDERING: both are autoloads, so they
+## subscribe to run_ended BEFORE this scene does; their counters/tech state are
+## therefore already updated when _on_run_ended defers the town swap + slot save. See
+## story_state.gd / tech_state.gd headers for the full guarantee (the smoke re-reads
+## the file to prove it). The age-advance hook (_on_tech_researched) stays here — it
+## mutates town/meta.age, not the tech section.
 ##
 ## Boot: the slot-select screen (SlotSelect) → choose_slot() → town, or straight
 ## back into a run at floor start if the slot holds a mid-run checkpoint (§7.13).
@@ -152,23 +154,15 @@ func _on_room_cleared(room: Node) -> void:
 
 
 func _on_run_ended(_victory: bool, _floor_reached: int, _stats: Dictionary) -> void:
-	# The counters + the full-clear codex shard rode StoryState (fired already — it
-	# subscribed first as an autoload). game.gd handles only the scene-flow tail.
+	# The counters + the full-clear codex shard rode StoryState, and Sophia's tech
+	# auto-solve rode TechState (both fired already — they subscribed first as
+	# autoloads). game.gd handles only the scene-flow tail.
 	SaveManager.state["checkpoint"] = null  # the run is over — nothing to resume
 	# The day tick: 1 day = 1 run, win OR die (locked decision, PRD §6.2).
 	Sfx.play("day-chime")
 	var produced := TownCore.tick(SaveManager.state["town"], DataLoader.load_domain("buildings"))
 	for id: String in produced:
 		Ledger.add(id, float(produced[id]), "town-tick")
-	# Sophia works the ACTIVE node between runs; after enough runs she just solves
-	# it — reward thinking, never hard-gate on the puzzle (IC-10, PRD §7.8).
-	var active := str(SaveManager.state["tech"].get("active", ""))
-	if not active.is_empty():
-		SaveManager.state["tech"] = TechCore.tick_auto_solve(SaveManager.state["tech"], active)
-		var tech_defs := DataLoader.load_domain("tech")
-		if tech_defs.has(active) and TechCore.auto_solve_ready(tech_defs[active], SaveManager.state["tech"]):
-			SaveManager.state["tech"] = TechCore.complete(SaveManager.state["tech"], active)
-			EventBus.tech_researched.emit(active)
 	call_deferred("_goto_town")
 
 

@@ -7,10 +7,11 @@ class_name TechPanel
 ## READ (the authored explanation) → the node's puzzle, dispatched on
 ## `puzzle.kind` (architecture-schemas.md §4): "quiz" → the built-in QUIZ screen;
 ## "interactive" → PUZZLE embeds the bespoke scene from PUZZLES and waits for its
-## `solved` signal → AHA (the reveal) → done: TechCore.complete +
-## `tech_researched` on the EventBus + save.
+## `solved` signal → AHA (the reveal) → done: TechState.complete (TechCore.complete +
+## `tech_researched` on the EventBus) + save.
 ##
-## Logic stays in TechCore (pure, tested); this class is screens and wiring.
+## Logic stays in TechCore (pure, tested); tech-section writes route through the
+## TechState autoload (set_active / invest / complete); this class is screens and wiring.
 ## All flow methods (select_node / invest_all / begin_read / begin_quiz / answer /
 ## begin_puzzle / finish) are public so the headless smoke can drive the real path.
 
@@ -72,22 +73,15 @@ func close() -> void:
 func select_node(id: String) -> void:
 	_node_id = id
 	# Selecting makes it the ACTIVE node — the one Sophia auto-solves over runs.
-	SaveManager.state["tech"]["active"] = id
+	TechState.set_active(id)
 	_show_node()
 
 
 ## Pour the Ledger's Knowledge (+ Knowledge Shards, converted as needed) into the
-## selected node, up to its remaining cost.
+## selected node, up to its remaining cost. The invest transaction (+ its Ledger
+## spends) lives on TechState now; the readout re-reads state below.
 func invest_all() -> void:
-	var def: Dictionary = _defs[_node_id]
-	var tech: Dictionary = SaveManager.state["tech"]
-	var missing := float(def["cost_knowledge"]) - TechCore.progress(tech, _node_id)
-	var conv := TechCore.shards_needed(missing, Ledger.get_amount("knowledge"), Ledger.get_amount("knowledge-shards"))
-	if int(conv["shards_used"]) > 0 and Ledger.try_spend("knowledge-shards", float(conv["shards_used"]), "research"):
-		Ledger.add("knowledge", float(conv["knowledge_from_shards"]), "shard-conversion")
-	var result := TechCore.invest(tech, def, minf(Ledger.get_amount("knowledge"), missing))
-	if float(result["accepted"]) > 0.0 and Ledger.try_spend("knowledge", float(result["accepted"]), "research"):
-		SaveManager.state["tech"] = result["tech"]
+	TechState.invest(_defs[_node_id], _node_id)
 	_show_node()
 
 
@@ -141,8 +135,7 @@ func answer(index: int) -> void:
 
 ## The aha has been read: the node completes for real.
 func finish() -> void:
-	SaveManager.state["tech"] = TechCore.complete(SaveManager.state["tech"], _node_id)
-	EventBus.tech_researched.emit(_node_id)
+	TechState.complete(_node_id)  # TechCore.complete + tech_researched, in one place
 	SaveManager.save_current()
 	_node_id = ""
 	_show_list()

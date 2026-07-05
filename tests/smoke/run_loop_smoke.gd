@@ -200,6 +200,18 @@ func _run_smoke() -> void:
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 1,
 		"masonry unlock makes the quarry buildable")
 
+	# TechState (autoload) owns the tech-section writes now — the panel's finish() and
+	# Sophia's auto-solve both route through it. Re-read the slot straight off disk to
+	# prove the TechState-mutated tech dict lands there (same ordering proof as the
+	# story counters above).
+	var disk_tech: Dictionary = _read_slot_from_disk().get("tech", {})
+	var disk_researched: Array = disk_tech.get("researched", [])
+	_check(disk_researched.has("med-arithmetic-zero") and disk_researched.has("med-masonry-arch"),
+		"disk: TechState research persisted (%s)" % str(disk_researched))
+	_check(str(disk_tech.get("active", "?")) == "", "disk: active node cleared on completion")
+	_check(not (disk_tech.get("in_progress", {}) as Dictionary).has("med-masonry-arch"),
+		"disk: completed node's in-progress/auto-solve counter cleared")
+
 	# --- Mara's Forge ----------------------------------------------------------------
 	Ledger.add("resonance-ore", 5.0, "smoke-grant")
 	var ore_before := Ledger.get_amount("resonance-ore")

@@ -15,7 +15,7 @@ extends Node
 ## counters StoryState updates here are always on disk by the time the save writes. The
 ## smoke asserts this by re-reading the slot file after a run ends. Registered in
 ## project.godot [autoload] right after SaveManager (whose state it owns a slice of) and
-## before RunState/Sfx (which emit / also-subscribe to these same signals).
+## before TechState/RunState/Sfx (which emit / also-subscribe to these same signals).
 ##
 ## Mutation reference (the complete set moved out of game.gd):
 ##   resource_changed → story.flags["has-<id>"]  (first-time-pickup, dialogue `has()`)
@@ -53,7 +53,8 @@ func _on_boss_killed(_boss_id: String, _floor: int) -> void:
 
 ## Run ended (win or die). Bumps the run counters, mirrors runs into meta (the
 ## slot-select readout), and — on victory (== full clear in the slice) — grants the
-## codex shard. The day tick, tech auto-solve, and the town swap stay in game.gd.
+## codex shard. The day tick and the town swap stay in game.gd; the tech auto-solve
+## moved to the TechState autoload.
 func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> void:
 	StoryCore.record_run_end(SaveManager.state["story"], victory)
 	SaveManager.state["meta"]["runs"] = SaveManager.state["story"]["counters"]["runs"]
