@@ -1,0 +1,19 @@
+{
+	"id": "a-mara-meets",
+	"source": "spine",
+	"speakers": ["mara", "tycho"],
+	"priority": 96,
+	"conditions": [{"flag": "a3"}],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "mara", "text": "Hey! If that's not my favorite field researcher! How's it going out there, you already had to use my sword to scare off some wild animals?"},
+			{"who": "mara", "text": "Wait, you look different. What are these etchings on your forearm? What happened?"},
+			{"who": "tycho", "text": "Why thank you, I actually had quite some use for the sword you gave me, but it wasn't wild animals. I had an encounter with a magical artefact and went into a place full of monsters. I died, but I survived."},
+			{"who": "mara", "text": "What? You mean it's dangerous? Can I come with you?"},
+			{"who": "tycho", "text": "No, we already tested it. Only I can enter. And you probably shouldn't anyway. The magic from the artefact seems to resurrect me if I die, but you don't have that advantage, as far as I remember."},
+			{"who": "mara", "text": "Aww, unfair! Well, you make sure you bring anything interesting here, I want to see what you find in there"},
+			{"who": "tycho", "text": "Of course, will do."}
+		]
+	}
+}

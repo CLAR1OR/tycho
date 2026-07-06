@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3]
+[gd_scene load_steps=34 format=3]
 
 [ext_resource type="Script" path="res://src/town/town.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/combat/player.tscn" id="2"]
@@ -100,6 +100,17 @@ albedo_color = Color(0.3, 0.5, 0.3, 1)
 
 [sub_resource type="StandardMaterial3D" id="ThomasMat"]
 albedo_color = Color(0.45, 0.35, 0.22, 1)
+
+[sub_resource type="StandardMaterial3D" id="SophiaMat"]
+albedo_color = Color(0.55, 0.45, 0.62, 1)
+
+[sub_resource type="CylinderMesh" id="MeditationMesh"]
+top_radius = 0.6
+bottom_radius = 0.7
+height = 0.4
+
+[sub_resource type="StandardMaterial3D" id="MeditationMat"]
+albedo_color = Color(0.4, 0.42, 0.5, 1)
 
 [node name="Town" type="Node3D"]
 script = ExtResource("1")
@@ -435,6 +446,51 @@ shape = SubResource("PlotShape")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 billboard = 1
 text = "Thomas — E to talk"
+font_size = 36
+outline_size = 8
+
+[node name="NpcSophia" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -8)
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+metadata/npc_id = "sophia"
+
+[node name="Mesh" type="MeshInstance3D" parent="NpcSophia"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
+mesh = SubResource("NpcMesh")
+surface_material_override/0 = SubResource("SophiaMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcSophia"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("PlotShape")
+
+[node name="Label" type="Label3D" parent="NpcSophia"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
+billboard = 1
+text = "Sophia — E to talk"
+font_size = 36
+outline_size = 8
+
+[node name="MeditationSpot" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 12)
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+
+[node name="Mesh" type="MeshInstance3D" parent="MeditationSpot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
+mesh = SubResource("MeditationMesh")
+surface_material_override/0 = SubResource("MeditationMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeditationSpot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("PlotShape")
+
+[node name="Label" type="Label3D" parent="MeditationSpot"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+billboard = 1
+text = "Thomas's Favorite Spot"
 font_size = 36
 outline_size = 8
 

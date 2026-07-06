@@ -1,0 +1,63 @@
+# Dialogue review — 2026-07-06 (human opening scripts + voice recalibration)
+
+The human wrote the game's opening dialogues (first-death spine + first-meeting beats) and set the register: **"scientific observing, no-BS type of talking. no poetic / wise stuff. maybe thomas can get some, but that's about it."** This pass integrated those scripts verbatim, added the missing NPCs/UI, and ran a conformance pass over the existing batch against the sharpened register. **The human's scripts are now the top calibration anchors** in `voice-guides.md` and outrank all prior samples.
+
+---
+
+## 1. Human scripts integrated (CANONICAL — typo fixes only)
+
+| id | source | speakers | gate | sets | notes |
+|---|---|---|---|---|---|
+| `a3-first-death` | spine, **force_play** cutscene | tycho, sophia | `deaths>=1` | `a3` | Scripts 1+2 as one cutscene. Stage directions became telegram narration lines (`who:""`): "He finds Sophia at her workbench…" / "They walk to the portal." / "Sophia steps toward the portal. It does not let her through." / "They walk back." Priority **105** (above B5's 95) so it takes the one force-play slot on the death-return visit. |
+| `a-mara-meets` | spine | mara, tycho | `flag(a3)` | — | Script 3. Priority **96** (above `b1-mara-ore`'s 90) so the greeting precedes the ore beat when both are eligible. |
+| `b2-thomas-meditation` | spine | thomas, tycho | `flag(a3)` | **`b2`** | Script 4. Sets `b2` → unlocks the etchings system (UnlocksCore `etchings<-b2`) and Thomas's meditation spot. Priority 94. |
+| `b4-herzog-ledger` | spine | herzog, tycho | `resource(gold)>=40` | `b4` | **Reworked** to Script 5 (same id/gate/flag). Was 4 lines, now 3. |
+
+### Typo fixes to the human scripts (only these; no phrasing changes)
+The three normalizations the brief named were applied to the raw text; as delivered here the scripts read:
+- **"chick in" → "check in"** (A3: "Let me check in with my sister…").
+- **"ecounter" → "encounter"** (a-mara-meets: "I had an encounter with a magical artefact…").
+- **"ressources" → "resources"** (b4: "Something that gives gold and resources…").
+No other spelling changes. **Grammar/phrasing left verbatim** per instruction — e.g. "This goes against my every theory I had about how the world actually works", "as far as I remember", and the several lines the human left without a terminal period (A3 lines 5/8/16; a-mara-meets line 6) are preserved exactly. No em dashes added anywhere.
+
+### Voice-guide tensions in the human text (human overrides — flagged, not changed)
+- **A3 Tycho: "All other data points also point in the direction of this being reality."** — `data` is on the voice-guide's *deniability* banned-words list (pre-reveal, everyone but Wren/Linnea). The human's scientific-observing register uses it deliberately. Kept verbatim; `voice-guides.md` §deniability now records the exception (Tycho's dry-empirical register may reach for "data points").
+- **A3 Sophia: "maybe it runs on divine energy after all? On magic?"** — `energy` (physics sense) is likewise on the deniability list; here it's the in-world *divine energy / magic* framing, not physics, so it stays deniable. Kept verbatim.
+
+---
+
+## 2. Conformance pass over the existing batch (register: scientific-observing, no poetic/wise)
+
+The 2026-07-04 batch was already drafted against the banned-aphorism rule, so **most lines were already conformant.** Only the clearest poetic/inspirational-shaped lines were rewritten; Thomas keeps his limited contemplative license (untouched). Every change below is a **proposal for the human's curation** — revert freely.
+
+### Rewritten (2 files, 3 lines)
+| id | before → after |
+|---|---|
+| `wren-bark-roads` | "Same three hills, every time. **As if the roads are remembering something the hills already forgot.**" → "Same three hills, every time. **Nobody laid them out to. They just do.**" (drops the mystical personification; keeps Wren's hanging-observation tell) |
+| `b5-the-first-wall` (narration) | "The wall goes up over a week **—** grey stone…" → "…over a week**,** grey stone…" (removes an em dash in a caption) |
+| `b5-the-first-wall` (narration) | "…a stone ring where the wooden one stood. **It is a small wall. It is a beginning.**" → "…**It is a small wall, and it is the first the town has ever raised from stone.**" (drops the inspirational-post button; stays observational) |
+
+### Reviewed and KEPT (borderline, flagged for the human)
+- **`arc-sophia-method`** — "if I only read, I learn what the shard knows. If I guess first, I find out what I know… only the second one is mine." Mirrored shape, but it *is* the empirical method (predict → check error) stated concretely, which is exactly the target register. Kept; flag if the mirror reads too precious.
+- **`arc-thomas-*`** — all kept (Thomas's contemplative license). Watch `arc-thomas-woman`'s "Love at that distance is a strange crop, boy" if you want him plainer.
+- **`b3-sophia-shards` / `-alt`** narration — "There is something new in her face, and it isn't fear. It's appetite." Literary caption, kept (narration, not spoken).
+- **`wren-bark-monomyth` / `-hut`** — Wren's licensed funny-strange takes; the monomyth "turning the pages" and the hut's "Not the hut. The forgetting." are his signature. Kept; de-poeticize if you want him drier.
+- **`herzog-bark-wall`** — "I've stopped being surprised by what a wall does to a man." Slightly proverb-ish but matches his approved dry-general register. Kept.
+
+Everything else in `data/dialogue/` was reviewed line-by-line and judged already conformant (Tilly earnest/report, Mara task-in-line banter, Herzog flat declaratives, Sophia precise, the a4/b1/c3/herzog-ledger spine).
+
+---
+
+## 3. New systems this pass added (context for curation)
+
+- **Sophia is now a town NPC** (`NpcSophia`, near her desk; talkable from day 0, before the tech tree). Her arc beats (arc-sophia-*) previously had **no talk spot** — the desk opens the research panel, not dialogue — so they were unreachable. They fire now.
+- **`!` / `!!` dialogue indicators** — a floating Label3D over any NPC with **new, unseen** content: `!!` for a spine (main-story) beat, `!` for arc/contextual. Barks and already-seen content never light it. Pure `DialogueCore.indicator_for`, rendered by `town.gd`, refreshed on entry and after each dialogue closes.
+- **Meditation spot** — Thomas's favorite spot (Area3D + prop near Thomas), gated on the etchings system (B2). The etchings/attunement **menu is not built in v1** (document-don't-build); unlocked, it's a one-line diegetic beat ("Tycho listens to the resonance. Nothing answers yet.").
+
+---
+
+## 4. Open design edges (human decision — noted, NOT solved)
+
+1. **Win-first-run edge.** `a3-first-death` gates on `deaths>=1`, and the Mara greeting (a3), Thomas/B2 (a3 → etchings), etc. chain off `a3`. **A player who never dies on their first run never trips the gate**, so the first-death cutscene and everything downstream (including the etchings unlock via B2) stall. A fallback gate (e.g. an OR on `runs>=N`, or firing A3 after A2 regardless) is a human call — same class as the B3 `boss_kills>=3 OR runs>=6` fallback. Recorded in `act1-story-beats.md` (A3 note).
+2. **B2 gate divergence.** The skeleton's B2 gate was "first Resonance Dust + visited Thomas once". The human's script 4 gates on `flag(a3)` and Thomas simply offering it, so **B2 now depends on the first-death cutscene**, not on dust. Intended per the human's direction; noted in the beats doc.
+3. **Greeting-after-ore edge.** If a player gets Resonance Ore and talks to Mara *before* ever dying, `b1-mara-ore` plays first and `a-mara-meets` (the introduction) plays later, slightly out of narrative order. Minor; priority can't fix it without a flag-chain. Left as-is.

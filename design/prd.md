@@ -193,7 +193,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 
 ### 7.12 Dialogue system
 - **Purpose:** the Hades-style vibrancy + story delivery; the largest writing line item.
-- **Trigger:** on each town visit, build the eligible set per character; spine/cutscene beats can **force-play** (banner icon), max **1 forced scene per visit**.
+- **Trigger:** on each town visit, build the eligible set per character; spine/cutscene beats can **force-play**, max **1 forced scene per visit**. A floating **`!` / `!!` marker** over an NPC flags new UNSEEN content (`!!` = a spine/main-story beat, `!` = arc/contextual; barks and seen content don't light it) — the banner icon, built 2026-07-06 via pure `DialogueCore.indicator_for`.
 - **State:** every snippet is data: `id, speakers[], source (spine|arc|contextual|bark), conditions[], priority, once, cooldown_runs, force_play, sets_flag, scene`. `story.seen[]` tracks shown.
 - **Resolution:** each character offers their single highest-priority eligible item; **priority spine > arc > contextual > bark**; `cooldown_runs` prevents back-to-back same-arc beats; barks repeatable. Selector is a **pure function `(save_state, character) -> snippet`** (unit-testable). Conditions read only EventBus-maintained state (flags/counters/ledger/tech). **Dialogues are fully scripted — the player never chooses** (all decisions happen in other systems). Supports 3+ speakers and cutscenes (painterly stills + narration).
 - **Content hooks:** ~22 spine (incl. Phase E post-climax, 2026-07-03) + ~28 arc (4 full arcs: Sophia, Tilly, Mara, Thomas) + ~250 contextual + ~70 barks (incl. ~10 post-climax) + ~8 cutscenes. Condition vocabulary in `act1-story-beats.md` §spec is the engine contract. **All dialogue drafts against `voice-guides.md`** (locked 2026-07-03 — house style, per-character tells, tech-unlocked vocabulary; the second bearer is Linnea in data, never named in Act I).
@@ -218,7 +218,7 @@ All content = **JSON in `data/`, one file per entity, filename = kebab-case id**
 ---
 
 ## 9. UX & Feedback
-- **Must be visible:** current HP / resources / active Echoes (in-run HUD); room/floor progress + minimap (Cartography tech reveals more — incl. door foresight, `run-structure.md`); **door reward sigils** (+ peril marks; first encounter of each sigil gets a one-line tooltip); active tech node + progress; building costs vs. owned resources; which dialogue is a forced story beat (banner icon).
+- **Must be visible:** current HP / resources / active Echoes (in-run HUD); room/floor progress + minimap (Cartography tech reveals more — incl. door foresight, `run-structure.md`); **door reward sigils** (+ peril marks; first encounter of each sigil gets a one-line tooltip); active tech node + progress; building costs vs. owned resources; which NPC has new dialogue (`!`/`!!` marker, `!!` = a forced/spine story beat).
 - **Must be immediate:** hit/dash/pickup feedback (the feel-critical SFX subset gets human tuning); ability cooldown states; Echo-pick HUD (auto-opens).
 - **Needs recap/history:** codex shard assembly (visible artifact); achievements page; tech tree per-age screens (researched=green, current=blue, available=normal, locked=greyed); seen-dialogue tracking (no repeats of `once` snippets).
 - **Must be explainable on failure:** death cause readable (what hit you); why a tech/building is locked (missing prereq/resource shown); why a dialogue/system isn't available yet (gated).

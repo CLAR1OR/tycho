@@ -8,10 +8,9 @@
 	"scene": {
 		"kind": "talk",
 		"lines": [
-			{"who": "herzog", "text": "You've hauled up enough coin that I can't call it luck anymore. So I've opened the ledger. Proper books."},
-			{"who": "herzog", "text": "Bring gold and stone and tell me what you want raised. The town raises it. A study, a quarry, a wall. Whatever the coin covers."},
-			{"who": "tycho", "text": "That's it? No terms?"},
-			{"who": "herzog", "text": "The ledger doesn't argue terms. It only adds. Go pick a plot."}
+			{"who": "herzog", "text": "I heard from the others in town that you found something. Something that gives gold and resources. Gold and resources that the town could use, I am sure."},
+			{"who": "tycho", "text": "That's right. We don't know what it is yet, but I am bringing out stuff every time I get in. I take it you can use the gold to help out and improve our town?"},
+			{"who": "herzog", "text": "Of course. We can decide together what we should invest in."}
 		]
 	}
 }

@@ -155,6 +155,48 @@ func test_twin_forced_plays_exactly_once() -> void:
 		"after one twin plays, no forced scene remains (the other is suppressed)")
 
 
+func test_indicator_for() -> void:
+	# "!!" = an unseen SPINE beat, "!" = unseen arc/contextual, "" = nothing new.
+	var s := _save_state()
+	check_eq(DialogueCore.indicator_for({"x": _def("x", {"source": "spine"})}, s, "herzog"), "!!",
+		"unseen spine beat → !!")
+	check_eq(DialogueCore.indicator_for({"x": _def("x", {"source": "arc"})}, s, "herzog"), "!",
+		"unseen arc beat → !")
+	check_eq(DialogueCore.indicator_for({"x": _def("x", {"source": "contextual"})}, s, "herzog"), "!",
+		"unseen contextual → !")
+	check_eq(DialogueCore.indicator_for({"x": _def("x", {"source": "bark"})}, s, "herzog"), "",
+		"only a repeatable bark on offer → no marker")
+	check_eq(DialogueCore.indicator_for({}, s, "herzog"), "", "nothing eligible → no marker")
+	# A seen once-beat is filtered out by select → no marker.
+	(s["story"]["seen"] as Array).append("seen-spine")
+	check_eq(DialogueCore.indicator_for({"seen-spine": _def("seen-spine", {"source": "spine"})}, s,
+		"herzog"), "", "seen once-beat → no marker")
+	# A repeatable (once:false) non-bark that's already been seen slips past select's
+	# seen-filter, but the marker is for NEW content only — still "".
+	var s2 := _save_state()
+	(s2["story"]["seen"] as Array).append("repeat-ctx")
+	check_eq(DialogueCore.indicator_for(
+		{"repeat-ctx": _def("repeat-ctx", {"source": "contextual", "once": false})}, s2, "herzog"),
+		"", "repeatable non-bark already seen → no marker")
+	# Spine still wins over a high-weight bark on the same character → !!.
+	check_eq(DialogueCore.indicator_for({
+		"bark-1": _def("bark-1", {"source": "bark", "priority": 999}),
+		"spine-1": _def("spine-1", {"source": "spine", "priority": 1}),
+	}, _save_state(), "herzog"), "!!", "unseen spine outranks a bark → !!")
+
+
+func test_select_forced_priority() -> void:
+	# Two eligible force_play spine beats → the higher priority takes the one slot. The
+	# first-death cutscene (priority above B5) must claim it on the death-return visit.
+	var s := _save_state()
+	var defs := {
+		"low": _def("low", {"source": "spine", "force_play": true, "priority": 95}),
+		"high": _def("high", {"source": "spine", "force_play": true, "priority": 105}),
+	}
+	check_eq(DialogueCore.select_forced(defs, s), "high",
+		"higher-priority force_play scene is chosen first")
+
+
 func test_mark_shown() -> void:
 	var s := _save_state()
 	var def := _def("b5", {"source": "arc", "sets_flag": "b5"})

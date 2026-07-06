@@ -9,7 +9,11 @@ extends Node3D
 ##   → read → quiz → aha → unlock).
 ## - NPCS — any Area3D child with `metadata/npc_id`. E to talk: DialogueCore picks
 ##   their single best eligible snippet (PRD §7.12). Spine beats with force_play
-##   auto-play on town entry, max 1 per visit (spec).
+##   auto-play on town entry, max 1 per visit (spec). A floating "!"/"!!" marker over
+##   an NPC flags new UNSEEN content ("!!" = a main-story/spine beat), via the pure
+##   DialogueCore.indicator_for; refreshed on entry and after any dialogue closes.
+## - MEDITATION SPOT — Thomas's favorite spot, gated on the etchings system (B2). The
+##   etchings menu isn't built in v1; unlocked, it's a placeholder meditation beat.
 ## - DUNGEON PORTAL — step in to start a run (signalled up to game.gd).
 ##
 ## Town STATE is the save's town section (architecture-schemas §6), read/written
@@ -21,15 +25,19 @@ var _building_defs: Dictionary = {}
 var _tech_defs: Dictionary = {}
 var _dialogue_defs: Dictionary = {}
 var _plots: Array[Area3D] = []      # every Area3D with metadata/building_id
+var _npcs: Array[Area3D] = []       # every Area3D with metadata/npc_id
+var _npc_indicators: Dictionary = {}  # npc_id -> Label3D ("!"/"!!" new-dialogue marker)
 var _in_plot: Area3D = null         # the plot the player is standing in (or null)
 var _in_npc: Area3D = null          # the NPC the player is standing at (or null)
 var _in_desk: bool = false
 var _in_forge: bool = false
+var _in_meditation: bool = false    # standing at Thomas's favorite spot
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
 @onready var _desk: Area3D = $SophiasDesk
 @onready var _forge: Area3D = $MarasForge
+@onready var _meditation: Area3D = $MeditationSpot
 @onready var _portal: Area3D = $DungeonPortal
 @onready var _day_label: Label = $HUD/DayInfo
 @onready var _food_label: Label = $HUD/FoodStatus
@@ -55,12 +63,20 @@ func _ready() -> void:
 					_in_plot = null)
 		if child is Area3D and child.has_meta("npc_id"):
 			var npc := child as Area3D
+			_npcs.append(npc)
+			_npc_indicators[str(npc.get_meta("npc_id"))] = _make_indicator(npc)
 			npc.body_entered.connect(func(body: Node3D) -> void:
 				if body is Player:
 					_in_npc = npc)
 			npc.body_exited.connect(func(body: Node3D) -> void:
 				if body is Player and _in_npc == npc:
 					_in_npc = null)
+	_meditation.body_entered.connect(func(body: Node3D) -> void:
+		if body is Player:
+			_in_meditation = true)
+	_meditation.body_exited.connect(func(body: Node3D) -> void:
+		if body is Player:
+			_in_meditation = false)
 	_desk.body_entered.connect(func(body: Node3D) -> void:
 		if body is Player:
 			_in_desk = true)
@@ -86,6 +102,7 @@ func _ready() -> void:
 		_food_label.text = ""
 	_hint_label.text = "WASD move - E interact (plots, desk, forge, people) - the portal starts a run"
 	_refresh_facilities()
+	_refresh_indicators()
 	# Spine/cutscene beats can force-play on a town visit — max 1 (spec): this runs
 	# once per town instance, so one visit = at most one forced scene. Deferred a
 	# frame so the scene (and any save/swap in flight) settles first.
@@ -103,6 +120,8 @@ func _unhandled_input(event: InputEvent) -> void:
 	elif _in_forge:
 		if open_forge_panel() == null:
 			_flash_facility(_forge, "Mara: not yet.")
+	elif _in_meditation:
+		_try_meditate()
 	elif _in_npc != null:
 		talk_to(str(_in_npc.get_meta("npc_id")))
 	elif _in_plot != null:
@@ -161,10 +180,54 @@ func _play_snippet(def: Dictionary, count_talk: bool) -> DialoguePanel:
 		SaveManager.state["story"] = DialogueCore.mark_shown(
 			SaveManager.state["story"], def, count_talk)
 		SaveManager.save_current()
-		# A cascade beat (b1/b3/b4) may have just set its flag — reopen the facility
-		# it gates without waiting for the next town visit.
-		_refresh_facilities())
+		# A cascade beat (b1/b2/b3/b4) may have just set its flag — reopen the facility
+		# it gates without waiting for the next town visit, and refresh the "!"/"!!"
+		# markers (this beat is now seen; another may have become eligible).
+		_refresh_facilities()
+		_refresh_indicators())
 	return panel
+
+
+# --- Meditation (etchings, B2) ------------------------------------------------------
+
+## Thomas's favorite spot. Gated on the etchings system (B2). The etchings/attunement
+## menu is NOT built in v1 (document-don't-build): unlocked, this is a one-line diegetic
+## meditation beat. The real listen-to-the-resonance UI lands with the etchings system.
+func _try_meditate() -> void:
+	if not UnlocksCore.is_unlocked(SaveManager.state, "etchings"):
+		_flash_facility(_meditation, "Tycho: not yet.")
+		return
+	_flash_facility(_meditation, "Tycho listens to the resonance. Nothing answers yet.")
+
+
+# --- Dialogue indicators ("!" / "!!") ----------------------------------------------
+
+## The floating new-dialogue marker over an NPC (the forced-beat banner icon, PRD
+## §7.12). Public so the smoke can assert it; town.gd renders _refresh_indicators.
+func indicator_for_npc(npc_id: String) -> String:
+	return DialogueCore.indicator_for(_dialogue_defs, SaveManager.state, npc_id)
+
+
+func _make_indicator(npc: Area3D) -> Label3D:
+	var mark := Label3D.new()
+	mark.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	mark.font_size = 64
+	mark.outline_size = 10
+	mark.position = Vector3(0, 3.1, 0)
+	mark.visible = false
+	npc.add_child(mark)
+	return mark
+
+
+func _refresh_indicators() -> void:
+	for npc in _npcs:
+		var npc_id := str(npc.get_meta("npc_id"))
+		var mark: Label3D = _npc_indicators[npc_id]
+		var glyph := indicator_for_npc(npc_id)
+		mark.text = glyph
+		mark.visible = not glyph.is_empty()
+		# "!!" = a main-story beat waiting; "!" = new arc/contextual content.
+		mark.modulate = Color(1.0, 0.35, 0.25) if glyph == "!!" else Color(1.0, 0.85, 0.3)
 
 
 # --- Build plots ------------------------------------------------------------------
@@ -202,6 +265,11 @@ func _refresh_facilities() -> void:
 		"Mara hasn't offered her services")
 	_refresh_facility(_desk, "tech", "Sophia's Desk", "E to research",
 		"Sophia hasn't cracked the shards")
+	# Thomas's meditation spot gates on the etchings system (B2 — Thomas teaches
+	# stillness). The etchings/attunement menu itself isn't built in v1; unlocked, the
+	# spot is a placeholder meditation beat (see _try_meditate).
+	_refresh_facility(_meditation, "etchings", "Thomas's Favorite Spot", "E to meditate",
+		"Thomas hasn't shown you stillness")
 	_refresh_plots()
 
 

@@ -55,6 +55,25 @@ static func select_forced(defs: Dictionary, save_state: Dictionary) -> String:
 	return best_id
 
 
+## The floating-marker a character's talk spot should show right now (town.gd
+## renders it as a Label3D over the NPC): "" none, "!" new arc/contextual content,
+## "!!" a new SPINE (main-story) beat. Indicator = NEW, UNSEEN content only — barks
+## (repeatable flavor) and anything already seen never light it, so it always turns
+## off once the player has heard the character out. Pure; unit-tested.
+static func indicator_for(defs: Dictionary, save_state: Dictionary, character: String) -> String:
+	var best := select(defs, save_state, character)
+	if best.is_empty():
+		return ""
+	var def: Dictionary = defs[best]
+	if str(def.get("source", "bark")) == "bark":
+		return ""  # only a repeatable bark is on offer — not new content
+	# A once:false non-bark that's already been seen slips past select's seen-filter;
+	# the indicator is for the unseen, so guard it here too.
+	if (save_state.get("story", {}).get("seen", []) as Array).has(best):
+		return ""
+	return "!!" if str(def.get("source", "")) == "spine" else "!"
+
+
 ## A snippet's owner — the character whose talk menu offers it (first speaker).
 static func owner_of(def: Dictionary) -> String:
 	var speakers: Array = def.get("speakers", [])

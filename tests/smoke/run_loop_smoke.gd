@@ -290,36 +290,66 @@ func _run_smoke() -> void:
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
 	_check(Ledger.get_amount("stone") >= 2.0, "quarry produced stone on the day tick")
 
-	# --- Dialogue (PRD §7.12): masonry was researched during this save, so B5 ("the
-	# first wall", force_play) must have auto-played on THIS town return.
-	var dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
-	_check(dlg != null, "B5 'the first wall' force-played on town entry")
+	# --- Dialogue on the run-2 town return (PRD §7.12) -------------------------------
+	# deaths just hit 1, so the FIRST-DEATH cutscene (a3-first-death, force_play,
+	# priority above B5) claims the one force-play slot on this entry. B5 ("the first
+	# wall") is eligible (masonry researched) but outranked — it waits for the next
+	# town entry (the simulated run below). This resequences the old B5-plays-here flow.
+	var a3: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(a3 != null, "first-death cutscene (A3) force-played on the town return after a death")
 	_check(bool(SaveManager.state["story"]["flags"].get("has-resonance-ore", false)),
 		"first-pickup flag set from the run's ore drop")
-	if dlg != null:
-		var b5_lines: int = ((DataLoader.load_domain("dialogue")["b5-the-first-wall"]["scene"] as Dictionary)["lines"] as Array).size()
-		for i in b5_lines:
-			dlg.advance()
-		await _settle(3)
-		_check(not get_tree().paused, "finished dialogue unpauses the game")
-		_check(bool(SaveManager.state["story"]["flags"].get("b5", false)), "B5 set its flag")
-		_check((SaveManager.state["story"]["seen"] as Array).has("b5-the-first-wall"),
-			"B5 marked seen (a spine beat never repeats)")
-	# Talking: Herzog offers his single highest-priority eligible snippet — A4
-	# (spine, runs >= 2) outranks the gold-gated contextual.
+	if a3 != null:
+		await _drive_panel(a3, "a3-first-death")
+		_check(not get_tree().paused, "finished cutscene unpauses the game")
+		_check(bool(SaveManager.state["story"]["flags"].get("a3", false)), "A3 set its first-death flag")
+		_check((SaveManager.state["story"]["seen"] as Array).has("a3-first-death"), "A3 marked seen")
+
+	# "!" / "!!" indicators (DialogueCore.indicator_for, rendered by town.gd). With a3
+	# set, Mara has an unseen SPINE greeting (a-mara-meets) → "!!"; Tilly has an unseen
+	# ARC beat (arc-tilly-eager, runs>=1) → "!".
+	_check(str(_scene_node().call("indicator_for_npc", "mara")) == "!!",
+		"Mara shows !! for an unseen spine greeting")
+	_check(str(_scene_node().call("indicator_for_npc", "tilly")) == "!",
+		"Tilly shows ! for an unseen arc beat")
+
+	# Sophia is now a town NPC (talkable from day 0, ungated). After B3 she has arc content.
+	_check(_scene_node().has_node("NpcSophia"), "Sophia exists as a town NPC")
+	var sdlg: DialoguePanel = _scene_node().call("talk_to", "sophia")
+	_check(sdlg != null, "Sophia is talkable and offers her arc beat (b3 set)")
+	if sdlg != null:
+		await _drive_panel(sdlg, "arc-sophia-method")
+
+	# Tilly's arc beat, then her indicator clears (only a bark remains; barks don't light it).
+	var tdlg: DialoguePanel = _scene_node().call("talk_to", "tilly")
+	_check(tdlg != null, "Tilly offers her arc beat")
+	if tdlg != null:
+		await _drive_panel(tdlg, "arc-tilly-eager")
+	_check(str(_scene_node().call("indicator_for_npc", "tilly")) == "",
+		"the indicator clears once the beat is seen (only a bark left for Tilly)")
+
+	# Thomas's meditation beat (B2) unlocks the etchings system + the meditation spot.
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "etchings"), "etchings locked before B2")
+	var thdlg: DialoguePanel = _scene_node().call("talk_to", "thomas")
+	_check(thdlg != null, "Thomas offers the B2 meditation beat")
+	if thdlg != null:
+		await _drive_panel(thdlg, "b2-thomas-meditation")
+	_check(bool(SaveManager.state["story"]["flags"].get("b2", false)), "B2 set its flag")
+	_check(UnlocksCore.is_unlocked(SaveManager.state, "etchings"), "etchings unlocked after B2")
+	_check(_scene_node().has_node("MeditationSpot"), "Thomas's meditation spot exists in town")
+
+	# Talking Herzog: A4 (spine, runs >= 2) outranks the gold-gated contextual; B4 was
+	# seen in run 1, so A4 is his top beat now.
 	var talk: DialoguePanel = _scene_node().call("talk_to", "herzog")
 	_check(talk != null, "Herzog has something to say")
 	if talk != null:
-		var a4_lines: int = ((DataLoader.load_domain("dialogue")["a4-herzog-fetch"]["scene"] as Dictionary)["lines"] as Array).size()
-		for i in a4_lines:
-			talk.advance()
-		await _settle(3)
+		await _drive_panel(talk, "a4-herzog-fetch")
 		_check(bool(SaveManager.state["story"]["flags"].get("a4", false)),
-			"A4 played first (spine > contextual, B4 already seen) and set its flag")
+			"A4 played (spine > contextual, B4 already seen) and set its flag")
 		_check(int((SaveManager.state["story"]["talked_to"] as Dictionary).get("herzog", 0)) == 2,
 			"talked_to counted (B4 earlier + A4 now)")
 
-	# mark_shown replaces the story section (pure copy) — re-grab the counters ref.
+	# mark_shown replaced the story section repeatedly — re-grab the counters ref.
 	c = SaveManager.state["story"]["counters"]
 
 	# --- Cheat panel (F2 playtest tool) — must mirror the real paths exactly --------
@@ -338,6 +368,17 @@ func _run_smoke() -> void:
 		var built_count := (SaveManager.state["town"]["buildings"] as Array).size()
 		cheats.simulate_run(true)
 		await _settle(10)
+		# The simulated run re-entered town → the pending B5 ("first wall") force-plays
+		# now (A3 is seen, the b3 twins are flag-suppressed, so B5 is the top force-play).
+		var b5: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+		_check(b5 != null, "B5 'the first wall' force-plays on the next town entry (deferred past A3)")
+		if b5 != null:
+			await _drive_panel(b5, "b5-the-first-wall")
+			_check(bool(SaveManager.state["story"]["flags"].get("b5", false)), "B5 set its flag")
+			_check((SaveManager.state["story"]["seen"] as Array).has("b5-the-first-wall"),
+				"B5 marked seen (a spine beat never repeats)")
+		# B5's mark_shown replaced the story section — re-grab the counters ref.
+		c = SaveManager.state["story"]["counters"]
 		_check(int(c["runs"]) == runs_before + 3, "simulated run ticks the runs counter")
 		_check(int(c["full_clears"]) == 2, "simulated run counts a full clear")
 		_check(int(c["boss_kills"]) >= 2, "simulated run counts the boss kill")
@@ -559,6 +600,14 @@ func _read_slot_from_disk() -> Dictionary:
 		return {}
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
 	return parsed if parsed is Dictionary else {}
+
+
+## Advance a dialogue panel through every line of the given snippet id, then settle.
+func _drive_panel(panel: DialoguePanel, id: String) -> void:
+	var lines: int = ((DataLoader.load_domain("dialogue")[id]["scene"] as Dictionary)["lines"] as Array).size()
+	for i in lines:
+		panel.advance()
+	await _settle(3)
 
 
 func _settle(frames: int) -> void:

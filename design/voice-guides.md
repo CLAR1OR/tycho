@@ -1,12 +1,14 @@
 # Character Voice Guides
 
 > The contract for all dialogue writing — the ~250 contextual snippets, ~70 barks, arcs, and spine scripts are drafted against this doc (agents draft, human curates; `content-budget.md`). **Worked out with the human in-session and approved 2026-07-03**; the sample lines below are human-approved calibration anchors — when in doubt, match them, not your instincts. Story context per character: bible → Characters; beats: `act1-story-beats.md`.
+>
+> **Register sharpened by the human (2026-07-06):** the target voice is **scientific observing, no-BS** — plain, concrete, someone reporting what they see and reasoning about it. **No poetic, wise, or aphoristic lines. Nothing that would work as an inspirational post.** The one exception is **Thomas**, who keeps a *limited* contemplative license (the question-under-the-question; his script below is the ceiling). The human wrote the game's opening dialogues; **those scripts (below, § Human-authored anchors) are the top calibration anchors and outrank every prior sample.**
 
 ---
 
 ## House style (applies to every character)
 
-1. **Plain timeless English.** No archaic grammar (no thee/thou/'tis), no modern slang. Concrete words; metaphors from what these people touch: forge, harvest, stone, weather, roads.
+1. **Plain timeless English, scientific-observing.** No archaic grammar (no thee/thou/'tis), no modern slang. Concrete words; metaphors from what these people touch: forge, harvest, stone, weather, roads. Characters **observe, then reason** — they say what they saw and what it implies, not what it *means* in a deep way. No poetic imagery, no wisdom, no aphorism. If a line sounds profound out of context, it's wrong (Thomas excepted, within his license).
 2. **Written to be SAID, not read.** Short sentences. Contractions. People talk to get something done in the scene, not to be quotable.
 3. **Banned constructions (the AI tells):**
    - **No em dashes in dialogue.** Commas and full stops.
@@ -15,7 +17,7 @@
    - Cleverness only where the *character* would reach for it (see humor map), never because the writer could.
 4. **Humor map:** Tycho and Mara joke on purpose (spice, not sauce — not every line). Sophia is dry. Herzog is funny only by omission. Thomas has gentle irony. Tilly is never witty; her comedy is earnestness. Wren is funny-strange, not funny-haha.
 5. **The cover-the-name test:** every character has a syntactic tell (below). A drafted line should identify its speaker with the name hidden. If it could be anyone, it's no one — redraft.
-6. **Deniability vocabulary.** Words nobody says (pre-reveal, any character except Wren/Linnea per their licenses): *data, percent, energy* (physics sense), *information, system, signal*. The ideas can be modern; the words never are.
+6. **Deniability vocabulary.** Words nobody says (pre-reveal, any character except Wren/Linnea per their licenses): *data, percent, energy* (physics sense), *information, system, signal*. The ideas can be modern; the words never are. **Exception (human, 2026-07-06):** Tycho's dry-empirical register may reach for words like **"data points"** — his opening monologue does ("All other data points also point in the direction of this being reality"). It reads as a careful man reasoning, not as physics jargon; allowed for Tycho. "Energy" stays banned in the physics sense, but the *in-world* "divine energy / magic" framing (Sophia, A3) is fine — that's the deniable cover, not the reveal.
 
 ## Tech-unlocked vocabulary
 
@@ -32,13 +34,23 @@ The town's *language* modernizes with its tech (a quiet reward for researching).
 
 ---
 
+## Human-authored anchors (2026-07-06 — top priority, outrank all samples below)
+
+The human wrote the opening dialogues (first death + first meetings). These set the register; match **these** first. Full text in `data/dialogue/` (`a3-first-death`, `a-mara-meets`, `b2-thomas-meditation`, `b4-herzog-ledger`).
+
+- **Tycho** — observes, forms a hypothesis, tests it, and looks for advantage: *"Not a dream. I cannot breathe through my pinched nose, which should be possible in a dream. All other data points also point in the direction of this being reality."* / *"Let me check in with my sister, maybe we can find out what is happening here. And maybe we can take advantage of it."* Plain, self-assured, dry. The joke (if any) sits on the observation.
+- **Sophia** — curious-empirical, not schoolmarmish. She revises when the evidence forces it and wants to see for herself: *"This goes against my every theory I had about how the world actually works. But maybe it runs on divine energy after all? On magic? I need to see this for myself."* / *"I cannot go through. Probably keyed to you, as it got created at the same time as your etchings."* She reasons out loud; correcting Tycho is occasional, not her default mode.
+- **Mara** — warm, high-energy, banters while she works, wants to see what you bring: *"Hey! If that's not my favorite field researcher!"* / *"Wait, you look different. What are these etchings on your forearm? What happened?"* / *"Aww, unfair! Well, you make sure you bring anything interesting here."*
+- **Thomas** — the contemplative license, kept limited: *"Mhmm.. that is most interesting. Have you tried meditating on it? Listening in to that resonance?"* Questions and gentle guidance, no mysticism, no aphorism.
+- **Herzog** — flat pragmatism, values the town's use of a thing over its mystery: *"Something that gives gold and resources. Gold and resources that the town could use, I am sure."* / *"Of course. We can decide together what we should invest in."*
+
 ## The voices
 
 Format per character: **stance** (how they meet the world) · **tell** (the syntactic fingerprint) · **do / don't** · **approved lines** (calibration anchors).
 
 ### Tycho (protagonist; speaks in most scenes)
 - **Stance:** takes danger lightly and people seriously. Zagreus-flavored but smarter: quick, unbothered, curious. He notices things; when he jokes, the joke sits on something he noticed.
-- **Tell:** observation first, quip second. Asks "why" out loud like other people hum.
+- **Tell:** observation first, quip second. Asks "why" out loud like other people hum. Reasons in the open — observation → hypothesis → test — and eyes the advantage in a strange situation (opportunism, per the human's opening script).
 - **Do:** self-deprecate about dying; get suddenly plain when it matters.
 - **Don't:** puns; meanness; joking in every line (spice, not sauce).
 - **Approved:**
@@ -49,7 +61,7 @@ Format per character: **stance** (how they meet the world) · **tell** (the synt
 
 ### Sophia (sister; the method)
 - **Stance:** serious, dedicated to the craft and to bettering everyone's life. Even smarter than Tycho and not performing it.
-- **Tell:** precision that sharpens instead of softens. Exact hedges. Excitement shows as speed, never volume. Teases Tycho by correcting him.
+- **Tell:** precision that sharpens instead of softens. Exact hedges. Excitement shows as speed, never volume. Curious-empirical: she reasons out loud and revises when the evidence forces it, and wants to see for herself; correcting Tycho is occasional, not her default mode (not schoolmarmish).
 - **Do:** ask for the plain version; quantify; care about him sideways (chair, notes, food).
 - **Don't:** gush; monologue; say anything ornamental.
 - **Approved:**

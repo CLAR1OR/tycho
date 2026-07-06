@@ -1,0 +1,19 @@
+{
+	"id": "b2-thomas-meditation",
+	"source": "spine",
+	"speakers": ["thomas", "tycho"],
+	"priority": 94,
+	"conditions": [{"flag": "a3"}],
+	"sets_flag": "b2",
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{"who": "tycho", "text": "Thomas, look at this. You ever seen something like this in your readings or travels? What could it be?"},
+			{"who": "thomas", "text": "Hello Tycho. Let me see ... no, I haven't seen something like this before. Where did you get this?"},
+			{"who": "tycho", "text": "In a cave not far from here. I touched some kind of artefact, which dissolved into me and left me with these etchings. I feel some kind of resonance to them, but I cannot really tell."},
+			{"who": "thomas", "text": "Mhmm.. that is most interesting. Have you tried meditating on it? Listening in to that resonance?"},
+			{"who": "tycho", "text": "No, not as of yet."},
+			{"who": "thomas", "text": "Well then, feel free to use my favorite spot here."}
+		]
+	}
+}

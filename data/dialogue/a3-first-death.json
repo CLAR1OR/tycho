@@ -1,0 +1,31 @@
+{
+	"id": "a3-first-death",
+	"source": "spine",
+	"speakers": ["tycho", "sophia"],
+	"priority": 105,
+	"force_play": true,
+	"conditions": [{"counter": "deaths", "gte": 1}],
+	"sets_flag": "a3",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{"who": "", "text": "Tycho wakes on the floor of his own home."},
+			{"who": "tycho", "text": "What? What just happened? Was this a dream? How am I alive?"},
+			{"who": "tycho", "text": "... No, it wasn't a dream, I still have the etchings. I might still be dreaming though. Let me check real quick."},
+			{"who": "tycho", "text": "Not a dream. I cannot breathe through my pinched nose, which should be possible in a dream. All other data points also point in the direction of this being reality."},
+			{"who": "tycho", "text": "Let me check in with my sister, maybe we can find out what is happening here. And maybe we can take advantage of it"},
+			{"who": "", "text": "He finds Sophia at her workbench, bent over her instruments."},
+			{"who": "tycho", "text": "Sophia! Sorry to interrupt your work, but this might be of interest to you too. While out in the fields, I fell into a cave, touched some foreign object, got some etchings and seemingly power, entered a portal, was slain by monsters, woke up here again. It was not a dream, you can see the etchings on my arm for yourself."},
+			{"who": "sophia", "text": "What are you talking about? I might think you went insane, but I see your forearms, which give some credibility to your story. Show me what you found, you can explain on the way"},
+			{"who": "", "text": "They walk to the portal."},
+			{"who": "tycho", "text": "So here was the object, it dissolved after I touched it and opened this portal."},
+			{"who": "sophia", "text": "This goes against my every theory I had about how the world actually works. But maybe it runs on divine energy after all? On magic? I need to see this for myself"},
+			{"who": "", "text": "Sophia steps toward the portal. It does not let her through."},
+			{"who": "sophia", "text": "I cannot go through. Probably keyed to you, as it got created at the same time as your etchings. What a shame. Well, you are the one out in the field anyway. Make sure to bring back as much as you can. We want to study this."},
+			{"who": "tycho", "text": "Sure will do. Probably better that only I can enter, as it's quite dangerous in there. I feel like the artefact will resurrect me again if I should fail, so this is the safest way."},
+			{"who": "", "text": "They walk back."},
+			{"who": "sophia", "text": "This is something huge and something completely unknown to us. It is imperative that you continue researching it, and bring back everything you can find"},
+			{"who": "tycho", "text": "Did not have anything else in mind."}
+		]
+	}
+}
