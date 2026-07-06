@@ -1,0 +1,46 @@
+[gd_scene load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://src/combat/enemy_charger.gd" id="1"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_body"]
+size = Vector3(0.8, 1.5, 0.8)
+
+[sub_resource type="StandardMaterial3D" id="Mat_body"]
+resource_local_to_scene = true
+albedo_color = Color(0.2, 0.8, 0.85, 1)
+
+[sub_resource type="BoxShape3D" id="Shape_body"]
+size = Vector3(0.8, 1.5, 0.8)
+
+[node name="EnemyCharger" type="CharacterBody3D"]
+collision_layer = 2
+collision_mask = 7
+script = ExtResource("1")
+max_hp = 24
+move_speed = 5.0
+engage_dist = 8.0
+stop_range = 1.8
+attack_range = 2.2
+telegraph_time = 0.4
+strike_time = 0.12
+recover_time = 0.9
+rest_time = 0.8
+attack_damage = 18
+knockback = 4.0
+stagger_time = 0.28
+sight_range = 13.0
+base_color = Color(0.2, 0.8, 0.85, 1)
+charge_range = 10.0
+charge_speed = 22.0
+charge_time = 0.55
+contact_radius = 1.7
+wall_stun_bonus = 0.8
+
+[node name="Body" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+mesh = SubResource("BoxMesh_body")
+surface_material_override/0 = SubResource("Mat_body")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.75, 0)
+shape = SubResource("Shape_body")

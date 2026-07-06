@@ -20,7 +20,18 @@ extends Node3D
 const ENEMY_BRUTE := preload("res://scenes/combat/enemy_dummy.tscn")
 const ENEMY_SKIRMISHER := preload("res://scenes/combat/enemy_skirmisher.tscn")
 const ENEMY_ARCHER := preload("res://scenes/combat/enemy_archer.tscn")
+const ENEMY_SLAMMER := preload("res://scenes/combat/enemy_slammer.tscn")
+const ENEMY_CHARGER := preload("res://scenes/combat/enemy_charger.tscn")
 const ENEMY_BOSS := preload("res://scenes/combat/enemy_boss.tscn")
+
+## WaveCore type-id → scene. compose() only ever emits ids in WaveCore.TYPES.
+const ENEMY_SCENES := {
+	WaveCore.TYPE_BRUTE: ENEMY_BRUTE,
+	WaveCore.TYPE_SKIRMISHER: ENEMY_SKIRMISHER,
+	WaveCore.TYPE_ARCHER: ENEMY_ARCHER,
+	WaveCore.TYPE_SLAMMER: ENEMY_SLAMMER,
+	WaveCore.TYPE_CHARGER: ENEMY_CHARGER,
+}
 
 ## Placeholder until real per-floor bosses land (PRD §7.7 — bosses are human-gated).
 const BOSS_ID := "boss-placeholder"
@@ -30,6 +41,8 @@ const PLAYER_SPAWN := Vector3(0, 0, 18)  # south edge; the wave scatters around 
 # FEEL knobs — same names as feel_room.gd, so the F1 tuning panel works in-run too.
 @export var enemy_count: int = 3         # FEEL: base enemies in a combat room (scaled by floor+room)
 @export var respawn_delay: float = 0.9   # FEEL: beat between the last kill and the exit opening (s)
+@export var wave_beat: float = 1.0       # FEEL: pause between a cleared wave and the next (s)
+@export var wave_spawn_telegraph: float = 0.6  # FEEL: spawn-marker warn time before enemies appear (s)
 @export var shake_on_hit: float = 0.35   # FEEL: camera kick (m) when the player takes a hit
 @export var spawn_radius: float = 16.0   # FEEL: how far out around the room the wave scatters (m)
 @export var spawn_jitter: float = 3.0    # FEEL: random wobble on each spawn point (m)
@@ -58,6 +71,10 @@ var _peril: bool = false      # elite wave (incoming_door.peril)
 var _reprieve: bool = false   # breather room: no wave, a Wellspring instead
 
 var _enemies: Array[EnemyDummy] = []
+# Sequential waves (design 2026-07-06): a combat room runs 2-3 waves; the room only
+# CLEARS after the last wave falls. Empty for boss/reprieve rooms (they don't wave).
+var _waves: Array = []          # list of Array[String] WaveCore type-ids
+var _wave_index: int = 0
 var _cleared: bool = false
 var _door_chosen: bool = false  # first door walked wins — no backtracking
 var _last_hp: int = Player.MAX_HEALTH
@@ -133,14 +150,52 @@ func _spawn_wave() -> void:
 		_hint_label.text = "Breather — touch the Wellspring, then choose a door"
 		return
 	if kind == RunFlow.KIND_BOSS:
+		# Boss rooms are a single staged fight — no waves in this chunk.
 		_spawn_enemy(ENEMY_BOSS, Vector3(0, 1.0, -14))
 		_spawn_enemy(ENEMY_SKIRMISHER, Vector3(-8, 1.0, -10))
 		_spawn_enemy(ENEMY_SKIRMISHER, Vector3(8, 1.0, -10))
 		return
-	# Simple pressure curve: deeper floors and later rooms add a body each.
-	var count := enemy_count + (room_index - 1) + (floor_num - 1)
-	for i in count:
-		_spawn_enemy(_scene_for(i), _wave_spawn_pos(i, count))
+	# Multi-wave combat room: compose the whole plan (pure/seeded WaveCore), then spawn
+	# wave 0. Each wave's clear either spawns the next (after a beat) or, on the last,
+	# emits `cleared` — all in _on_enemy_died. Peril mults ride _spawn_enemy, so every
+	# wave's spawns get them.
+	_waves = WaveCore.compose(floor_num, room_index, enemy_count, _wave_seed())
+	_wave_index = 0
+	_spawn_current_wave()
+
+
+func _wave_seed() -> int:
+	# Vary the mix per run (falls back to a fixed seed outside a live run).
+	return int(RunState.run.get("seed", 0)) if RunState.in_run() else 0
+
+
+func _spawn_current_wave() -> void:
+	_update_wave_label()
+	var wave: Array = _waves[_wave_index]
+	for i in wave.size():
+		_telegraph_then_spawn(_scene_for_id(str(wave[i])), _wave_spawn_pos(i, wave.size()))
+
+
+## Flash a growing ground marker at the spawn point, then drop the enemy in — so a new
+## wave READS before it can hit anyone. Guards a torn-down room (player died / quit).
+func _telegraph_then_spawn(scene: PackedScene, pos: Vector3) -> void:
+	CombatFX.ground_telegraph(self, pos, wave_spawn_telegraph, 1.2, Color(1.0, 0.85, 0.2))
+	await get_tree().create_timer(wave_spawn_telegraph).timeout
+	if not is_inside_tree() or _cleared:
+		return
+	_spawn_enemy(scene, pos)
+
+
+func _scene_for_id(type_id: String) -> PackedScene:
+	if ENEMY_SCENES.has(type_id):
+		return ENEMY_SCENES[type_id]
+	push_error("CombatRoom: unknown wave type \"%s\" — using the Brute" % type_id)
+	return ENEMY_BRUTE
+
+
+func _update_wave_label() -> void:
+	if _waves.size() > 1:
+		_hint_label.text = "Wave %d/%d - clear the room" % [_wave_index + 1, _waves.size()]
 
 
 func _spawn_enemy(scene: PackedScene, pos: Vector3) -> void:
@@ -157,16 +212,6 @@ func _spawn_enemy(scene: PackedScene, pos: Vector3) -> void:
 	_enemies.append(enemy)
 
 
-func _scene_for(i: int) -> PackedScene:
-	match i % 3:
-		1:
-			return ENEMY_SKIRMISHER
-		2:
-			return ENEMY_ARCHER
-		_:
-			return ENEMY_BRUTE
-
-
 func _wave_spawn_pos(i: int, count: int) -> Vector3:
 	# Scatter around the room centre (like feel_room), away from the south spawn.
 	var angle := TAU * float(i) / float(count) + randf_range(-0.3, 0.3)
@@ -179,13 +224,39 @@ func _on_enemy_died(enemy: EnemyDummy) -> void:
 	if randf() < ore_drop_chance:
 		Ledger.add("resonance-ore", 1.0, "run-drop")
 	_enemies.erase(enemy)
-	if _enemies.is_empty() and not _cleared:
-		_cleared = true
-		if kind == RunFlow.KIND_BOSS:
-			Ledger.add("gold", float(boss_gold), "boss-drop")
-			Ledger.add("knowledge-shards", float(boss_shards), "boss-drop")
-			Ledger.add("resonance-ore", float(boss_ore), "boss-drop")
-		cleared.emit()
+	if not _enemies.is_empty() or _cleared:
+		return
+	# The current wave is down. If a combat room has more waves, spawn the next after a
+	# beat; the room only CLEARS (drops door/echo offers, boss loot) after the last one.
+	if kind != RunFlow.KIND_BOSS and _wave_index + 1 < _waves.size():
+		_advance_wave()
+		return
+	_cleared = true
+	if kind == RunFlow.KIND_BOSS:
+		Ledger.add("gold", float(boss_gold), "boss-drop")
+		Ledger.add("knowledge-shards", float(boss_shards), "boss-drop")
+		Ledger.add("resonance-ore", float(boss_ore), "boss-drop")
+	cleared.emit()
+
+
+## Wait a beat after a wave falls, then bring in the next one (its spawns telegraph).
+func _advance_wave() -> void:
+	_wave_index += 1
+	await get_tree().create_timer(wave_beat).timeout
+	if not is_inside_tree() or _cleared:
+		return
+	_spawn_current_wave()
+
+
+## True once the room is fully cleared (last wave / boss down). For the headless smoke,
+## which must drive multi-wave rooms to completion.
+func is_cleared() -> bool:
+	return _cleared
+
+
+## Total waves this room runs (1 for boss/reprieve). Exposed for the smoke's assert.
+func wave_total() -> int:
+	return maxi(1, _waves.size())
 
 
 # --- Exit & doors ----------------------------------------------------------------

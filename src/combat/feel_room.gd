@@ -14,6 +14,8 @@ extends Node3D
 const ENEMY_BRUTE := preload("res://scenes/combat/enemy_dummy.tscn")
 const ENEMY_SKIRMISHER := preload("res://scenes/combat/enemy_skirmisher.tscn")
 const ENEMY_ARCHER := preload("res://scenes/combat/enemy_archer.tscn")
+const ENEMY_SLAMMER := preload("res://scenes/combat/enemy_slammer.tscn")
+const ENEMY_CHARGER := preload("res://scenes/combat/enemy_charger.tscn")
 
 # FEEL knobs — @export so the Inspector and the F1 tuning panel can dial them live.
 @export var enemy_count: int = 4         # FEEL: enemies per wave (sandbox knob — tune freely)
@@ -63,12 +65,17 @@ func _spawn_wave() -> void:
 
 
 func _scene_for(i: int) -> PackedScene:
-	# Rotate through the three variants so each wave is a mix.
-	match i % 3:
+	# Rotate through all five variants so each sandbox wave is a mix (Slammer + Charger
+	# added 2026-07-06 so the human can feel-tune them here).
+	match i % 5:
 		1:
 			return ENEMY_SKIRMISHER
 		2:
 			return ENEMY_ARCHER
+		3:
+			return ENEMY_SLAMMER
+		4:
+			return ENEMY_CHARGER
 		_:
 			return ENEMY_BRUTE
 

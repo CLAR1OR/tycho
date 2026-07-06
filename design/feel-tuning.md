@@ -158,7 +158,8 @@ The whole-game freeze-frame when a hit lands — where the *weight* comes from.
 ---
 
 ## Enemies — base behaviour `src/combat/enemy_dummy.gd`
-This script is shared by **all three variants**. It has two layers:
+This script is shared by **all five variants** (the Archer, Slammer, and Charger each
+`extend` it and override only their engage/strike). It has two layers:
 
 ### A) Per-variant stats — `@export` (✏️ Inspector, per variant scene)
 Open the variant scene, select its root node, edit in the Inspector. Current values per
@@ -220,32 +221,85 @@ Adds two more `@export`s (✏️ Inspector, on `enemy_archer.tscn`):
 
 ---
 
-## Per-variant stat sheet (current `@export` values)
-What each variant scene currently sets. Edit these in the Inspector (open the scene → root node).
+## Slammer extras — `src/combat/enemy_slammer.gd` *(added 2026-07-06)*
+The AoE-after-windup enemy: lumbers in, paints a growing **ground circle**, then slams;
+armored (stagger 0), so you *dodge* the slam (dash out — dash i-frames cover it), you don't
+cancel it. Adds two `@export`s (✏️ Inspector, on `enemy_slammer.tscn`) on top of the base stats.
 
-| Stat | **Brute** `enemy_dummy.tscn` | **Skirmisher** `enemy_skirmisher.tscn` | **Archer** `enemy_archer.tscn` |
-|------|------|------|------|
-| `max_hp` | 60 | 28 | 22 |
-| `move_speed` | 4.5 | 7.5 | 5.5 |
-| `engage_dist` | 4.5 | 5.5 | 9.0 |
-| `stop_range` | 1.9 | 1.6 | — (ranged) |
-| `attack_range` | 2.6 | 2.2 | — (ranged) |
-| `telegraph_time` | 0.45 | 0.3 | 0.6 |
-| `strike_time` | 0.12 | 0.1 | 0.15 |
-| `recover_time` | 0.4 | 0.35 | 0.5 |
-| `rest_time` | 0.9 | 0.6 | 1.0 |
-| `attack_damage` | 15 | 8 | 12 |
-| `knockback` | 6.0 | 5.0 | 4.0 |
-| `stagger_time` | 0 (armored) | 0.25 | 0.3 |
-| `sight_range` | 12.0 | 12.0 | 14.0 |
-| `shoot_range` | — | — | 11.0 |
-| `min_range` | — | — | 6.0 |
-| `base_color` | red | orange | green |
+| Export (Inspector name) | Default | What it does |
+|-------------------------|---------|--------------|
+| `slam_range` (Slam Range) | 3.5 | Distance at which it commits to a slam (m). |
+| `slam_radius` (Slam Radius) | 3.2 | AoE radius of the slam — and of the ground-circle telegraph (m). |
+
+> The **windup length** (your reaction/dodge window) is the base `telegraph_time` (0.9 — long
+> on purpose). Slam **damage** is the base `attack_damage` (28). All placeholders.
+
+## Charger extras — `src/combat/enemy_charger.gd` *(added 2026-07-06)*
+Locks on, paints a brief **line telegraph**, then dash-charges down it; hits you on contact,
+overshoots, and is left briefly stunned + vulnerable (longer if it slams a wall). Squishy;
+staggerable except mid-charge. Adds five `@export`s (✏️ Inspector, on `enemy_charger.tscn`).
+
+| Export (Inspector name) | Default | What it does |
+|-------------------------|---------|--------------|
+| `charge_range` (Charge Range) | 10.0 | Distance at which it locks on and charges (m). |
+| `charge_speed` (Charge Speed) | 22.0 | Dash-charge speed (m/s). |
+| `charge_time` (Charge Time) | 0.55 | How long the charge runs (m ~ range/speed). |
+| `contact_radius` (Contact Radius) | 1.7 | Charge hitbox radius vs the player (m). |
+| `wall_stun_bonus` (Wall Stun Bonus) | 0.8 | Extra RECOVER stun after slamming a wall (s). |
+
+> The **aim/lock window** is the base `telegraph_time` (0.4 — brief); the post-charge stun is
+> the base `recover_time` (0.9), plus `wall_stun_bonus` on a wall hit. All placeholders.
 
 ---
 
-## The room & the wave — `src/combat/feel_room.gd`  (`@export` → F1 panel / Inspector)
-The sandbox director. Tune the encounter, not a character.
+## Per-variant stat sheet (current `@export` values)
+What each variant scene currently sets. Edit these in the Inspector (open the scene → root node).
+
+| Stat | **Brute** `enemy_dummy.tscn` | **Skirmisher** `enemy_skirmisher.tscn` | **Archer** `enemy_archer.tscn` | **Slammer** `enemy_slammer.tscn` | **Charger** `enemy_charger.tscn` |
+|------|------|------|------|------|------|
+| `max_hp` | 60 | 28 | 22 | 90 | 24 |
+| `move_speed` | 4.5 | 7.5 | 5.5 | 3.2 | 5.0 |
+| `engage_dist` | 4.5 | 5.5 | 9.0 | 3.5 | 8.0 |
+| `stop_range` | 1.9 | 1.6 | — (ranged) | 2.0 | 1.8 |
+| `attack_range` | 2.6 | 2.2 | — (ranged) | 3.2 | 2.2 |
+| `telegraph_time` | 0.45 | 0.3 | 0.6 | 0.9 | 0.4 |
+| `strike_time` | 0.12 | 0.1 | 0.15 | 0.15 | 0.12 |
+| `recover_time` | 0.4 | 0.35 | 0.5 | 0.8 | 0.9 |
+| `rest_time` | 0.9 | 0.6 | 1.0 | 1.2 | 0.8 |
+| `attack_damage` | 15 | 8 | 12 | 28 | 18 |
+| `knockback` | 6.0 | 5.0 | 4.0 | 3.0 | 4.0 |
+| `stagger_time` | 0 (armored) | 0.25 | 0.3 | 0 (armored) | 0.28 |
+| `sight_range` | 12.0 | 12.0 | 14.0 | 12.0 | 13.0 |
+| `shoot_range` | — | — | 11.0 | — | — |
+| `min_range` | — | — | 6.0 | — | — |
+| `base_color` | red | orange | green | steel-blue | teal |
+
+> Slammer/Charger also carry their own extras — see the sections above.
+
+---
+
+## The room & the wave — combat rooms & the sandbox
+### Live run — `src/combat/combat_room.gd`  (`@export` → F1 panel / Inspector)
+A live combat room runs **2–3 sequential waves** *(multi-wave added 2026-07-06)*; it only
+counts as cleared after the last wave falls. All placeholders — dial like feel numbers.
+
+| Var | Default | What it does |
+|-----|---------|--------------|
+| `enemy_count` | 3 | Base wave size (wave 0); later waves + floor/room add bodies on top. |
+| `wave_beat` | 1.0 | Pause between a cleared wave and the next (s). |
+| `wave_spawn_telegraph` | 0.6 | Warn time — a growing ground marker flashes at each spawn before the enemy appears (s). |
+| `respawn_delay` | 0.9 | Beat between the **final** clear and the doors/exit opening (s). |
+| `spawn_radius` | 16.0 | How far out around the room each wave scatters (m). |
+| `spawn_jitter` | 3.0 | Random wobble on each spawn point (m). |
+
+> **Wave count / sizes / type mix** are the pure `WaveCore` (`src/combat/wave_core.gd`),
+> code-only placeholders: `MIN_WAVES` (2) / `MAX_WAVES` (3) / `THIRD_WAVE_AT` (4 = when a
+> room earns its 3rd wave), the `wave_size()` growth curve, and `TYPE_WEIGHTS` (per-type
+> draw weight: Brute 3 / Skirmisher 3 / Archer 2 / Slammer 1 / Charger 1 — Slammer & Charger
+> are lightly weighted so they season the mix from floor 1). Peril mults apply to every wave.
+
+### Sandbox — `src/combat/feel_room.gd`  (`@export` → F1 panel / Inspector)
+The endless-wave director (F6 room). Tune the encounter, not a character.
 
 | Var | Default | What it does |
 |-----|---------|--------------|
@@ -255,11 +309,11 @@ The sandbox director. Tune the encounter, not a character.
 | `spawn_radius` | 18.0 | How far out around the room the wave scatters (m). |
 | `spawn_jitter` | 3.0 | Random wobble on each spawn point (m). |
 
-> The **mix** of variants per wave is `_scene_for()` (currently rotates Brute / Skirmisher
-> / Archer by `i % 3`). The **room size, walls, and cover layout** are nodes in
-> `scenes/combat/feel_room.tscn` (`Floor`, `WallN/S/E/W`, the `Obstacles` group) — move or
-> resize them in the editor; obstacles are on collision layer 4 so they block movement **and**
-> line-of-sight.
+> The sandbox **mix** of variants per wave is `_scene_for()` (rotates all five variants —
+> Brute / Skirmisher / Archer / Slammer / Charger — by `i % 5`). The **room size, walls, and
+> cover layout** are nodes in `scenes/combat/feel_room.tscn` (`Floor`, `WallN/S/E/W`, the
+> `Obstacles` group) — move or resize them in the editor; obstacles are on collision layer 4
+> so they block movement **and** line-of-sight.
 
 ---
 
@@ -308,4 +362,11 @@ The sandbox director. Tune the encounter, not a character.
 - **Squishies feel armored / stunlocked:** variant `stagger_time` (0 = never interrupted).
 - **Crowds unreadable:** `max_attackers` (down), `separation_force` (up), enemy `engage_dist`.
 - **Archers oppressive:** arrow `SPEED` (down), Archer `telegraph_time` (up), `shoot_range` (down).
+- **Slammer AoE unfair / trivial:** Slammer `telegraph_time` (longer = more dodge time),
+  `slam_radius`, `attack_damage`; it's meant to be dodged with a dash.
+- **Charger too swingy:** Charger `charge_speed`, `telegraph_time` (the lock/aim window),
+  `contact_radius`, `recover_time` + `wall_stun_bonus` (its punish window).
+- **Rooms too short / too long:** `WaveCore` `MIN_WAVES`/`MAX_WAVES`/`THIRD_WAVE_AT`, the
+  `wave_size()` curve, combat-room `enemy_count`, `wave_beat` (pause between waves).
+- **New types too rare / too common:** `WaveCore.TYPE_WEIGHTS` (Slammer/Charger start at 1).
 - **Camera floaty / harsh:** `follow_lerp`, `shake_on_hit`, `shake_decay`, `cam_pitch`.

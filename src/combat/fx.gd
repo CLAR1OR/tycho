@@ -48,6 +48,69 @@ static func death_burst(parent: Node, world_pos: Vector3, color: Color) -> void:
 	fx.setup(color)
 
 
+## A flat ground-circle telegraph that GROWS over `duration` then frees itself — the
+## reusable "danger zone" tell (introduced 2026-07-06). Used by the Slammer's AoE
+## windup and by wave-spawn markers. Placed on the floor at world_pos; `radius` is the
+## final circle radius in metres. Returns the node (callers may free it early).
+static func ground_telegraph(parent: Node, world_pos: Vector3, duration: float,
+		radius: float, color: Color) -> MeshInstance3D:
+	if parent == null:
+		return null
+	var mesh := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = radius
+	cyl.bottom_radius = radius
+	cyl.height = 0.08
+	mesh.mesh = cyl
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.albedo_color = Color(color.r, color.g, color.b, 0.3)
+	mesh.material_override = mat
+	parent.add_child(mesh)
+	mesh.global_position = Vector3(world_pos.x, 0.06, world_pos.z)
+	mesh.scale = Vector3(0.35, 1.0, 0.35)  # opens up over the window so the read grows
+	var tween := mesh.create_tween()
+	tween.tween_property(mesh, "scale", Vector3(1.0, 1.0, 1.0), duration)
+	tween.parallel().tween_property(mat, "albedo_color:a", 0.6, duration)
+	tween.tween_callback(mesh.queue_free)
+	return mesh
+
+
+## A thin flat LINE telegraph from `origin` along `dir` for `length` metres, brightening
+## over `duration` then freeing itself — the reusable "this lane is dangerous" tell
+## (Charger's charge windup). Returns the node (callers may free it early).
+static func line_telegraph(parent: Node, origin: Vector3, dir: Vector3, length: float,
+		duration: float, color: Color) -> MeshInstance3D:
+	if parent == null:
+		return null
+	var d := Vector3(dir.x, 0.0, dir.z)
+	if d.length() < 0.001:
+		d = Vector3.FORWARD
+	d = d.normalized()
+	var mesh := MeshInstance3D.new()
+	var box := BoxMesh.new()
+	box.size = Vector3(0.35, 0.06, length)  # local -Z runs down the lane after look_at
+	mesh.mesh = box
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.albedo_color = Color(color.r, color.g, color.b, 0.15)
+	mesh.material_override = mat
+	parent.add_child(mesh)
+	var center := Vector3(origin.x, 0.07, origin.z) + d * (length * 0.5)
+	mesh.global_position = center
+	mesh.look_at(center + d, Vector3.UP)
+	var tween := mesh.create_tween()
+	tween.tween_property(mat, "albedo_color:a", 0.7, duration)  # brighter as the charge nears
+	tween.tween_callback(mesh.queue_free)
+	return mesh
+
+
 ## A translucent after-image of a mesh (dash trail). Frees itself as it fades.
 static func dash_ghost(parent: Node, mesh: Mesh, xform: Transform3D, color: Color) -> void:
 	if parent == null or mesh == null:

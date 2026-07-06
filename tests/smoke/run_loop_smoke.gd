@@ -23,6 +23,7 @@ var _dust_tested: bool = false
 var _wellspring_tested: bool = false
 var _boss_heal_tested: bool = false
 var _postboss_echo_tested: bool = false
+var _multiwave_checked: bool = false  # a real combat room ran >1 wave (2026-07-06)
 
 
 func _ready() -> void:
@@ -54,6 +55,27 @@ func _run_smoke() -> void:
 	_check(TownCore.building_level(SaveManager.state["town"], "sophias-study") == 0,
 		"build refused while the building system is locked")
 
+	# --- New enemy types (2026-07-06): both scenes must load, extend EnemyDummy, and
+	# carry their signature exports — so the wave pipeline can spawn them in a real room. ---
+	var slammer: Node = load("res://scenes/combat/enemy_slammer.tscn").instantiate()
+	_check(slammer is EnemyDummy, "slammer scene loads and extends EnemyDummy")
+	_check(slammer.get("slam_radius") != null, "slammer exposes its AoE-radius export")
+	slammer.free()
+	var charger: Node = load("res://scenes/combat/enemy_charger.tscn").instantiate()
+	_check(charger is EnemyDummy, "charger scene loads and extends EnemyDummy")
+	_check(charger.get("charge_speed") != null, "charger exposes its charge-speed export")
+	charger.free()
+	# Wave composition is pure/seeded — prove both new types are reachable in the mix.
+	var mix_has_slammer := false
+	var mix_has_charger := false
+	for s in 200:
+		for w: Array in WaveCore.compose(1, 1 + s % 5, 3, s):
+			if w.has(WaveCore.TYPE_SLAMMER):
+				mix_has_slammer = true
+			if w.has(WaveCore.TYPE_CHARGER):
+				mix_has_charger = true
+	_check(mix_has_slammer and mix_has_charger, "WaveCore mixes in Slammer + Charger from floor 1")
+
 	# --- Run 1: full clear over 3 floors, with a mid-run quit + resume at floor 2 ---
 	_game.call("_start_run")
 	await get_tree().process_frame
@@ -82,6 +104,7 @@ func _run_smoke() -> void:
 	_check(music_dungeon_ok and music_boss_ok, "both dungeon and boss music beats sampled")
 	_check(rooms_seen < MAX_ROOMS, "run finished within the watchdog (%d rooms)" % rooms_seen)
 	# Door-choice coverage (design/run-structure.md) — each path was hit during the run.
+	_check(_multiwave_checked, "a combat room ran multiple sequential waves")
 	_check(_door_offer_checked, "a door offer with 1-2 distinct sigils was shown")
 	_check(_dust_tested, "a paying door granted its cache on clear (reason door-reward)")
 	_check(_wellspring_tested, "a reprieve door's Wellspring healed 40% of missing")
@@ -420,35 +443,37 @@ func _play_room() -> void:
 ## A normal combat room. On the FIRST one, override the incoming door to a Dust cache so
 ## the clear pays an unconfounded cache (dust has no other combat source) — exercises
 ## game.gd's door-reward payment deterministically.
-func _clear_combat(_room: Node) -> void:
+func _clear_combat(room: Node) -> void:
+	if not _multiwave_checked:
+		_multiwave_checked = true
+		_check(int(room.call("wave_total")) >= 2,
+			"combat room runs multiple waves (%d)" % int(room.call("wave_total")))
 	if not _dust_tested:
 		_dust_tested = true
 		var floor_now := int(RunState.run["floor"])
 		RunState.pending_door = {"sigil": "dust", "peril": false}
 		var dust_before := Ledger.get_amount("resonance-dust")
-		_kill_wave()
-		await _settle(10)
+		await _kill_room(room)
 		var want: float = float(DoorCore.cache_reward("dust", floor_now, false)["amount"])
 		_check(absf(Ledger.get_amount("resonance-dust") - (dust_before + want)) < 0.001,
 			"dust door paid its cache on clear (+%.0f)" % want)
 		return
-	_kill_wave()
-	await _settle(10)
+	await _kill_room(room)
 
 
 ## A boss room. On the FIRST one, wound the player to a known HP and assert the boss
 ## kill repairs 30% of the missing amount (the auto floor-boss valve).
-func _clear_boss(_room: Node) -> void:
+func _clear_boss(room: Node) -> void:
 	var player := _find_player()
 	if player != null and not _boss_heal_tested:
 		_boss_heal_tested = true
 		player.restore_health(60)  # deterministic: 40 missing of 100
 		var want: int = 60 + DoorCore.heal_missing(60, player.max_health, DoorCore.BOSS_HEAL_PCT)
-		_kill_wave()
+		await _kill_room(room)
 		await _settle(12)
 		_check(player.health == want, "boss kill healed 30%% of missing (60 -> %d, want %d)" % [player.health, want])
 		return
-	_kill_wave()
+	await _kill_room(room)
 	await _settle(12)
 
 
@@ -465,11 +490,25 @@ func _drive_reprieve(_room: Node, well: Node) -> void:
 		_check(player.health == want, "Wellspring healed 40%% of missing (60 -> %d, want %d)" % [player.health, want])
 
 
-## Kill everything in the current room.
+## Kill every enemy currently on the field (one wave's worth).
 func _kill_wave() -> void:
 	for e in get_tree().get_nodes_in_group("enemies"):
 		if is_instance_valid(e):
 			e.take_damage(99999)
+
+
+## Fully clear a (possibly multi-wave) combat/boss room: kill whatever is on the field,
+## wait through each inter-wave beat + spawn telegraph, repeat until the room reports
+## cleared. Watchdog-bounded so a stuck room fails loudly downstream, not by hanging.
+func _kill_room(room: Node) -> void:
+	var guard := 0
+	while not bool(room.call("is_cleared")) and guard < 80:
+		guard += 1
+		if get_tree().get_nodes_in_group("enemies").is_empty():
+			await _settle(10)  # mid inter-wave beat / spawn telegraph — wait for bodies
+			continue
+		_kill_wave()
+		await _settle(6)
 
 
 ## Walk out through a door (or the plain boss exit). Checks the offer shape once, then
