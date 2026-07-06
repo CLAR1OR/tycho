@@ -8,7 +8,7 @@ class_name CameraRig
 # FEEL: human-tuned, do not optimize — camera framing is part of combat feel.
 # @export so the Inspector and the F1 tuning panel can dial them live.
 @export var follow_lerp: float = 9.0                # FEEL: higher = snappier follow, lower = floatier
-@export var cam_offset := Vector3(0, 15, 9)         # FEEL: height + pull-back of the fixed camera
+@export var cam_offset := Vector3(0, 12, 7.5)         # FEEL: height + pull-back of the fixed camera
 @export var cam_pitch: float = -58.0                # FEEL: downward tilt in degrees (the 2.5D angle)
 @export var shake_decay: float = 6.0                # FEEL: how fast a shake settles (higher = snappier)
 

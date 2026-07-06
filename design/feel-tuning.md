@@ -80,14 +80,14 @@ Open the listed `.gd` file in any editor (or Godot's Script tab), change the num
 ### Movement
 | Var | Default | What it does |
 |-----|---------|--------------|
-| `move_speed` | 7.0 | Top run speed (m/s). |
+| `move_speed` | 9.0 | Top run speed (m/s). |
 | `accel` | 70.0 | How fast you reach top speed (higher = snappier start). |
 | `friction` | 80.0 | How fast you stop when you release the keys (higher = less slide). |
 
 ### Dash
 | Var | Default | What it does |
 |-----|---------|--------------|
-| `dash_speed` | 24.0 | Burst speed during a dash. |
+| `dash_speed` | 30.0 | Burst speed during a dash. |
 | `dash_time` | 0.15 | How long the burst lasts (s). |
 | `dash_cooldown` | 0.90 | Time before dash is ready again (s). |
 | `dash_iframes` | 0.18 | Invulnerability window from dash start (s). Raise to make dashing more forgiving. |
@@ -149,7 +149,7 @@ The whole-game freeze-frame when a hit lands — where the *weight* comes from.
 | Var | Default | What it does |
 |-----|---------|--------------|
 | `follow_lerp` | 9.0 | How tightly the camera tracks you (higher = snappier, lower = floatier). |
-| `cam_offset` | (0, 15, 9) | Height + pull-back of the fixed camera (the framing). Panel exposes `.y` and `.z`. |
+| `cam_offset` | (0, 12, 7.5) | Height + pull-back of the fixed camera (the framing). Panel exposes `.y` and `.z`. |
 | `cam_pitch` | -58.0 | Downward tilt in degrees — **the 2.5D angle**. |
 | `shake_decay` | 6.0 | How fast a screen-shake settles (higher = snappier). |
 

@@ -11,12 +11,12 @@ class_name Player
 ## Forward = local -Z (Godot look_at convention); the player faces the mouse cursor.
 
 # --- Movement (FEEL) ---
-@export var move_speed: float = 7.0       # FEEL: top movement speed (m/s)
+@export var move_speed: float = 9.0       # FEEL: top movement speed (m/s)
 @export var accel: float = 70.0           # FEEL: how fast we reach move_speed
 @export var friction: float = 80.0        # FEEL: how fast we stop when no input
 
 # --- Dash (FEEL) ---
-@export var dash_speed: float = 24.0      # FEEL: burst speed during a dash
+@export var dash_speed: float = 30.0      # FEEL: burst speed during a dash
 @export var dash_time: float = 0.15       # FEEL: how long the burst lasts (s)
 @export var dash_cooldown: float = 0.90   # FEEL: time before dash is ready again (s)
 @export var dash_iframes: float = 0.18    # FEEL: invulnerability window from dash start (s)
