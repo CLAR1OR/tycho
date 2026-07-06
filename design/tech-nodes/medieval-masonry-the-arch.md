@@ -13,7 +13,7 @@
 | prerequisites | `med-arithmetic-zero` (Arithmetic & Zero) |
 | unlocks | **Quarry** (Stone resource) + **Town Walls** (the strategy-layer seed) |
 | supersedes / retires | — (Timber/Stone retire later, at the Industrial age) |
-| status | drafted — awaiting playtest. **In-game since 2026-07-02** (`data/tech/med-masonry-arch.json`); the **§5 interactive puzzle is BUILT** (same day, replacing the interim quiz): pure `src/learning/arch_puzzle_core.gd` (the §9 scripted state machine) + clickable diagram `src/learning/puzzle_arch.gd`. Placeholder visuals; click-to-place stands in for drag-and-drop; hints cycle freely (the 1-per-run limit and the pointed profile's mechanical payoff are deferred — pointed is visual-only). This .md remains the authoring source. |
+| status | drafted — awaiting playtest. **In-game since 2026-07-02** (`data/tech/med-masonry-arch.json`); the **§5 interactive puzzle is BUILT** (same day, replacing the interim quiz): pure `src/learning/arch_puzzle_core.gd` (the §9 scripted state machine) + clickable diagram `src/learning/puzzle_arch.gd`. Placeholder visuals; click-to-place stands in for drag-and-drop; hints cycle freely (the 1-per-run limit and the pointed profile's mechanical payoff are deferred — pointed is visual-only). This .md remains the authoring source. **Explanation/aha rewritten 2026-07-06** to a neutral encyclopedic register (the "aliens' wikipedia" voice — no em dashes, no rhetorical questions, third person); §4/§5/§6 mirror `data/tech/med-masonry-arch.json`. |
 
 ## 2. One-line pitch
 Learn *why* an arch can hold up a cathedral when a flat stone can't span a doorway — and unlock stone construction (Quarry + the first Town Wall).
@@ -27,19 +27,19 @@ Available once Arithmetic & Zero is researched (the tree is open by then — Sop
 Tycho-the-observer hook (optional flavor): Tycho recalls the cave he fell into — a natural rock span overhead that *didn't* fall. "Why does the cave hold up its own ceiling, when our doorway lintel won't?"
 
 ## 4. Explanation (read before the puzzle)
-*Shown when the node is ready to research.*
+*Shown when the node is ready to research.* **Register: encyclopedic — plain, declarative, third person, no em dashes (rewrite 2026-07-06; this is the "aliens' wikipedia" voice). Mirror the JSON exactly so the two don't drift; light **bold** on defined terms is doc formatting only.*
 
-You already know stone in your bones: stack it and it only packs tighter — push *down* on a pile and it grips harder. So why does the same stone that holds up a whole wall **snap** the moment you lay it flat across a doorway and pile a roof on top?
+Stone is strong under compression and weak under tension. Squeezed, it can bear enormous loads. Pulled apart, its strength is roughly a tenth as much. This is why a stone wall stands while a single stone laid flat across a doorway cracks under the roof above it.
 
-Because stone keeps two very different promises. Squeeze it and it is almost unbreakable — its strength in **compression** is enormous. *Pull* it apart and it is feeble — its strength in **tension** is perhaps a tenth as much. A flat stone beam — a *lintel* — over a gap bends under load, and bending stretches its underside. The bottom fibers go into tension, and that is exactly where stone gives up and cracks.
+A flat stone laid across a gap is called a **lintel**. Under load it bends, and bending stretches its underside. The bottom of the stone goes into **tension**, and it cracks there, because tension is the load stone resists least.
 
-The **arch** is the trick that erases the tension. Curve the span into a ring of wedge-shaped stones — *voussoirs* — and now every stone is driven hard against its neighbors. Nothing bends. The weight runs *through* the stones as pure squeeze, following an invisible path — the **thrust line** — down to the ground. Stone asked to do only the one thing stone is good at.
+An **arch** removes the tension. The span is built as a ring of wedge-shaped stones called **voussoirs**. Under load each stone is pressed against its neighbors, so the weight is carried through the ring as **compression** alone. The load follows a curved path through the stones, called the **thrust line**, down to the ground.
 
-The last stone you set is the **keystone**, the wedge at the very top. Until it drops home the ring is unfinished, and a half-built arch would simply fall — so masons hold it up on a temporary wooden frame, the *centering*, until the keystone locks the ring. Seat it, and the arch becomes self-supporting. Pull the frame away. It stands.
+The last stone set, at the top of the ring, is the **keystone**. Until it is in place the ring is incomplete and cannot stand, so during construction the stones are held up by a temporary wooden frame called **centering**. Once the keystone is seated, the arch supports itself and the centering can be removed.
 
-There is a price, and it catches the careless: an arch does not only press *down* — it shoves *outward* at its feet. Span a wide gap and that outward thrust will spread the supports and bring the whole thing down, unless you brace each foot with a heavy **abutment** or a **buttress** to take the shove.
+An arch also pushes outward at its base, not only downward. Over a wide span this outward thrust can spread the supports and cause collapse. It is resisted by heavy masonry at each base, an **abutment** or a **buttress**.
 
-And your age is the moment this all comes alive. Right now — 1157 — masons are learning that if you make the arch *pointed* rather than round, the thrust line runs steeper and the outward shove shrinks. Walls can climb higher and thinner; windows can open wide enough to drown a hall in light. The great cathedrals beginning to rise in this very generation stand on exactly this insight.
+The **pointed arch** reduces this outward thrust. Rising to a point rather than a semicircle makes the thrust line steeper, so the horizontal force at the base is smaller. Walls can then be built taller and thinner, and windows made larger. Gothic architecture, beginning around this time, in the year 1157, is built on this fact.
 
 ## 5. The puzzle
 A small, scripted **build-the-gateway** sandbox (not a full physics sim — see Production notes). Three beats, each forcing one true idea. The goal: raise a gateway that carries the new Town Wall without collapsing.
@@ -55,20 +55,20 @@ A small, scripted **build-the-gateway** sandbox (not a full physics sim — see 
 - **Principle tested:** stone fails in tension, not compression; an arch routes load as pure compression; the ring is only stable once closed by the keystone; arches thrust *outward* and must be braced.
 - **Failure feedback (teach through failure):** the lintel cracks on its underside; the unkeyed half-arch falls; the unbraced arch splays at the feet. Each failure shows *where* and *why*, not just "wrong."
 
-- **Difficulty / graceful path (Sophia's hints, 1 per run; auto-solves after ~5):**
-  1. "A flat stone over a gap snaps along its *underside* — that's where it's being pulled apart, and stone hates being pulled. Can you arrange the stones so they're only ever *pushed*?"
-  2. "Wedges. If each stone is a wedge leaning on the next, the weight presses them together instead of bending any one of them. But a ring isn't a ring until it's closed."
-  3. "Set the top wedge — the keystone — *last*; that locks it. Then mind the feet: a finished arch shoves outward. Plant something heavy on each side to take the shove."
+- **Difficulty / graceful path (Sophia's hints, 1 per run; auto-solves after ~5).** These are DIALOGUE (Sophia's voice, not the encyclopedic body text); retouched 2026-07-06 to the sharpened register (em dashes removed) — see `design/dialogue/drafts-review-2026-07-06.md`. Mirror the JSON `data.hints` exactly:
+  1. "A flat stone over a gap snaps along its underside. That's where it's being pulled apart, and stone is weak when it's pulled. Try arranging the stones so they're only ever pushed together."
+  2. "Use wedges. If each stone is a wedge leaning on the next, the load presses them together instead of bending any one of them. A ring isn't a ring until it's closed, though."
+  3. "Set the top wedge, the keystone, last. That locks the ring. Then mind the feet. A finished arch shoves outward, so plant something heavy on each side to take the shove."
   - **Auto-solve (after ~5 runs):** *Sophia, at the riddle-wall in your home* — "Here — I worked it through. Wedge-stones, keystone last, brace the feet, and point the arch to spare the buttresses. The gate'll hold. Go raise your wall." *(Unlock granted; no delight lost — she shows her reasoning, so even the auto-path teaches.)*
 
 ## 6. The "aha" (post-solve)
-*Delivered as the gateway holds and light catches the new stone.*
+*Delivered as the gateway holds and light catches the new stone. A beat warmer than the body text, but no AI-isms — no em dashes, no mirrored aphorism (rewrite 2026-07-06). Mirror the JSON `aha`.*
 
-Here is the thing no mason of your century can prove, though their hands already know it. Hang a chain loose between two points and it falls into a particular curve — a **catenary** — the one shape in which the chain hangs in pure tension, no part straining sideways more than it must. Now flip that curve upside down. You have the one shape in which an arch stands in pure compression. *As hangs the flexible line, so but inverted will stand the rigid arch.* A dangling rope and a soaring vault are the **same curve**, mirrored through the ground.
+A hanging chain settles into a curve called a **catenary**. It is the shape in which the chain carries its own weight in pure tension, with no part pulled sideways more than it must be. Turn that curve upside down and you have the shape in which an arch stands in pure compression. A hanging rope and a standing arch trace the same curve, one mirrored through the ground.
 
-The builders raising the great cathedrals don't have this. They work by inherited rule and stubborn intuition — by what hasn't fallen down yet. The catenary is the quiet reason their intuition is *right*. Understanding doesn't raise the cathedral. It tells you why the cathedral stands — and which ones won't.
+The masons raising the cathedrals of this age do not have this. They build by inherited rule and by what has not yet fallen down. The catenary is the reason those rules work. Understanding does not raise the cathedral. It explains why the cathedral stands, and which ones will not.
 
-*(Optional Wren tag, in town later):* "Funny — a thing that falls and a thing that rises, the same shape. Maybe that's all building is. Catch a falling line and turn it over."
+*(Optional Wren tag, in town later, DIALOGUE — Wren's voice, not the body register):* "A thing that falls and a thing that rises, the same shape. Catch a falling line and turn it over. That's most of building, I think."
 
 ## 7. Unlock & in-fiction beat
 - **Mechanical:** unlocks the **Quarry** (begin producing Stone; small chance of Resonance Ore) and **Town Walls** (build → L1). Town Walls is flavor/morale now and the explicit **strategy-layer seed** — the first stone of the war to come.

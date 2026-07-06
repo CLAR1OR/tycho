@@ -2,17 +2,24 @@ extends RefCounted
 class_name TechCore
 ## Pure tech-tree logic (PRD §7.8, architecture-schemas.md §4). Operates on the
 ## save's `tech` section (`{researched: [], in_progress: {id: knowledge},
-## auto_solve_counters: {id: runs}, active: ""}`) and on defs from data/tech/.
-## All functions return NEW dicts — no engine state, unit-tests headless.
+## auto_solve_counters: {id: runs}, quiz_locked: {id: true}, active: ""}`) and on
+## defs from data/tech/. All functions return NEW dicts — no engine state,
+## unit-tests headless.
 ##
-## Flow: pick an active node → pour Knowledge (+ Knowledge Shards) into it →
-## at cost threshold it's READY → read explanation → solve puzzle/quiz → complete()
-## → the typed unlocks fire (dispatched by the caller). Sophia auto-solves the
-## active node after `auto_solve_after_runs` runs (IC-10: reward thinking, never
-## hard-gate on it).
+## Flow: pour Knowledge into the active node (investing spends KNOWLEDGE ONLY — the
+## Knowledge Shards you bring back are converted to Knowledge separately, by turning
+## them in to Sophia at the desk; see TechState.turn_in_shards) → at cost threshold
+## it's READY → read explanation → solve puzzle/quiz → complete() → the typed
+## unlocks fire (dispatched by the caller). Sophia auto-solves the active node after
+## `auto_solve_after_runs` runs (IC-10: reward thinking, never hard-gate on it).
+##
+## Quiz gate (2026-07-06): a WRONG quiz answer locks that node's quiz (quiz_locked)
+## until one more run passes — the lock is cleared on run_ended (TechState). The
+## interactive arch puzzle is exempt (its staged failures are the teaching).
 
-## What one Knowledge Shard is worth when dumped into research (PRD §7.10 — the
-## main early research driver; boss bounty). Placeholder economy number.
+## What one Knowledge Shard is worth once turned in for Knowledge at Sophia's desk
+## (PRD §7.10 — the main early research driver; boss bounty). Placeholder economy
+## number: a shard must beat a passive day tick so run loot stays the early driver.
 const SHARD_KNOWLEDGE_VALUE := 5.0
 
 
@@ -88,10 +95,31 @@ static func auto_solve_ready(def: Dictionary, tech: Dictionary) -> bool:
 	return int(tech.get("auto_solve_counters", {}).get(id, 0)) >= threshold
 
 
-## Convert whole shards into knowledge for research. Pure math: how many of
-## `shards` are needed to top `missing` up, given `knowledge` already available.
-## Returns {"shards_used": int, "knowledge_from_shards": float}.
-static func shards_needed(missing: float, knowledge: float, shards: float) -> Dictionary:
-	var gap := maxf(missing - knowledge, 0.0)
-	var used := mini(int(ceilf(gap / SHARD_KNOWLEDGE_VALUE)), int(shards))
-	return {"shards_used": used, "knowledge_from_shards": float(used) * SHARD_KNOWLEDGE_VALUE}
+## Knowledge yielded by turning in `shards` whole Knowledge Shards at Sophia's desk
+## (all held shards convert at SHARD_KNOWLEDGE_VALUE apiece). Whole shards only.
+static func shard_turn_in_value(shards: float) -> float:
+	return floorf(maxf(shards, 0.0)) * SHARD_KNOWLEDGE_VALUE
+
+
+# --- Quiz lock (a wrong quiz answer waits one run; 2026-07-06) -----------------------
+
+## True while `id`'s quiz is locked (a wrong answer this run — Sophia won't hear it
+## again until a run passes). Quiz nodes only; the interactive puzzle never locks.
+static func is_quiz_locked(tech: Dictionary, id: String) -> bool:
+	return bool(tech.get("quiz_locked", {}).get(id, false))
+
+
+## Lock `id`'s quiz after a wrong answer. Returns a NEW tech dict.
+static func lock_quiz(tech: Dictionary, id: String) -> Dictionary:
+	var out := tech.duplicate(true)
+	if not out.has("quiz_locked"):
+		out["quiz_locked"] = {}
+	out["quiz_locked"][id] = true
+	return out
+
+
+## Clear every quiz lock (one run has passed — call on run_ended). Returns a NEW dict.
+static func clear_quiz_locks(tech: Dictionary) -> Dictionary:
+	var out := tech.duplicate(true)
+	out["quiz_locked"] = {}
+	return out

@@ -61,3 +61,18 @@ Everything else in `data/dialogue/` was reviewed line-by-line and judged already
 1. **Win-first-run edge.** `a3-first-death` gates on `deaths>=1`, and the Mara greeting (a3), Thomas/B2 (a3 → etchings), etc. chain off `a3`. **A player who never dies on their first run never trips the gate**, so the first-death cutscene and everything downstream (including the etchings unlock via B2) stall. A fallback gate (e.g. an OR on `runs>=N`, or firing A3 after A2 regardless) is a human call — same class as the B3 `boss_kills>=3 OR runs>=6` fallback. Recorded in `act1-story-beats.md` (A3 note).
 2. **B2 gate divergence.** The skeleton's B2 gate was "first Resonance Dust + visited Thomas once". The human's script 4 gates on `flag(a3)` and Thomas simply offering it, so **B2 now depends on the first-death cutscene**, not on dust. Intended per the human's direction; noted in the beats doc.
 3. **Greeting-after-ore edge.** If a player gets Resonance Ore and talks to Mara *before* ever dying, `b1-mara-ore` plays first and `a-mara-meets` (the introduction) plays later, slightly out of narrative order. Minor; priority can't fix it without a flag-chain. Left as-is.
+
+---
+
+## 5. Tech-node Sophia hints retouched (arch puzzle — 2026-07-06)
+
+The masonry tech rewrite (encyclopedic explanation/aha; see `design/tech-nodes/medieval-masonry-the-arch.md` §4/§6) is body text, not dialogue. But the arch puzzle's Sophia HINTS and its intro line **are** dialogue (`data/tech/med-masonry-arch.json` → `puzzle.data`), and the originals carried **em dashes**, which the sharpened register bans. Retouched to Sophia's plain, precise register (she may still reason out loud and ask a guiding question; only the em dashes and the mild personification were the problem). Proposals for the human's curation — revert freely.
+
+| line | before → after |
+|---|---|
+| intro | "…Herzog wants STONE. Raise a gateway that can carry the new wall. Try the obvious thing first **—** then load it and see." → "…Herzog wants stone. Raise a gateway that can carry the new wall. Try the obvious thing first**,** then load it and see." (em dash → comma; drops the shout-caps STONE) |
+| hint 1 | "A flat stone over a gap snaps along its *underside* **—** that's where it's being pulled apart, and **stone hates being pulled**. Can you arrange the stones so they're only ever *pushed*?" → "A flat stone over a gap snaps along its underside**. That's** where it's being pulled apart, and **stone is weak when it's pulled**. **Try arranging** the stones so they're only ever pushed together." |
+| hint 2 | "Wedges. If each stone is a wedge leaning on the next, the weight presses them together instead of bending any one of them. **But a ring isn't a ring until it's closed.**" → "**Use wedges.** If each stone is a wedge leaning on the next, the load presses them together instead of bending any one of them. **A ring isn't a ring until it's closed, though.**" |
+| hint 3 | "Set the top wedge **—** the keystone **—** *last*; that locks it. Then mind the feet: a finished arch shoves outward. Plant something heavy on each side to take the shove." → "Set the top wedge, the keystone, last**. That** locks the ring. Then mind the feet**.** A finished arch shoves outward, so plant something heavy on each side to take the shove." |
+
+The optional Wren "aha" tag in the .md (§6) was also de-em-dashed and pointed toward Wren's plainer register (it is not shipped in `data/`; authoring reference only).

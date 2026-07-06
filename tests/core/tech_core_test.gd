@@ -71,12 +71,21 @@ func test_auto_solve() -> void:
 	check(str(TechCore.tick_auto_solve(tech, "")) == str(tech), "no active node → no tick")
 
 
-func test_shards_needed() -> void:
-	var r := TechCore.shards_needed(23.0, 10.0, 9.0)  # missing 23, have 10 knowledge
-	check_eq(r["shards_used"], 3, "gap of 13 needs 3 shards at 5 apiece")
-	check_eq(r["knowledge_from_shards"], 15.0, "3 shards → 15 knowledge")
-	check_eq(TechCore.shards_needed(8.0, 20.0, 9.0)["shards_used"], 0, "no gap → no shards")
-	check_eq(TechCore.shards_needed(100.0, 0.0, 2.0)["shards_used"], 2, "capped at owned shards")
+func test_shard_turn_in_value() -> void:
+	check_eq(TechCore.shard_turn_in_value(3.0), 15.0, "3 whole shards → 15 knowledge at 5 apiece")
+	check_eq(TechCore.shard_turn_in_value(0.0), 0.0, "no shards → no knowledge")
+	check_eq(TechCore.shard_turn_in_value(2.4), 10.0, "whole shards only (2.4 → 2 → 10)")
+	check_eq(TechCore.shard_turn_in_value(-1.0), 0.0, "negative clamps to zero")
+
+
+func test_quiz_lock() -> void:
+	var tech := _fresh_tech()
+	check(not TechCore.is_quiz_locked(tech, "x"), "a fresh node's quiz is unlocked")
+	tech = TechCore.lock_quiz(tech, "x")
+	check(TechCore.is_quiz_locked(tech, "x"), "a wrong answer locks the quiz")
+	check(not TechCore.is_quiz_locked(tech, "y"), "the lock is per-node (y stays open)")
+	tech = TechCore.clear_quiz_locks(tech)
+	check(not TechCore.is_quiz_locked(tech, "x"), "a passed run clears all quiz locks")
 
 
 func test_building_unlock_gate() -> void:

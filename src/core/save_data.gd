@@ -32,7 +32,10 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 			"dialogue_last": {},
 			"arc_last": {},
 		},
-		"tech": {"researched": [], "in_progress": {}, "auto_solve_counters": {}, "active": ""},
+		# quiz_locked {id: true}: a wrong quiz answer locks that node's quiz until one
+		# more run passes (cleared on run_ended; 2026-07-06). defaults-merge fills it
+		# for old saves.
+		"tech": {"researched": [], "in_progress": {}, "auto_solve_counters": {}, "quiz_locked": {}, "active": ""},
 		"ledger": {},
 		# well_fed: last day-tick Food-upkeep status (design/food-upkeep.md). false
 		# until the town has ever ticked with food covering upkeep; defaults-merge

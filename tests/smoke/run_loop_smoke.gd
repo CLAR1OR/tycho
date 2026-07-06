@@ -185,16 +185,63 @@ func _run_smoke() -> void:
 	_scene_node().call("_try_build", "quarry")
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 0,
 		"quarry blocked before masonry is researched")
-	Ledger.add("knowledge", 100.0, "smoke-grant")
-	Ledger.add("gold", 100.0, "smoke-grant")
+	var cheats: CheatPanel = get_tree().get_first_node_in_group("cheat_panel")
+	_check(cheats != null, "cheat panel available for the run-gate test")
 	var panel: TechPanel = _scene_node().call("open_tech_panel")
 	await _settle(3)
-	# Arithmetic: the quiz form, incl. one deliberately wrong answer (must retry).
+
+	# Shard turn-in economy (2026-07-06): investing spends KNOWLEDGE ONLY. Knowledge
+	# Shards convert to Knowledge only by turning them in at the desk. Run 1's bosses
+	# left shards in the pouch — turn them in and watch Knowledge grow by 5 apiece.
+	var shards_held := Ledger.get_amount("knowledge-shards")
+	_check(shards_held >= 1.0, "carrying boss knowledge-shards to turn in (%.0f)" % shards_held)
+	var kn_before := Ledger.get_amount("knowledge")
+	panel.turn_in_shards()
+	_check(absf(Ledger.get_amount("knowledge") - (kn_before + shards_held * TechCore.SHARD_KNOWLEDGE_VALUE)) < 0.001,
+		"turn-in converted all shards to knowledge at 5 apiece")
+	_check(Ledger.get_amount("knowledge-shards") == 0.0, "turn-in emptied the shard pouch")
+
+	# Fund research with Knowledge; park a couple of shards to prove invest never
+	# touches them now (the mid-invest auto-convert is gone).
+	Ledger.add("knowledge", 100.0, "smoke-grant")
+	Ledger.add("gold", 100.0, "smoke-grant")
+	Ledger.add("knowledge-shards", 2.0, "smoke-grant")
+	var shards_parked := Ledger.get_amount("knowledge-shards")
 	panel.select_node("med-arithmetic-zero")
+	var kn_pre_invest := Ledger.get_amount("knowledge")
 	panel.invest_all()
+	_check(Ledger.get_amount("knowledge") < kn_pre_invest, "invest spent Knowledge")
+	_check(Ledger.get_amount("knowledge-shards") == shards_parked,
+		"invest left Knowledge Shards untouched (no auto-convert)")
+
+	# Quiz gate (2026-07-06): a wrong answer LOCKS the quiz until one run passes.
 	panel.begin_read()
 	panel.begin_quiz()
-	panel.answer(1)
+	panel.answer(1)  # deliberately wrong
+	_check(TechCore.is_quiz_locked(SaveManager.state["tech"], "med-arithmetic-zero"),
+		"a wrong quiz answer locks the node's quiz")
+	_check(panel.on_locked_screen(), "the panel shows the locked screen (no answer buttons)")
+	panel.answer(0)  # locked → no effect, no retry
+	_check(not (SaveManager.state["tech"]["researched"] as Array).has("med-arithmetic-zero"),
+		"locked quiz can't be answered — still not researched")
+	panel.close()
+	await _settle(3)
+
+	# A run has to pass before Sophia will hear the answer again. Simulate one — nothing
+	# force-plays on this return (A3 needs a death, B5 needs masonry, the b3 twins are
+	# flag-suppressed), so the town swap is silent.
+	cheats.simulate_run(true)
+	await _settle(10)
+	_check(not TechCore.is_quiz_locked(SaveManager.state["tech"], "med-arithmetic-zero"),
+		"finishing a run clears the quiz lock")
+
+	# Now she'll hear it. Reopen the desk (a fresh town scene after the sim) and answer
+	# correctly — arithmetic is still funded from the invest above.
+	panel = _scene_node().call("open_tech_panel")
+	await _settle(3)
+	panel.select_node("med-arithmetic-zero")
+	panel.begin_read()
+	panel.begin_quiz()
 	var questions: int = ((DataLoader.load_domain("tech")["med-arithmetic-zero"]["puzzle"] as Dictionary)["data"]["questions"] as Array).size()
 	for i in questions:
 		panel.answer(0)  # authored data keeps the correct option at index 0
@@ -286,7 +333,8 @@ func _run_smoke() -> void:
 	_check(_scene_file() == "town.tscn", "death returns to town (got %s)" % _scene_file())
 	_check(SaveManager.state["checkpoint"] == null, "death clears the checkpoint too")
 	_check(int(c["deaths"]) == 1, "death counted")
-	_check(int(c["runs"]) == runs_before + 2, "died run still ticks the day")
+	# runs so far: run 1 + the quiz-gate sim + run 2 (death) = runs_before + 3.
+	_check(int(c["runs"]) == runs_before + 3, "died run still ticks the day")
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
 	_check(Ledger.get_amount("stone") >= 2.0, "quarry produced stone on the day tick")
 
@@ -353,7 +401,7 @@ func _run_smoke() -> void:
 	c = SaveManager.state["story"]["counters"]
 
 	# --- Cheat panel (F2 playtest tool) — must mirror the real paths exactly --------
-	var cheats: CheatPanel = get_tree().get_first_node_in_group("cheat_panel")
+	cheats = get_tree().get_first_node_in_group("cheat_panel")
 	_check(cheats != null, "cheat panel lives on the HUD layer")
 	if cheats != null:
 		var gold_now := Ledger.get_amount("gold")
@@ -379,10 +427,13 @@ func _run_smoke() -> void:
 				"B5 marked seen (a spine beat never repeats)")
 		# B5's mark_shown replaced the story section — re-grab the counters ref.
 		c = SaveManager.state["story"]["counters"]
-		_check(int(c["runs"]) == runs_before + 3, "simulated run ticks the runs counter")
-		_check(int(c["full_clears"]) == 2, "simulated run counts a full clear")
+		# runs: run 1 + quiz-gate sim + run 2 death + this sim = runs_before + 4.
+		_check(int(c["runs"]) == runs_before + 4, "simulated run ticks the runs counter")
+		# full clears: run 1 + quiz-gate sim + this sim = 3 (run 2 was a death).
+		_check(int(c["full_clears"]) == 3, "simulated run counts a full clear")
 		_check(int(c["boss_kills"]) >= 2, "simulated run counts the boss kill")
-		_check(int(SaveManager.state["codex"]["shards"]) == 2, "simulated run slots a codex shard")
+		# codex: run 1 + quiz-gate sim + this sim = 3.
+		_check(int(SaveManager.state["codex"]["shards"]) == 3, "simulated run slots a codex shard")
 		_check(Ledger.get_amount("stone") > stone_now, "simulated run still ticks the day (quarry)")
 		_check(_scene_file() == "town.tscn", "simulated run lands back in town")
 		# food = prior stock + farm harvest (3) - upkeep (2 base + 1/building).
@@ -392,7 +443,7 @@ func _run_smoke() -> void:
 		_check(bool(SaveManager.state["town"]["well_fed"]), "well-fed with a full granary")
 		_check(bool(_read_slot_from_disk()["town"]["well_fed"]), "disk: well_fed status persisted")
 		cheats.grant_codex_shard()
-		_check(int(SaveManager.state["codex"]["shards"]) == 3, "codex shard cheat applies")
+		_check(int(SaveManager.state["codex"]["shards"]) == 4, "codex shard cheat applies")
 
 	SaveManager.delete_slot(SMOKE_SLOT)
 	print("---")

@@ -3,19 +3,25 @@ class_name TechPanel
 ## Sophia's research screen (PRD §7.8) — placeholder UI, code-built like the echo
 ## and tuning panels. Pauses the game while open.
 ##
-## Flow: LIST (pick/see nodes) → NODE (progress + invest Knowledge/Shards) →
-## READ (the authored explanation) → the node's puzzle, dispatched on
+## Flow: LIST (pick/see nodes; turn in Knowledge Shards) → NODE (progress + invest
+## Knowledge) → READ (the authored explanation) → the node's puzzle, dispatched on
 ## `puzzle.kind` (architecture-schemas.md §4): "quiz" → the built-in QUIZ screen;
 ## "interactive" → PUZZLE embeds the bespoke scene from PUZZLES and waits for its
 ## `solved` signal → AHA (the reveal) → done: TechState.complete (TechCore.complete +
 ## `tech_researched` on the EventBus) + save.
 ##
+## Shard economy (2026-07-06): investing spends KNOWLEDGE ONLY. Knowledge Shards are
+## turned in for Knowledge with the desk's "turn in shards" action (TechState). A wrong
+## quiz answer LOCKS the quiz (LOCKED screen) until one run passes — the interactive
+## arch puzzle is exempt (its staged failures are the teaching).
+##
 ## Logic stays in TechCore (pure, tested); tech-section writes route through the
-## TechState autoload (set_active / invest / complete); this class is screens and wiring.
-## All flow methods (select_node / invest_all / begin_read / begin_quiz / answer /
-## begin_puzzle / finish) are public so the headless smoke can drive the real path.
+## TechState autoload (set_active / invest / turn_in_shards / lock_quiz / complete); this
+## class is screens and wiring. All flow methods (select_node / invest_all /
+## turn_in_shards / begin_read / begin_quiz / answer / begin_puzzle / finish) are public
+## so the headless smoke can drive the real path.
 
-enum Screen { LIST, NODE, READ, QUIZ, PUZZLE, AHA }
+enum Screen { LIST, NODE, READ, QUIZ, LOCKED, PUZZLE, AHA }
 
 ## Bespoke interactive puzzles, keyed by the node's `puzzle.scene`. Contract:
 ## a Control with `setup(data: Dictionary)` and a `solved` signal.
@@ -90,8 +96,27 @@ func begin_read() -> void:
 
 
 func begin_quiz() -> void:
+	if TechCore.is_quiz_locked(SaveManager.state["tech"], _node_id):
+		_show_locked()
+		return
 	_quiz_index = 0
 	_show_quiz()
+
+
+## Turn in ALL held Knowledge Shards for Knowledge at the desk (TechState owns the
+## transaction). Public so the smoke can drive it; refreshes the current screen.
+func turn_in_shards() -> void:
+	TechState.turn_in_shards()
+	SaveManager.save_current()
+	if _screen == Screen.NODE:
+		_show_node()
+	else:
+		_show_list()
+
+
+## True while the quiz-locked screen is up (a wrong answer this run). Smoke/debug hook.
+func on_locked_screen() -> bool:
+	return _screen == Screen.LOCKED
 
 
 ## Embed the node's bespoke interactive puzzle and wait for it to be solved.
@@ -119,9 +144,13 @@ func puzzle_node() -> Control:
 
 
 ## Answer the current quiz question with option `index` (in DATA order — the UI
-## shuffles display order but binds original indices). Wrong answers just retry:
-## reward thinking, never hard-gate (IC-10).
+## shuffles display order but binds original indices). A WRONG answer locks the quiz
+## for one run (2026-07-06); Sophia still auto-solves eventually, so this delays,
+## never hard-gates (IC-10). No-op while already locked (the locked screen has no
+## answer buttons; this guards a stray driver call).
 func answer(index: int) -> void:
+	if _screen == Screen.LOCKED:
+		return
 	var q := _current_question()
 	if index == int(q.get("correct", 0)):
 		_quiz_index += 1
@@ -130,7 +159,9 @@ func answer(index: int) -> void:
 		else:
 			_show_quiz()
 	else:
-		_show_quiz("Not quite — read the failure, think it through, try again.")
+		TechState.lock_quiz(_node_id)
+		SaveManager.save_current()
+		_show_locked()
 
 
 ## The aha has been read: the node completes for real.
@@ -151,6 +182,7 @@ func _show_list() -> void:
 	_label("You carry: %d Knowledge, %d Knowledge Shards (worth %d each)" % [
 		int(Ledger.get_amount("knowledge")), int(Ledger.get_amount("knowledge-shards")),
 		int(TechCore.SHARD_KNOWLEDGE_VALUE)])
+	_turn_in_button()
 	for id in TechCore.available(_defs, tech):
 		var def: Dictionary = _defs[id]
 		var b := Button.new()
@@ -179,6 +211,7 @@ func _show_node() -> void:
 	_label("Progress: %.0f / %d Knowledge" % [TechCore.progress(tech, _node_id), int(def["cost_knowledge"])])
 	_label("You carry: %d Knowledge, %d Shards" % [
 		int(Ledger.get_amount("knowledge")), int(Ledger.get_amount("knowledge-shards"))])
+	_turn_in_button()
 	if TechCore.is_ready(def, tech):
 		_label("It's ready. Sophia lays out what the shards revealed —")
 		_button("Read & solve", begin_read)
@@ -222,6 +255,18 @@ func _show_quiz(feedback: String = "") -> void:
 		b.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		b.pressed.connect(answer.bind(i))
 		_rows.add_child(b)
+
+
+## The quiz is locked (a wrong answer this run). No answer buttons — a run has to pass
+## before Sophia will hear the answer again. Diegetic line in the plain register.
+func _show_locked() -> void:
+	_screen = Screen.LOCKED
+	_clear()
+	var def: Dictionary = _defs[_node_id]
+	_title(str(def["name"]))
+	_reading("Sophia: That's not it. Go make a run and clear your head. Ask me again when you're back.")
+	_button("Back", _show_list)
+	_button("Close (keeps progress)", close)
 
 
 func _show_aha() -> void:
@@ -269,6 +314,20 @@ func _reading(text: String) -> void:
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rows.add_child(l)
+
+
+## The "turn in shards" action (2026-07-06): bring Sophia the Knowledge Shards you
+## found and she extracts what they teach — all held shards → Knowledge at 5 apiece.
+## Disabled at 0 shards. Shown on both the list and node screens.
+func _turn_in_button() -> void:
+	var shards := int(Ledger.get_amount("knowledge-shards"))
+	var b := Button.new()
+	b.text = "Turn in %d Knowledge Shards → %d Knowledge" % [
+		shards, shards * int(TechCore.SHARD_KNOWLEDGE_VALUE)]
+	b.disabled = shards <= 0
+	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
+	b.pressed.connect(turn_in_shards)
+	_rows.add_child(b)
 
 
 func _button(text: String, action: Callable) -> void:

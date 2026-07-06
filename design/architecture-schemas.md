@@ -93,6 +93,18 @@ Tech nodes, buildings, and resources each carry their own `age` field — an age
 
 Unlock application is a dispatch on `type` — adding a new unlock type in Act II touches one match statement, no node data.
 
+**Tech save-section shape** (`save.tech`, owned by the TechState autoload over pure TechCore):
+```jsonc
+"tech": {
+  "researched": [],            // completed node ids
+  "in_progress": {},           // {id: knowledge poured in} — investing spends Knowledge ONLY
+  "auto_solve_counters": {},   // {id: runs the node has been active} → Sophia auto-solves at auto_solve_after_runs
+  "quiz_locked": {},           // {id: true} — a wrong QUIZ answer locks that node's quiz; cleared on run_ended (waits one run). 2026-07-06
+  "active": ""                 // the node Sophia works between runs
+}
+```
+**Status (2026-07-06):** Knowledge Shards no longer auto-convert during invest — they are turned in for Knowledge at the desk (`TechState.turn_in_shards`, `SHARD_KNOWLEDGE_VALUE` = 5, Ledger reason `shard-turn-in`). A wrong quiz answer sets `quiz_locked[id]` (Ledger-free); `TechState._on_run_ended` clears all locks each run. `defaults-merge` fills `quiz_locked` for old saves.
+
 ## 5. Achievements (central event hook)
 
 The **EventBus autoload is the spine of the whole architecture**, not just achievements: typed signals (`run_ended`, `boss_killed`, `tech_researched`, `resource_changed`, `building_built`, `dialogue_seen`, `codex_shard_added`, `death`, …). Achievements, dialogue-gating counters, stats, and future strategy systems are all *subscribers*. Systems never call each other for bookkeeping — they emit.
