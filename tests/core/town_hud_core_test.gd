@@ -104,6 +104,26 @@ func test_toast_segments_fed_only_when_well_fed() -> void:
 	check_eq(str(last["text"]), "Well-Fed", "the fed segment reads 'Well-Fed'")
 
 
+func test_producible_resources() -> void:
+	# produce → its resource; the knowledge kind → knowledge; other kinds generate nothing.
+	var defs := {
+		"farm": {"levels": [
+			{"effects": [{"kind": "produce", "resource": "food", "per_day": 3}]},
+			{"effects": [{"kind": "produce", "resource": "food", "per_day": 5}]},
+		]},
+		"study": {"levels": [{"effects": [{"kind": "knowledge", "per_day": 1}]}]},
+		"walls": {"levels": [{"effects": [{"kind": "capability", "id": "walls-1"}]}]},
+	}
+	var p := TownHudCore.producible_resources(defs)
+	check(bool(p.get("food", false)), "produce effects mark their resource producible")
+	check(bool(p.get("knowledge", false)), "the knowledge effect kind marks knowledge")
+	check_eq(p.size(), 2, "capability/unknown kinds generate nothing (no gold, no walls)")
+
+
+func test_producible_resources_empty() -> void:
+	check_eq(TownHudCore.producible_resources({}).size(), 0, "no buildings → nothing producible")
+
+
 func test_toast_segments_dust_short_label() -> void:
 	var segs := TownHudCore.toast_segments(
 		{"produced": {"resonance-dust": 2.0}, "food_consumed": 0.0, "well_fed": false})

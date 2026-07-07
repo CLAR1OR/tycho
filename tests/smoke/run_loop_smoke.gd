@@ -134,6 +134,16 @@ func _run_smoke() -> void:
 	_check(thud is Control and (thud as Control).size == tvp,
 		"TownHud spans the viewport (%s == %s)" % [
 			str((thud as Control).size) if thud is Control else "?", str(tvp)])
+	# The strip's town/run split (2026-07-07): town = building-producible (derived from
+	# the building defs), run = everything only ever brought home from runs.
+	var tgroup: Array = thud.call("town_group")
+	var rgroup: Array = thud.call("run_group")
+	_check(tgroup.has("stone") and tgroup.has("food") and tgroup.has("knowledge")
+		and not tgroup.has("gold"),
+		"town group = the building-producible resources (%s)" % str(tgroup))
+	_check(rgroup.has("gold") and rgroup.has("knowledge-shards") and rgroup.has("resonance-ore")
+		and rgroup.has("resonance-dust"),
+		"run group = the run-collected pickups (%s)" % str(rgroup))
 	var c: Dictionary = SaveManager.state["story"]["counters"]
 	_check(int(c["runs"]) == runs_before + 1, "runs counter ticked (%d)" % int(c["runs"]))
 	_check(int(c["boss_kills"]) >= 1, "boss kill counted (%d)" % int(c["boss_kills"]))

@@ -78,6 +78,27 @@ static func toast_segments(tick: Dictionary) -> Array:
 	return out
 
 
+## The set (id -> true) of resources ANY defined building can generate on a day tick —
+## walks every def's levels' effects (kind "produce" → its resource; the "knowledge"
+## kind → knowledge; other kinds generate nothing). The strip's town/run split derives
+## from this (human decision 2026-07-07): building-producible = the town economy,
+## everything else only ever comes home from runs. Data-driven on purpose — a future
+## gold-producing Market would migrate gold to the town group by itself.
+static func producible_resources(building_defs: Dictionary) -> Dictionary:
+	var out := {}
+	for id: String in building_defs:
+		for level: Dictionary in (building_defs[id] as Dictionary).get("levels", []):
+			for effect: Dictionary in level.get("effects", []):
+				match str(effect.get("kind", "")):
+					"produce":
+						var res := str(effect.get("resource", ""))
+						if not res.is_empty():
+							out[res] = true
+					"knowledge":
+						out["knowledge"] = true
+	return out
+
+
 ## Short label for a resource id (falls back to the id itself).
 static func _label(id: String) -> String:
 	return str(_LABELS.get(id, id))

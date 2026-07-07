@@ -15,8 +15,13 @@ class_name TownHud
 ## there; the town-specific placeholders below (the three new resource colours, the toast
 ## timings, the hint copy) are dialled here.
 ##
-## HUMAN: HINT_TEXT, the toast copy/timings, the FS_*/PROJECTION_ALPHA, and the three new
-## resource colours are all PLACEHOLDERS — dial like FEEL numbers (design/ui-hud.md).
+## The strip is TWO panels (human decision 2026-07-07): the town economy (resources a
+## building can generate — derived from the building defs) and the run pickups (only
+## ever brought home from runs), the run panel holding the corner like the in-run strip.
+##
+## HUMAN: HINT_TEXT, the toast copy/timings, the FS_*/PROJECTION_ALPHA, the three new
+## resource colours, and the TOWN/RUN group headers are all PLACEHOLDERS — dial like
+## FEEL numbers (design/ui-hud.md).
 
 # =====================================================================================
 # Town-specific style — placeholders. (Shared palette + fonts + sizes live in SlateHud.)
@@ -29,6 +34,14 @@ const COL_KNOWLEDGE := Color(159.0/255, 220.0/255, 255.0/255)     # #9fdcff
 const COL_GAP := 16.0            # gap between columns
 const VALUE_LABEL_GAP := 4.0     # gap between a column's value and its dim label
 const PROJECTION_ALPHA := 0.55   # the "+n/d" projection below each column
+# The town/run group split (human decision 2026-07-07): building-producible resources
+# in one panel, run-collected pickups in another, run panel at the corner (mirrors the
+# in-run pickup strip's position). Headers are placeholder copy.
+const GROUP_GAP := 12.0          # gap between the two panels
+const FS_GROUP := 10             # the tiny group headers (display font)
+const GROUP_HEADER_ALPHA := 0.65
+const GROUP_TOWN_LABEL := "TOWN"
+const GROUP_RUN_LABEL := "RUN"
 # Toast (overnight production)
 const FS_TOAST_HEAD := 11        # the "OVERNIGHT" header (display)
 const TOAST_HOLD_S := 4.0
@@ -55,6 +68,8 @@ var _has_ticked: bool = false
 
 var _building_defs: Dictionary = {}
 var _deltas: Dictionary = {}   # TownHudCore.day_deltas — recomputed on resource_changed
+var _town_ids: Array[String] = []   # STRIP_IDS partitioned by TownHudCore.producible_resources:
+var _run_ids: Array[String] = []    # building-producible = town, the rest = run pickups
 
 var _toast_segs: Array = []
 var _toast_alpha: float = 0.0
@@ -70,6 +85,14 @@ func _ready() -> void:
 	# behind a dialogue. (The town has no player input here, so ALWAYS is harmless.)
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	_building_defs = DataLoader.load_domain("buildings")
+	# Partition the strip: town economy (a building can generate it) vs run pickups
+	# (only ever brought home). Data-driven — see TownHudCore.producible_resources.
+	var producible := TownHudCore.producible_resources(_building_defs)
+	for id: String in STRIP_IDS:
+		if producible.has(id):
+			_town_ids.append(id)
+		else:
+			_run_ids.append(id)
 	# The projections mirror the day tick, which depends on the town's buildings + the
 	# food stock — recompute on any Ledger change AND after a build (its resource-spend
 	# fires BEFORE the building lands in state, so the spend alone would leave a stale
@@ -122,6 +145,14 @@ func projection(id: String) -> float:
 
 func toast_visible() -> bool:
 	return _toast_alpha > 0.0
+
+
+func town_group() -> Array:
+	return _town_ids.duplicate()
+
+
+func run_group() -> Array:
+	return _run_ids.duplicate()
 
 
 # --- Process -------------------------------------------------------------------------
@@ -198,10 +229,22 @@ func _span(x: float, y: float, h: float, s: String, col: Color) -> float:
 # --- Resource strip (top-right) + projections (below) --------------------------------
 
 func _draw_resource_strip() -> void:
+	# Two panels under tiny headers: the town economy (building-producible) left, the
+	# run pickups right — the run group holds the corner, mirroring where the in-run
+	# pickup strip lives so the same resources sit in the same place in both scenes.
+	var head_h := _font_display.get_height(FS_GROUP)
+	var y := MARGIN + head_h + 3.0
+	var run_left := _draw_group(_run_ids, GROUP_RUN_LABEL, size.x - MARGIN, y)
+	_draw_group(_town_ids, GROUP_TOWN_LABEL, run_left - GROUP_GAP, y)
+
+
+## Draw one resource-group panel with its columns + projections, right edge at right_x,
+## panel top at y, and a tiny centred header above it. Returns the panel's left edge.
+func _draw_group(ids: Array[String], header: String, right_x: float, y: float) -> float:
 	var pad := Vector2(12, 6)
 	# Measure every column first (value + dim label), so we can right-anchor the panel.
 	var cols: Array = []  # [{id, val, label, val_w, label_w, w}]
-	for id: String in STRIP_IDS:
+	for id: String in ids:
 		var val := "%d" % int(Ledger.get_amount(id))
 		var label := str(STRIP_LABEL.get(id, id))
 		var vw := _text_w(val, FS_BODY, _font_num)
@@ -216,8 +259,11 @@ func _draw_resource_strip() -> void:
 	content_w -= COL_GAP
 	var w := content_w + pad.x * 2.0
 	var h := _font_num.get_height(FS_BODY) + pad.y * 2.0
-	var rect := Rect2(size.x - MARGIN - w, MARGIN, w, h)
+	var rect := Rect2(right_x - w, y, w, h)
 	_panel(rect, COL_SLATE_BG, COL_SLATE_BORDER, 2, 8)
+	var head_h := _font_display.get_height(FS_GROUP)
+	_text_in(Rect2(rect.position.x, y - head_h - 3.0, w, head_h), header,
+		Color(COL_KEY_TEXT, GROUP_HEADER_ALPHA), FS_GROUP, _font_display)
 	var x := rect.position.x + pad.x
 	for c: Dictionary in cols:
 		var id := str(c["id"])
@@ -235,6 +281,7 @@ func _draw_resource_strip() -> void:
 				_font_num.get_height(FS_SMALL)), proj, Color(COL_KEY_TEXT, PROJECTION_ALPHA),
 				FS_SMALL, _font_num, HORIZONTAL_ALIGNMENT_LEFT)
 		x += float(c["w"]) + COL_GAP
+	return rect.position.x
 
 
 # --- Contextual hint (bottom-center) -------------------------------------------------
