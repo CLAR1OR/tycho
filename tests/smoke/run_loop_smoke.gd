@@ -711,6 +711,13 @@ func _clear_combat(room: Node) -> void:
 		var hud: Node = room.get("_hud")
 		_check(hud != null and "Wave" in str(hud.call("chip")),
 			"info chip shows the Wave segment (%s)" % (str(hud.call("chip")) if hud != null else "no hud"))
+		# Geometry regression net: the HUD must actually span the viewport — anchors set
+		# in a Control's own _ready under a CanvasLayer get NO layout pass (size stays
+		# 0,0 and every size-anchored element draws off-screen; caught live 2026-07-07).
+		var vp: Vector2 = get_viewport().get_visible_rect().size
+		_check(hud is Control and (hud as Control).size == vp,
+			"RunHud spans the viewport (%s == %s)" % [
+				str((hud as Control).size) if hud is Control else "?", str(vp)])
 	if not _dust_tested:
 		_dust_tested = true
 		var floor_now := int(RunState.run["floor"])

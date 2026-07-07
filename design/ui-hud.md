@@ -4,6 +4,8 @@
 
 The in-run HUD replaces the old debug-style stacked text Labels (`RoomInfo` / `HP` / `Hint` / `Echoes`). It is **one code-built `Control`** — `src/combat/run_hud.gd` (`RunHud`) — added by `combat_room.gd` onto its existing `$HUD` CanvasLayer, `mouse_filter = IGNORE`, filling the screen. It draws everything itself in `_draw` (rounded panels via a `StyleBoxFlat`, text via the fallback font) and polls the player/boss each frame; `combat_room.gd` + `game.gd` push the room/hint/wave/HP/boss state in through setters.
 
+**Sizing gotcha (fixed 2026-07-07, same day):** anchors set in a Control's own `_ready` under a CanvasLayer never receive a layout pass — `size` stays (0,0) and everything anchored to `size.x`/`size.y` draws off-screen (only the fixed-coordinate info chip was visible). `RunHud._process` therefore syncs `size` to `get_viewport_rect().size` explicitly (also covers window resizes), and the smoke asserts the HUD spans the viewport so this can't regress.
+
 **Pure logic is in `HudCore`** (`src/combat/hud_core.gd`, static, unit-tested `tests/core/hud_core_test.gd`): the info-chip segment rules (`chip_text`), the echo-shelf fold (`fold_echoes`), the monogram scheme (`monogram`), and the low-HP threshold (`is_low_hp`). `RunHud` owns only pixels.
 
 ## Components

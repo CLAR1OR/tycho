@@ -202,6 +202,12 @@ func _on_resource_changed(id: String, _old: float, new_amount: float, _reason: S
 
 
 func _process(delta: float) -> void:
+	# Godot quirk: anchors set in our own _ready never get a layout pass under a
+	# CanvasLayer (size stays 0,0 and everything anchored to size.x/size.y draws
+	# off-screen). Sync to the viewport explicitly; also covers window resizes.
+	var vp := get_viewport_rect().size
+	if size != vp:
+		size = vp
 	# Fade the pickup strip after its hold window.
 	if _pickup_alpha > 0.0:
 		if _pickup_hold_t > 0.0:
