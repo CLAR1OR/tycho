@@ -6,15 +6,16 @@ class_name RunHud
 ##
 ## One screen-filling Control (mouse_filter IGNORE) on combat_room's $HUD CanvasLayer.
 ## It draws everything itself in _draw (rounded panels via a StyleBoxFlat, text via the
-## fallback font) and polls the player/boss each frame — combat_room + game.gd push the
-## room/hint/wave/HP state in through the setters. Pure string/fold/threshold logic lives
-## in HudCore (src/combat/hud_core.gd); this node owns only pixels.
+## three project fonts under assets/fonts/) and polls the player/boss each frame —
+## combat_room + game.gd push the room/hint/wave/HP state in through the setters. Pure
+## string/fold/threshold logic lives in HudCore (src/combat/hud_core.gd); this node
+## owns only pixels.
 ##
-## HUMAN: EVERYTHING under "Style" is a PLACEHOLDER — colours, sizes, and the pickup
-## timings are yours to dial (design/ui-hud.md). Dial them like FEEL numbers.
+## HUMAN: EVERYTHING under "Style" is a PLACEHOLDER — colours, sizes, fonts, and the
+## pickup timings are yours to dial (design/ui-hud.md). Dial them like FEEL numbers.
 
 # =====================================================================================
-# Style — placeholders (colours / sizes / timings). Dial freely.
+# Style — placeholders (colours / sizes / fonts / timings). Dial freely.
 # =====================================================================================
 # Palette (Color(r/255,...) so the values are const-foldable — the hex is in the comment)
 const COL_SLATE_BG := Color(23.0/255, 22.0/255, 28.0/255)          # #17161c panel body
@@ -57,12 +58,21 @@ const VIGNETTE_DEPTH := 90.0
 const VIGNETTE_STEPS := 24
 const VIGNETTE_ALPHA := 0.30
 const COL_VIGNETTE := Color(201.0/255, 58.0/255, 44.0/255)
-# Fonts
-const FS_CHIP := 14
-const FS_BODY := 15
-const FS_SMALL := 11
-const FS_SLOT := 22
-const FS_HP := 15
+# Fonts — files under assets/fonts/ (all OFL; provenance in assets/fonts/SOURCES.md).
+# Roles: DISPLAY = engraved caps (ability/echo monograms, the boss label), NUM = every
+# number/readout (mono, so digits don't shuffle as they tick), BODY = the one prose
+# line (the contextual hint). Swap a role = swap its .ttf here.
+const FONT_DISPLAY_FILE := preload("res://assets/fonts/Cinzel-SemiBold.ttf")
+const FONT_BODY_FILE := preload("res://assets/fonts/EBGaramond-Medium.ttf")
+const FONT_NUM_FILE := preload("res://assets/fonts/JetBrainsMono-Medium.ttf")
+const FS_CHIP := 13      # info chip (num)
+const FS_BODY := 14      # pickup strip + cooldown seconds (num)
+const FS_HINT := 19      # contextual hint (body — Garamond runs small, so it sits larger)
+const FS_SMALL := 10     # key badges, stack-count badge (num)
+const FS_TILE := 13      # echo tile monograms (display)
+const FS_SLOT := 20      # ability slot monograms (display)
+const FS_HP := 14        # HP numerals (num)
+const FS_BOSS := 13      # boss label (display)
 # Layout margin from screen edges
 const MARGIN := 14.0
 # Pickup strip timing
@@ -109,7 +119,9 @@ var _pickup_amounts: Dictionary = {}   # id -> amount at the last pickup
 var _pickup_alpha: float = 0.0
 var _pickup_hold_t: float = 0.0
 
-var _font: Font
+var _font_display: FontVariation
+var _font_body: FontVariation
+var _font_num: FontVariation
 var _sb := StyleBoxFlat.new()
 
 
@@ -117,9 +129,20 @@ func _ready() -> void:
 	add_to_group("run_hud")
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_font = ThemeDB.fallback_font
+	_font_display = _with_fallback(FONT_DISPLAY_FILE)
+	_font_body = _with_fallback(FONT_BODY_FILE)
+	_font_num = _with_fallback(FONT_NUM_FILE)
 	# In-run pickups feed the fading strip; the town economy readout stays on game.gd's HUD.
 	EventBus.resource_changed.connect(_on_resource_changed)
+
+
+static func _with_fallback(base: Font) -> FontVariation:
+	# Glyphs the family lacks (e.g. the chip's "⚠") fall back to the system font.
+	# A wrapper, so the shared imported resource is never mutated.
+	var f := FontVariation.new()
+	f.base_font = base
+	f.fallbacks = [ThemeDB.fallback_font]
+	return f
 
 
 # --- Setup / setters (combat_room + game.gd push state in) ---------------------------
@@ -240,26 +263,33 @@ func _panel(rect: Rect2, bg: Color, border: Color, border_w: int, radius: int) -
 	draw_style_box(_sb, rect)
 
 
-func _text(pos: Vector2, s: String, col: Color, fs: int) -> void:
-	# pos = top-left; draw_string wants a baseline, so drop by the ascent.
-	draw_string(_font, Vector2(pos.x, pos.y + _font.get_ascent(fs)),
-		s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
+func _text_w(s: String, fs: int, font: Font) -> float:
+	return font.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
 
 
-func _text_w(s: String, fs: int) -> float:
-	return _font.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
+func _text_in(rect: Rect2, s: String, col: Color, fs: int, font: Font,
+		halign := HORIZONTAL_ALIGNMENT_CENTER) -> void:
+	# Text vertically centred in rect via baseline math: a line box is ascent+descent
+	# tall, so the baseline sits at centre + (ascent - descent)/2. (The old helper
+	# sized boxes by the font-size px and dropped by the full ascent — text rode low.)
+	var x := rect.position.x
+	if halign == HORIZONTAL_ALIGNMENT_CENTER:
+		x += (rect.size.x - _text_w(s, fs, font)) * 0.5
+	var y := rect.position.y + rect.size.y * 0.5 + (font.get_ascent(fs) - font.get_descent(fs)) * 0.5
+	draw_string(font, Vector2(x, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 
 
 # --- Info chip (top-left) ------------------------------------------------------------
 
 func _draw_chip() -> void:
 	var s := chip()
-	var pad := Vector2(10, 6)
-	var w := _text_w(s, FS_CHIP) + pad.x * 2.0
-	var h := float(FS_CHIP) + pad.y * 2.0
+	var pad := Vector2(10, 5)
+	var w := _text_w(s, FS_CHIP, _font_num) + pad.x * 2.0
+	var h := _font_num.get_height(FS_CHIP) + pad.y * 2.0
 	var rect := Rect2(MARGIN, MARGIN, w, h)
 	_panel(rect, COL_CHIP_BG, COL_CHIP_BORDER, 1, 8)
-	_text(rect.position + pad, s, COL_TEXT, FS_CHIP)
+	_text_in(Rect2(rect.position.x + pad.x, rect.position.y, w - pad.x * 2.0, h),
+		s, COL_TEXT, FS_CHIP, _font_num, HORIZONTAL_ALIGNMENT_LEFT)
 
 
 # --- Pickup strip (top-right, fading) ------------------------------------------------
@@ -273,25 +303,25 @@ func _draw_pickups() -> void:
 		if amt <= 0:
 			continue
 		var t := "%d %s" % [amt, str(PICKUP_LABEL[id])]
-		segs.append({"text": t, "color": PICKUP_COLOR[id], "w": _text_w(t, FS_BODY)})
+		segs.append({"text": t, "color": PICKUP_COLOR[id], "w": _text_w(t, FS_BODY, _font_num)})
 	if segs.is_empty():
 		return
 	var gap := 18.0
-	var pad := Vector2(12, 7)
+	var pad := Vector2(12, 6)
 	var content_w := 0.0
 	for seg: Dictionary in segs:
 		content_w += float(seg["w"]) + gap
 	content_w -= gap
 	var w := content_w + pad.x * 2.0
-	var h := float(FS_BODY) + pad.y * 2.0
+	var h := _font_num.get_height(FS_BODY) + pad.y * 2.0
 	var rect := Rect2(size.x - MARGIN - w, MARGIN, w, h)
 	_panel(rect, Color(COL_SLATE_BG, COL_SLATE_BG.a * _pickup_alpha),
 		Color(COL_SLATE_BORDER, COL_SLATE_BORDER.a * _pickup_alpha), 2, 8)
 	var x := rect.position.x + pad.x
 	for seg: Dictionary in segs:
 		var c: Color = seg["color"]
-		_text(Vector2(x, rect.position.y + pad.y), str(seg["text"]),
-			Color(c, c.a * _pickup_alpha), FS_BODY)
+		_text_in(Rect2(x, rect.position.y, float(seg["w"]), h), str(seg["text"]),
+			Color(c, c.a * _pickup_alpha), FS_BODY, _font_num, HORIZONTAL_ALIGNMENT_LEFT)
 		x += float(seg["w"]) + gap
 
 
@@ -310,11 +340,9 @@ func _draw_hp_and_echoes() -> void:
 			(bar.size.x - inset * 2.0) * frac, bar.size.y - inset * 2.0)
 		draw_rect(fill, COL_HP_FILL)
 	var num := "%d / %d" % [_hp, _max_hp]
-	var nw := _text_w(num, FS_HP)
-	var npos := Vector2(bar.position.x + (bar.size.x - nw) * 0.5,
-		bar.position.y + (bar.size.y - FS_HP) * 0.5)
-	_text(npos + Vector2(1, 1), num, Color(0, 0, 0, 0.6), FS_HP)  # shadow
-	_text(npos, num, COL_HP_LOW_NUM if low else Color.WHITE, FS_HP)
+	_text_in(Rect2(bar.position + Vector2(1, 1), bar.size), num, Color(0, 0, 0, 0.6),
+		FS_HP, _font_num)  # shadow
+	_text_in(bar, num, COL_HP_LOW_NUM if low else Color.WHITE, FS_HP, _font_num)
 	# Echo shelf directly above the HP bar (row 0 nearest the bar, wrapping upward).
 	for i in _echoes.size():
 		var row := i / ECHO_PER_ROW
@@ -326,20 +354,14 @@ func _draw_hp_and_echoes() -> void:
 
 func _draw_echo_tile(rect: Rect2, tile: Dictionary) -> void:
 	_panel(rect, COL_SLATE_BG, COL_SLATE_BORDER, 2, ECHO_RADIUS)
-	var mono := str(tile.get("monogram", "?"))
-	var mw := _text_w(mono, FS_SMALL)
-	_text(Vector2(rect.position.x + (rect.size.x - mw) * 0.5,
-		rect.position.y + (rect.size.y - FS_SMALL) * 0.5), mono, COL_TEXT, FS_SMALL)
+	_text_in(rect, str(tile.get("monogram", "?")), COL_TEXT, FS_TILE, _font_display)
 	var count := int(tile.get("count", 1))
 	if count > 1:
 		# Small gold stack badge, top-right corner.
 		var bs := 14.0
 		var b := Rect2(rect.position.x + rect.size.x - bs + 3.0, rect.position.y - 3.0, bs, bs)
 		_panel(b, COL_READY, COL_READY, 0, 4)
-		var ct := str(count)
-		var cw := _text_w(ct, FS_SMALL)
-		_text(Vector2(b.position.x + (bs - cw) * 0.5, b.position.y + (bs - FS_SMALL) * 0.5),
-			ct, COL_BADGE_TEXT, FS_SMALL)
+		_text_in(b, str(count), COL_BADGE_TEXT, FS_SMALL, _font_num)
 
 
 # --- Ability slots (bottom-right) ----------------------------------------------------
@@ -352,7 +374,7 @@ func _draw_ability_slots() -> void:
 	# Dash pip (smaller, vertically centred against the big slots).
 	var dash: Dictionary = info.get("dash", {"cd_left": 0.0, "cd_total": 0.0})
 	_draw_slot(Rect2(x, y + (SLOT - DASH_PIP) * 0.5, DASH_PIP, DASH_PIP),
-		"–", "SPC", float(dash.get("cd_left", 0.0)), true, FS_SMALL)
+		"–", "SPC", float(dash.get("cd_left", 0.0)), true, FS_TILE)
 	x -= SLOT_GAP + SLOT
 	for i in SLOT_KEYS.size():
 		var slot: String = SLOT_KEYS[SLOT_KEYS.size() - 1 - i]  # R, Q, RMB (right to left)
@@ -374,20 +396,14 @@ func _draw_slot(rect: Rect2, face: String, key: String, cd_left: float, ready_gl
 		border = COL_READY
 	_panel(rect, COL_SLATE_BG, border, 3, SLOT_RADIUS)
 	var face_col := COL_TEXT if ready_glow else COL_KEY_TEXT
-	var fw := _text_w(face, fs)
-	_text(Vector2(rect.position.x + (rect.size.x - fw) * 0.5,
-		rect.position.y + (rect.size.y - fs) * 0.5 - 4.0), face, face_col, fs)
+	_text_in(rect, face, face_col, fs, _font_display)
 	if on_cd:
 		# Darken the whole face + overlay the remaining seconds (v1 — no pie wedge).
 		draw_rect(rect, Color(0, 0, 0, 0.55))
-		var cd := "%.1f" % cd_left
-		var cw := _text_w(cd, FS_BODY)
-		_text(Vector2(rect.position.x + (rect.size.x - cw) * 0.5,
-			rect.position.y + (rect.size.y - FS_BODY) * 0.5), cd, Color.WHITE, FS_BODY)
+		_text_in(rect, "%.1f" % cd_left, Color.WHITE, FS_BODY, _font_num)
 	# Key badge under the slot.
-	var kw := _text_w(key, FS_SMALL)
-	_text(Vector2(rect.position.x + (rect.size.x - kw) * 0.5, rect.position.y + rect.size.y + 2.0),
-		key, COL_KEY_TEXT, FS_SMALL)
+	_text_in(Rect2(rect.position.x, rect.position.y + rect.size.y + 2.0,
+		rect.size.x, _font_num.get_height(FS_SMALL)), key, COL_KEY_TEXT, FS_SMALL, _font_num)
 
 
 # --- Boss bar (top-center) -----------------------------------------------------------
@@ -396,10 +412,11 @@ func _draw_boss_bar() -> void:
 	if not boss_bar_visible():
 		return
 	var label := "FLOOR %d — BOSS" % _floor
-	var lw := _text_w(label, FS_SMALL)
+	var lh := _font_display.get_height(FS_BOSS)
 	var cx := size.x * 0.5
-	_text(Vector2(cx - lw * 0.5, MARGIN), label, COL_BOSS_LABEL, FS_SMALL)
-	var bar := Rect2(cx - BOSS_W * 0.5, MARGIN + FS_SMALL + 6.0, BOSS_W, BOSS_H)
+	_text_in(Rect2(cx - BOSS_W * 0.5, MARGIN, BOSS_W, lh), label, COL_BOSS_LABEL,
+		FS_BOSS, _font_display)
+	var bar := Rect2(cx - BOSS_W * 0.5, MARGIN + lh + 4.0, BOSS_W, BOSS_H)
 	_panel(bar, COL_SLATE_BG, COL_SLATE_BORDER, 3, 6)
 	var frac := clampf(float(_boss.current_hp()) / float(maxi(1, _boss_max)), 0.0, 1.0)
 	if frac > 0.0:
@@ -413,13 +430,14 @@ func _draw_boss_bar() -> void:
 func _draw_hint() -> void:
 	if _hint.is_empty():
 		return
-	var pad := Vector2(14, 7)
-	var w := _text_w(_hint, FS_BODY) + pad.x * 2.0
-	var h := float(FS_BODY) + pad.y * 2.0
+	var pad := Vector2(14, 6)
+	var w := _text_w(_hint, FS_HINT, _font_body) + pad.x * 2.0
+	var h := _font_body.get_height(FS_HINT) + pad.y * 2.0
 	# Sit above the ability slots' key-badge line.
 	var rect := Rect2((size.x - w) * 0.5, size.y - MARGIN - SLOT - h - 24.0, w, h)
 	_panel(rect, COL_CHIP_BG, COL_CHIP_BORDER, 1, 8)
-	_text(rect.position + pad, _hint, COL_TEXT, FS_BODY)
+	_text_in(Rect2(rect.position.x + pad.x, rect.position.y, w - pad.x * 2.0, h),
+		_hint, COL_TEXT, FS_HINT, _font_body, HORIZONTAL_ALIGNMENT_LEFT)
 
 
 # --- Vignette (low HP) ---------------------------------------------------------------
