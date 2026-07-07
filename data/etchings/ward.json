@@ -1,0 +1,21 @@
+{
+	"id": "ward",
+	"name": "Ward",
+	"slot": "q",
+	"principle": "rapid-assembly",
+	"cooldown_s": 12.0,
+	"granted_by": null,
+	"cost_unlock_dust": 4,
+	"cost_levels_dust": [4, 6],
+	"behavior": {
+		"width": 4.0,
+		"duration": 5.0
+	},
+	"levels": [
+		{},
+		{"width_mult": 1.3, "duration_mult": 1.2},
+		{"rider": "pulse_shove"}
+	],
+	"weapon_synergy": {"weapon": "sword", "effect": "braced_frontal_dr"},
+	"summon_seed": false
+}

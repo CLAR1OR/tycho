@@ -186,6 +186,8 @@ Enemy-telegraph colors are fixed across strata; palettes are chosen around them 
 
 ## 10. Etching abilities (added 2026-07-03 — design source: `etchings.md`)
 
+**Implementation status (first slice built 2026-07-07):** the `data/etchings/` domain (spec `ETCHINGS_SPEC` in `data_loader.gd`, all 9 authored), pure `src/learning/etchings_core.gd` (unlock/level/cost/equip/`ensure_baseline`/`effective_behavior`), and the `EtchingsPanel` (`src/town/etchings_panel.gd`, opened from Thomas's meditation spot; town.gd `open_etchings_panel()`, B2-gated via UnlocksCore) + the player's RMB/Q/R casting framework are **built and tested**. Five abilities are castable (Push/Bolt/Snare/Shockwave/Surge); four are dormant (data ships, unlearnable in the panel) — implementation status is code (`EtchingsCore.IMPLEMENTED`), not data. The def gained an optional **`behavior`** dict (per-ability cast numbers = the dial board; `design/feel-tuning.md`); level entries carry `<field>_mult` scalars folded in by `effective_behavior`. Save's `combat.etchings` was unchanged (no migration). Deferred: L3 riders, weapon synergies, etching-mod Echoes, attunements.
+
 The 9 active abilities (3 per slot; dash is fixed and not data). Save already carries `combat.etchings` (§1) — this is the content domain it references. `principle` is the rational-fiction tag (dialogue hooks read it); `summon_seed` marks Sentinel as the ability §8's summons hang off (`source_etching`).
 
 ```jsonc
@@ -194,9 +196,11 @@ The 9 active abilities (3 per slot; dash is fixed and not data). Save already ca
   "principle": "impulse",
   "cooldown_s": 5.0,
   "granted_by": "b2",                                    // beat id, or null = bought at Thomas's Hut
-  "cost_unlock_dust": 0, "cost_levels_dust": [3, 5],
-  "levels": [ { }, { "damage_mult": 1.3 }, { "rider": "bowling" } ],
-  "weapon_synergy": { "weapon": "sword", "effect": "combo_continues_bonus_finisher" },
+  "cost_unlock_dust": 0, "cost_levels_dust": [3, 5],       // [L2, L3]
+  "behavior": { "damage_scale": 0.6, "cone_deg": 100.0,   // cast numbers (dial board, feel-tuning.md)
+                "range": 5.0, "knockback": 16.0 },
+  "levels": [ { }, { "cone_deg_mult": 1.3 }, { "rider": "bowling" } ],  // L1{} L2 <field>_mult L3 rider (unimpl.)
+  "weapon_synergy": { "weapon": "sword", "effect": "combo_continues_bonus_finisher" },  // data only in v1
   "summon_seed": false }
 ```
 

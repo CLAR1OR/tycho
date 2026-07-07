@@ -65,6 +65,20 @@ const SCHEMAS: Dictionary = {
 		"requires": {"type": "array", "array_of": "string"},  # synergy prereq echo ids
 		"mods": {"type": "array", "required": true, "array_of": "dict"},
 	},
+	"etchings": {  # design/etchings.md and architecture-schemas.md section 10
+		"id": {"type": "string", "required": true},
+		"name": {"type": "string", "required": true},
+		"slot": {"type": "string", "required": true, "one_of": ["rmb", "q", "r"]},
+		"principle": {"type": "string", "required": true},
+		"cooldown_s": {"type": "float", "required": true},
+		"granted_by": {"type": "string", "nullable": true},
+		"cost_unlock_dust": {"type": "int", "required": true},
+		"cost_levels_dust": {"type": "array", "required": true, "array_of": "int"},
+		"behavior": {"type": "dict"},
+		"levels": {"type": "array", "required": true, "array_of": "dict"},
+		"weapon_synergy": {"type": "dict", "nullable": true},
+		"summon_seed": {"type": "bool"},
+	},
 	"dialogue": {  # architecture-schemas.md §7 — spec + condition vocabulary in act1-story-beats.md
 		"id": {"type": "string", "required": true},
 		"source": {"type": "string", "required": true,

@@ -111,6 +111,34 @@ static func line_telegraph(parent: Node, origin: Vector3, dir: Vector3, length: 
 	return mesh
 
 
+## An expanding flat disc from `world_pos` — the Shockwave etching's pressure-wave read
+## (design/etchings.md R — Surges). Grows to `radius` and fades over ~0.35s, then frees.
+## Placeholder primitive (a fresh material per call, so no shared-material aliasing).
+static func shockwave_ring(parent: Node, world_pos: Vector3, radius: float, color: Color) -> void:
+	if parent == null:
+		return
+	var mesh := MeshInstance3D.new()
+	var cyl := CylinderMesh.new()
+	cyl.top_radius = radius
+	cyl.bottom_radius = radius
+	cyl.height = 0.1
+	mesh.mesh = cyl
+	var mat := StandardMaterial3D.new()
+	mat.transparency = BaseMaterial3D.TRANSPARENCY_ALPHA
+	mat.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+	mat.emission_enabled = true
+	mat.emission = color
+	mat.albedo_color = Color(color.r, color.g, color.b, 0.5)
+	mesh.material_override = mat
+	parent.add_child(mesh)
+	mesh.global_position = Vector3(world_pos.x, 0.08, world_pos.z)
+	mesh.scale = Vector3(0.2, 1.0, 0.2)
+	var tween := mesh.create_tween()
+	tween.tween_property(mesh, "scale", Vector3(1.0, 1.0, 1.0), 0.3)
+	tween.parallel().tween_property(mat, "albedo_color:a", 0.0, 0.35)
+	tween.tween_callback(mesh.queue_free)
+
+
 ## A translucent after-image of a mesh (dash trail). Frees itself as it fades.
 static func dash_ghost(parent: Node, mesh: Mesh, xform: Transform3D, color: Color) -> void:
 	if parent == null or mesh == null:

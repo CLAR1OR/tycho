@@ -1,0 +1,21 @@
+{
+	"id": "afterstrike",
+	"name": "Afterstrike",
+	"slot": "rmb",
+	"principle": "stored-work",
+	"cooldown_s": 5.0,
+	"granted_by": null,
+	"cost_unlock_dust": 3,
+	"cost_levels_dust": [3, 5],
+	"behavior": {
+		"replay_scale": 0.6,
+		"delay_s": 0.5
+	},
+	"levels": [
+		{},
+		{"replay_scale_mult": 1.3},
+		{"rider": "aoe_pulse"}
+	],
+	"weapon_synergy": {"weapon": "daggers", "effect": "replays_twice"},
+	"summon_seed": false
+}

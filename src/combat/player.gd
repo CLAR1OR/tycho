@@ -71,6 +71,19 @@ var weapon_kind: String = "melee"
 var arrow_speed: float = 22.0  # ranged only; weapon data (projectile.speed)
 
 const ARROW_SCENE := preload("res://scenes/combat/arrow.tscn")
+const SNARE_FIELD := preload("res://src/combat/snare_field.gd")
+
+# --- Etchings (design/etchings.md) — the RMB/Q/R ability kit, loaded from the save ---
+# Data lives in data/etchings/; per-ability numbers are in each def's `behavior` dict
+# (the dial board — feel-tuning.md), NOT here, so they tune like economy numbers. Five
+# abilities are implemented (Push/Bolt/Snare/Shockwave/Surge); the rest are dormant.
+var _etch_defs: Dictionary = {}
+var _etch_state: Dictionary = {}                 # the save's combat.etchings, at spawn
+var _equipped := {"rmb": "", "q": "", "r": ""}   # slot -> etching id
+var _cast_cd := {"rmb": 0.0, "q": 0.0, "r": 0.0} # per-slot cooldown remaining (s)
+var _surge_t: float = 0.0                        # Surge remaining (s); 0 = inactive
+var _surge_prev: Dictionary = {}                 # stats to restore when Surge ends
+
 var _state: int = State.NORMAL
 var _dash_cd: float = 0.0
 var _dash_t: float = 0.0
@@ -99,13 +112,25 @@ var _base_mesh_color: Color = Color(0.85, 0.85, 0.9)
 
 func _ready() -> void:
 	health_changed.emit(health, max_health)
+	_load_etchings()
 
 
 func _physics_process(delta: float) -> void:
 	_dash_cd = maxf(0.0, _dash_cd - delta)
 	_iframe_t = maxf(0.0, _iframe_t - delta)
+	_tick_abilities(delta)
 
 	_face_mouse()
+
+	# Cast an equipped ability toward the cursor (respects cooldown; never mid-dash —
+	# a committed dash shouldn't be cancelled). try_cast is the shared entry point.
+	if _state != State.DASHING:
+		if Input.is_action_just_pressed("ability_rmb"):
+			try_cast("rmb")
+		elif Input.is_action_just_pressed("ability_q"):
+			try_cast("q")
+		elif Input.is_action_just_pressed("ability_r"):
+			try_cast("r")
 
 	match _state:
 		State.NORMAL:
@@ -400,6 +425,167 @@ func _mouse_ground_pos() -> Vector3:
 
 func _flat(v: Vector3) -> Vector3:
 	return Vector3(v.x, 0.0, v.z)
+
+
+# --- Etchings — the RMB/Q/R ability kit (design/etchings.md) ------------------
+
+## Read the equipped loadout off the save at spawn. ensure_baseline grants Push once B2
+## is set (Thomas's meditation scene). No-op outside a real save (the feel_room sandbox
+## has no loaded slot) — the sandbox player simply has no abilities.
+func _load_etchings() -> void:
+	_etch_defs = EtchingsCore.defs()
+	var state: Dictionary = SaveManager.state
+	if not (state is Dictionary) or not state.has("combat"):
+		return
+	var etchings: Dictionary = (state["combat"] as Dictionary).get("etchings", {})
+	var flags: Dictionary = (state.get("story", {}) as Dictionary).get("flags", {})
+	etchings = EtchingsCore.ensure_baseline(etchings, _etch_defs, flags)
+	state["combat"]["etchings"] = etchings
+	_etch_state = etchings
+	var slots: Dictionary = etchings.get("slots", {})
+	for slot: String in _equipped:
+		_equipped[slot] = str(slots.get(slot, ""))
+
+
+## The etching id equipped in `slot` ("" if empty). Public for the smoke driver.
+func equipped_id(slot: String) -> String:
+	return str(_equipped.get(slot, ""))
+
+
+func _tick_abilities(delta: float) -> void:
+	for slot: String in _cast_cd:
+		_cast_cd[slot] = maxf(0.0, float(_cast_cd[slot]) - delta)
+	if _surge_t > 0.0:
+		_surge_t -= delta
+		if _surge_t <= 0.0:
+			_end_surge()
+
+
+## Cast the ability equipped in `slot` toward the cursor. Returns true if it fired.
+## Shared by input and the headless smoke. No-op on an empty slot, an unimplemented
+## (dormant) ability, or while on cooldown.
+func try_cast(slot: String) -> bool:
+	var id := str(_equipped.get(slot, ""))
+	if id.is_empty() or float(_cast_cd.get(slot, 0.0)) > 0.0:
+		return false
+	if not EtchingsCore.is_implemented(id) or not _etch_defs.has(id):
+		return false
+	var def: Dictionary = _etch_defs[id]
+	var b := EtchingsCore.effective_behavior(def, EtchingsCore.level_of(_etch_state, id))
+	_cast_cd[slot] = float(def.get("cooldown_s", 5.0))
+	match id:
+		"push": _cast_push(b)
+		"bolt": _cast_bolt(b)
+		"snare": _cast_snare(b)
+		"shockwave": _cast_shockwave(b)
+		"surge": _cast_surge(b)
+	Sfx.play("dash", global_position)  # placeholder cast whoosh (audio.md: add per-ability later)
+	return true
+
+
+func _cast_push(b: Dictionary) -> void:
+	var facing := _flat(-global_transform.basis.z).normalized()
+	var half := deg_to_rad(float(b.get("cone_deg", 100.0))) * 0.5
+	var reach := float(b.get("range", 5.0))
+	var dmg := int(round(float(attack_damage) * float(b.get("damage_scale", 0.6))))
+	var knock := float(b.get("knockback", 16.0))
+	var wall_bonus := int(round(float(attack_damage) * float(b.get("wall_bonus_scale", 1.5))))
+	var wall_stag := float(b.get("wall_stagger", 0.5))
+	CombatFX.shockwave_ring(get_parent(), global_position + facing * reach * 0.5, reach * 0.6, Color(0.7, 0.9, 1.0))
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(e):
+			continue
+		var to_e := _flat((e as Node3D).global_position - global_position)
+		var d := to_e.length()
+		if d < 0.01 or d > reach or facing.angle_to(to_e) > half:
+			continue
+		e.take_damage(dmg)
+		if is_instance_valid(e) and e.has_method("apply_knockback"):
+			e.apply_knockback(to_e / d, knock, wall_bonus, wall_stag)
+
+
+func _cast_bolt(b: Dictionary) -> void:
+	var arrow: Arrow = ARROW_SCENE.instantiate()
+	arrow.collision_mask = 6  # enemies + walls — the player's own bolt never bites back
+	get_parent().add_child(arrow)
+	var dir := _flat(-global_transform.basis.z).normalized()
+	arrow.global_position = global_position + Vector3.UP * 0.9 + dir * 0.8
+	var dmg := int(round(float(attack_damage) * float(b.get("damage_scale", 0.8))))
+	arrow.setup(dir, dmg, float(b.get("projectile_speed", 26.0)), Color(0.6, 0.85, 1.0))
+
+
+func _cast_snare(b: Dictionary) -> void:
+	var field: SnareField = SNARE_FIELD.new()
+	get_parent().add_child(field)
+	field.global_position = global_position
+	field.setup(float(b.get("radius", 3.0)), float(b.get("slow_factor", 0.3)),
+		float(b.get("duration", 4.0)), float(b.get("stagger_on_cast", 0.25)))
+
+
+func _cast_shockwave(b: Dictionary) -> void:
+	var radius := float(b.get("radius", 6.0))
+	var base_dmg := float(attack_damage) * float(b.get("damage_scale", 1.4))
+	var edge := float(b.get("falloff", 0.4))
+	var knock := float(b.get("knockback", 22.0))
+	var stag := float(b.get("stagger_duration", 0.6))
+	CombatFX.shockwave_ring(get_parent(), global_position, radius, Color(1.0, 0.9, 0.5))
+	for e in get_tree().get_nodes_in_group("enemies"):
+		if not is_instance_valid(e):
+			continue
+		var to_e := _flat((e as Node3D).global_position - global_position)
+		var d := to_e.length()
+		if d > radius:
+			continue
+		var dmg := int(round(base_dmg * lerpf(1.0, edge, clampf(d / radius, 0.0, 1.0))))
+		e.take_damage(maxi(1, dmg))
+		# The panic button briefly staggers EVEN ARMORED enemies (the only thing that does).
+		if is_instance_valid(e):
+			if e.has_method("force_stagger"):
+				e.force_stagger(stag)
+			if e.has_method("apply_knockback") and d > 0.01:
+				e.apply_knockback(to_e / d, knock)
+
+
+func _cast_surge(b: Dictionary) -> void:
+	# Refresh if already up; otherwise snapshot the CURRENT (possibly echo-modified) stats
+	# so the end restores to what they were at cast, never the raw exports.
+	if _surge_t <= 0.0:
+		_surge_prev = {
+			"move_speed": move_speed,
+			"attack_windup": attack_windup, "attack_active": attack_active,
+			"attack_recover": attack_recover, "attack_recover_finisher": attack_recover_finisher,
+			"dash_cooldown": dash_cooldown,
+		}
+		move_speed *= float(b.get("move_mult", 1.35))
+		var atm := float(b.get("attack_time_mult", 0.6))
+		attack_windup *= atm
+		attack_active *= atm
+		attack_recover *= atm
+		attack_recover_finisher *= atm
+		dash_cooldown *= float(b.get("dash_cd_mult", 0.5))
+	_surge_t = float(b.get("duration", 5.0))
+
+
+func _end_surge() -> void:
+	_surge_t = 0.0
+	for stat: String in _surge_prev:
+		set(stat, _surge_prev[stat])
+	_surge_prev = {}
+
+
+## Minimal run-HUD readout of the three ability slots (combat_room polls this).
+func ability_hud_text() -> String:
+	var glyph := {"rmb": "RMB", "q": "Q", "r": "R"}
+	var parts := PackedStringArray(["Abilities:"])
+	for slot: String in ["rmb", "q", "r"]:
+		var id := str(_equipped.get(slot, ""))
+		if id.is_empty():
+			parts.append("%s: -" % glyph[slot])
+		else:
+			var cd := float(_cast_cd.get(slot, 0.0))
+			var disp := str((_etch_defs.get(id, {}) as Dictionary).get("name", id))
+			parts.append("%s: %s %s" % [glyph[slot], disp, "ready" if cd <= 0.0 else "%.1fs" % cd])
+	return "\n".join(parts)
 
 
 # --- Damage / life ----------------------------------------------------------

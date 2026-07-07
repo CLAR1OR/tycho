@@ -155,6 +155,17 @@ func open_forge_panel() -> ForgePanel:
 	return panel
 
 
+## Public (interact + smoke driver): open Thomas's etching menu, or null if the etchings
+## system hasn't been unlocked yet (B2 — Thomas shows stillness). Mirror of the forge/desk.
+func open_etchings_panel() -> EtchingsPanel:
+	if not UnlocksCore.is_unlocked(SaveManager.state, "etchings"):
+		return null
+	var panel := EtchingsPanel.new()
+	$HUD.add_child(panel)
+	panel.open()
+	return panel
+
+
 # --- Dialogue (PRD §7.12) -----------------------------------------------------------
 
 ## Public (interact + smoke driver): the character offers their single best
@@ -190,14 +201,12 @@ func _play_snippet(def: Dictionary, count_talk: bool) -> DialoguePanel:
 
 # --- Meditation (etchings, B2) ------------------------------------------------------
 
-## Thomas's favorite spot. Gated on the etchings system (B2). The etchings/attunement
-## menu is NOT built in v1 (document-don't-build): unlocked, this is a one-line diegetic
-## meditation beat. The real listen-to-the-resonance UI lands with the etchings system.
+## Thomas's favorite spot. Gated on the etchings system (B2). Unlocked, it opens the
+## etching loadout menu (EtchingsPanel — design/etchings.md, built 2026-07-07); locked, a
+## brief "not yet" flash (the permanent label already carries the diegetic reason).
 func _try_meditate() -> void:
-	if not UnlocksCore.is_unlocked(SaveManager.state, "etchings"):
+	if open_etchings_panel() == null:
 		_flash_facility(_meditation, "Tycho: not yet.")
-		return
-	_flash_facility(_meditation, "Tycho listens to the resonance. Nothing answers yet.")
 
 
 # --- Dialogue indicators ("!" / "!!") ----------------------------------------------

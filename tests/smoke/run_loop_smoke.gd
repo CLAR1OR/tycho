@@ -361,14 +361,62 @@ func _run_smoke() -> void:
 	forge.close()
 	await _settle(3)
 
+	# --- Etchings: B2 opens the system, then learn a kit before run 2 (design/etchings.md) ---
+	# Relocated ahead of run 2 so the run player actually carries the loadout. Thomas's B2
+	# is a talk beat (not force_play), so it fires only on talk — and setting b2 here doesn't
+	# disturb the later B5 force-play on the death return.
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "etchings"), "etchings locked before B2")
+	var thdlg: DialoguePanel = _scene_node().call("talk_to", "thomas")
+	_check(_panel_id(thdlg) == "b2-thomas-meditation", "Thomas offers the B2 meditation beat")
+	if thdlg != null:
+		await _drive_panel(thdlg, "b2-thomas-meditation")
+	_check(bool(SaveManager.state["story"]["flags"].get("b2", false)), "B2 set its flag")
+	_check(UnlocksCore.is_unlocked(SaveManager.state, "etchings"), "etchings unlocked after B2")
+	_check(_scene_node().has_node("MeditationSpot"), "Thomas's meditation spot exists in town")
+
+	var etch: EtchingsPanel = _scene_node().call("open_etchings_panel")
+	_check(etch != null, "meditation spot opens the etchings panel once unlocked")
+	await _settle(3)
+	var etchings: Dictionary = SaveManager.state["combat"]["etchings"]
+	_check(EtchingsCore.level_of(etchings, "push") == 1, "ensure_baseline granted Push at L1")
+	_check(str(etchings["slots"]["rmb"]) == "push", "Push auto-equipped to the RMB slot")
+	Ledger.add("resonance-dust", 100.0, "smoke-grant")
+	var dust_before := Ledger.get_amount("resonance-dust")
+	etch.learn("snare")       # Q, unlock 4 — auto-equips to the empty Q slot
+	etch.learn("shockwave")   # R, unlock 6 — auto-equips to the empty R slot
+	etch.equip("q", "snare")  # idempotent (already auto-equipped) — exercises the equip API
+	etch.equip("r", "shockwave")
+	etchings = SaveManager.state["combat"]["etchings"]
+	_check(EtchingsCore.level_of(etchings, "snare") == 1 and str(etchings["slots"]["q"]) == "snare",
+		"Snare learned + equipped to Q")
+	_check(EtchingsCore.level_of(etchings, "shockwave") == 1 and str(etchings["slots"]["r"]) == "shockwave",
+		"Shockwave learned + equipped to R")
+	_check(absf((dust_before - Ledger.get_amount("resonance-dust")) - 10.0) < 0.001,
+		"learning Snare(4) + Shockwave(6) spent 10 Dust via the Ledger (reason etching)")
+	var edefs := EtchingsCore.defs()
+	_check(not EtchingsCore.can_learn(edefs["sentinel"], 999.0, etchings),
+		"Sentinel is dormant — not learnable even with Dust")
+	etch.learn("sentinel")
+	_check(not EtchingsCore.is_unlocked(SaveManager.state["combat"]["etchings"], "sentinel"),
+		"learning a dormant etching is a no-op")
+	_check((_read_slot_from_disk()["combat"]["etchings"]["unlocked"] as Dictionary).has("shockwave"),
+		"disk: the learned etching kit persisted")
+	etch.close()
+	await _settle(3)
+
 	# --- Run 2: death ------------------------------------------------------------
 	_game.call("_start_run")
-	await _settle(10)
+	await _settle(12)
 	var player := _find_player()
 	_check(player != null, "run 2 spawned a player")
 	if player != null:
 		_check(player.attack_damage < 25, "daggers kit applied to the run player (damage %d)" % player.attack_damage)
 		_check(player.attack_windup < 0.05, "daggers are faster (windup %.3f)" % player.attack_windup)
+		# The equipped etchings ride the fresh run player (loaded at spawn).
+		_check(player.call("equipped_id", "rmb") == "push", "run player carries Push (RMB)")
+		_check(player.call("equipped_id", "q") == "snare", "run player carries Snare (Q)")
+		_check(player.call("equipped_id", "r") == "shockwave", "run player carries Shockwave (R)")
+		await _test_abilities_in_run(player)
 	if player != null:
 		player.take_damage(99999)
 	await _settle(30)
@@ -424,15 +472,8 @@ func _run_smoke() -> void:
 	_check(str(_scene_node().call("indicator_for_npc", "tilly")) == "",
 		"the indicator clears once the beat is seen (only a bark left for Tilly)")
 
-	# Thomas's meditation beat (B2) unlocks the etchings system + the meditation spot.
-	_check(not UnlocksCore.is_unlocked(SaveManager.state, "etchings"), "etchings locked before B2")
-	var thdlg: DialoguePanel = _scene_node().call("talk_to", "thomas")
-	_check(thdlg != null, "Thomas offers the B2 meditation beat")
-	if thdlg != null:
-		await _drive_panel(thdlg, "b2-thomas-meditation")
-	_check(bool(SaveManager.state["story"]["flags"].get("b2", false)), "B2 set its flag")
-	_check(UnlocksCore.is_unlocked(SaveManager.state, "etchings"), "etchings unlocked after B2")
-	_check(_scene_node().has_node("MeditationSpot"), "Thomas's meditation spot exists in town")
+	# (Thomas's B2 meditation beat + the etchings kit were exercised BEFORE run 2, above —
+	# the run player needs the loadout at spawn.)
 
 	# Talking Herzog: A4 (spine, runs >= 2) outranks the gold-gated contextual; B4 was
 	# seen in run 1's return, so A4 is his top beat now.
@@ -681,6 +722,37 @@ func _panel_id(panel: DialoguePanel) -> String:
 	if panel == null:
 		return "none"
 	return str((panel.get("_def") as Dictionary).get("id", ""))
+
+
+## Drive two etching casts against controlled dummy enemies and assert concrete effects:
+## Snare slows a nearby enemy (public slow_factor < 1), Shockwave force-staggers an ARMORED
+## Brute (the only thing that bypasses stagger_time == 0). Each also proves the cooldown
+## engaged (a second immediate cast is refused).
+func _test_abilities_in_run(player: Player) -> void:
+	var room := _scene_node()
+	var ppos: Vector3 = (player as Node3D).global_position
+	# Snare (Q): a dummy inside the field radius gets slowed.
+	var dummy: EnemyDummy = load("res://scenes/combat/enemy_dummy.tscn").instantiate()
+	room.add_child(dummy)
+	dummy.target = player
+	(dummy as Node3D).global_position = ppos + Vector3(1.2, 0, 0)
+	await _settle(2)
+	_check(dummy.slow_factor == 1.0, "enemy starts unsnared (slow_factor 1.0)")
+	_check(player.call("try_cast", "q"), "Snare (Q) cast fired")
+	await _settle(4)
+	_check(dummy.slow_factor < 1.0, "Snare field slowed the nearby enemy (slow_factor %.2f)" % dummy.slow_factor)
+	_check(not player.call("try_cast", "q"), "Snare on cooldown — a second immediate cast is refused")
+	# Shockwave (R): force-stagger an ARMORED Brute (stagger_time 0 → only Shockwave does this).
+	var brute: EnemyDummy = load("res://scenes/combat/enemy_dummy.tscn").instantiate()
+	room.add_child(brute)
+	brute.target = player
+	(brute as Node3D).global_position = ppos + Vector3(2.0, 0, 0)
+	await _settle(2)
+	_check(brute.stagger_time == 0.0, "the Brute is armored (stagger_time 0)")
+	_check(player.call("try_cast", "r"), "Shockwave (R) cast fired")
+	await _settle(1)
+	_check(brute.call("is_staggered"), "Shockwave force-staggered the armored Brute")
+	_check(not player.call("try_cast", "r"), "Shockwave on cooldown — a second immediate cast is refused")
 
 
 func _settle(frames: int) -> void:

@@ -352,6 +352,31 @@ The endless-wave director (F6 room). Tune the encounter, not a character.
 
 ---
 
+## Etching abilities — `data/etchings/*.json` (data files, dial like economy numbers) *(added 2026-07-07)*
+Every ability number is a **data field**, not a `# FEEL:` export — edit the JSON and reload
+(no code, no scene). Two places per ability:
+- **`behavior` dict** — the base cast numbers (below). Damage fields are a *scale of the
+  player's `attack_damage`* (so tuning the baseline tunes the abilities, like weapon mods).
+- **`levels[1]` / `levels[2]`** — L2/L3 scaling: any `"<field>_mult"` multiplies that base
+  `behavior` field (e.g. `"cone_deg_mult": 1.3`). `levels[2]` also names the L3 `rider`
+  (unimplemented in v1 — the string is inert). `cooldown_s` and the dust costs
+  (`cost_unlock_dust`, `cost_levels_dust: [L2, L3]`) are top-level.
+
+| Ability | Slot | `cooldown_s` | Key `behavior` fields (placeholder values) |
+|---------|------|--------------|--------------------------------------------|
+| **Push** | rmb | 5 | `damage_scale` 0.6, `cone_deg` 100, `range` 5, `knockback` 16, `wall_bonus_scale` 1.5, `wall_stagger` 0.5 |
+| **Bolt** | rmb | 5 | `damage_scale` 0.8, `range` 16, `projectile_speed` 26 |
+| **Snare** | q | 12 | `radius` 3, `slow_factor` 0.3, `duration` 4, `stagger_on_cast` 0.25 |
+| **Shockwave** | r | 40 | `damage_scale` 1.4, `radius` 6, `knockback` 22, `falloff` 0.4 (edge dmg fraction), `stagger_duration` 0.6 |
+| **Surge** | r | 35 | `duration` 5, `move_mult` 1.35, `attack_time_mult` 0.6 (lower = faster), `dash_cd_mult` 0.5 |
+
+> The four dormant abilities (Afterstrike/Ward/Lodestone/Sentinel) carry placeholder
+> `behavior` too, but nothing reads it yet (they aren't in `EtchingsCore.IMPLEMENTED`).
+> No dedicated cast SFX yet — casting reuses the `dash` sound as a placeholder whoosh
+> (add per-ability rows to `data/audio/sfx-map.json` + a hook when desired).
+
+---
+
 ## First dials to try (suggested starting points)
 - **Too easy / too hard:** enemy `attack_damage`, `telegraph_time` (longer = fairer),
   `enemy_count`, `max_attackers`, player `hit_grace`.

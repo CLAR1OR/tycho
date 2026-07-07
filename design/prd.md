@@ -117,6 +117,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 - **Risk:** dominant weapon/effect. **Feel is human-tuned** (`# FEEL:` markers; agents must not "optimize" tuned numbers). The combat-feel gate is the go/no-go for the whole project.
 
 ### 7.3 Combat — etchings (active abilities)
+- **Status (first slice built 2026-07-07 — `etchings.md`):** all 9 ship as data; `EtchingsCore` + `EtchingsPanel` (opened from Thomas's meditation spot, B2-gated) do learn/level/equip with Resonance Dust; the player casts RMB/Q/R with cooldowns. **Built: Push, Bolt, Snare, Shockwave, Surge.** **Dormant (data only, unlearnable in the panel): Afterstrike, Ward, Lodestone, Sentinel.** **Deferred:** L3 riders, weapon synergies, etching-mod Echoes, Passive Attunements (7.4). Numbers are placeholders.
 - **Purpose:** Tycho's "magic" loadout — the nanobot abilities.
 - **Trigger:** unlocked at B2; configured at Thomas's Hut; fired in dungeon on RMB/Q/R (Space/dash is fixed and always available from A1).
 - **State:** `etchings.slots {rmb, q, r}`, `etchings.unlocked {id: level}`. **9 abilities** unlockable (3 per slot), each **3 upgrade levels** (Resonance Dust). Each has exactly 1 weapon-synergy variant. *(Designed 2026-07-03 — `etchings.md`:)* slot grammar **RMB=Strike / Q=Field / R=Surge**; RMB **Push** (free at B2) / **Bolt** / **Afterstrike**; Q **Snare** / **Ward** / **Lodestone**; R **Shockwave** / **Surge** / **Sentinel**. Cooldowns only, no mana; mouse-aimed.

@@ -66,11 +66,22 @@ signal died
 
 var target: Node3D = null
 
+## Movement multiplier applied to planar velocity (1.0 = normal). The Snare etching's
+## field sets this < 1 while an enemy is inside and restores 1.0 on exit/expiry — it must
+## NEVER persist past the field (design/etchings.md Q). Runtime-only, not a FEEL export.
+var slow_factor: float = 1.0
+
 var _hp: int = 0
 var _state: int = State.IDLE
 var _timer: float = 0.0
 var _struck: bool = false
 var _knockback_vel: Vector3 = Vector3.ZERO
+# Push etching (design/etchings.md RMB): a heavy knockback that deals bonus damage +
+# a brief forced stagger if the enemy is slammed into a wall/obstacle (reuses the
+# Charger's _hit_wall idea). Active only for the duration of the shove.
+var _slam_active: bool = false
+var _slam_bonus_dmg: int = 0
+var _slam_stagger: float = 0.0
 var _circle_dir: float = 1.0
 var _flip_timer: float = 0.0
 var _wander_target: Vector3 = Vector3.ZERO
@@ -116,11 +127,15 @@ func _physics_process(delta: float) -> void:
 
 	velocity += _knockback_vel
 	velocity += _separation()
+	# Snare field: heavily slow the whole planar motion while inside (restored on exit).
+	velocity.x *= slow_factor
+	velocity.z *= slow_factor
 	if _state == State.IDLE:
 		_face_move()   # a strolling enemy looks where it walks, not at an unseen player
 	else:
 		_face_target()
 	move_and_slide()
+	_check_slam_wall()
 
 
 # --- States -----------------------------------------------------------------
@@ -355,6 +370,59 @@ func _enter_stagger() -> void:
 	_state = State.STAGGER
 	_timer = stagger_time
 	_set_color(base_color)  # a cancelled telegraph must stop reading as a threat
+
+
+# --- Etching hooks (design/etchings.md) --------------------------------------
+
+## Heavy shove from the Push etching. Knocks the enemy back (armored or not — knockback
+## is not a stagger); if it hits a wall/obstacle mid-shove it takes `wall_bonus_dmg` and a
+## brief forced stagger. Overrides the light take_damage knockback.
+func apply_knockback(dir: Vector3, strength: float, wall_bonus_dmg: int = 0, wall_stagger: float = 0.0) -> void:
+	_knockback_vel = _flat(dir).normalized() * strength
+	_slam_bonus_dmg = wall_bonus_dmg
+	_slam_stagger = wall_stagger
+	_slam_active = wall_bonus_dmg > 0
+
+
+## While being shoved by Push, a wall/obstacle collision spends the shove for bonus damage
+## + a brief stagger (design's "slammed into walls take bonus damage + brief stagger").
+func _check_slam_wall() -> void:
+	if not _slam_active:
+		return
+	if _knockback_vel.length() < 1.0:
+		_slam_active = false
+		return
+	for i in get_slide_collision_count():
+		if get_slide_collision(i).get_collider() is StaticBody3D:
+			_slam_active = false
+			_knockback_vel = Vector3.ZERO
+			if _slam_stagger > 0.0:
+				force_stagger(_slam_stagger)
+			take_damage(_slam_bonus_dmg)  # no `from` → no extra knockback
+			return
+
+
+## Brief hit-interrupt for SQUISHIES only (stagger_time > 0) — used by the Snare field's
+## on-cast root. Armored enemies are never staggered by this (design: armored never rooted).
+func stagger(duration: float) -> void:
+	if stagger_time <= 0.0:
+		return
+	_state = State.STAGGER
+	_timer = duration
+	_set_color(base_color)
+
+
+## Force a stagger even on ARMORED enemies — the Shockwave etching is the ONLY thing that
+## bypasses stagger_time == 0 (design/etchings.md R: "briefly staggers even armored").
+func force_stagger(duration: float) -> void:
+	_state = State.STAGGER
+	_timer = duration
+	_set_color(base_color)
+
+
+## True while hit-interrupted (STAGGER). Exposed for the headless smoke's shockwave assert.
+func is_staggered() -> bool:
+	return _state == State.STAGGER
 
 
 # --- Misc helpers -----------------------------------------------------------

@@ -1,5 +1,7 @@
 # Etchings — the 9 active abilities (+ dash)
 
+> **Implementation status (2026-07-07 — first slice built).** The system is playable: all 9 abilities ship as data (`data/etchings/*.json`), a pure `EtchingsCore` + the `EtchingsPanel` (opened from Thomas's meditation spot, gated on B2) handle learn/level/equip with Resonance Dust, and the player casts RMB/Q/R with per-slot cooldowns. **Built (castable at L1/L2): Push, Bolt, Snare, Shockwave, Surge.** **Dormant (data ships, shown in the panel as unlearnable): Afterstrike, Ward, Lodestone, Sentinel** — implementation status is CODE (`EtchingsCore.IMPLEMENTED`), not data. **Deferred:** all L3 riders (data only), all weapon synergies (data only), etching-mod Echoes, and Passive Attunements. Every number below is a placeholder living in each def's `behavior` dict + level `_mult`s (dial board: `design/feel-tuning.md`).
+
 > The design for Tycho's "magic" loadout: the **9 unlockable abilities** (3 per slot: RMB / Q / R), the fixed dash, upgrade levels, weapon synergies, and the data shape. **Drafted 2026-07-03** — fills the bible's empty etchings table (the last undesigned core combat system). All numbers are placeholders; ability *feel* is `# FEEL:` territory (human-tuned like everything else in combat). Budget contract: 9 abilities × 3 levels × ~1 weapon-synergy variant each (`content-budget.md`); system contract: PRD §7.3; vendor: Thomas's Hut (Resonance Dust, shared with attunements).
 
 ---

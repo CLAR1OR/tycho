@@ -1,0 +1,24 @@
+{
+	"id": "shockwave",
+	"name": "Shockwave",
+	"slot": "r",
+	"principle": "pressure-wave",
+	"cooldown_s": 40.0,
+	"granted_by": null,
+	"cost_unlock_dust": 6,
+	"cost_levels_dust": [6, 9],
+	"behavior": {
+		"damage_scale": 1.4,
+		"radius": 6.0,
+		"knockback": 22.0,
+		"falloff": 0.4,
+		"stagger_duration": 0.6
+	},
+	"levels": [
+		{},
+		{"damage_scale_mult": 1.25, "radius_mult": 1.2},
+		{"rider": "slow_field"}
+	],
+	"weapon_synergy": {"weapon": "sword", "effect": "next_swings_finisher"},
+	"summon_seed": false
+}

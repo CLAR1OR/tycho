@@ -1,0 +1,23 @@
+{
+	"id": "snare",
+	"name": "Snare",
+	"slot": "q",
+	"principle": "viscosity",
+	"cooldown_s": 12.0,
+	"granted_by": null,
+	"cost_unlock_dust": 4,
+	"cost_levels_dust": [4, 6],
+	"behavior": {
+		"radius": 3.0,
+		"slow_factor": 0.3,
+		"duration": 4.0,
+		"stagger_on_cast": 0.25
+	},
+	"levels": [
+		{},
+		{"radius_mult": 1.2, "duration_mult": 1.25},
+		{"rider": "exit_stagger"}
+	],
+	"weapon_synergy": {"weapon": "bow", "effect": "ranged_bonus_vs_snared"},
+	"summon_seed": false
+}

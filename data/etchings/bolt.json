@@ -1,0 +1,22 @@
+{
+	"id": "bolt",
+	"name": "Bolt",
+	"slot": "rmb",
+	"principle": "directed-energy",
+	"cooldown_s": 5.0,
+	"granted_by": null,
+	"cost_unlock_dust": 3,
+	"cost_levels_dust": [3, 5],
+	"behavior": {
+		"damage_scale": 0.8,
+		"range": 16.0,
+		"projectile_speed": 26.0
+	},
+	"levels": [
+		{},
+		{"damage_scale_mult": 1.3},
+		{"rider": "pierce"}
+	],
+	"weapon_synergy": {"weapon": "bow", "effect": "marks_target"},
+	"summon_seed": false
+}

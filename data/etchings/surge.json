@@ -1,0 +1,23 @@
+{
+	"id": "surge",
+	"name": "Surge",
+	"slot": "r",
+	"principle": "overdrive",
+	"cooldown_s": 35.0,
+	"granted_by": null,
+	"cost_unlock_dust": 6,
+	"cost_levels_dust": [6, 9],
+	"behavior": {
+		"duration": 5.0,
+		"move_mult": 1.35,
+		"attack_time_mult": 0.6,
+		"dash_cd_mult": 0.5
+	},
+	"levels": [
+		{},
+		{"duration_mult": 1.3},
+		{"rider": "kills_extend"}
+	],
+	"weapon_synergy": {"weapon": "daggers", "effect": "extra_dash_charge"},
+	"summon_seed": false
+}

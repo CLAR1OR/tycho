@@ -1,0 +1,21 @@
+{
+	"id": "sentinel",
+	"name": "Sentinel",
+	"slot": "r",
+	"principle": "self-assembly",
+	"cooldown_s": 40.0,
+	"granted_by": null,
+	"cost_unlock_dust": 6,
+	"cost_levels_dust": [6, 9],
+	"behavior": {
+		"lifetime": 8.0,
+		"bolt_scale": 0.4
+	},
+	"levels": [
+		{},
+		{"lifetime_mult": 1.25, "bolt_scale_mult": 1.2},
+		{"rider": "taunt"}
+	],
+	"weapon_synergy": {"weapon": "bow", "effect": "volley_in_sync"},
+	"summon_seed": true
+}

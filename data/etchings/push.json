@@ -1,0 +1,25 @@
+{
+	"id": "push",
+	"name": "Push",
+	"slot": "rmb",
+	"principle": "impulse",
+	"cooldown_s": 5.0,
+	"granted_by": "b2",
+	"cost_unlock_dust": 0,
+	"cost_levels_dust": [3, 5],
+	"behavior": {
+		"damage_scale": 0.6,
+		"cone_deg": 100.0,
+		"range": 5.0,
+		"knockback": 16.0,
+		"wall_bonus_scale": 1.5,
+		"wall_stagger": 0.5
+	},
+	"levels": [
+		{},
+		{"cone_deg_mult": 1.3, "knockback_mult": 1.15},
+		{"rider": "bowling"}
+	],
+	"weapon_synergy": {"weapon": "sword", "effect": "combo_continues_bonus_finisher"},
+	"summon_seed": false
+}

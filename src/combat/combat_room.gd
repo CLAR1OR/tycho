@@ -78,6 +78,7 @@ var _wave_index: int = 0
 var _cleared: bool = false
 var _door_chosen: bool = false  # first door walked wins — no backtracking
 var _last_hp: int = Player.MAX_HEALTH
+var _ability_label: Label  # minimal RMB/Q/R readout (design/etchings.md HUD)
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
@@ -130,6 +131,11 @@ func _ready() -> void:
 	EchoCore.apply_all_to_player(_player, RunState.echoes)
 	if RunState.player_health > 0:
 		_player.restore_health(RunState.player_health)
+	# Minimal ability readout (equipped RMB/Q/R + cooldowns), polled in _process.
+	_ability_label = Label.new()
+	_ability_label.position = Vector2(14, 74)
+	_ability_label.add_theme_font_size_override("font_size", 14)
+	$HUD.add_child(_ability_label)
 	_spawn_wave()
 	# Same live feel-tuning panel as the sandbox (F1) — dials apply to THIS room's
 	# instances plus the shared static knobs (hitstop, crowd rules).
@@ -423,6 +429,11 @@ func present_echo_offer(offer_ids: Array[String], on_pick: Callable, on_done: Ca
 
 
 # --- HUD -----------------------------------------------------------------------
+
+func _process(_delta: float) -> void:
+	if _ability_label != null and is_instance_valid(_player):
+		_ability_label.text = _player.ability_hud_text()
+
 
 func _on_player_health_changed(hp: int, max_hp: int) -> void:
 	_hp_label.text = "HP: %d / %d" % [hp, max_hp]
