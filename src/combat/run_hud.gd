@@ -1,4 +1,4 @@
-extends Control
+extends SlateHud
 class_name RunHud
 ## The in-run HUD ("Slate" design — human-approved 2026-07-07 via claude.ai/design,
 ## the "C" direction: an echo shelf over the HP bar with a clean top row). Replaces the
@@ -11,27 +11,20 @@ class_name RunHud
 ## string/fold/threshold logic lives in HudCore (src/combat/hud_core.gd); this node
 ## owns only pixels.
 ##
-## HUMAN: EVERYTHING under "Style" is a PLACEHOLDER — colours, sizes, fonts, and the
-## pickup timings are yours to dial (design/ui-hud.md). Dial them like FEEL numbers.
+## Extends SlateHud (src/core/slate_hud.gd), which owns the SHARED style: the Slate
+## palette + pickup colours, the three project fonts, the shared font sizes (FS_CHIP /
+## FS_BODY / FS_HINT / FS_SMALL) + MARGIN, and the draw plumbing (_panel / _text_in /
+## _text_w / _with_fallback / _sync_viewport_size). Dial shared style there; the
+## run-specific placeholders below are the HP/echo/slot/boss/vignette/pickup pieces.
+##
+## HUMAN: EVERYTHING under "Style" (here + the shared style in slate_hud.gd) is a
+## PLACEHOLDER — colours, sizes, fonts, and the pickup timings. Dial them like FEEL
+## numbers (design/ui-hud.md).
 
 # =====================================================================================
-# Style — placeholders (colours / sizes / fonts / timings). Dial freely.
+# Run-specific style — placeholders (sizes / colours / timings). Dial freely.
+# (The shared palette + fonts + FS_CHIP/BODY/HINT/SMALL + MARGIN live in SlateHud.)
 # =====================================================================================
-# Palette (Color(r/255,...) so the values are const-foldable — the hex is in the comment)
-const COL_SLATE_BG := Color(23.0/255, 22.0/255, 28.0/255)          # #17161c panel body
-const COL_SLATE_BORDER := Color(74.0/255, 71.0/255, 86.0/255)      # #4a4756
-const COL_CHIP_BG := Color(23.0/255, 22.0/255, 28.0/255, 0.78)     # #17161c @ 0.78
-const COL_CHIP_BORDER := Color(58.0/255, 56.0/255, 68.0/255)       # #3a3844
-const COL_TEXT := Color(201.0/255, 197.0/255, 214.0/255)           # #c9c5d6
-const COL_READY := Color(255.0/255, 230.0/255, 128.0/255)          # #ffe680 gold ready/badge
-const COL_BADGE_TEXT := Color(30.0/255, 28.0/255, 24.0/255)        # dark text on the gold badge
-const COL_KEY_TEXT := Color(150.0/255, 146.0/255, 162.0/255)       # dim key-badge label
-const COL_PERIL := Color(255.0/255, 92.0/255, 92.0/255)            # #ff5c5c (glyph lives in chip text)
-# Pickup colours (per resource id)
-const COL_GOLD := Color(255.0/255, 230.0/255, 128.0/255)           # #ffe680
-const COL_ORE := Color(176.0/255, 164.0/255, 224.0/255)            # #b0a4e0
-const COL_DUST := Color(128.0/255, 230.0/255, 255.0/255)           # #80e6ff
-const COL_SHARDS := Color(208.0/255, 143.0/255, 255.0/255)         # #d08fff
 # HP bar
 const HP_W := 340.0
 const HP_H := 26.0
@@ -58,23 +51,12 @@ const VIGNETTE_DEPTH := 90.0
 const VIGNETTE_STEPS := 24
 const VIGNETTE_ALPHA := 0.30
 const COL_VIGNETTE := Color(201.0/255, 58.0/255, 44.0/255)
-# Fonts — files under assets/fonts/ (all OFL; provenance in assets/fonts/SOURCES.md).
-# Roles: DISPLAY = engraved caps (ability/echo monograms, the boss label), NUM = every
-# number/readout (mono, so digits don't shuffle as they tick), BODY = the one prose
-# line (the contextual hint). Swap a role = swap its .ttf here.
-const FONT_DISPLAY_FILE := preload("res://assets/fonts/Cinzel-SemiBold.ttf")
-const FONT_BODY_FILE := preload("res://assets/fonts/EBGaramond-Medium.ttf")
-const FONT_NUM_FILE := preload("res://assets/fonts/JetBrainsMono-Medium.ttf")
-const FS_CHIP := 13      # info chip (num)
-const FS_BODY := 14      # pickup strip + cooldown seconds (num)
-const FS_HINT := 19      # contextual hint (body — Garamond runs small, so it sits larger)
-const FS_SMALL := 10     # key badges, stack-count badge (num)
+# Fonts + the FS_CHIP/BODY/HINT/SMALL sizes + MARGIN are shared — see SlateHud. These
+# are the run-specific display sizes (DISPLAY = Cinzel monograms/labels; NUM = HP digits).
 const FS_TILE := 13      # echo tile monograms (display)
 const FS_SLOT := 20      # ability slot monograms (display)
 const FS_HP := 14        # HP numerals (num)
 const FS_BOSS := 13      # boss label (display)
-# Layout margin from screen edges
-const MARGIN := 14.0
 # Pickup strip timing
 const PICKUP_HOLD_S := 3.0
 const PICKUP_FADE_S := 0.8
@@ -119,30 +101,12 @@ var _pickup_amounts: Dictionary = {}   # id -> amount at the last pickup
 var _pickup_alpha: float = 0.0
 var _pickup_hold_t: float = 0.0
 
-var _font_display: FontVariation
-var _font_body: FontVariation
-var _font_num: FontVariation
-var _sb := StyleBoxFlat.new()
-
 
 func _ready() -> void:
+	super._ready()  # SlateHud: anchors + mouse_filter + the three fonts
 	add_to_group("run_hud")
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	mouse_filter = Control.MOUSE_FILTER_IGNORE
-	_font_display = _with_fallback(FONT_DISPLAY_FILE)
-	_font_body = _with_fallback(FONT_BODY_FILE)
-	_font_num = _with_fallback(FONT_NUM_FILE)
 	# In-run pickups feed the fading strip; the town economy readout stays on game.gd's HUD.
 	EventBus.resource_changed.connect(_on_resource_changed)
-
-
-static func _with_fallback(base: Font) -> FontVariation:
-	# Glyphs the family lacks (e.g. the chip's "⚠") fall back to the system font.
-	# A wrapper, so the shared imported resource is never mutated.
-	var f := FontVariation.new()
-	f.base_font = base
-	f.fallbacks = [ThemeDB.fallback_font]
-	return f
 
 
 # --- Setup / setters (combat_room + game.gd push state in) ---------------------------
@@ -225,12 +189,7 @@ func _on_resource_changed(id: String, _old: float, new_amount: float, _reason: S
 
 
 func _process(delta: float) -> void:
-	# Godot quirk: anchors set in our own _ready never get a layout pass under a
-	# CanvasLayer (size stays 0,0 and everything anchored to size.x/size.y draws
-	# off-screen). Sync to the viewport explicitly; also covers window resizes.
-	var vp := get_viewport_rect().size
-	if size != vp:
-		size = vp
+	_sync_viewport_size()  # SlateHud: the CanvasLayer-under-_ready layout quirk
 	# Fade the pickup strip after its hold window.
 	if _pickup_alpha > 0.0:
 		if _pickup_hold_t > 0.0:
@@ -253,30 +212,6 @@ func _draw() -> void:
 	_draw_hp_and_echoes()
 	_draw_ability_slots()
 	_draw_hint()
-
-
-func _panel(rect: Rect2, bg: Color, border: Color, border_w: int, radius: int) -> void:
-	_sb.bg_color = bg
-	_sb.border_color = border
-	_sb.set_border_width_all(border_w)
-	_sb.set_corner_radius_all(radius)
-	draw_style_box(_sb, rect)
-
-
-func _text_w(s: String, fs: int, font: Font) -> float:
-	return font.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-
-
-func _text_in(rect: Rect2, s: String, col: Color, fs: int, font: Font,
-		halign := HORIZONTAL_ALIGNMENT_CENTER) -> void:
-	# Text vertically centred in rect via baseline math: a line box is ascent+descent
-	# tall, so the baseline sits at centre + (ascent - descent)/2. (The old helper
-	# sized boxes by the font-size px and dropped by the full ascent — text rode low.)
-	var x := rect.position.x
-	if halign == HORIZONTAL_ALIGNMENT_CENTER:
-		x += (rect.size.x - _text_w(s, fs, font)) * 0.5
-	var y := rect.position.y + rect.size.y * 0.5 + (font.get_ascent(fs) - font.get_descent(fs)) * 0.5
-	draw_string(font, Vector2(x, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
 
 
 # --- Info chip (top-left) ------------------------------------------------------------

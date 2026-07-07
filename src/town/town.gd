@@ -33,15 +33,14 @@ var _in_desk: bool = false
 var _in_forge: bool = false
 var _in_meditation: bool = false    # standing at Thomas's favorite spot
 
+var _hud: TownHud = null            # the Slate town HUD (day chip + resource strip + toast)
+
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
 @onready var _desk: Area3D = $SophiasDesk
 @onready var _forge: Area3D = $MarasForge
 @onready var _meditation: Area3D = $MeditationSpot
 @onready var _portal: Area3D = $DungeonPortal
-@onready var _day_label: Label = $HUD/DayInfo
-@onready var _food_label: Label = $HUD/FoodStatus
-@onready var _hint_label: Label = $HUD/Hint
 
 
 func _ready() -> void:
@@ -91,16 +90,14 @@ func _ready() -> void:
 			_in_forge = false)
 	# A finished research can unlock plots while we stand here — refresh live.
 	EventBus.tech_researched.connect(func(_tech_id: String) -> void: _refresh_plots())
+	# The Slate town HUD (design/ui-hud.md): day chip + resource strip + per-resource
+	# day-projections + the bottom hint; game.gd fires the overnight toast via
+	# show_day_toast on the run-end return. 1 day = 1 run; the Well-Fed status only means
+	# something once a day has ticked (day 1 = no tick yet; reads the last tick's status).
+	_hud = TownHud.new()
+	$HUD.add_child(_hud)
 	var day := int(SaveManager.state["story"]["counters"].get("runs", 0)) + 1
-	_day_label.text = "Home — Day %d" % day
-	# Food upkeep (design/food-upkeep.md): the Well-Fed indicator only means something
-	# once a day has ticked (day 1 = no tick yet); reads the last tick's stored status.
-	if day > 1:
-		var fed := bool(SaveManager.state["town"].get("well_fed", false))
-		_food_label.text = "Well-Fed (+25% production)" if fed else "Short on food (no bonus)"
-	else:
-		_food_label.text = ""
-	_hint_label.text = "WASD move - E interact (plots, desk, forge, people) - the portal starts a run"
+	_hud.configure(day, bool(SaveManager.state["town"].get("well_fed", false)), day > 1)
 	_refresh_facilities()
 	_refresh_indicators()
 	# Spine/cutscene beats can force-play on a town visit — max 1 (spec): this runs
@@ -131,6 +128,12 @@ func _unhandled_input(event: InputEvent) -> void:
 func _on_portal_body_entered(body: Node3D) -> void:
 	if body is Player:
 		run_requested.emit()
+
+
+## Public (game.gd, run-end return): flash the overnight production toast. An empty tick
+## (e.g. a Forfeit return, which ticks no day) is a no-op inside the HUD.
+func show_day_toast(tick: Dictionary) -> void:
+	_hud.show_day_toast(tick)
 
 
 ## Public (game flow + smoke driver): open Sophia's research screen, or null if the

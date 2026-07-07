@@ -499,28 +499,3 @@ outline_size = 8
 [node name="CameraRig" parent="." instance=ExtResource("3")]
 
 [node name="HUD" type="CanvasLayer" parent="."]
-
-[node name="DayInfo" type="Label" parent="HUD"]
-offset_left = 14.0
-offset_top = 10.0
-offset_right = 400.0
-offset_bottom = 36.0
-text = "Home — Day 1"
-
-[node name="FoodStatus" type="Label" parent="HUD"]
-offset_left = 14.0
-offset_top = 36.0
-offset_right = 400.0
-offset_bottom = 62.0
-text = ""
-
-[node name="Hint" type="Label" parent="HUD"]
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 14.0
-offset_top = -34.0
-offset_right = 900.0
-offset_bottom = -8.0
-grow_vertical = 0
-text = "WASD move - build at the plot (E) - step into the portal to descend"

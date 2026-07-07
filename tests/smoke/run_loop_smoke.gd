@@ -117,6 +117,23 @@ func _run_smoke() -> void:
 	await _settle(30)
 	_check(_scene_file() == "town.tscn", "victory returns to town (got %s)" % _scene_file())
 	_check(SaveManager.state["checkpoint"] == null, "run over — checkpoint cleared")
+
+	# --- Town HUD (Slate T1 + overnight toast + projections, 2026-07-07) ---------------
+	# The run-end return fires the overnight production toast, and the day chip reads the
+	# new day + the last tick's Food status. Also the CanvasLayer-under-_ready geometry
+	# regression net (same as RunHud's): the HUD must span the viewport.
+	var thud: Node = get_tree().get_first_node_in_group("town_hud")
+	_check(thud != null, "town HUD present on the victory return")
+	_check(bool(thud.call("toast_visible")), "overnight toast shown on the day-tick town return")
+	var dc := str(thud.call("day_chip"))
+	_check(dc.begins_with("Day 2"), "town day chip reads Day 2 on the run-1 return (%s)" % dc)
+	var fed_now := bool(SaveManager.state["town"]["well_fed"])
+	_check(dc.contains("Well-Fed") if fed_now else dc.contains("Short"),
+		"day chip shows the last tick's food status (%s)" % dc)
+	var tvp: Vector2 = get_viewport().get_visible_rect().size
+	_check(thud is Control and (thud as Control).size == tvp,
+		"TownHud spans the viewport (%s == %s)" % [
+			str((thud as Control).size) if thud is Control else "?", str(tvp)])
 	var c: Dictionary = SaveManager.state["story"]["counters"]
 	_check(int(c["runs"]) == runs_before + 1, "runs counter ticked (%d)" % int(c["runs"]))
 	_check(int(c["boss_kills"]) >= 1, "boss kill counted (%d)" % int(c["boss_kills"]))
@@ -342,6 +359,17 @@ func _run_smoke() -> void:
 	_scene_node().call("_try_build", "quarry")
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 1,
 		"masonry unlock makes the quarry buildable")
+
+	# TownHud projection self-consistency: the "+n/d" under the stone column must equal the
+	# net stone day-delta computed straight from TownCore.tick with the same live inputs
+	# (a quarry produces stone with no stone upkeep → a positive projection).
+	var thud2: Node = get_tree().get_first_node_in_group("town_hud")
+	var want_stone := float(TownHudCore.day_deltas(TownCore.tick(
+		SaveManager.state["town"], DataLoader.load_domain("buildings"),
+		Ledger.get_amount("food"))).get("stone", 0.0))
+	_check(want_stone > 0.0, "the quarry gives a positive stone projection (%.1f)" % want_stone)
+	_check(thud2 != null and absf(float(thud2.call("projection", "stone")) - want_stone) < 0.001,
+		"TownHud stone projection matches the computed day delta (%.1f)" % want_stone)
 
 	# TechState (autoload) owns the tech-section writes now — the panel's finish() and
 	# Sophia's auto-solve both route through it. Re-read the slot straight off disk to

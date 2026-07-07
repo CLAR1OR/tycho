@@ -29,25 +29,23 @@ const DEFAULT_SLOT_NAME := "Tycho"
 @export var rooms_min: int = 3
 @export var rooms_max: int = 4
 
-## Ledger readout order for the HUD (resource meaning stays in data/resources/).
-const HUD_RESOURCES: Array[String] = ["gold", "stone", "food", "knowledge", "knowledge-shards"]
-
 var _scene: Node = null       # the live town or combat room
 var _session_t: float = 0.0   # unsaved playtime (flushed into meta.playtime_s on save)
 # Portal-entry slot snapshot for a Forfeit rollback (design 2026-07-07). Captured at
 # _start_run BEFORE any run mutation or checkpoint write; Forfeit restores it wholesale.
 var _run_snapshot: Dictionary = {}
+# The last day tick's result, handed to the town's overnight toast on the run-end return
+# (design/ui-hud.md). Set in _on_run_ended, consumed + cleared in _goto_town — a Forfeit
+# reaches town WITHOUT setting it, so it never toasts (Forfeit ticks no day).
+var _last_day_tick: Dictionary = {}
 
 @onready var _world: Node = $World
-@onready var _res_label: Label = $HUD/Resources
 
 
 func _ready() -> void:
-	EventBus.resource_changed.connect(func(_id: String, _o: float, _n: float, _r: String) -> void:
-		_refresh_resources())
-	# The has-<resource> pickup flags + all story counters now ride StoryState (an
-	# autoload, so it subscribes before this scene) — game.gd only reacts to the HUD.
-	EventBus.save_loaded.connect(func(_slot: int) -> void: _refresh_resources())
+	# The has-<resource> pickup flags + all story counters ride StoryState (an autoload,
+	# so it subscribes before this scene); the town economy readout is now the TownHud's
+	# resource strip, so game.gd holds no HUD readout of its own.
 	EventBus.run_ended.connect(_on_run_ended)
 	EventBus.tech_researched.connect(_on_tech_researched)
 	# Playtest cheat panel (F2) — lives on the HUD layer so it survives scene swaps.
@@ -77,7 +75,6 @@ func _show_slot_select() -> void:
 func choose_slot(slot: int) -> void:
 	if not SaveManager.load_slot(slot):
 		SaveManager.create_slot(slot, DEFAULT_SLOT_NAME)
-	_refresh_resources()
 	var checkpoint: Variant = SaveManager.state.get("checkpoint")
 	if checkpoint is Dictionary and not (checkpoint as Dictionary).is_empty():
 		RunState.resume_from(checkpoint)
@@ -100,7 +97,10 @@ func _goto_town() -> void:
 	var town := TOWN_SCENE.instantiate()
 	_swap(town)
 	town.run_requested.connect(func() -> void: call_deferred("_start_run"))
-	_refresh_resources()  # run is over — the town economy readout shows again
+	# Fire the overnight production toast if a day just ticked (a run ended into town).
+	# _last_day_tick is empty on a fresh boot / resume / Forfeit return, so those are silent.
+	town.show_day_toast(_last_day_tick)
+	_last_day_tick = {}
 	_save()
 
 
@@ -115,12 +115,10 @@ func _start_run() -> void:
 	RunState.start_run(
 		{"floors": run_floors, "rooms_min": rooms_min, "rooms_max": rooms_max},
 		randi(), run_number)
-	_refresh_resources()  # in a run now — the town economy readout hides (pickups fade in-HUD)
 	_next_room()
 
 
 func _next_room() -> void:
-	_refresh_resources()  # in a run: hide the town economy readout (also covers a resume boot)
 	# Per-floor autosave (PRD §7.13): a floor's first room = the resume point.
 	# RunState is already positioned there, so the snapshot IS the floor start.
 	if int(RunState.run["room"]) == 1:
@@ -276,6 +274,7 @@ func _on_run_ended(_victory: bool, _floor_reached: int, _stats: Dictionary) -> v
 		Ledger.add(id, float(produced[id]), "town-tick")
 	Ledger.try_spend("food", float(tick["food_consumed"]), "upkeep")
 	SaveManager.state["town"]["well_fed"] = bool(tick["well_fed"])
+	_last_day_tick = tick  # the town's overnight toast reads this on the return (_goto_town)
 	call_deferred("_goto_town")
 
 
@@ -320,8 +319,7 @@ func forfeit_run() -> void:
 	Ledger.reset(SaveManager.state["ledger"])
 	SaveManager.state["checkpoint"] = null                # (c) belt-and-suspenders (snapshot predates it)
 	SaveManager.save_current()                            # (d) overwrite the run's on-disk checkpoints
-	_refresh_resources()
-	call_deferred("_goto_town")                           # (e) town music rides the normal path
+	call_deferred("_goto_town")                           # (e) town music rides the normal path (no toast: no day ticked)
 
 
 ## Save & Quit from the ESC menu → back to the slot-select screen. In a run: NO disk write
@@ -353,14 +351,3 @@ func _save() -> void:
 	SaveManager.state["meta"]["playtime_s"] = float(SaveManager.state["meta"]["playtime_s"]) + _session_t
 	_session_t = 0.0
 	SaveManager.save_current()
-
-
-## The town economy readout (gold/stone/food/knowledge/shards). Shown in TOWN only —
-## hidden during a run, where in-run pickups ride the RunHud's fading strip instead
-## (design/ui-hud.md). The in-run echo shelf + HP + abilities all live on the RunHud.
-func _refresh_resources() -> void:
-	_res_label.visible = not RunState.in_run()
-	var parts := PackedStringArray()
-	for id in HUD_RESOURCES:
-		parts.append("%s: %d" % [id, int(Ledger.get_amount(id))])
-	_res_label.text = "\n".join(parts)
