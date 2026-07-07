@@ -79,16 +79,24 @@ The optional Wren "aha" tag in the .md (§6) was also de-em-dashed and pointed t
 
 ---
 
-## 6. A3 opening-scene twin — win-first-run fix (2026-07-07)
+## 6. A3 opening-scene twin + E2 — dissolve mechanic (2026-07-07, revised)
 
-The human decided the opening scene must fire after the FIRST run regardless of death (resolves the "win-first-run edge" flagged in `act1-story-beats.md`). Built as a twin of `a3-first-death` using the same shared-flag suppression as the B3 pair. `a3-first-death` is UNCHANGED and canonical.
+The 2026-07-07 dissolve decision reshaped this. A full clear now ends by walking into the codex-artifact pedestal in the final chamber, which **dissolves** Tycho home to town (a new `dissolves` counter, separate from combat `deaths`). The opening scene fires on the first run either way, and — per the human — **the twins share the SAME dialogue** (keep the dying references in both).
 
-| id | source | speakers | gate | priority | sets | notes |
+**`a3-first-return` is DELETED.** Its placeholder lines (a no-death re-open) are moot — there is nothing to curate. Retired entirely.
+
+**`a3-first-death` is UNCHANGED and canonical (human-verbatim).**
+
+| id | source | speakers | gate | priority | sets | curation |
 |---|---|---|---|---|---|---|
-| `a3-first-return` (NEW) | spine, **force_play** cutscene | tycho, sophia | `runs>=1` | **104** | `a3` | The generic opener: Tycho steps back out of the portal (a win, no death) and takes Sophia to it. Death variant (`a3-first-death`, 105) wins the slot after a death; the generic fills the no-death case. Either sets `a3` → the other is inert forever. |
+| `a3-first-death-alt` (NEW) | spine, **force_play** cutscene | tycho, sophia | `dissolves>=1` | **104** | `a3` | **Nothing to curate** — the `scene` block is a **byte-exact copy** of the canonical human-verbatim `a3-first-death` (verified equal). Only the top-level fields (id/gate/priority) differ. Fires after a full-clear first run; `a3-first-death` (105, `deaths>=1`) fires after a combat-death first run; shared-flag suppression keeps only one. |
+| `e2-artifact-waits` (NEW) | spine, **force_play** cutscene | sophia, tycho | `codex_shards>=6` | **98** | `e2` | **HUMAN CURATION FLAGGED — all lines are ORCHESTRATOR PLACEHOLDER.** The Phase-E E2 beat ("The artifact waits"). Gate is coupled to `StoryCore.CODEX_SHARDS_MAX` (placeholder 6). Order-safe (no emperor refs). Register: scientific-observing/no-BS; the beats-doc sample Sophia line's em dash was re-punctuated ("It's finished. And it's listening. For what, I can't say yet."). |
 
-**Lines — HUMAN CURATION FLAGGED (overwrite the placeholders).** `a3-first-return` reuses the human's own `a3-first-death` lines wherever the scene is identical (finding Sophia, the walk to the portal, the portal refusing her, the closing). Those are **HUMAN-VERBATIM** — do not touch. The lines that had to differ (there was no death) are **ORCHESTRATOR PLACEHOLDER** and want the human's pen:
-
-- **Placeholder (new for the no-death open):** line 1 narration ("Tycho steps out of the portal, back into the evening air."); line 2 Tycho ("Back out. Same field, same sky. The passage holds in both directions, then."); line 3 Tycho ("Let me check in with my sister…").
-- **Placeholder (adapted from the human's `a3-first-death` line, death clause removed):** line 5 Tycho's "Sophia! Sorry to interrupt…" (drops "was slain by monsters, woke up here again"; ends on the etchings); line 12 Tycho's "Sure will do…" (drops the "artefact will resurrect me" clause — no death has happened yet).
-- **Human-verbatim (copied byte-exact from `a3-first-death`):** the "He finds Sophia at her workbench…" narration; Sophia's "What are you talking about?…"; "They walk to the portal."; Tycho's "So here was the object…"; Sophia's "This goes against my every theory…"; "Sophia steps toward the portal. It does not let her through."; Sophia's "I cannot go through…"; "They walk back."; Sophia's "This is something huge…"; Tycho's "Did not have anything else in mind."
+**`e2-artifact-waits` placeholder lines (overwrite freely):**
+1. *(narration)* "The final shard settles into place. The artifact is whole for the first time."
+2. *(narration)* "It turns once, slowly. A low hum fills the chamber, holds, then stops. The artifact goes still."
+3. **Sophia:** "That's the last of it. Every shard, seated. It's complete."
+4. **Tycho:** "It turned, it hummed, and now nothing."
+5. **Sophia:** "It's finished. And it's listening. For what, I can't say yet."
+6. **Tycho:** "So it's complete, and we still don't know what it is."
+7. **Sophia:** "No. The shards taught us how to build it, not what it's for. We keep going out. We're not ready to answer it."

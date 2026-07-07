@@ -20,6 +20,7 @@ extends Node
 signal run_started(run_number: int)
 signal run_ended(victory: bool, floor_reached: int, stats: Dictionary)
 signal death(source_id: String)                      # player died in-run (no penalty, per locked design)
+signal dissolved()                                   # player walked into the codex artifact on a full clear (final chamber) — Tycho dissolves + respawns in town (2026-07-07); ticks `dissolves`, NOT `deaths`
 signal boss_killed(boss_id: String, floor: int)
 
 # --- Economy ---

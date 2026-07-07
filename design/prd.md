@@ -76,7 +76,7 @@ Move → dash to evade → attack (light combo) → fire abilities on cooldown (
 - **Success:** room cleared → door opens. **Failure:** HP to 0 → death → respawn in town (no penalty).
 
 ### 6.2 Mid-run (meso — one dungeon descent)
-Enter floor → traverse **6–10 rooms** of RNG-ordered types (combat / boss / reprieve-upgrade) → collect **Echoes** (in-run upgrades that can synergize) → **boss at the end of each floor** (5 floors) → anticipation peaks at boss, relief on the kill → descend. **Full clear** = all 5 floors + final boss → a **codex shard** drops and **visibly slots into the artifact** in the final-boss chamber.
+Enter floor → traverse **6–10 rooms** of RNG-ordered types (combat / boss / reprieve-upgrade) → collect **Echoes** (in-run upgrades that can synergize) → **boss at the end of each floor** (5 floors) → anticipation peaks at boss, relief on the kill → descend. **Full clear** = all 5 floors + final boss → a **codex-artifact pedestal** rises in the final-boss chamber (the only exit); walking into it **dissolves** Tycho home to town (victorious), and the run's **codex shard** slots into the artifact on that return (built 2026-07-07, §7.11).
 - **Run length target:** 20–25 min on a successful clear.
 - **Run end (win OR die):** advances the **day tick** → town production + research fire once; new dialogue becomes eligible; everything collected is kept.
 
@@ -187,8 +187,8 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 
 ### 7.11 Codex meta-puzzle (the mystery)
 - **Purpose:** v1's payoff — the growing mystery itself (solving it = the alien reveal, post-v1).
-- **Trigger:** each **full clear** drops a Codex Shard → it **visibly slots into the artifact** in the final-boss chamber.
-- **State:** `codex.shards` count; 5–7 shard visual states.
+- **Trigger:** each **full clear** drops a Codex Shard → it **visibly slots into the artifact** in the final-boss chamber. **Built 2026-07-07 (dissolve loop):** after the final boss's valve, a **codex-artifact pedestal** rises as the ONLY way out; walking into it **dissolves** Tycho (placeholder FX) and returns him to town victorious via the normal `run_ended(true)` path — the run's shard slots in on that return. Happens on EVERY full clear (also after the puzzle is complete — dissolve is the established way home). The dissolve ticks a separate counter `dissolves` (`EventBus.dissolved`), NOT `deaths` (combat only).
+- **State:** `codex.shards` count, clamped at `StoryCore.CODEX_SHARDS_MAX` (placeholder **6**, within the 5–7 range); 5–7 shard visual states. At max the puzzle completes and E2 ("The artifact waits") force-plays.
 - **Resolution:** v1 only *assembles* it in plain sight; completion has a designed beat (**E2 "The artifact waits"**, 2026-07-03 — it assembles fully, turns, hums, and *listens*; explicit in-fiction "not yet"; solving = post-v1). Dream-link beats escalate per shard (story).
 - **Risk:** none mechanical; ensure the visible assembly reads as meaningful, not a collectible counter.
 

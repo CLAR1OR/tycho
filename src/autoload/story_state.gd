@@ -20,6 +20,7 @@ extends Node
 ## Mutation reference (the complete set moved out of game.gd):
 ##   resource_changed → story.flags["has-<id>"]  (first-time-pickup, dialogue `has()`)
 ##   death            → story.counters.deaths
+##   dissolved        → story.counters.dissolves  (full-clear return via the codex artifact)
 ##   boss_killed      → story.counters.boss_kills
 ##   run_ended        → story.counters.runs (+ meta.runs mirror); on victory also
 ##                      story.counters.full_clears + codex.shards (+ codex_shard_added)
@@ -28,6 +29,7 @@ extends Node
 func _ready() -> void:
 	EventBus.resource_changed.connect(_on_resource_changed)
 	EventBus.death.connect(_on_death)
+	EventBus.dissolved.connect(_on_dissolved)
 	EventBus.boss_killed.connect(_on_boss_killed)
 	EventBus.run_ended.connect(_on_run_ended)
 
@@ -45,6 +47,10 @@ func _on_resource_changed(id: String, _old: float, new_amount: float, _reason: S
 
 func _on_death(_source_id: String) -> void:
 	StoryCore.record_death(SaveManager.state["story"])
+
+
+func _on_dissolved() -> void:
+	StoryCore.record_dissolve(SaveManager.state["story"])
 
 
 func _on_boss_killed(_boss_id: String, _floor: int) -> void:

@@ -102,6 +102,37 @@ func room_cleared(boss_id: String = "") -> bool:
 	return true
 
 
+## True when the CURRENT room is the run's LAST — the final floor's boss. The final
+## chamber is handled specially (design 2026-07-07): after the boss valve, a codex artifact
+## pedestal (the only way out) dissolves Tycho and ends the run. Call BEFORE room_cleared
+## advances the run (game.gd checks it at the top of _on_room_cleared).
+func is_final_boss() -> bool:
+	return in_run() and room_kind() == RunFlow.KIND_BOSS \
+		and int(run["floor"]) >= int(run["floors"])
+
+
+## Final chamber: the boss just died. Announce the kill (counts toward boss_kills, feeds
+## the boss valve) but DO NOT end the run — the player must still walk into the codex
+## artifact. game.gd spawns the pedestal after the valve; finish_at_artifact() ends the
+## run when it is entered. (This splits room_cleared's boss-emit from its run-end so the
+## victory happens at the artifact, not at the kill.)
+func final_boss_killed(boss_id: String = "") -> void:
+	if not in_run():
+		return
+	EventBus.boss_killed.emit(boss_id, RunFlow.floor_reached(run))
+
+
+## The player walked into the codex artifact (final chamber only) — end the run VICTORIOUS.
+## Advances the still-open run to over+victory and emits run_ended with the SAME args a
+## normal final-boss clear used to (game.gd's _on_run_ended does the day-tick/town tail).
+## boss_killed already fired (final_boss_killed); the dissolve signal is emitted by the room.
+func finish_at_artifact() -> void:
+	if not in_run():
+		return
+	run = RunFlow.advance(run)  # final boss → over + victory
+	_end_run()
+
+
 ## The player died in the current room (no penalty — locked design).
 func player_died(source_id: String = "") -> void:
 	if not in_run():

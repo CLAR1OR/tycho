@@ -117,6 +117,10 @@ func _run_smoke() -> void:
 	_check(int(c["runs"]) == runs_before + 1, "runs counter ticked (%d)" % int(c["runs"]))
 	_check(int(c["boss_kills"]) >= 1, "boss kill counted (%d)" % int(c["boss_kills"]))
 	_check(int(c["full_clears"]) == 1, "full clear counted")
+	# The full clear ended by walking into the codex artifact — Tycho DISSOLVED (a full-clear
+	# return), which is a separate counter from a combat death (2026-07-07).
+	_check(int(c["dissolves"]) == 1, "dissolve counted at the codex artifact")
+	_check(int(c["deaths"]) == 0, "the full-clear dissolve is NOT a combat death")
 	_check(int(SaveManager.state["codex"]["shards"]) == 1, "codex shard slotted")
 	_check(Ledger.get_amount("gold") > 0.0, "gold dropped (%.0f)" % Ledger.get_amount("gold"))
 	_check(Ledger.get_amount("knowledge-shards") >= 1.0, "boss dropped knowledge shards")
@@ -131,25 +135,26 @@ func _run_smoke() -> void:
 	_check(int(disk_c["runs"]) == runs_before + 1, "disk: runs counter persisted (%d)" % int(disk_c["runs"]))
 	_check(int(disk_c["full_clears"]) == 1, "disk: full clear persisted")
 	_check(int(disk_c["boss_kills"]) >= 1, "disk: boss kills persisted (%d)" % int(disk_c["boss_kills"]))
+	_check(int(disk_c["dissolves"]) == 1, "disk: dissolves counter persisted")
 	_check(int(on_disk["codex"]["shards"]) == 1, "disk: codex shard persisted")
 	_check(int(on_disk["meta"]["runs"]) == runs_before + 1, "disk: meta.runs mirror persisted")
 
-	# --- Run-1 victory return: the A3 opening cutscene (win-first-run twin) -----------
-	# The generic opener a3-first-return (force_play, runs>=1, priority 104) claims the
-	# one force-play slot on this victory return: it outranks B3 (92) and the b3-alt
-	# fallback is out (runs<6). Its death-variant twin a3-first-death (deaths>=1, 105)
-	# stays out because run 1 was a full clear. Either twin sets `a3`; DialogueCore's
-	# flag-suppression then silences the other forever.
+	# --- Run-1 victory return: the A3 opening cutscene (dissolve-first-run twin) --------
+	# A full clear ends by walking into the codex artifact — Tycho DISSOLVES (not a combat
+	# death). So dissolves==1, deaths==0. a3-first-death-alt (dissolves>=1, force_play, 104)
+	# claims the one force-play slot: it outranks B3 (92) and the b3-alt fallback is out
+	# (runs<6). Its combat-death twin a3-first-death (deaths>=1, 105) stays out (no death
+	# yet). Either twin sets `a3`; DialogueCore's flag-suppression silences the other.
 	await _settle(5)
 	var a3ret: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
 	_check(a3ret != null, "A3 opening cutscene force-played on the run-1 victory return")
-	_check(_panel_id(a3ret) == "a3-first-return",
-		"the win-first-run twin played (a3-first-return), not the death variant (%s)" % _panel_id(a3ret))
+	_check(_panel_id(a3ret) == "a3-first-death-alt",
+		"the dissolve-first-run twin played (a3-first-death-alt), not the death variant (%s)" % _panel_id(a3ret))
 	if a3ret != null:
-		await _drive_panel(a3ret, "a3-first-return")
+		await _drive_panel(a3ret, "a3-first-death-alt")
 	_check(bool(SaveManager.state["story"]["flags"].get("a3", false)), "A3 set its flag")
-	_check((SaveManager.state["story"]["seen"] as Array).has("a3-first-return"),
-		"a3-first-return marked seen")
+	_check((SaveManager.state["story"]["seen"] as Array).has("a3-first-death-alt"),
+		"a3-first-death-alt marked seen")
 
 	# Indicator (moved here): with a3 set, Mara has an unseen SPINE greeting
 	# (a-mara-meets) → "!!". Assert it BEFORE talking to her (talking clears the marker).
@@ -431,8 +436,8 @@ func _run_smoke() -> void:
 
 	# --- Dialogue on the run-2 death return: B5, and the twin-suppression proof ------
 	# deaths just hit 1, so a3-first-death's gate (deaths>=1) is finally met — but `a3`
-	# is already set (a3-first-return played on the run-1 return), so a3-first-death is
-	# INERT (flag-suppressed). Masonry is researched, so B5 ("the first wall") is the top
+	# is already set (a3-first-death-alt played on the run-1 dissolve return), so
+	# a3-first-death is INERT (flag-suppressed). Masonry is researched, so B5 ("the first wall") is the top
 	# eligible force-play and claims the slot. This is the twin-suppression proof.
 	_check(bool(SaveManager.state["story"]["flags"].get("has-resonance-ore", false)),
 		"first-pickup flag set from the run's ore drop")
@@ -498,6 +503,27 @@ func _run_smoke() -> void:
 		_check(Ledger.get_amount("gold") == gold_now + 100.0, "cheat grants gold via the Ledger")
 		cheats.grant_codex_shard()
 		_check(int(SaveManager.state["codex"]["shards"]) == 4, "codex shard cheat applies")
+
+	# --- E2 "The artifact waits" (Phase E, 2026-07-07) --------------------------------
+	# The codex puzzle completes at CODEX_SHARDS_MAX; the E2 cutscene then force-plays. Cheat
+	# the codex to max (and past it — proving grant_codex_shard clamps), then re-enter town
+	# via a sim so E2's town-entry force-play fires. E2 (codex_shards>=6) is the only eligible
+	# force-play: a3/b3 twins are flag-suppressed and B5 is seen.
+	while int(SaveManager.state["codex"]["shards"]) < StoryCore.CODEX_SHARDS_MAX:
+		cheats.grant_codex_shard()
+	_check(int(SaveManager.state["codex"]["shards"]) == StoryCore.CODEX_SHARDS_MAX,
+		"codex reaches the max (%d)" % StoryCore.CODEX_SHARDS_MAX)
+	cheats.grant_codex_shard()  # a grant past max
+	_check(int(SaveManager.state["codex"]["shards"]) == StoryCore.CODEX_SHARDS_MAX,
+		"grant_codex_shard clamps at max (stays %d)" % StoryCore.CODEX_SHARDS_MAX)
+	cheats.simulate_run(true)  # re-enter town (its victory codex grant also clamps at max)
+	await _settle(10)
+	var e2: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(_panel_id(e2) == "e2-artifact-waits",
+		"E2 (the artifact waits) force-plays at max codex shards (%s)" % _panel_id(e2))
+	if e2 != null:
+		await _drive_panel(e2, "e2-artifact-waits")
+	_check(bool(SaveManager.state["story"]["flags"].get("e2", false)), "E2 set its flag")
 
 	SaveManager.delete_slot(SMOKE_SLOT)
 	print("---")
@@ -663,9 +689,18 @@ func _kill_room(room: Node) -> void:
 ## picks a door — preferring a Reprieve door until the Wellspring is tested, otherwise
 ## a real fight (never Reprieve/Boss when a loot/echo door is on offer).
 func _walk_out(_room: Node) -> void:
-	await _settle(90)  # doors / the exit open after the room's respawn_delay beat
-	var doors := get_tree().get_nodes_in_group("door_portal")
+	await _settle(90)  # doors / the exit / the artifact open after the respawn_delay beat
 	var player := _find_player()
+	# Final chamber (2026-07-07): the codex artifact is the ONLY way out — walk into it
+	# (Wellspring-style), which dissolves Tycho and ends the run victorious.
+	var artifact := get_tree().get_first_node_in_group("codex_artifact")
+	if artifact != null:
+		if player != null:
+			var ap: Vector3 = (artifact as Node3D).global_position
+			(player as Node3D).global_position = Vector3(ap.x, 0.1, ap.z)
+		await _settle(20)
+		return
+	var doors := get_tree().get_nodes_in_group("door_portal")
 	if doors.is_empty():
 		if player != null:
 			(player as Node3D).global_position = Vector3(0, 0.1, -23)  # the plain boss exit

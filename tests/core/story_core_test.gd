@@ -10,7 +10,7 @@ func _story() -> Dictionary:
 	# A fresh story section, same shape SaveData.default_slot builds.
 	return {
 		"flags": {},
-		"counters": {"runs": 0, "deaths": 0, "boss_kills": 0, "full_clears": 0},
+		"counters": {"runs": 0, "deaths": 0, "dissolves": 0, "boss_kills": 0, "full_clears": 0},
 		"seen": [],
 		"talked_to": {},
 		"dialogue_last": {},
@@ -52,6 +52,14 @@ func test_death_increments() -> void:
 	check_eq(int(story["counters"]["runs"]), 0, "death alone does not tick runs")
 
 
+func test_dissolve_increments() -> void:
+	var story := _story()
+	StoryCore.record_dissolve(story)
+	StoryCore.record_dissolve(story)
+	check_eq(int(story["counters"]["dissolves"]), 2, "dissolves counted")
+	check_eq(int(story["counters"]["deaths"]), 0, "a full-clear dissolve is NOT a combat death")
+
+
 func test_boss_kill_increments() -> void:
 	var story := _story()
 	StoryCore.record_boss_kill(story)
@@ -88,6 +96,16 @@ func test_grant_codex_shard_returns_total() -> void:
 	check_eq(StoryCore.grant_codex_shard(codex), 1, "first grant returns total 1")
 	check_eq(StoryCore.grant_codex_shard(codex), 2, "second grant returns total 2")
 	check_eq(int(codex["shards"]), 2, "the codex dict holds the running total")
+
+
+func test_grant_codex_shard_clamps_at_max() -> void:
+	# The puzzle holds only CODEX_SHARDS_MAX shards — a grant at max is a no-op (2026-07-07).
+	var codex := {"shards": StoryCore.CODEX_SHARDS_MAX - 1}
+	check_eq(StoryCore.grant_codex_shard(codex), StoryCore.CODEX_SHARDS_MAX,
+		"the last grant reaches the max")
+	check_eq(StoryCore.grant_codex_shard(codex), StoryCore.CODEX_SHARDS_MAX,
+		"granting at max returns max (clamped)")
+	check_eq(int(codex["shards"]), StoryCore.CODEX_SHARDS_MAX, "the codex never exceeds the max")
 
 
 # --- Raw flag set ------------------------------------------------------------------

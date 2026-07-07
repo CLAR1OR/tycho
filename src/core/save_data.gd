@@ -26,7 +26,9 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 		},
 		"story": {
 			"flags": {},
-			"counters": {"runs": 0, "deaths": 0, "boss_kills": 0, "full_clears": 0},
+			# dissolves: full-clear returns via the codex artifact (2026-07-07) — separate
+			# from deaths (combat only). defaults-merge fills it for old saves.
+			"counters": {"runs": 0, "deaths": 0, "dissolves": 0, "boss_kills": 0, "full_clears": 0},
 			"seen": [],
 			"talked_to": {},
 			"dialogue_last": {},

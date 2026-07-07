@@ -128,6 +128,8 @@ func _next_room() -> void:
 	room.cleared.connect(_on_room_cleared.bind(room))
 	room.exit_entered.connect(func() -> void: call_deferred("_next_room"))
 	room.player_died.connect(func() -> void: RunState.player_died())
+	# Final chamber: walking into the codex artifact dissolves Tycho and ends the run.
+	room.artifact_entered.connect(func() -> void: call_deferred("_finish_at_artifact"))
 
 
 ## The floor profile (door weights + peril chance), clamped to the highest authored
@@ -166,8 +168,17 @@ func _on_room_cleared(room: Node) -> void:
 	# Captured before RunState.room_cleared advances / a new door is picked.
 	var incoming: Dictionary = RunState.pending_door.duplicate()
 	var cleared_floor := int(RunState.run["floor"])
+	if RunState.is_final_boss():
+		# The final chamber (design 2026-07-07): count the kill, run the boss valve (heal +
+		# the guaranteed post-boss echo), then raise the codex artifact as the ONLY way out.
+		# Walking into it dissolves Tycho and ends the run — run_ended is DEFERRED to that
+		# entry (RunState.finish_at_artifact via room.artifact_entered), not fired here.
+		RunState.final_boss_killed(boss_id)
+		room.apply_missing_heal(DoorCore.BOSS_HEAL_PCT)
+		_offer_echo(room, func() -> void: _open_artifact(room))
+		return
 	if not RunState.room_cleared(boss_id):
-		return  # the run just ended (final boss) — _on_run_ended takes it from here
+		return  # defensive: only the final boss ends the run, handled above
 	if was_boss:
 		# Boss valve (PRD §7.7 heal): repair 30% of missing HP, then the GUARANTEED
 		# post-boss echo (the new cadence), then the plain exit to the next floor.
@@ -220,6 +231,19 @@ func _present_doors(room: Node, offer: Array) -> void:
 		return
 	room.present_doors(offer, func(door: Dictionary) -> void:
 		RunState.pending_door = door.duplicate())
+
+
+## Raise the codex artifact pedestal in the final chamber (design 2026-07-07). The label
+## shows the CURRENT shard count / max; the run's own shard is granted on run_ended (the
+## dissolve), so it isn't reflected here yet.
+func _open_artifact(room: Node) -> void:
+	room.open_artifact(int(SaveManager.state["codex"]["shards"]), StoryCore.CODEX_SHARDS_MAX)
+
+
+## The player walked into the codex artifact — end the run victorious (deferred out of the
+## body_entered physics callback). run_ended then rides the normal _on_run_ended tail.
+func _finish_at_artifact() -> void:
+	RunState.finish_at_artifact()
 
 
 func _on_run_ended(_victory: bool, _floor_reached: int, _stats: Dictionary) -> void:

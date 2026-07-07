@@ -85,6 +85,9 @@ func simulate_run(victory: bool) -> void:
 		grant("knowledge-shards", SIM_BOSS_SHARDS)
 		grant("resonance-ore", SIM_BOSS_ORE)
 		EventBus.boss_killed.emit("cheat-sim", 1)
+		# A real full clear now dissolves Tycho at the codex artifact (2026-07-07) — the sim
+		# emits the same signal so the dissolves counter + any subscriber behave identically.
+		EventBus.dissolved.emit()
 	else:
 		EventBus.death.emit("cheat-sim")
 	EventBus.run_ended.emit(victory, 1, {})

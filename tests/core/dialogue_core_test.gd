@@ -7,7 +7,7 @@ func _save_state() -> Dictionary:
 	return {
 		"story": {
 			"flags": {"a4": true, "has-resonance-ore": true},
-			"counters": {"runs": 10, "deaths": 2, "boss_kills": 3, "full_clears": 1},
+			"counters": {"runs": 10, "deaths": 2, "dissolves": 1, "boss_kills": 3, "full_clears": 1},
 			"seen": [],
 			"talked_to": {"thomas": 2},
 			"dialogue_last": {},
@@ -33,6 +33,9 @@ func test_condition_vocabulary() -> void:
 	check(not DialogueCore.eval_condition({"flag": "d3"}, s), "flag unset")
 	check(DialogueCore.eval_condition({"counter": "runs", "gte": 10}, s), "counter gte hit")
 	check(not DialogueCore.eval_condition({"counter": "runs", "gte": 11}, s), "counter gte miss")
+	check(DialogueCore.eval_condition({"counter": "dissolves", "gte": 1}, s),
+		"dissolves counter read generically from story.counters")
+	check(not DialogueCore.eval_condition({"counter": "dissolves", "gte": 2}, s), "dissolves gte miss")
 	check(DialogueCore.eval_condition({"counter": "codex_shards", "gte": 2}, s),
 		"codex_shards reads the codex section")
 	check(DialogueCore.eval_condition({"tech": "med-arithmetic-zero"}, s), "tech researched")
@@ -156,40 +159,41 @@ func test_twin_forced_plays_exactly_once() -> void:
 
 
 func test_a3_twin_pair_priority_then_suppression() -> void:
-	# The A3 opening-scene twin pair (2026-07-07): a3-first-death (deaths>=1, priority
-	# 105) and a3-first-return (runs>=1, priority 104), both force_play, both setting
-	# `a3`. After a death BOTH gates hold (a death still ticks runs) → the higher-priority
-	# death variant wins the one force-play slot. After a deathless first run only the
-	# generic is eligible. Either sets `a3`, and the shared-flag suppression then silences
-	# the other forever.
+	# The A3 opening-scene twin pair (2026-07-07): a3-first-death (deaths>=1, priority 105)
+	# fires when the first run ended in a COMBAT death; a3-first-death-alt (dissolves>=1,
+	# priority 104) fires when it ended in a full clear (walking into the codex artifact
+	# dissolves Tycho — a SEPARATE counter, not deaths). Both force_play, both set `a3`, and
+	# carry the SAME dialogue text; the shared-flag suppression silences whichever didn't
+	# play. The two gates are mutually exclusive on the FIRST run (a run either dies or
+	# dissolves), so priority only matters as a defensive tiebreak.
 	var death := _def("a3-first-death", {"source": "spine", "force_play": true,
 		"priority": 105, "sets_flag": "a3", "speakers": ["tycho", "sophia"],
 		"conditions": [{"counter": "deaths", "gte": 1}]})
-	var ret := _def("a3-first-return", {"source": "spine", "force_play": true,
+	var diss := _def("a3-first-death-alt", {"source": "spine", "force_play": true,
 		"priority": 104, "sets_flag": "a3", "speakers": ["tycho", "sophia"],
-		"conditions": [{"counter": "runs", "gte": 1}]})
-	var defs := {"a3-first-death": death, "a3-first-return": ret}
-	# After a death (deaths>=1, runs>=1): both eligible → priority 105 wins.
+		"conditions": [{"counter": "dissolves", "gte": 1}]})
+	var defs := {"a3-first-death": death, "a3-first-death-alt": diss}
+	# First run ended in a combat death: deaths>=1, dissolves==0 → only the death variant.
 	var died := _save_state()
 	died["story"]["flags"] = {}
-	died["story"]["counters"] = {"runs": 1, "deaths": 1, "boss_kills": 0, "full_clears": 0}
-	check(DialogueCore.eligible(death, died), "death variant eligible after a death")
-	check(DialogueCore.eligible(ret, died), "generic also eligible after a death (runs ticked too)")
+	died["story"]["counters"] = {"runs": 1, "deaths": 1, "dissolves": 0, "boss_kills": 0, "full_clears": 0}
+	check(DialogueCore.eligible(death, died), "death variant eligible after a combat death")
+	check(not DialogueCore.eligible(diss, died), "dissolve variant out (no dissolve yet)")
 	check_eq(DialogueCore.select_forced(defs, died), "a3-first-death",
-		"a death → the higher-priority death variant claims the force-play slot")
-	# A deathless first run (runs>=1, deaths==0): only the generic is eligible.
+		"a combat death → the death variant plays")
+	# First run was a full clear (dissolve home): dissolves>=1, deaths==0 → only the alt.
 	var won := _save_state()
 	won["story"]["flags"] = {}
-	won["story"]["counters"] = {"runs": 1, "deaths": 0, "boss_kills": 3, "full_clears": 1}
-	check(not DialogueCore.eligible(death, won), "death variant out on a deathless run")
-	check_eq(DialogueCore.select_forced(defs, won), "a3-first-return",
-		"a deathless first run → the generic opener plays")
-	# Whichever plays sets `a3`; now BOTH are inert (no forced scene remains), even after
-	# a later death would satisfy the death variant's own gate.
-	won["story"] = DialogueCore.mark_shown(won["story"], ret, false)
-	won["story"]["counters"]["deaths"] = 1  # a death happens later
+	won["story"]["counters"] = {"runs": 1, "deaths": 0, "dissolves": 1, "boss_kills": 3, "full_clears": 1}
+	check(not DialogueCore.eligible(death, won), "death variant out on a deathless full clear")
+	check_eq(DialogueCore.select_forced(defs, won), "a3-first-death-alt",
+		"a full-clear dissolve → the dissolve variant plays")
+	# Whichever plays sets `a3`; now BOTH are inert (no forced scene remains), even after a
+	# later combat death would satisfy the death variant's own gate.
+	won["story"] = DialogueCore.mark_shown(won["story"], diss, false)
+	won["story"]["counters"]["deaths"] = 1  # a combat death happens on a later run
 	check(not DialogueCore.eligible(death, won), "death variant suppressed by the shared a3 flag")
-	check(not DialogueCore.eligible(ret, won), "played generic suppressed (seen + flag)")
+	check(not DialogueCore.eligible(diss, won), "played dissolve variant suppressed (seen + flag)")
 	check_eq(DialogueCore.select_forced(defs, won), "",
 		"once a3 is set, neither twin can force-play again")
 

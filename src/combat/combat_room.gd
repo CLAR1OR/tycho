@@ -58,6 +58,7 @@ const PLAYER_SPAWN := Vector3(0, 0, 18)  # south edge; the wave scatters around 
 signal cleared        # the wave is down; the orchestrator decides what happens next
 signal exit_entered   # the player stepped into the open exit portal
 signal player_died    # HP hit 0 in this room
+signal artifact_entered  # the player walked into the codex artifact (final chamber) — dissolve + run end
 
 # Where in the run this room sits — set via setup() before entering the tree.
 var floor_num: int = 1
@@ -410,6 +411,73 @@ func _spawn_wellspring() -> void:
 			apply_missing_heal(DoorCore.WELLSPRING_HEAL_PCT)
 			label.text = "Wellspring (spent)")
 	add_child(well)
+
+
+# --- Codex artifact (final chamber only) -----------------------------------------
+
+## Raise the codex artifact pedestal (design 2026-07-07). In the FINAL floor's boss room,
+## game.gd calls this after the boss valve (heal + guaranteed echo) resolves — a pedestal
+## rises INSTEAD of the plain exit and is the ONLY way out. Walking into it dissolves Tycho
+## and ends the run (emits `dissolved` on the bus + `artifact_entered` up to game.gd). The
+## label shows the current shard count / max; this run's shard is granted on run_ended.
+func open_artifact(shards: int, shards_max: int) -> void:
+	await get_tree().create_timer(respawn_delay).timeout
+	if not is_inside_tree():
+		return
+	_spawn_artifact(shards, shards_max)
+	_hint_label.text = "The codex artifact stands whole — step into it"
+
+
+func _spawn_artifact(shards: int, shards_max: int) -> void:
+	var artifact := Area3D.new()
+	artifact.add_to_group("codex_artifact")
+	artifact.position = Vector3(0, 1.4, -18)
+	artifact.collision_layer = 0
+	artifact.collision_mask = 1
+	var shape := CollisionShape3D.new()
+	var sph := SphereShape3D.new()
+	sph.radius = 2.0
+	shape.shape = sph
+	artifact.add_child(shape)
+	var mesh := MeshInstance3D.new()
+	# Placeholder: an egg-ish prism, artifact-purple, glowing (the egg motif, bible §story).
+	var pm := PrismMesh.new()
+	pm.size = Vector3(1.6, 2.8, 1.6)
+	mesh.mesh = pm
+	var mat := StandardMaterial3D.new()
+	mat.emission_enabled = true
+	mat.emission = Color(0.75, 0.45, 1.0)
+	mat.albedo_color = Color(0.5, 0.3, 0.8)
+	mesh.material_override = mat
+	artifact.add_child(mesh)
+	var label := Label3D.new()
+	label.text = "Codex: %d/%d" % [shards, shards_max]
+	label.position = Vector3(0, 2.6, 0)
+	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
+	artifact.add_child(label)
+	var spent := [false]  # one use; the dissolve ends the run
+	# Distance re-check rejects Godot's spurious first-frame body_entered (as the Wellspring).
+	artifact.body_entered.connect(func(body: Node3D) -> void:
+		if body is Player and not spent[0] \
+				and body.global_position.distance_to(artifact.global_position) < 3.0:
+			spent[0] = true
+			RunState.player_health = _player.health  # (unused after town return, kept for parity)
+			_dissolve_player()
+			EventBus.dissolved.emit()
+			artifact_entered.emit())
+	add_child(artifact)
+	# global_position is only valid once the artifact is in the tree (add_child above).
+	Sfx.play("door-open", artifact.global_position)
+
+
+## Placeholder dissolve FX (design 2026-07-07): a brief tinted burst where Tycho stands +
+## hide his mesh. Reuses the death-FX shard burst; ~0.5s, purely cosmetic (the run has
+## already ended at the artifact). No FEEL numbers — placeholder until the painterly pass.
+func _dissolve_player() -> void:
+	if not is_instance_valid(_player):
+		return
+	CombatFX.death_burst(self, _player.global_position, Color(0.75, 0.45, 1.0))
+	_player.visible = false
 
 
 # --- Echo offer -----------------------------------------------------------------

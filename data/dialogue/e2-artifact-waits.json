@@ -1,0 +1,21 @@
+{
+	"id": "e2-artifact-waits",
+	"source": "spine",
+	"speakers": ["sophia", "tycho"],
+	"priority": 98,
+	"force_play": true,
+	"conditions": [{"counter": "codex_shards", "gte": 6}],
+	"sets_flag": "e2",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{"who": "", "text": "The final shard settles into place. The artifact is whole for the first time."},
+			{"who": "", "text": "It turns once, slowly. A low hum fills the chamber, holds, then stops. The artifact goes still."},
+			{"who": "sophia", "text": "That's the last of it. Every shard, seated. It's complete."},
+			{"who": "tycho", "text": "It turned, it hummed, and now nothing."},
+			{"who": "sophia", "text": "It's finished. And it's listening. For what, I can't say yet."},
+			{"who": "tycho", "text": "So it's complete, and we still don't know what it is."},
+			{"who": "sophia", "text": "No. The shards taught us how to build it, not what it's for. We keep going out. We're not ready to answer it."}
+		]
+	}
+}

@@ -14,6 +14,12 @@ class_name StoryCore
 ## never a fresh copy. Cross-section effects (the meta.runs mirror, the codex grant on
 ## victory) are applied by StoryState, which sees the whole state.
 
+## The codex puzzle completes at this many shards (PRD §7.11: "5–7 shard visual states";
+## placeholder — dial like an economy number). Exposed for the pedestal label, the clamp
+## below, and the E2 gate (data/dialogue/e2-artifact-waits.json's codex_shards>=6 is
+## coupled to this value — keep them in sync).
+const CODEX_SHARDS_MAX := 6
+
 
 ## First-time-pickup flag for the dialogue `has(<resource>)` vocabulary
 ## (act1-story-beats.md). Sets story.flags["has-<id>"] the first time a resource goes
@@ -36,6 +42,15 @@ static func record_death(story: Dictionary) -> void:
 	counters["deaths"] = int(counters["deaths"]) + 1
 
 
+## Player dissolved at the codex artifact on a full clear (EventBus.dissolved, 2026-07-07)
+## — bumps the dissolves counter. SEPARATE from deaths (which stays combat-only): the
+## dissolve is the established, non-fatal way home from a completed run. No penalty. The
+## run still ends victorious via run_ended. Mutates story.
+static func record_dissolve(story: Dictionary) -> void:
+	var counters: Dictionary = story["counters"]
+	counters["dissolves"] = int(counters.get("dissolves", 0)) + 1
+
+
 ## A boss was killed (EventBus.boss_killed) — bumps the boss_kills counter. Mutates
 ## story. (The codex-shard / full-clear reward rides run_ended, not this.)
 static func record_boss_kill(story: Dictionary) -> void:
@@ -56,9 +71,10 @@ static func record_run_end(story: Dictionary, victory: bool) -> void:
 
 ## Grant one codex shard (the full-clear reward — PRD §7.11 — and the F2 cheat).
 ## Lives in the codex section, not story; StoryState calls it on victory and emits
-## codex_shard_added(total). Mutates codex; returns the new total.
+## codex_shard_added(total). CLAMPS at CODEX_SHARDS_MAX — the puzzle only holds so many
+## shards, so a grant at max is a no-op returning max. Mutates codex; returns the new total.
 static func grant_codex_shard(codex: Dictionary) -> int:
-	var total := int(codex["shards"]) + 1
+	var total := mini(int(codex["shards"]) + 1, CODEX_SHARDS_MAX)
 	codex["shards"] = total
 	return total
 
