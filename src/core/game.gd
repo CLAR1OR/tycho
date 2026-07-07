@@ -40,7 +40,6 @@ var _run_snapshot: Dictionary = {}
 
 @onready var _world: Node = $World
 @onready var _res_label: Label = $HUD/Resources
-@onready var _echo_label: Label = $HUD/Echoes
 
 
 func _ready() -> void:
@@ -82,7 +81,6 @@ func choose_slot(slot: int) -> void:
 	var checkpoint: Variant = SaveManager.state.get("checkpoint")
 	if checkpoint is Dictionary and not (checkpoint as Dictionary).is_empty():
 		RunState.resume_from(checkpoint)
-		_refresh_echoes()
 		_next_room()
 	else:
 		_goto_town()
@@ -102,7 +100,7 @@ func _goto_town() -> void:
 	var town := TOWN_SCENE.instantiate()
 	_swap(town)
 	town.run_requested.connect(func() -> void: call_deferred("_start_run"))
-	_refresh_echoes()  # run is over — the echo readout clears with it
+	_refresh_resources()  # run is over — the town economy readout shows again
 	_save()
 
 
@@ -117,10 +115,12 @@ func _start_run() -> void:
 	RunState.start_run(
 		{"floors": run_floors, "rooms_min": rooms_min, "rooms_max": rooms_max},
 		randi(), run_number)
+	_refresh_resources()  # in a run now — the town economy readout hides (pickups fade in-HUD)
 	_next_room()
 
 
 func _next_room() -> void:
+	_refresh_resources()  # in a run: hide the town economy readout (also covers a resume boot)
 	# Per-floor autosave (PRD §7.13): a floor's first room = the resume point.
 	# RunState is already positioned there, so the snapshot IS the floor start.
 	if int(RunState.run["room"]) == 1:
@@ -232,8 +232,7 @@ func _offer_echo(room: Node, on_done: Callable) -> void:
 		on_done.call()
 		return
 	room.present_echo_offer(offers, func(id: String) -> void:
-		RunState.pick_echo(id)
-		_refresh_echoes(), on_done)
+		RunState.pick_echo(id), on_done)  # the room's RunHud refreshes its echo shelf on pick
 
 
 ## Open the next room's doors; walking into one records the chosen door on RunState so
@@ -322,7 +321,6 @@ func forfeit_run() -> void:
 	SaveManager.state["checkpoint"] = null                # (c) belt-and-suspenders (snapshot predates it)
 	SaveManager.save_current()                            # (d) overwrite the run's on-disk checkpoints
 	_refresh_resources()
-	_refresh_echoes()
 	call_deferred("_goto_town")                           # (e) town music rides the normal path
 
 
@@ -346,7 +344,6 @@ func _return_to_slot_select() -> void:
 	if _scene != null:
 		_scene.queue_free()
 		_scene = null
-	_refresh_echoes()
 	_show_slot_select()
 
 
@@ -358,24 +355,12 @@ func _save() -> void:
 	SaveManager.save_current()
 
 
+## The town economy readout (gold/stone/food/knowledge/shards). Shown in TOWN only —
+## hidden during a run, where in-run pickups ride the RunHud's fading strip instead
+## (design/ui-hud.md). The in-run echo shelf + HP + abilities all live on the RunHud.
 func _refresh_resources() -> void:
+	_res_label.visible = not RunState.in_run()
 	var parts := PackedStringArray()
 	for id in HUD_RESOURCES:
 		parts.append("%s: %d" % [id, int(Ledger.get_amount(id))])
 	_res_label.text = "\n".join(parts)
-
-
-func _refresh_echoes() -> void:
-	if not RunState.in_run() or RunState.echoes.is_empty():
-		_echo_label.text = ""
-		return
-	# Fold repeats of stackable picks into "name ×n".
-	var counts := {}
-	for id in RunState.echoes:
-		counts[id] = int(counts.get(id, 0)) + 1
-	var defs := EchoCore.defs()
-	var parts := PackedStringArray(["Echoes:"])
-	for id: String in counts:
-		var display := str((defs.get(id, {}) as Dictionary).get("name", id))
-		parts.append(display if int(counts[id]) == 1 else "%s ×%d" % [display, int(counts[id])])
-	_echo_label.text = "\n".join(parts)

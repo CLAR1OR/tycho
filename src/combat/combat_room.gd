@@ -83,14 +83,11 @@ var _last_hp: int = Player.MAX_HEALTH
 # Never reset within the room — the ESC menu may forfeit / quit only when the room is
 # cleared OR the player is still untouched (can_menu_quit).
 var _damage_taken: bool = false
-var _ability_label: Label  # minimal RMB/Q/R readout (design/etchings.md HUD)
+var _hud: RunHud  # the in-run HUD (design/ui-hud.md) — chip / HP / echoes / abilities / boss
 
 @onready var _player: Player = $Player
 @onready var _rig: CameraRig = $CameraRig
 @onready var _portal: Area3D = $ExitPortal
-@onready var _room_label: Label = $HUD/RoomInfo
-@onready var _hp_label: Label = $HUD/HP
-@onready var _hint_label: Label = $HUD/Hint
 
 
 func setup(p_floor: int, p_room: int, p_rooms_this_floor: int, p_kind: String,
@@ -115,14 +112,13 @@ func _ready() -> void:
 	_portal.visible = false
 	_portal.monitoring = false
 	_portal.body_entered.connect(_on_portal_body_entered)
-	if kind == RunFlow.KIND_BOSS:
-		_room_label.text = "Floor %d — BOSS" % floor_num
-	elif _reprieve:
-		_room_label.text = "Floor %d — Reprieve" % floor_num
-	else:
-		var suffix := "  ⚠ peril" if _peril else ""
-		_room_label.text = "Floor %d — Room %d/%d%s" % [floor_num, room_index, rooms_this_floor, suffix]
-	_hint_label.text = "Clear the room - F1 tuning"
+	# The in-run HUD (design/ui-hud.md) — one code-built Control on the HUD layer.
+	_hud = RunHud.new()
+	$HUD.add_child(_hud)
+	_hud.setup(_player)
+	var hud_kind := HudCore.KIND_REPRIEVE if _reprieve else kind
+	_hud.configure_room(floor_num, room_index, rooms_this_floor, hud_kind, _peril)
+	_hud.set_hint("Clear the room")
 	# Configure this room's FRESH player instance, in order: the equipped weapon
 	# (baseline kit), then the run's echoes on top, then carried-over HP (rooms
 	# must not free-heal).
@@ -140,11 +136,10 @@ func _ready() -> void:
 	# with a carried-wound value, which must NOT count as damage taken this room.
 	_last_hp = _player.health
 	_damage_taken = false
-	# Minimal ability readout (equipped RMB/Q/R + cooldowns), polled in _process.
-	_ability_label = Label.new()
-	_ability_label.position = Vector2(14, 74)
-	_ability_label.add_theme_font_size_override("font_size", 14)
-	$HUD.add_child(_ability_label)
+	# Seed the HUD with the player's starting HP + this run's echo picks (health_changed
+	# already fired during the player's own _ready, before the HUD existed to hear it).
+	_hud.set_hp(_player.health, _player.max_health)
+	_hud.refresh_echoes()
 	_spawn_wave()
 	# Same live feel-tuning panel as the sandbox (F1) — dials apply to THIS room's
 	# instances plus the shared static knobs (hitstop, crowd rules).
@@ -161,12 +156,14 @@ func _spawn_wave() -> void:
 		# the next doors; the heal is the reward, taken by touching the pool.
 		_spawn_wellspring()
 		_cleared = true
+		_hud.mark_cleared()
 		cleared.emit.call_deferred()
-		_hint_label.text = "Breather — touch the Wellspring, then choose a door"
+		_hud.set_hint("Breather — touch the Wellspring, then choose a door")
 		return
 	if kind == RunFlow.KIND_BOSS:
 		# Boss rooms are a single staged fight — no waves in this chunk.
-		_spawn_enemy(ENEMY_BOSS, Vector3(0, 1.0, -14))
+		var boss := _spawn_enemy(ENEMY_BOSS, Vector3(0, 1.0, -14))
+		_hud.set_boss(boss)
 		_spawn_enemy(ENEMY_SKIRMISHER, Vector3(-8, 1.0, -10))
 		_spawn_enemy(ENEMY_SKIRMISHER, Vector3(8, 1.0, -10))
 		return
@@ -209,11 +206,11 @@ func _scene_for_id(type_id: String) -> PackedScene:
 
 
 func _update_wave_label() -> void:
-	if _waves.size() > 1:
-		_hint_label.text = "Wave %d/%d - clear the room" % [_wave_index + 1, _waves.size()]
+	# Wave progress now lives in the info chip (design/ui-hud.md), not the hint.
+	_hud.set_wave(_wave_index, _waves.size())
 
 
-func _spawn_enemy(scene: PackedScene, pos: Vector3) -> void:
+func _spawn_enemy(scene: PackedScene, pos: Vector3) -> EnemyDummy:
 	var enemy: EnemyDummy = scene.instantiate()
 	enemy.position = pos
 	enemy.target = _player
@@ -225,6 +222,7 @@ func _spawn_enemy(scene: PackedScene, pos: Vector3) -> void:
 	add_child(enemy)
 	enemy.died.connect(_on_enemy_died.bind(enemy))
 	_enemies.append(enemy)
+	return enemy
 
 
 func _wave_spawn_pos(i: int, count: int) -> Vector3:
@@ -247,6 +245,7 @@ func _on_enemy_died(enemy: EnemyDummy) -> void:
 		_advance_wave()
 		return
 	_cleared = true
+	_hud.mark_cleared()
 	if kind == RunFlow.KIND_BOSS:
 		Ledger.add("gold", float(boss_gold), "boss-drop")
 		Ledger.add("knowledge-shards", float(boss_shards), "boss-drop")
@@ -284,7 +283,7 @@ func open_exit() -> void:
 	_portal.visible = true
 	_portal.monitoring = true
 	Sfx.play("door-open", _portal.global_position)
-	_hint_label.text = "Exit open — step into the light"
+	_hud.set_hint("Exit open — step into the light")
 
 
 func _on_portal_body_entered(body: Node3D) -> void:
@@ -306,7 +305,7 @@ func present_doors(offer: Array, on_choose: Callable) -> void:
 	for i in offer.size():
 		_make_door(Vector3(float(xs[i]), 1.75, -23.0), offer[i], on_choose)
 	Sfx.play("door-open", Vector3(0, 1.75, -23))
-	_hint_label.text = "Choose a door — the sigil is what the next room pays"
+	_hud.set_hint("Choose a door — the sigil is what the next room pays")
 
 
 func _make_door(pos: Vector3, door: Dictionary, on_choose: Callable) -> void:
@@ -433,7 +432,7 @@ func open_artifact(shards: int, shards_max: int) -> void:
 	if not is_inside_tree():
 		return
 	_spawn_artifact(shards, shards_max)
-	_hint_label.text = "The codex artifact stands whole — step into it"
+	_hud.set_hint("The codex artifact stands whole — step into it")
 
 
 func _spawn_artifact(shards: int, shards_max: int) -> void:
@@ -501,18 +500,17 @@ func present_echo_offer(offer_ids: Array[String], on_pick: Callable, on_done: Ca
 		var defs := EchoCore.defs()
 		if defs.has(id):
 			EchoCore.apply_to_player(_player, defs[id])
+		_hud.refresh_echoes()  # the new pick joins the shelf immediately
 		on_done.call())
 
 
 # --- HUD -----------------------------------------------------------------------
-
-func _process(_delta: float) -> void:
-	if _ability_label != null and is_instance_valid(_player):
-		_ability_label.text = _player.ability_hud_text()
-
+# The run HUD (RunHud) polls the player for ability cooldowns itself each frame; the
+# room only pushes the state it owns (HP, chip, wave, hint, boss) through its setters.
 
 func _on_player_health_changed(hp: int, max_hp: int) -> void:
-	_hp_label.text = "HP: %d / %d" % [hp, max_hp]
+	if _hud != null:
+		_hud.set_hp(hp, max_hp)
 	if hp < _last_hp:
 		_rig.shake(shake_on_hit)
 		_damage_taken = true  # a hit this room — the Hades gate closes until the room clears

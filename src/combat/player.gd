@@ -573,6 +573,28 @@ func _end_surge() -> void:
 	_surge_prev = {}
 
 
+## Per-slot ability info for the run HUD (RunHud polls this): {rmb,q,r} each ->
+## {id, name, cd_left, cd_total}, plus a "dash" entry {cd_left, cd_total}. Clean
+## read-only view over _equipped/_cast_cd/_etch_defs so the HUD never pokes privates.
+## Dash has no separate cooldown accessor otherwise; it is ready whenever cd_left <= 0.
+func ability_slot_info() -> Dictionary:
+	var out := {}
+	for slot: String in ["rmb", "q", "r"]:
+		var id := str(_equipped.get(slot, ""))
+		var nm := ""
+		var cd_total := 0.0
+		if not id.is_empty() and _etch_defs.has(id):
+			var def: Dictionary = _etch_defs[id]
+			nm = str(def.get("name", id))
+			cd_total = float(def.get("cooldown_s", 0.0))
+		out[slot] = {
+			"id": id, "name": nm,
+			"cd_left": float(_cast_cd.get(slot, 0.0)), "cd_total": cd_total,
+		}
+	out["dash"] = {"cd_left": _dash_cd, "cd_total": dash_cooldown}
+	return out
+
+
 ## Minimal run-HUD readout of the three ability slots (combat_room polls this).
 func ability_hud_text() -> String:
 	var glyph := {"rmb": "RMB", "q": "Q", "r": "R"}

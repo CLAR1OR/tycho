@@ -425,6 +425,12 @@ func is_staggered() -> bool:
 	return _state == State.STAGGER
 
 
+## Current hit points (max is the `max_hp` export). Read-only view for the run HUD's
+## boss bar, which polls the boss node each frame (design/ui-hud.md).
+func current_hp() -> int:
+	return _hp
+
+
 # --- Misc helpers -----------------------------------------------------------
 
 func _dist_to_target() -> float:

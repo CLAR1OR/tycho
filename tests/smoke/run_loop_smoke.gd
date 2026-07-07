@@ -25,6 +25,9 @@ var _boss_heal_tested: bool = false
 var _postboss_echo_tested: bool = false
 var _multiwave_checked: bool = false  # a real combat room ran >1 wave (2026-07-06)
 var _final_boss_disk_checked: bool = false  # the statistics invariant window (2026-07-07)
+# RunHud coverage (the Slate in-run HUD, 2026-07-07) — each checked once.
+var _shelf_checked: bool = false      # echo shelf tile count == folded pick count
+var _pickup_checked: bool = false     # pickup strip lights on a drop
 
 
 func _ready() -> void:
@@ -686,6 +689,13 @@ func _play_room() -> void:
 	if echo_panel != null:
 		echo_panel.call("pick", 0)  # take the offered echo, like a player
 		await _settle(6)
+		# The RunHud echo shelf rebuilt on the pick — one tile per folded pick.
+		if not _shelf_checked:
+			_shelf_checked = true
+			var hud: Node = room.get("_hud")
+			var want := HudCore.fold_echoes(RunState.echoes, EchoCore.defs()).size()
+			_check(hud != null and int(hud.call("echo_tile_count")) == want,
+				"echo shelf tile count matches the folded pick count (%d)" % want)
 	await _walk_out(room)
 
 
@@ -697,6 +707,10 @@ func _clear_combat(room: Node) -> void:
 		_multiwave_checked = true
 		_check(int(room.call("wave_total")) >= 2,
 			"combat room runs multiple waves (%d)" % int(room.call("wave_total")))
+		# RunHud info chip carries the wave segment while the multi-wave room is uncleared.
+		var hud: Node = room.get("_hud")
+		_check(hud != null and "Wave" in str(hud.call("chip")),
+			"info chip shows the Wave segment (%s)" % (str(hud.call("chip")) if hud != null else "no hud"))
 	if not _dust_tested:
 		_dust_tested = true
 		var floor_now := int(RunState.run["floor"])
@@ -706,6 +720,12 @@ func _clear_combat(room: Node) -> void:
 		var want: float = float(DoorCore.cache_reward("dust", floor_now, false)["amount"])
 		_check(absf(Ledger.get_amount("resonance-dust") - (dust_before + want)) < 0.001,
 			"dust door paid its cache on clear (+%.0f)" % want)
+		# The kills dropped gold → the RunHud pickup strip is now visible (fades after ~3s).
+		if not _pickup_checked:
+			_pickup_checked = true
+			var hud: Node = room.get("_hud")
+			_check(hud != null and bool(hud.call("pickup_visible")),
+				"RunHud pickup strip lit up on the run's resource drops")
 		return
 	await _kill_room(room)
 
@@ -716,11 +736,16 @@ func _clear_boss(room: Node) -> void:
 	var player := _find_player()
 	if player != null and not _boss_heal_tested:
 		_boss_heal_tested = true
+		var hud: Node = room.get("_hud")
+		_check(hud != null and bool(hud.call("boss_bar_visible")),
+			"RunHud boss bar visible during the boss fight")
 		player.restore_health(60)  # deterministic: 40 missing of 100
 		var want: int = 60 + DoorCore.heal_missing(60, player.max_health, DoorCore.BOSS_HEAL_PCT)
 		await _kill_room(room)
 		await _settle(12)
 		_check(player.health == want, "boss kill healed 30%% of missing (60 -> %d, want %d)" % [player.health, want])
+		_check(hud != null and not bool(hud.call("boss_bar_visible")),
+			"RunHud boss bar gone after the boss dies")
 		return
 	await _kill_room(room)
 	await _settle(12)
