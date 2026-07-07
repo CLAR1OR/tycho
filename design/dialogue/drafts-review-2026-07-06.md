@@ -76,3 +76,19 @@ The masonry tech rewrite (encyclopedic explanation/aha; see `design/tech-nodes/m
 | hint 3 | "Set the top wedge **—** the keystone **—** *last*; that locks it. Then mind the feet: a finished arch shoves outward. Plant something heavy on each side to take the shove." → "Set the top wedge, the keystone, last**. That** locks the ring. Then mind the feet**.** A finished arch shoves outward, so plant something heavy on each side to take the shove." |
 
 The optional Wren "aha" tag in the .md (§6) was also de-em-dashed and pointed toward Wren's plainer register (it is not shipped in `data/`; authoring reference only).
+
+---
+
+## 6. A3 opening-scene twin — win-first-run fix (2026-07-07)
+
+The human decided the opening scene must fire after the FIRST run regardless of death (resolves the "win-first-run edge" flagged in `act1-story-beats.md`). Built as a twin of `a3-first-death` using the same shared-flag suppression as the B3 pair. `a3-first-death` is UNCHANGED and canonical.
+
+| id | source | speakers | gate | priority | sets | notes |
+|---|---|---|---|---|---|---|
+| `a3-first-return` (NEW) | spine, **force_play** cutscene | tycho, sophia | `runs>=1` | **104** | `a3` | The generic opener: Tycho steps back out of the portal (a win, no death) and takes Sophia to it. Death variant (`a3-first-death`, 105) wins the slot after a death; the generic fills the no-death case. Either sets `a3` → the other is inert forever. |
+
+**Lines — HUMAN CURATION FLAGGED (overwrite the placeholders).** `a3-first-return` reuses the human's own `a3-first-death` lines wherever the scene is identical (finding Sophia, the walk to the portal, the portal refusing her, the closing). Those are **HUMAN-VERBATIM** — do not touch. The lines that had to differ (there was no death) are **ORCHESTRATOR PLACEHOLDER** and want the human's pen:
+
+- **Placeholder (new for the no-death open):** line 1 narration ("Tycho steps out of the portal, back into the evening air."); line 2 Tycho ("Back out. Same field, same sky. The passage holds in both directions, then."); line 3 Tycho ("Let me check in with my sister…").
+- **Placeholder (adapted from the human's `a3-first-death` line, death clause removed):** line 5 Tycho's "Sophia! Sorry to interrupt…" (drops "was slain by monsters, woke up here again"; ends on the etchings); line 12 Tycho's "Sure will do…" (drops the "artefact will resurrect me" clause — no death has happened yet).
+- **Human-verbatim (copied byte-exact from `a3-first-death`):** the "He finds Sophia at her workbench…" narration; Sophia's "What are you talking about?…"; "They walk to the portal."; Tycho's "So here was the object…"; Sophia's "This goes against my every theory…"; "Sophia steps toward the portal. It does not let her through."; Sophia's "I cannot go through…"; "They walk back."; Sophia's "This is something huge…"; Tycho's "Did not have anything else in mind."

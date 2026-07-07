@@ -155,6 +155,45 @@ func test_twin_forced_plays_exactly_once() -> void:
 		"after one twin plays, no forced scene remains (the other is suppressed)")
 
 
+func test_a3_twin_pair_priority_then_suppression() -> void:
+	# The A3 opening-scene twin pair (2026-07-07): a3-first-death (deaths>=1, priority
+	# 105) and a3-first-return (runs>=1, priority 104), both force_play, both setting
+	# `a3`. After a death BOTH gates hold (a death still ticks runs) → the higher-priority
+	# death variant wins the one force-play slot. After a deathless first run only the
+	# generic is eligible. Either sets `a3`, and the shared-flag suppression then silences
+	# the other forever.
+	var death := _def("a3-first-death", {"source": "spine", "force_play": true,
+		"priority": 105, "sets_flag": "a3", "speakers": ["tycho", "sophia"],
+		"conditions": [{"counter": "deaths", "gte": 1}]})
+	var ret := _def("a3-first-return", {"source": "spine", "force_play": true,
+		"priority": 104, "sets_flag": "a3", "speakers": ["tycho", "sophia"],
+		"conditions": [{"counter": "runs", "gte": 1}]})
+	var defs := {"a3-first-death": death, "a3-first-return": ret}
+	# After a death (deaths>=1, runs>=1): both eligible → priority 105 wins.
+	var died := _save_state()
+	died["story"]["flags"] = {}
+	died["story"]["counters"] = {"runs": 1, "deaths": 1, "boss_kills": 0, "full_clears": 0}
+	check(DialogueCore.eligible(death, died), "death variant eligible after a death")
+	check(DialogueCore.eligible(ret, died), "generic also eligible after a death (runs ticked too)")
+	check_eq(DialogueCore.select_forced(defs, died), "a3-first-death",
+		"a death → the higher-priority death variant claims the force-play slot")
+	# A deathless first run (runs>=1, deaths==0): only the generic is eligible.
+	var won := _save_state()
+	won["story"]["flags"] = {}
+	won["story"]["counters"] = {"runs": 1, "deaths": 0, "boss_kills": 3, "full_clears": 1}
+	check(not DialogueCore.eligible(death, won), "death variant out on a deathless run")
+	check_eq(DialogueCore.select_forced(defs, won), "a3-first-return",
+		"a deathless first run → the generic opener plays")
+	# Whichever plays sets `a3`; now BOTH are inert (no forced scene remains), even after
+	# a later death would satisfy the death variant's own gate.
+	won["story"] = DialogueCore.mark_shown(won["story"], ret, false)
+	won["story"]["counters"]["deaths"] = 1  # a death happens later
+	check(not DialogueCore.eligible(death, won), "death variant suppressed by the shared a3 flag")
+	check(not DialogueCore.eligible(ret, won), "played generic suppressed (seen + flag)")
+	check_eq(DialogueCore.select_forced(defs, won), "",
+		"once a3 is set, neither twin can force-play again")
+
+
 func test_indicator_for() -> void:
 	# "!!" = an unseen SPINE beat, "!" = unseen arc/contextual, "" = nothing new.
 	var s := _save_state()

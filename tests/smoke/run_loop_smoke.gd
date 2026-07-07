@@ -134,50 +134,98 @@ func _run_smoke() -> void:
 	_check(int(on_disk["codex"]["shards"]) == 1, "disk: codex shard persisted")
 	_check(int(on_disk["meta"]["runs"]) == runs_before + 1, "disk: meta.runs mirror persisted")
 
-	# --- The unlock cascade fires on the run-1 town return (PRD §7.1) ---------------
-	# B3 (Sophia cracks the shards) force-plays because run 1's 3 boss kills tripped
-	# its gate; then B1 (Mara, talk) and B4 (Herzog, talk) open the forge and plots.
+	# --- Run-1 victory return: the A3 opening cutscene (win-first-run twin) -----------
+	# The generic opener a3-first-return (force_play, runs>=1, priority 104) claims the
+	# one force-play slot on this victory return: it outranks B3 (92) and the b3-alt
+	# fallback is out (runs<6). Its death-variant twin a3-first-death (deaths>=1, 105)
+	# stays out because run 1 was a full clear. Either twin sets `a3`; DialogueCore's
+	# flag-suppression then silences the other forever.
 	await _settle(5)
-	var dlg_defs: Dictionary = DataLoader.load_domain("dialogue")
-	_check(not UnlocksCore.is_unlocked(SaveManager.state, "tech"), "desk still locked as B3 opens")
-	var b3dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
-	_check(b3dlg != null, "B3 'Sophia cracks the shards' force-played (3rd boss kill)")
-	if b3dlg != null:
-		for i in ((dlg_defs["b3-sophia-shards"]["scene"] as Dictionary)["lines"] as Array).size():
-			b3dlg.advance()
-		await _settle(3)
-	_check(bool(SaveManager.state["story"]["flags"].get("b3", false)), "B3 set its flag")
-	_check(UnlocksCore.is_unlocked(SaveManager.state, "tech"), "research desk unlocked after B3")
+	var a3ret: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(a3ret != null, "A3 opening cutscene force-played on the run-1 victory return")
+	_check(_panel_id(a3ret) == "a3-first-return",
+		"the win-first-run twin played (a3-first-return), not the death variant (%s)" % _panel_id(a3ret))
+	if a3ret != null:
+		await _drive_panel(a3ret, "a3-first-return")
+	_check(bool(SaveManager.state["story"]["flags"].get("a3", false)), "A3 set its flag")
+	_check((SaveManager.state["story"]["seen"] as Array).has("a3-first-return"),
+		"a3-first-return marked seen")
 
+	# Indicator (moved here): with a3 set, Mara has an unseen SPINE greeting
+	# (a-mara-meets) → "!!". Assert it BEFORE talking to her (talking clears the marker).
+	_check(str(_scene_node().call("indicator_for_npc", "mara")) == "!!",
+		"Mara shows !! for the unseen spine greeting (a-mara-meets)")
+
+	# --- Mara: greeting then ore (greeting-then-ore ordering) ------------------------
+	# a-mara-meets (spine 96, flag a3) outranks b1-mara-ore (spine 90, has-ore): the
+	# first talk is her greeting, the second is the ore beat that opens the forge.
 	_check(not UnlocksCore.is_unlocked(SaveManager.state, "weapons"), "forge locked before B1")
+	var greet: DialoguePanel = _scene_node().call("talk_to", "mara")
+	_check(_panel_id(greet) == "a-mara-meets", "Mara's first beat is her greeting (a-mara-meets)")
+	if greet != null:
+		await _drive_panel(greet, "a-mara-meets")
 	var b1dlg: DialoguePanel = _scene_node().call("talk_to", "mara")
-	_check(b1dlg != null, "Mara offers B1 (resonance ore is in the pack from the boss drops)")
+	_check(_panel_id(b1dlg) == "b1-mara-ore", "Mara's next beat is the ore beat (greeting now seen)")
 	if b1dlg != null:
-		for i in ((dlg_defs["b1-mara-ore"]["scene"] as Dictionary)["lines"] as Array).size():
-			b1dlg.advance()
-		await _settle(3)
+		await _drive_panel(b1dlg, "b1-mara-ore")
 	_check(bool(SaveManager.state["story"]["flags"].get("b1", false)), "B1 set its flag")
 	_check(UnlocksCore.is_unlocked(SaveManager.state, "weapons"), "forge unlocked after B1")
 
+	# --- Herzog: B4 opens the build plots (runs==1, so A4's runs>=2 gate keeps it out) ---
 	_check(not UnlocksCore.is_unlocked(SaveManager.state, "building"), "build plots locked before B4")
 	var b4dlg: DialoguePanel = _scene_node().call("talk_to", "herzog")
-	_check(b4dlg != null, "Herzog offers B4 (gold over the cheapest building cost; A4 needs runs>=2)")
+	_check(_panel_id(b4dlg) == "b4-herzog-ledger",
+		"Herzog offers B4 (gold over the cheapest building cost; A4 needs runs>=2)")
 	if b4dlg != null:
-		for i in ((dlg_defs["b4-herzog-ledger"]["scene"] as Dictionary)["lines"] as Array).size():
-			b4dlg.advance()
-		await _settle(3)
+		await _drive_panel(b4dlg, "b4-herzog-ledger")
 	_check(bool(SaveManager.state["story"]["flags"].get("b4", false)), "B4 set its flag")
 	_check(UnlocksCore.is_unlocked(SaveManager.state, "building"), "build plots unlocked after B4")
-	# mark_shown replaced the story dict three times — re-grab the counters ref.
+	# mark_shown replaced the story dict several times — re-grab the counters ref.
 	c = SaveManager.state["story"]["counters"]
 
-	# --- Build in town -------------------------------------------------------------
-	# The wave gold (>= 40) buys Sophia's Study L1; the next day tick must produce.
+	# --- Build in town ---------------------------------------------------------------
+	# The wave gold (>= 40) buys Sophia's Study L1; a later day tick must produce.
 	var gold_before_build := Ledger.get_amount("gold")
 	_scene_node().call("_try_build", "sophias-study")
 	var lvl: int = TownCore.building_level(SaveManager.state["town"], "sophias-study")
 	_check(lvl == 1, "build plot built the study (level %d)" % lvl)
 	_check(Ledger.get_amount("gold") < gold_before_build, "build spent gold")
+
+	# --- Desk still locked; B3 (+ the Food day tick) fire on the NEXT town entry ------
+	# B3 (Sophia cracks the shards) is eligible (run 1's 3 boss kills tripped its gate)
+	# but A3 outranked it on the last return. It force-plays only once A3 has set its
+	# flag (suppressing the a3 twins) — on the next town entry. Prove the desk is still
+	# shut, build the Farm, fill the granary, then drive a simulated run to bring B3 and
+	# the Food-upkeep day tick (design/food-upkeep.md) in together.
+	_check(not UnlocksCore.is_unlocked(SaveManager.state, "tech"), "research desk locked before B3")
+	Ledger.add("gold", 40.0, "smoke-grant")
+	_scene_node().call("_try_build", "farm")
+	_check(TownCore.building_level(SaveManager.state["town"], "farm") == 1, "farm built (ungated)")
+	var cheats: CheatPanel = get_tree().get_first_node_in_group("cheat_panel")
+	_check(cheats != null, "cheat panel available")
+	# Buildings now: study + farm (2) → upkeep 2 + 2 = 4; farm L1 makes 3 food; a fat
+	# granary covers it → well-fed.
+	Ledger.add("food", 50.0, "smoke-grant")
+	var food_before := Ledger.get_amount("food")
+	var built_count := (SaveManager.state["town"]["buildings"] as Array).size()
+
+	cheats.simulate_run(true)  # sim #1 — trips B3 and runs the Food day tick
+	await _settle(10)
+	# food = prior stock + farm harvest (3) - upkeep (2 base + 1/building).
+	var expected_food := food_before + 3.0 - (2.0 + 1.0 * float(built_count))
+	_check(absf(Ledger.get_amount("food") - expected_food) < 0.001,
+		"food = stock + farm harvest - upkeep (%.1f)" % Ledger.get_amount("food"))
+	_check(bool(SaveManager.state["town"]["well_fed"]), "well-fed with a full granary")
+	_check(bool(_read_slot_from_disk()["town"]["well_fed"]), "disk: well_fed status persisted")
+
+	var b3dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(_panel_id(b3dlg) == "b3-sophia-shards",
+		"B3 force-plays on the next town entry (A3 seen; the b3 twins pick the primary)")
+	if b3dlg != null:
+		await _drive_panel(b3dlg, "b3-sophia-shards")
+	_check(bool(SaveManager.state["story"]["flags"].get("b3", false)), "B3 set its flag")
+	_check(UnlocksCore.is_unlocked(SaveManager.state, "tech"), "research desk unlocked after B3")
+	c = SaveManager.state["story"]["counters"]
 
 	# --- Research at Sophia's desk ---------------------------------------------------
 	# Quarry must be tech-gated first; then drive the REAL panel path end-to-end:
@@ -185,14 +233,13 @@ func _run_smoke() -> void:
 	_scene_node().call("_try_build", "quarry")
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 0,
 		"quarry blocked before masonry is researched")
-	var cheats: CheatPanel = get_tree().get_first_node_in_group("cheat_panel")
-	_check(cheats != null, "cheat panel available for the run-gate test")
 	var panel: TechPanel = _scene_node().call("open_tech_panel")
 	await _settle(3)
 
 	# Shard turn-in economy (2026-07-06): investing spends KNOWLEDGE ONLY. Knowledge
-	# Shards convert to Knowledge only by turning them in at the desk. Run 1's bosses
-	# left shards in the pouch — turn them in and watch Knowledge grow by 5 apiece.
+	# Shards convert to Knowledge only by turning them in at the desk. Run 1's boss and
+	# the sim above left shards in the pouch — turn them in and watch Knowledge grow by
+	# 5 apiece.
 	var shards_held := Ledger.get_amount("knowledge-shards")
 	_check(shards_held >= 1.0, "carrying boss knowledge-shards to turn in (%.0f)" % shards_held)
 	var kn_before := Ledger.get_amount("knowledge")
@@ -227,11 +274,13 @@ func _run_smoke() -> void:
 	panel.close()
 	await _settle(3)
 
-	# A run has to pass before Sophia will hear the answer again. Simulate one — nothing
-	# force-plays on this return (A3 needs a death, B5 needs masonry, the b3 twins are
-	# flag-suppressed), so the town swap is silent.
+	# A run has to pass before Sophia will hear the answer again. Simulate one (sim #2).
+	# Nothing force-plays on this return: A3 is set (both a3 twins suppressed), b3 is set
+	# (both b3 twins suppressed), and B5 still needs masonry — so the town swap is silent.
 	cheats.simulate_run(true)
 	await _settle(10)
+	_check(get_tree().get_first_node_in_group("dialogue_panel") == null,
+		"the quiz-clear return is silent (no eligible force-play)")
 	_check(not TechCore.is_quiz_locked(SaveManager.state["tech"], "med-arithmetic-zero"),
 		"finishing a run clears the quiz lock")
 
@@ -285,13 +334,6 @@ func _run_smoke() -> void:
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 1,
 		"masonry unlock makes the quarry buildable")
 
-	# --- Farm (Food upkeep, design/food-upkeep.md) ---------------------------------
-	# Ungated by tech (agriculture is day-0; the build SYSTEM gate — B4 — covers it),
-	# so it builds straight away now that plots are open.
-	Ledger.add("gold", 40.0, "smoke-grant")
-	_scene_node().call("_try_build", "farm")
-	_check(TownCore.building_level(SaveManager.state["town"], "farm") == 1, "farm built (ungated)")
-
 	# TechState (autoload) owns the tech-section writes now — the panel's finish() and
 	# Sophia's auto-solve both route through it. Re-read the slot straight off disk to
 	# prove the TechState-mutated tech dict lands there (same ordering proof as the
@@ -332,32 +374,38 @@ func _run_smoke() -> void:
 	await _settle(30)
 	_check(_scene_file() == "town.tscn", "death returns to town (got %s)" % _scene_file())
 	_check(SaveManager.state["checkpoint"] == null, "death clears the checkpoint too")
+	c = SaveManager.state["story"]["counters"]
 	_check(int(c["deaths"]) == 1, "death counted")
-	# runs so far: run 1 + the quiz-gate sim + run 2 (death) = runs_before + 3.
-	_check(int(c["runs"]) == runs_before + 3, "died run still ticks the day")
+	# runs: run 1 + sim #1 (B3) + sim #2 (quiz clear) + run 2 death = runs_before + 4.
+	_check(int(c["runs"]) == runs_before + 4, "died run still ticks the day")
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
 	_check(Ledger.get_amount("stone") >= 2.0, "quarry produced stone on the day tick")
 
-	# --- Dialogue on the run-2 town return (PRD §7.12) -------------------------------
-	# deaths just hit 1, so the FIRST-DEATH cutscene (a3-first-death, force_play,
-	# priority above B5) claims the one force-play slot on this entry. B5 ("the first
-	# wall") is eligible (masonry researched) but outranked — it waits for the next
-	# town entry (the simulated run below). This resequences the old B5-plays-here flow.
-	var a3: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
-	_check(a3 != null, "first-death cutscene (A3) force-played on the town return after a death")
+	# --- Dialogue on the run-2 death return: B5, and the twin-suppression proof ------
+	# deaths just hit 1, so a3-first-death's gate (deaths>=1) is finally met — but `a3`
+	# is already set (a3-first-return played on the run-1 return), so a3-first-death is
+	# INERT (flag-suppressed). Masonry is researched, so B5 ("the first wall") is the top
+	# eligible force-play and claims the slot. This is the twin-suppression proof.
 	_check(bool(SaveManager.state["story"]["flags"].get("has-resonance-ore", false)),
 		"first-pickup flag set from the run's ore drop")
-	if a3 != null:
-		await _drive_panel(a3, "a3-first-death")
+	var b5: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(b5 != null, "a force-play cutscene fired on the death return")
+	_check(_panel_id(b5) == "b5-the-first-wall",
+		"B5 played, NOT the suppressed a3-first-death (%s)" % _panel_id(b5))
+	if b5 != null:
+		await _drive_panel(b5, "b5-the-first-wall")
 		_check(not get_tree().paused, "finished cutscene unpauses the game")
-		_check(bool(SaveManager.state["story"]["flags"].get("a3", false)), "A3 set its first-death flag")
-		_check((SaveManager.state["story"]["seen"] as Array).has("a3-first-death"), "A3 marked seen")
+		_check(bool(SaveManager.state["story"]["flags"].get("b5", false)), "B5 set its flag")
+		_check((SaveManager.state["story"]["seen"] as Array).has("b5-the-first-wall"),
+			"B5 marked seen (a spine beat never repeats)")
+	c = SaveManager.state["story"]["counters"]
+	_check(int(c["full_clears"]) == 3, "full clears: run 1 + two victorious sims")
+	_check(int(c["boss_kills"]) >= 2, "boss kills counted (%d)" % int(c["boss_kills"]))
+	_check(int(SaveManager.state["codex"]["shards"]) == 3, "codex shards: run 1 + two sims")
 
-	# "!" / "!!" indicators (DialogueCore.indicator_for, rendered by town.gd). With a3
-	# set, Mara has an unseen SPINE greeting (a-mara-meets) → "!!"; Tilly has an unseen
-	# ARC beat (arc-tilly-eager, runs>=1) → "!".
-	_check(str(_scene_node().call("indicator_for_npc", "mara")) == "!!",
-		"Mara shows !! for an unseen spine greeting")
+	# --- Indicators + character talks on the death return (PRD §7.12) -----------------
+	# Tilly has an unseen ARC beat (arc-tilly-eager, runs>=1) → "!". (Mara's greeting is
+	# already seen from the run-1 return, so her marker is off — asserted earlier.)
 	_check(str(_scene_node().call("indicator_for_npc", "tilly")) == "!",
 		"Tilly shows ! for an unseen arc beat")
 
@@ -387,7 +435,7 @@ func _run_smoke() -> void:
 	_check(_scene_node().has_node("MeditationSpot"), "Thomas's meditation spot exists in town")
 
 	# Talking Herzog: A4 (spine, runs >= 2) outranks the gold-gated contextual; B4 was
-	# seen in run 1, so A4 is his top beat now.
+	# seen in run 1's return, so A4 is his top beat now.
 	var talk: DialoguePanel = _scene_node().call("talk_to", "herzog")
 	_check(talk != null, "Herzog has something to say")
 	if talk != null:
@@ -400,48 +448,13 @@ func _run_smoke() -> void:
 	# mark_shown replaced the story section repeatedly — re-grab the counters ref.
 	c = SaveManager.state["story"]["counters"]
 
-	# --- Cheat panel (F2 playtest tool) — must mirror the real paths exactly --------
+	# --- Cheat panel (F2 playtest tool) — grant paths mirror the real Ledger ----------
 	cheats = get_tree().get_first_node_in_group("cheat_panel")
 	_check(cheats != null, "cheat panel lives on the HUD layer")
 	if cheats != null:
 		var gold_now := Ledger.get_amount("gold")
 		cheats.grant("gold", 100.0)
 		_check(Ledger.get_amount("gold") == gold_now + 100.0, "cheat grants gold via the Ledger")
-		var stone_now := Ledger.get_amount("stone")
-		# Food upkeep (design/food-upkeep.md): grant a fat granary so this day tick is
-		# well-fed. Buildings = study + quarry + farm (3) → upkeep 2 + 3 = 5; farm L1
-		# makes 3 food; stock (50+) covers upkeep with room to spare.
-		Ledger.add("food", 50.0, "smoke-grant")
-		var food_before := Ledger.get_amount("food")
-		var built_count := (SaveManager.state["town"]["buildings"] as Array).size()
-		cheats.simulate_run(true)
-		await _settle(10)
-		# The simulated run re-entered town → the pending B5 ("first wall") force-plays
-		# now (A3 is seen, the b3 twins are flag-suppressed, so B5 is the top force-play).
-		var b5: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
-		_check(b5 != null, "B5 'the first wall' force-plays on the next town entry (deferred past A3)")
-		if b5 != null:
-			await _drive_panel(b5, "b5-the-first-wall")
-			_check(bool(SaveManager.state["story"]["flags"].get("b5", false)), "B5 set its flag")
-			_check((SaveManager.state["story"]["seen"] as Array).has("b5-the-first-wall"),
-				"B5 marked seen (a spine beat never repeats)")
-		# B5's mark_shown replaced the story section — re-grab the counters ref.
-		c = SaveManager.state["story"]["counters"]
-		# runs: run 1 + quiz-gate sim + run 2 death + this sim = runs_before + 4.
-		_check(int(c["runs"]) == runs_before + 4, "simulated run ticks the runs counter")
-		# full clears: run 1 + quiz-gate sim + this sim = 3 (run 2 was a death).
-		_check(int(c["full_clears"]) == 3, "simulated run counts a full clear")
-		_check(int(c["boss_kills"]) >= 2, "simulated run counts the boss kill")
-		# codex: run 1 + quiz-gate sim + this sim = 3.
-		_check(int(SaveManager.state["codex"]["shards"]) == 3, "simulated run slots a codex shard")
-		_check(Ledger.get_amount("stone") > stone_now, "simulated run still ticks the day (quarry)")
-		_check(_scene_file() == "town.tscn", "simulated run lands back in town")
-		# food = prior stock + farm harvest (3) - upkeep (2 base + 1/building).
-		var expected_food := food_before + 3.0 - (2.0 + 1.0 * float(built_count))
-		_check(absf(Ledger.get_amount("food") - expected_food) < 0.001,
-			"food = stock + farm harvest - upkeep (%.1f)" % Ledger.get_amount("food"))
-		_check(bool(SaveManager.state["town"]["well_fed"]), "well-fed with a full granary")
-		_check(bool(_read_slot_from_disk()["town"]["well_fed"]), "disk: well_fed status persisted")
 		cheats.grant_codex_shard()
 		_check(int(SaveManager.state["codex"]["shards"]) == 4, "codex shard cheat applies")
 
@@ -594,7 +607,9 @@ func _kill_wave() -> void:
 ## cleared. Watchdog-bounded so a stuck room fails loudly downstream, not by hanging.
 func _kill_room(room: Node) -> void:
 	var guard := 0
-	while not bool(room.call("is_cleared")) and guard < 80:
+	# is_instance_valid guard: the death run's town swap can free the room while this
+	# loop is mid-_settle — resuming into room.call() would then hit a freed instance.
+	while is_instance_valid(room) and not bool(room.call("is_cleared")) and guard < 80:
 		guard += 1
 		if get_tree().get_nodes_in_group("enemies").is_empty():
 			await _settle(10)  # mid inter-wave beat / spawn telegraph — wait for bodies
@@ -659,6 +674,13 @@ func _drive_panel(panel: DialoguePanel, id: String) -> void:
 	for i in lines:
 		panel.advance()
 	await _settle(3)
+
+
+## The snippet id a dialogue panel is currently playing ("none" if the panel is null).
+func _panel_id(panel: DialoguePanel) -> String:
+	if panel == null:
+		return "none"
+	return str((panel.get("_def") as Dictionary).get("id", ""))
 
 
 func _settle(frames: int) -> void:
