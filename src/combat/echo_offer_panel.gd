@@ -17,6 +17,7 @@ var _on_pick: Callable
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS  # must work while the tree is paused
 	add_to_group("echo_offer")
+	theme = SlateTheme.get_theme()
 
 
 ## Show the offer and pause the game. `on_pick` is called with the chosen echo id.
@@ -36,6 +37,7 @@ func present(offer_ids: Array[String], on_pick: Callable) -> void:
 	var title := Label.new()
 	title.text = "Your etchings glow — choose an Echo"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	title.theme_type_variation = &"TitleLabel"
 	rows.add_child(title)
 
 	var cards := HBoxContainer.new()
@@ -53,7 +55,7 @@ func present(offer_ids: Array[String], on_pick: Callable) -> void:
 	var hint := Label.new()
 	hint.text = "click a card or press 1 / 2 / 3"
 	hint.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	hint.modulate = Color(1, 1, 1, 0.6)
+	hint.theme_type_variation = &"DimLabel"
 	rows.add_child(hint)
 
 	set_anchors_and_offsets_preset(Control.PRESET_CENTER)

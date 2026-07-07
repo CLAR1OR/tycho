@@ -1,10 +1,11 @@
-extends PanelContainer
+extends Control
 class_name PauseMenu
-## ESC pause menu (design 2026-07-07). Spawned once by game.gd on the HUD layer (survives
-## scene swaps), PROCESS_MODE_ALWAYS, hidden by default. ESC (ui_cancel) toggles it; while
-## open the tree is paused. Guards: inert at the slot-select screen; ignores ESC while
-## another panel already owns the pause (dialogue / echo offer / F1 / F2 / tech / forge /
-## etchings) — only our OWN open state may unpause.
+## ESC pause menu (design 2026-07-07; restyled to the Slate language + made FULLSCREEN
+## 2026-07-07). Spawned once by game.gd on the HUD layer (survives scene swaps),
+## PROCESS_MODE_ALWAYS, hidden by default. ESC (ui_cancel) toggles it; while open the tree
+## is paused. Guards: inert at the slot-select screen; ignores ESC while another panel
+## already owns the pause (dialogue / echo offer / F1 / F2 / tech / forge / etchings) —
+## only our OWN open state may unpause.
 ##
 ## Offers Resume, Forfeit Run (in-run only), and Save & Quit. Forfeit and in-run Save & Quit
 ## obey the Hades quit-gate: leaving a room is allowed only after clearing it or while still
@@ -15,9 +16,15 @@ class_name PauseMenu
 ##
 ## Code-built like the other panels. Public methods (open / close / forfeit / save_and_quit
 ## / can_quit_now) let the headless smoke drive it; gated actions no-op with a visible reason.
+##
+## Fullscreen: a near-opaque backdrop over the whole screen with a centred column. It lives
+## on game.gd's `$HUD` CanvasLayer, where anchors set in _ready get NO layout pass (the
+## RunHud geometry quirk) — so `size` is synced to the viewport on open and each frame while
+## visible.
 
-const PANEL_WIDTH := 380.0
-const FONT_SIZE := 15
+const PANEL_WIDTH := 320.0
+## Fullscreen backdrop: near-opaque dark so the game recedes (HUMAN: placeholder — dial).
+const COL_BACKDROP := Color(12.0 / 255, 11.0 / 255, 16.0 / 255, 0.88)  # #0c0b10 @ 0.88
 ## Shown when the Hades gate refuses a mid-run quit (HUMAN: placeholder copy — dial freely).
 const GATE_REASON := "Finish the fight first (or leave before taking a hit)."
 
@@ -31,15 +38,31 @@ func setup(game: Node) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	add_to_group("pause_menu")
-	set_anchors_and_offsets_preset(Control.PRESET_CENTER)
-	var margin := MarginContainer.new()
-	for side in ["margin_left", "margin_right", "margin_top", "margin_bottom"]:
-		margin.add_theme_constant_override(side, 24)
-	add_child(margin)
+	theme = SlateTheme.get_theme()
+	set_anchors_preset(Control.PRESET_FULL_RECT)
+	mouse_filter = Control.MOUSE_FILTER_STOP  # eat clicks so they don't fall through to the game
+	var backdrop := ColorRect.new()
+	backdrop.color = COL_BACKDROP
+	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(backdrop)
+	var center := CenterContainer.new()
+	center.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	center.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	add_child(center)
 	_rows = VBoxContainer.new()
-	_rows.add_theme_constant_override("separation", 10)
+	_rows.add_theme_constant_override("separation", 12)
 	_rows.custom_minimum_size = Vector2(PANEL_WIDTH, 0)
-	margin.add_child(_rows)
+	center.add_child(_rows)
+
+
+func _process(_delta: float) -> void:
+	# CanvasLayer-under-_ready layout quirk: keep the fullscreen rect synced to the viewport
+	# while shown (also covers window resizes). Cheap; only runs while visible.
+	if visible:
+		var vp := get_viewport_rect().size
+		if size != vp:
+			size = vp
 
 
 func _input(event: InputEvent) -> void:
@@ -64,6 +87,7 @@ func open() -> void:
 	if visible:
 		return
 	visible = true
+	size = get_viewport_rect().size  # sync now (the quirk); _process keeps it in step
 	get_tree().paused = true
 	_rebuild()
 	Sfx.play("ui-click")
@@ -120,12 +144,12 @@ func _rebuild() -> void:
 	var title := Label.new()
 	title.text = "Paused"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 22)
+	title.theme_type_variation = &"TitleLabel"
 	_rows.add_child(title)
 
 	_status_label = Label.new()
-	_status_label.add_theme_font_size_override("font_size", FONT_SIZE - 2)
-	_status_label.modulate = Color(1, 1, 1, 0.7)
+	_status_label.theme_type_variation = &"DimLabel"
+	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_rows.add_child(_status_label)
 
@@ -159,7 +183,8 @@ func _button(text: String, action: Callable, disabled: bool) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.disabled = disabled
-	b.add_theme_font_size_override("font_size", FONT_SIZE)
+	b.theme_type_variation = &"MenuButton"
+	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
 	b.pressed.connect(action)
 	_rows.add_child(b)

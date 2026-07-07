@@ -22,6 +22,7 @@ var _rows: VBoxContainer
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("etchings_panel")
+	theme = SlateTheme.get_theme()
 
 
 func open() -> void:
@@ -145,7 +146,7 @@ func _etching_row(id: String, def: Dictionary, etchings: Dictionary, is_equipped
 func _title(text: String) -> void:
 	var l := Label.new()
 	l.text = text
-	l.add_theme_font_size_override("font_size", 20)
+	l.theme_type_variation = &"TitleLabel"
 	_rows.add_child(l)
 
 
@@ -160,7 +161,7 @@ func _dim(text: String) -> void:
 	var l := Label.new()
 	l.text = text
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	l.modulate = Color(1, 1, 1, 0.55)
+	l.theme_type_variation = &"DimLabel"
 	_rows.add_child(l)
 
 

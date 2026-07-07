@@ -44,6 +44,7 @@ var _puzzle: Control
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("tech_panel")
+	theme = SlateTheme.get_theme()
 
 
 func open() -> void:
@@ -195,7 +196,7 @@ func _show_list() -> void:
 		if _defs.has(id):
 			var done := Label.new()
 			done.text = "✓ %s — researched" % str(_defs[id]["name"])
-			done.modulate = Color(1, 1, 1, 0.55)
+			done.theme_type_variation = &"DimLabel"
 			_rows.add_child(done)
 	_button("Close", close)
 
@@ -295,7 +296,7 @@ func _title(text: String) -> void:
 	var l := Label.new()
 	l.text = text
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.add_theme_font_size_override("font_size", 20)
+	l.theme_type_variation = &"TitleLabel"
 	_rows.add_child(l)
 
 

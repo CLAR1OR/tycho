@@ -55,9 +55,26 @@ The town HUD replaces the old plain `DayInfo` / `FoodStatus` / `Hint` Labels on 
 
 **HUMAN dial placeholders:** `HINT_TEXT`, the toast copy + `TOAST_HOLD_S`/`TOAST_FADE_S`, `PROJECTION_ALPHA`, every `FS_*`, and the three new resource colours are TownHud consts; the shared palette/fonts/sizes are in `SlateHud`. Dial like FEEL numbers.
 
+## Panels & the pause menu — Slate (2026-07-07)
+
+> Human directive: "continue with the pause/panel restyle to slate. pause menu should be fullscreen." Cashes in the deferred "pause / panel restyle" item below.
+
+The six Control-tree UIs that were plain default-gray are now in the Slate language. They do NOT draw in `_draw` like the HUDs — they are node trees (Labels/Buttons/PanelContainers), so they take a shared **Godot `Theme`** instead.
+
+**`SlateTheme`** (`src/core/slate_theme.gd`, `class_name SlateTheme extends RefCounted`) — a static factory + cache: `SlateTheme.get_theme()` builds ONE `Theme` and caches it in a static var. It reads every colour and font **off `SlateHud`'s constants** (`COL_SLATE_BG` / `COL_SLATE_BORDER` / `COL_TEXT` / `COL_READY` / `COL_KEY_TEXT` / `COL_CHIP_BORDER`, and the three font files via `SlateHud._with_fallback`) so the Slate palette + fonts stay ONE dial source — the human's SlateHud tweaks propagate to both the `_draw` HUDs and these panels. Only the SIZES / MARGINS / RADII are `SlateTheme`'s own placeholder consts (`FS_DEFAULT`/`FS_TITLE`/`FS_NUM`/`FS_MENU_BUTTON`, `BTN_RADIUS`/`PANEL_RADIUS`, button content margins). It styles the base **Button** (five slate styleboxes: normal / hover→border lightens to `COL_TEXT` / pressed→bg darkened / focus→gold `COL_READY` border / disabled→dim), **Panel/PanelContainer** (slate `panel` box, ~0.97 alpha), and **Label** (`COL_TEXT`), plus four **type variations** (applied per-node via `theme_type_variation`): `TitleLabel` (Cinzel caps, panel titles), `NumLabel` (mono, purely-numeric readouts), `DimLabel` (Garamond in the dim key colour, hints/footnotes/statuses), `MenuButton` (Button in Cinzel with roomier margins, the pause menu's big buttons).
+
+Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`present` (it inherits to every child), then uses `theme_type_variation` in place of the old ad-hoc `add_theme_font_size_override` / `modulate` fiddling — the diffs made the panels SIMPLER. **Six UIs covered:** `PauseMenu`, `ForgePanel`, `TechPanel`, `EtchingsPanel`, `DialoguePanel`, `EchoOfferPanel` (the in-run pick-1-of-3 — included so no default-gray UI remains). **RESTYLE ONLY** — every public method, signal, flow, pause semantic, guard, and game-copy string is byte-identical; the smoke drives them all unchanged.
+
+**Per-UI notes:** DialoguePanel keeps its speaker name gold-tinted (TitleLabel + a local down-size) and its spoken line at a larger local Garamond size (~19); its advance hint is a `DimLabel`. TechPanel/EtchingsPanel dim/locked/"researched" lines became `DimLabel`; the quiz's red wrong-answer feedback keeps its local semantic colour. EchoOfferPanel's cards are slate-styled Buttons (kept as single Buttons so pick semantics are untouched).
+
+**The pause menu is now FULLSCREEN.** `PauseMenu` changed base from `PanelContainer` to `Control`: a near-opaque backdrop (`#0c0b10` @ 0.88, a const) over the whole screen with a centred column — Cinzel `Paused` title, the existing Resume / Forfeit / Quit buttons as `MenuButton` variations (min width 320), and the gate-refusal status line as a `DimLabel`. **CanvasLayer geometry quirk** (the RunHud bug): anchors set in this Control's own `_ready` under game.gd's `$HUD` CanvasLayer get no layout pass, so `size` is synced to `get_viewport_rect().size` in `open()` AND each frame in `_process` while visible (it is PROCESS_MODE_ALWAYS). The smoke opens it and asserts the root spans the viewport. All flow (tree pause/unpause, the guards, inert-at-slot-select, the Hades gate) is untouched.
+
+**Stays un-themed (out of scope):** the slot-select screen, the F1 tuning panel, the F2 cheat panel (debug tools), and the arch puzzle (`puzzle_arch.gd` draws its own diagram).
+
+**HUMAN dial placeholders:** `SlateTheme`'s sizes / margins / radii and the pause backdrop colour are placeholders; the shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
+
 ## Deferred (document-don't-build)
 
 - **Echo tile tooltips / a hold-Tab detail view** (full echo names + descriptions on demand) — the shelf is monograms only for now.
-- **Pause / panel restyle to the slate language** — the ESC menu, forge, tech, etchings, dialogue panels keep their current look; unifying them under Slate is future polish.
 - **Ability cooldown pie-wedge** — v1 uses a flat face-darken + seconds; a radial sweep is a later flourish.
 - **Painterly art pass** — the HUD is placeholder primitives (the fonts are real as of 2026-07-07); the eventual painterly treatment rides the general art pass.

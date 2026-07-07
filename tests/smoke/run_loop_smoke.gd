@@ -595,6 +595,21 @@ func _run_smoke() -> void:
 	# disk and in memory.
 	pause = get_tree().get_first_node_in_group("pause_menu")
 	_check(pause != null, "pause menu available for the forfeit test")
+
+	# --- Pause menu — fullscreen geometry net (Slate restyle, 2026-07-07) ---------------
+	# It lives on the HUD CanvasLayer, where anchors set in _ready get NO layout pass (the
+	# RunHud quirk); open() syncs size to the viewport. Assert it spans the screen, then
+	# close and restore state (unpaused, hidden) exactly as it was.
+	if pause != null:
+		pause.open()
+		await _settle(2)
+		var pvp: Vector2 = get_viewport().get_visible_rect().size
+		_check((pause as Control).size == pvp,
+			"pause menu spans the viewport (%s == %s)" % [str((pause as Control).size), str(pvp)])
+		pause.close()
+		await _settle(2)
+		_check(not (pause as Control).visible and not get_tree().paused,
+			"pause menu closed and unpaused after the geometry check")
 	var gold_pre_run := Ledger.get_amount("gold")
 	var runs_pre_run := int(SaveManager.state["story"]["counters"]["runs"])
 	_game.call("_start_run")
