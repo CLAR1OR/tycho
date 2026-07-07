@@ -24,6 +24,7 @@ var _wellspring_tested: bool = false
 var _boss_heal_tested: bool = false
 var _postboss_echo_tested: bool = false
 var _multiwave_checked: bool = false  # a real combat room ran >1 wave (2026-07-06)
+var _final_boss_disk_checked: bool = false  # the statistics invariant window (2026-07-07)
 
 
 func _ready() -> void:
@@ -422,6 +423,28 @@ func _run_smoke() -> void:
 		_check(player.call("equipped_id", "q") == "snare", "run player carries Snare (Q)")
 		_check(player.call("equipped_id", "r") == "shockwave", "run player carries Shockwave (R)")
 		await _test_abilities_in_run(player)
+
+	# --- ESC quit-gate (Hades rule, design 2026-07-07) on the run-2 combat room ---------
+	# A hit closes the gate: the room refuses a menu quit and pause_menu.forfeit() no-ops
+	# (still in the run, no state changed). Clearing the room reopens the gate.
+	var gate_room := _scene_node()
+	var pause: PauseMenu = get_tree().get_first_node_in_group("pause_menu")
+	_check(pause != null, "pause menu lives on the HUD layer")
+	if player != null and pause != null and _scene_file() == "combat_room.tscn":
+		player.take_damage(1)
+		await _settle(2)
+		_check(not bool(gate_room.call("can_menu_quit")), "a hit closes the room's quit-gate")
+		var runs_guard := int(SaveManager.state["story"]["counters"]["runs"])
+		pause.forfeit()  # gated → must refuse
+		await _settle(2)
+		_check(RunState.in_run(), "gated forfeit refused — still in the run")
+		_check(_scene_file() == "combat_room.tscn", "gated forfeit left us in the room")
+		_check(int(SaveManager.state["story"]["counters"]["runs"]) == runs_guard,
+			"gated forfeit touched no counters")
+		await _kill_room(gate_room)
+		_check(bool(gate_room.call("can_menu_quit")), "clearing the room reopens the quit-gate")
+		await _settle(90)  # let the door offer settle so no await dangles when the room frees
+
 	if player != null:
 		player.take_damage(99999)
 	await _settle(30)
@@ -525,6 +548,49 @@ func _run_smoke() -> void:
 		await _drive_panel(e2, "e2-artifact-waits")
 	_check(bool(SaveManager.state["story"]["flags"].get("e2", false)), "E2 set its flag")
 
+	# --- Forfeit Run — "like it never happened" (ESC menu, design 2026-07-07) ----------
+	# Start a real run, let its first room pay out and clear it, then forfeit: the whole
+	# slot rolls back to the portal-entry snapshot (resources, counters, checkpoint), on
+	# disk and in memory.
+	pause = get_tree().get_first_node_in_group("pause_menu")
+	_check(pause != null, "pause menu available for the forfeit test")
+	var gold_pre_run := Ledger.get_amount("gold")
+	var runs_pre_run := int(SaveManager.state["story"]["counters"]["runs"])
+	_game.call("_start_run")
+	await _settle(12)
+	_check(_scene_file() == "combat_room.tscn", "forfeit run entered a combat room (got %s)" % _scene_file())
+	var fr_room := _scene_node()
+	await _kill_room(fr_room)
+	await _settle(60)  # let the door offer settle so nothing awaits a freed room on teardown
+	_check(Ledger.get_amount("gold") > gold_pre_run, "the forfeit run's room paid out (gold rose)")
+	_check(bool(fr_room.call("can_menu_quit")), "the cleared room allows a forfeit")
+	pause.forfeit()
+	await _settle(30)
+	_check(_scene_file() == "town.tscn", "forfeit returns to town (got %s)" % _scene_file())
+	_check(absf(Ledger.get_amount("gold") - gold_pre_run) < 0.001,
+		"forfeit rolled gold back to the pre-run value (%.0f)" % Ledger.get_amount("gold"))
+	_check(int(SaveManager.state["story"]["counters"]["runs"]) == runs_pre_run,
+		"forfeit left the runs counter unchanged")
+	_check(SaveManager.state["checkpoint"] == null, "forfeit cleared the checkpoint")
+	var fdisk := _read_slot_from_disk()
+	_check(absf(float((fdisk["ledger"] as Dictionary).get("gold", 0.0)) - gold_pre_run) < 0.001,
+		"disk: forfeit persisted the rolled-back gold")
+	_check(int((fdisk["story"]["counters"] as Dictionary)["runs"]) == runs_pre_run,
+		"disk: forfeit persisted the unchanged runs counter")
+	_check(fdisk.get("checkpoint") == null, "disk: forfeit persisted a null checkpoint")
+
+	# --- Save & Quit from town → slot select → re-enter (round-trip) -------------------
+	var runs_saved := int(SaveManager.state["story"]["counters"]["runs"])
+	pause.save_and_quit()
+	await _settle(5)
+	_check(_scene_node() == null, "Save & Quit returned to the slot-select screen")
+	_check(Music.current_id == "title", "slot select plays the title track after Save & Quit")
+	_game.call("choose_slot", SMOKE_SLOT)
+	await _settle(10)
+	_check(_scene_file() == "town.tscn", "re-choosing the slot loads town (got %s)" % _scene_file())
+	_check(int(SaveManager.state["story"]["counters"]["runs"]) == runs_saved,
+		"counters survived the Save & Quit round-trip (%d)" % int(SaveManager.state["story"]["counters"]["runs"]))
+
 	SaveManager.delete_slot(SMOKE_SLOT)
 	print("---")
 	if _failures.is_empty():
@@ -599,6 +665,17 @@ func _play_room() -> void:
 		await _clear_boss(room)
 	else:
 		await _clear_combat(room)
+	# Statistics invariant (2026-07-07): the final boss's kill is counted in MEMORY (via
+	# final_boss_killed) the instant it dies, but is NOT yet on disk — no checkpoint is
+	# written after the last floor start, and the pedestal hasn't been entered. Quitting in
+	# this window would discard the kill; the resume re-earns it exactly once. Prove disk
+	# lags memory here (RunState is still in_run — the run finishes at the artifact, below).
+	if boss and RunState.is_final_boss() and not _final_boss_disk_checked:
+		_final_boss_disk_checked = true
+		var mem_bk := int(SaveManager.state["story"]["counters"]["boss_kills"])
+		var disk_bk := int((_read_slot_from_disk()["story"]["counters"] as Dictionary)["boss_kills"])
+		_check(disk_bk < mem_bk,
+			"final-boss kill in memory, not yet on disk (disk %d < mem %d)" % [disk_bk, mem_bk])
 	if not RunState.in_run():
 		return  # the final boss — run over, town swap deferred
 	await _settle(8)

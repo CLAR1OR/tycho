@@ -34,6 +34,9 @@ const HUD_RESOURCES: Array[String] = ["gold", "stone", "food", "knowledge", "kno
 
 var _scene: Node = null       # the live town or combat room
 var _session_t: float = 0.0   # unsaved playtime (flushed into meta.playtime_s on save)
+# Portal-entry slot snapshot for a Forfeit rollback (design 2026-07-07). Captured at
+# _start_run BEFORE any run mutation or checkpoint write; Forfeit restores it wholesale.
+var _run_snapshot: Dictionary = {}
 
 @onready var _world: Node = $World
 @onready var _res_label: Label = $HUD/Resources
@@ -52,6 +55,10 @@ func _ready() -> void:
 	var cheats := CheatPanel.new()
 	cheats.setup(self)
 	$HUD.add_child(cheats)
+	# ESC pause menu (Resume / Forfeit / Save & Quit) — also HUD-layer, survives swaps.
+	var pause := PauseMenu.new()
+	pause.setup(self)
+	$HUD.add_child(pause)
 	_show_slot_select()
 
 
@@ -100,6 +107,12 @@ func _goto_town() -> void:
 
 
 func _start_run() -> void:
+	# The rollback point for a Forfeit: the full slot state at portal entry, before ANY run
+	# mutation or checkpoint write (design 2026-07-07). Nothing has touched a counter yet
+	# (start_run only emits run_started, which no state-owner mutates on). Capture the LIVE
+	# Ledger explicitly — state["ledger"] only syncs on save, so it can lag the real amounts.
+	_run_snapshot = SaveManager.state.duplicate(true)
+	_run_snapshot["ledger"] = Ledger.to_dict()
 	var run_number := int(SaveManager.state["story"]["counters"]["runs"]) + 1
 	RunState.start_run(
 		{"floors": run_floors, "rooms_min": rooms_min, "rooms_max": rooms_max},
@@ -275,6 +288,66 @@ func _on_tech_researched(tech_id: String) -> void:
 		SaveManager.state["town"]["age"] = node_age
 		SaveManager.state["meta"]["age"] = node_age
 		EventBus.age_advanced.emit(node_age)
+
+
+# --- ESC pause menu (design 2026-07-07) ---------------------------------------------
+# The PauseMenu (HUD layer) calls into these. The Hades quit-gate lives on the room
+# (combat_room.can_menu_quit); the menu asks the current scene directly.
+
+## The live scene (town or combat room), or null at the slot-select screen. The PauseMenu
+## reads it to route its gate check (town / no method → allowed; a room → can_menu_quit).
+func current_scene() -> Node:
+	return _scene
+
+
+## True when we are at the boot/quit slot-select screen (no scene loaded) — the menu is inert.
+func on_slot_select() -> bool:
+	return _scene == null
+
+
+## Forfeit the current run — "like it never happened" (design 2026-07-07). Roll the whole
+## slot back to the portal-entry snapshot: abort RunState (emits nothing → no day tick, no
+## counters, echoes gone), restore the snapshot to memory AND to the live Ledger (the only
+## thing save_current re-collects), force the checkpoint null, then save — overwriting the
+## floor-checkpoint writes the run left on disk. Finally return to town the normal deferred
+## way. The in-session RunState.run_number may skip a value after this — cosmetic, in memory.
+func forfeit_run() -> void:
+	if not RunState.in_run():
+		return
+	RunState.abort_run()                                  # (a) no run_ended/death/counters
+	SaveManager.state = _run_snapshot.duplicate(true)     # (b) restore portal-entry state
+	# _collect_from_systems() re-collects ONLY the Ledger on save — reset it to the snapshot
+	# so the run's resource gains don't leak back in through save_current below.
+	Ledger.reset(SaveManager.state["ledger"])
+	SaveManager.state["checkpoint"] = null                # (c) belt-and-suspenders (snapshot predates it)
+	SaveManager.save_current()                            # (d) overwrite the run's on-disk checkpoints
+	_refresh_resources()
+	_refresh_echoes()
+	call_deferred("_goto_town")                           # (e) town music rides the normal path
+
+
+## Save & Quit from the ESC menu → back to the slot-select screen. In a run: NO disk write
+## (the floor-start checkpoint already on disk IS the save; writing run counters here would
+## break the no-mid-run-write statistics invariant — the resume must re-earn post-checkpoint
+## progress). In town: a real save. Both then tear down to slot select.
+func save_and_quit() -> void:
+	if RunState.in_run():
+		# INVARIANT (statistics, design 2026-07-07): do NOT touch disk mid-run. Just drop the
+		# in-memory run; choose_slot reloads the floor-start checkpoint from disk on return.
+		RunState.abort_run()
+	else:
+		_save()
+	_return_to_slot_select()
+
+
+## Tear down the current scene and go back to the slot-select page (reused by Save & Quit).
+## choose_slot() works again afterward — it reloads from disk (resume checkpoint or town).
+func _return_to_slot_select() -> void:
+	if _scene != null:
+		_scene.queue_free()
+		_scene = null
+	_refresh_echoes()
+	_show_slot_select()
 
 
 # --- Save / HUD ---------------------------------------------------------------------

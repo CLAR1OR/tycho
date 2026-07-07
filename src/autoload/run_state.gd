@@ -142,6 +142,23 @@ func player_died(source_id: String = "") -> void:
 	_end_run()
 
 
+## Abort the current run in memory WITHOUT emitting anything — no run_ended, no death, no
+## boss_killed, so no day tick, no counters, no codex shard (design 2026-07-07). Used by the
+## ESC menu's Forfeit ("like it never happened") and in-run Save & Quit. Clears the live run
+## + all in-run state (echoes gone with it). The CALLER owns disk: forfeit restores the
+## portal-entry snapshot and re-saves; in-run Save & Quit writes nothing (the floor-start
+## checkpoint on disk IS the save). The next _start_run recomputes run_number, so an aborted
+## run may leave an in-memory gap in the numbering — cosmetic only.
+func abort_run() -> void:
+	run = {}
+	run_number = 0
+	echoes.clear()
+	echo_offers_made = 0
+	player_health = -1
+	door_plan = {}
+	pending_door = {}
+
+
 func _end_run() -> void:
 	EventBus.run_ended.emit(
 		bool(run["victory"]),

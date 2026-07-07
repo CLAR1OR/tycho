@@ -202,6 +202,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 
 ### 7.13 Save system & accessibility
 - **Save:** **multiple slots** (one file per slot + shared `profile.json` for settings/achievements). `save_version` with a migration chain (`migrate_vN_to_vN+1`, never read fields without defaults). **No mid-run saves in v1** — save on town return + per-floor autosave checkpoints (quit mid-run → resume at floor start). `pillars.{strategy,space}` reserved-empty so Acts II/III extend without migration.
+- **ESC pause menu (built 2026-07-07):** ESC opens Resume / Forfeit Run / Save & Quit (`PauseMenu`, HUD layer, survives scene swaps; inert at slot select; won't hijack ESC while another panel already owns the pause). **Hades quit-gate:** in a run you may Forfeit or Save & Quit only after clearing the current room OR while still untouched by it (`combat_room.can_menu_quit()`); mid-fight after a hit, both are refused with a plain reason. In town both are always allowed (no Forfeit — nothing to abandon). **Forfeit Run = "like it never happened":** the whole slot rolls back to a portal-entry snapshot (resources, counters, checkpoint) taken at run start, on disk and in memory — no day tick, no counters, echoes gone. **Save & Quit** returns to the slot-select screen. **Statistics invariant:** in-run Save & Quit writes NOTHING to disk — the floor-start checkpoint already on disk IS the save, so counters earned after it (e.g. the final-boss kill in the kill→pedestal window) are re-earned exactly once on resume, never double-counted. Writing mid-run would break this, so it is forbidden outside the floor-checkpoint snapshot.
 - **Achievements:** generic evaluator over `data/achievements/` reading EventBus signals; ~25 at v1; unlocks in profile.
 - **Accessibility:** assist mode (IC-10) + auto-solve (IC-10); accessibility settings are profile-level (survive slot deletion).
 
@@ -223,7 +224,7 @@ All content = **JSON in `data/`, one file per entity, filename = kebab-case id**
 - **Must be immediate:** hit/dash/pickup feedback (the feel-critical SFX subset gets human tuning); ability cooldown states; Echo-pick HUD (auto-opens).
 - **Needs recap/history:** codex shard assembly (visible artifact); achievements page; tech tree per-age screens (researched=green, current=blue, available=normal, locked=greyed); seen-dialogue tracking (no repeats of `once` snippets).
 - **Must be explainable on failure:** death cause readable (what hit you); why a tech/building is locked (missing prereq/resource shown); why a dialogue/system isn't available yet (gated).
-- **Screens (10):** tech tree (per-age), etchings+attunements, forge, mayor/build, market, echo-pick HUD, codex viewer, dialogue box, achievements, save slots. Static screens render in **painterly 2D**; gameplay in 2.5D.
+- **Screens (11):** tech tree (per-age), etchings+attunements, forge, mayor/build, market, echo-pick HUD, codex viewer, dialogue box, achievements, save slots, ESC pause menu (Resume / Forfeit / Save & Quit — built 2026-07-07). Static screens render in **painterly 2D**; gameplay in 2.5D.
 
 ---
 

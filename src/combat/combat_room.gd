@@ -79,6 +79,10 @@ var _wave_index: int = 0
 var _cleared: bool = false
 var _door_chosen: bool = false  # first door walked wins — no backtracking
 var _last_hp: int = Player.MAX_HEALTH
+# Hades quit-gate (design 2026-07-07): true once the player has taken a hit IN THIS ROOM.
+# Never reset within the room — the ESC menu may forfeit / quit only when the room is
+# cleared OR the player is still untouched (can_menu_quit).
+var _damage_taken: bool = false
 var _ability_label: Label  # minimal RMB/Q/R readout (design/etchings.md HUD)
 
 @onready var _player: Player = $Player
@@ -132,6 +136,10 @@ func _ready() -> void:
 	EchoCore.apply_all_to_player(_player, RunState.echoes)
 	if RunState.player_health > 0:
 		_player.restore_health(RunState.player_health)
+	# Rebaseline the hit tracker AFTER HP setup: the restore above emits health_changed
+	# with a carried-wound value, which must NOT count as damage taken this room.
+	_last_hp = _player.health
+	_damage_taken = false
 	# Minimal ability readout (equipped RMB/Q/R + cooldowns), polled in _process.
 	_ability_label = Label.new()
 	_ability_label.position = Vector2(14, 74)
@@ -507,4 +515,13 @@ func _on_player_health_changed(hp: int, max_hp: int) -> void:
 	_hp_label.text = "HP: %d / %d" % [hp, max_hp]
 	if hp < _last_hp:
 		_rig.shake(shake_on_hit)
+		_damage_taken = true  # a hit this room — the Hades gate closes until the room clears
 	_last_hp = hp
+
+
+## The Hades quit-gate (design 2026-07-07): the ESC menu may forfeit / Save & Quit only when
+## leaving is "clean" — the room is fully cleared, OR the player has not taken a hit here yet
+## (mid-fight but untouched still counts). Reprieve/auto-clear rooms are trivially allowed
+## (_cleared is set the instant they open). game.gd routes the menu's gate check here.
+func can_menu_quit() -> bool:
+	return _cleared or not _damage_taken

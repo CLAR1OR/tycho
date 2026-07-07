@@ -44,7 +44,7 @@ Completionists stretch further via difficulty tiers; the spine fits the budget.
 | --- | --- | --- |
 | **Buildings** | **13** × 3 levels | Per the bible's table. Each level = visual change; budget ~2 model variants per building (L1, L2/L3 shared where possible) + Thomas's Hut never changes (1 model, by lore). |
 | **Town map** | 1, with **2 age-skins** (Medieval, early-Renaissance) | The age turn must be *seen*. |
-| **Shop/system UI screens** | **10** | Tech tree (per-age screens), etchings, forge, mayor/build, market, echo-pick HUD, codex viewer, dialogue box, achievements, save slots. |
+| **Shop/system UI screens** | **11** | Tech tree (per-age screens), etchings, forge, mayor/build, market, echo-pick HUD, codex viewer, dialogue box, achievements, save slots, ESC pause menu (Resume / Forfeit / Save & Quit, built 2026-07-07). |
 
 ## Story & dialogue (the big one)
 
