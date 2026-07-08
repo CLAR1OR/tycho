@@ -718,6 +718,20 @@ func _quit_and_resume() -> void:
 	_boot_game()
 	await _settle(5)
 	_check(_scene_node() == null, "rebooted game waits at slot select")
+	# The S2 slot-select screen: geometry net (spans the viewport) + the three plaques.
+	var ss: Node = get_tree().get_first_node_in_group("slot_select")
+	var svp := get_viewport().get_visible_rect().size
+	_check(ss is Control and (ss as Control).size == svp,
+		"slot select spans the viewport (%s == %s)" % [
+			str((ss as Control).size) if ss is Control else "(none)", str(svp)])
+	_check(ss != null and ss.call("plaque_count") == 3, "slot select shows three saga plaques")
+	# Two-step delete state machine (no disk deletion): arming, then disarm-without-continue.
+	ss.call("on_delete", 2)
+	_check(int(ss.call("armed_slot")) == 2, "the ✕ arms its slot (no delete on the first press)")
+	ss.call("on_plaque", 2)
+	_check(int(ss.call("armed_slot")) == -1
+			and get_tree().get_first_node_in_group("slot_select") != null,
+		"clicking the armed plaque's own body disarms without continuing")
 	var badge_floor := -1
 	for entry: Dictionary in SaveManager.list_slots():
 		if int(entry["slot"]) == SMOKE_SLOT:
