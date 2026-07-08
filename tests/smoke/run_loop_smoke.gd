@@ -411,6 +411,13 @@ func _run_smoke() -> void:
 	_check(ore_before >= 7.0, "boss dropped guaranteed ore (have %.0f incl. 5 granted)" % ore_before)
 	var forge: ForgePanel = _scene_node().call("open_forge_panel")
 	await _settle(3)
+	# The anvil opens with the EQUIPPED weapon selected (default = sword this early).
+	_check(forge.selected_weapon() == str(SaveManager.state["combat"].get("current_weapon", "sword")),
+		"anvil opens on the equipped weapon (%s)" % forge.selected_weapon())
+	# Clicking a tab switches which weapon lies on the anvil.
+	forge.select_weapon("daggers")
+	_check(forge.selected_weapon() == "daggers", "tab select puts daggers on the anvil")
+	forge.select_weapon("sword")
 	forge.upgrade("sword")
 	_check(WeaponCore.flat_level(SaveManager.state["combat"], "sword") == 1,
 		"forge refined the sword to flat L1")

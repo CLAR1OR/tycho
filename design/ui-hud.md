@@ -134,6 +134,35 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** the arm silhouettes + sigil geometry (`EtchingsArms`/`SigilIcon`, painterly pass); all visual consts (`HIT_R`, halo/badge/dust sizes, arm dimensions, dock width) at the top of `etchings_arms.gd` / `etchings_panel.gd`; the `STARTERS` map; and ALL new copy (`SUBTITLE`, `DORMANT_DESC`, `DASH_DESC`, `DASH_PRINCIPLE`, `DEEP_BLURB`, `MARK_DEEPENS`, and the `desc`/`level_blurbs` in the three JSONs — plain register, Thomas's territory, no aphorisms). The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
+## Forge panel — The anvil (F2) (decided + built 2026-07-08)
+
+> Human picked **F2 — The anvil** on claude.ai/design ("Forge Panel" group), with one amendment: **NO stat bars** — the BITE/PACE/REACH "character bars" from the mocks (and the shared states card) are explicitly rejected and built nowhere. Mara's Forge is one weapon at a time lying large on the anvil in the ember light; the tabs switch it; refining is the screen's single ceremony.
+
+`ForgePanel` (`src/town/forge_panel.gd`) is a fullscreen `Control` (Slate-themed, pauses while open), a REBUILD of the old scrolling list — **mechanics byte-identical** (refine spends `resonance-ore` with reason `forge-flat` from each weapon's `flat.costs`; equip writes `combat.current_weapon`; `WeaponCore` untouched). The ember glow + tabs + anvil + big weapon + name bar + Ore readout are drawn in a custom **`ForgeAnvil`** Control (`src/town/forge_anvil.gd`, `_draw` + tab hover/click hit-test, precedent `EtchingsArms`); each weapon's silhouette is drawn by **`WeaponSilhouette`** (`src/town/weapon_silhouette.gd`, static `paint()`, shared by the tabs (small scale) and the anvil (large scale)). The header, the bottom strip, and Close sit on top as siblings.
+
+**Components:**
+- **Header** — top-left Cinzel title `Mara's Forge` (byte-identical) + a dim Garamond subtitle (placeholder copy `She keeps working while you look.`). No hint chip (consistent with the etchings amendment).
+- **Ore readout** (top-right) — a placeholder faceted-crystal glyph (hexagon + facet lines, `COL_ORE`) + a BIG mono number of `resonance-ore`, with a dim `resonance ore` label under it. No box (mirrors the etchings Dust readout the human set).
+- **Weapon tabs** (left column, one per weapon) — a rounded slate box with the weapon's small silhouette + a tiny mono caps label (`SWORD · EQUIPPED` when equipped, else the name). Hover brightens the border (to `COL_ORE`) + silhouette; the SELECTED tab wears the gold border + gold label. Click selects → the anvil shows that weapon.
+- **The anvil, centre stage** — a big anvil silhouette (placeholder primitives: face+horn / waist / base) with the selected weapon lying on it LARGE, slightly rotated (`WEAPON_ANGLE`), drop-shadowed. Above it a **name bar**: the weapon name (Cinzel ~30) + a mono caps meta line `KIND · [EQUIPPED ·] FLAT Ln · +N% DAMAGE` (EQUIPPED gold, present only when equipped; kind from data; `+N%` from `ForgePanelCore.damage_bonus_pct`).
+- **The bottom strip** (slate `PanelContainer`, centred under the anvil) — the weapon's authored `desc` (Garamond, verbatim data copy) + a mono level line (`REFINED Ln OF 5 · +15%/L`, placeholder format) + the **refine pip track** + the action.
+
+**Weapon silhouettes** (`WeaponSilhouette`): a registry keyed by weapon id (sword / daggers / bow), geometry lifted from the mock's SVGs as poly/line/arc primitives in a local center-origin box, painted at any scale + tilt. Unknown weapon id → a monogram fallback (`HudCore.monogram`), so a future weapon never crashes the forge. All geometry + metal colours placeholder for the painterly pass.
+
+**Refine pip-track state grammar** (5 pips = the 5 flat levels; from the shared states card, minus its rejected bars): FILLED = ore violet (`COL_ORE`) + soft glow (stylebox shadow); NEXT = ore-violet outline; REST = slate outline; at MAX = ALL gold (`COL_READY`) + glow. Ore violet is the refine colour (it is ore being worked) — the track is made OF ore until it's finished, then it goes gold.
+
+**The action** (strip, right): below max → the gold button `Refine to Ln (n Resonance Ore)` (byte-identical string), disabled when ore < cost (no red UI). At max → the byte-identical `Flat track maxed` as an inert gold-dim label. When the selected weapon is NOT equipped → also a slate `Equip` button (byte-identical string); the equipped weapon shows no Equip button. Equipping costs nothing (shipped behavior). **NO stat bars anywhere** (the amendment).
+
+**The future resonance-effects track** lands as a SECOND (dust-cyan `COL_DUST`) pip row under the flat row in the strip when it exists — no waiting UI before then.
+
+**Pure core** (`ForgePanelCore`, `src/town/forge_panel_core.gd`, unit-tested): `refine_action(def, level)` → `{kind: refine|maxed, cost, to_level}` and `damage_bonus_pct(def, level)` → the name-bar `+N%`. Both delegate to `WeaponCore` (`next_flat_cost` / `damage_mult`) — no cost/level math duplicated; the current flat level is read at the call site with `WeaponCore.flat_level` and passed in.
+
+**Frozen API** (the smoke drives it): `open / close / equip / upgrade` (byte-semantics kept — the strip's Refine/Equip buttons bind straight to `upgrade`/`equip`), plus a `selected_weapon()` debug getter.
+
+**Sanctioned game-copy removals** (died with the list): `You carry: %d Resonance Ore` and the `%s%s  —  flat L%d (%.0f%% damage)` weapon-row string (the info they carried is now the ore readout + the name-bar meta line).
+
+**HUMAN dial placeholders:** the ember glow colour/shape (`COL_EMBER`, `EMBER_*`), the anvil/weapon/tab geometry (`ForgeAnvil`/`WeaponSilhouette`, painterly pass), the ore crystal glyph, the pip sizes/radius, all visual consts at the tops of `forge_anvil.gd` / `forge_panel.gd`, and ALL new copy (`SUBTITLE`, the `LEVEL_LINE` format, the name-bar meta-line format — Mara's register, no aphorisms). The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
+
 ## Deferred (document-don't-build)
 
 - **Echo tile tooltips / a hold-Tab detail view** (full echo names + descriptions on demand) — the shelf is monograms only for now.
