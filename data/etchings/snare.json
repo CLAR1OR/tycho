@@ -19,5 +19,7 @@
 		{"rider": "exit_stagger"}
 	],
 	"weapon_synergy": {"weapon": "bow", "effect": "ranged_bonus_vs_snared"},
-	"summon_seed": false
+	"summon_seed": false,
+	"desc": "A field of thick air pooled on the ground. Enemies that step into it slow to a crawl. Cast it under a crowd and the fight comes to you.",
+	"level_blurbs": ["The slowing field.", "Wider field, longer hold.", "Enemies that leave it stagger."]
 }

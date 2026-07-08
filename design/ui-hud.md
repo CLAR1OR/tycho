@@ -103,6 +103,37 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** all chart visual numbers (star radii per state, glow/arc/ring widths, dust positions/alpha, right-fade width, hit radius, dock width/bar height) live at the top of `tech_chart.gd` + `tech_panel.gd` under a placeholder block; the new UI copy (subtitle, carry/dock labels, hint, age-II label, quiz-lock meta) is placeholder too. The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
+## Etchings panel — The arms (E1) (decided + built 2026-07-08)
+
+> Human picked **E1 — The arms** on claude.ai/design ("Etchings Panel" group), with two amendments: **no bottom hint chip**, and **the Resonance Dust readout is a bare icon + big number top-right, no panel box behind it**. Thomas's meditation screen is Tycho's two arms laid palm-up in the meditation posture, four etched marks on the skin — hands carry the instant casts, forearms the deeper ones.
+
+`EtchingsPanel` (`src/town/etchings_panel.gd`) is a fullscreen `Control` (Slate-themed, pauses while open). The arms + marks + Dust readout are drawn in a custom **`EtchingsArms`** Control (`src/town/etchings_arms.gd`, `_draw` + hover/click hit-test, precedent `TechChart`); each mark's sigil is drawn by **`SigilIcon`** (`src/town/sigil_icon.gd`, static `paint()` shared by the arms and the menu head). The header, the skill menu, and Close sit on top as siblings.
+
+**THE NO-SWAP RULE (the human's core directive — presentation only, mechanics stay):** the screen shows the four marks and NOTHING else — no ability list, no Equip button, no empty sockets, no dormant-four rows, no "slot" vocabulary in player-facing copy. Bolt/Surge and the dormant four stay in data + `EtchingsCore` (learnable-in-principle) but are unreachable from this screen; ability swapping arrives later as a story beat, not as UI that was visibly waiting.
+
+**Which ability a site shows:** the slot's **EQUIPPED** ability when one is equipped, else the slot's **STARTER** (`EtchingsArmsCore.displayed_ability`; `STARTERS = {rmb: push, q: snare, r: shockwave}`, a panel const, placeholder). This renders an old save with e.g. Bolt equipped on RMB correctly (Bolt's data + `HudCore.monogram` fallback sigil). Site layout: right palm = RMB (Push), left palm = Q (Snare), right forearm = R (Shockwave), left forearm = SPC (the dash — a hardcoded, innate site, not an etching in data).
+
+**Components:**
+- **Header** — top-left Cinzel title `Thomas's Favorite Spot — Etchings` (byte-identical) + a dim Garamond subtitle (placeholder copy). No bottom hint chip (human amendment).
+- **Dust readout** (top-right) — a placeholder Dust glyph (a loose cluster of cyan motes, for the painterly pass) + a BIG mono number in `COL_DUST`, with a dim `resonance dust` label under it. No box (human amendment).
+- **The two arms** — stylized silhouettes (placeholder primitives: a tapered forearm trapezoid, palm disc, four fingers, a thumb; one geometry mirrored per side). Awaiting the painterly pass.
+- **The four marks** — each draws its ability's sigil from `SigilIcon`'s registry (push = nested upward chevrons; snare = concentric circles + core dot; shockwave = radiating arcs over a point; dash = three slanted rising dashes; unknown id → monogram fallback).
+- **The skill menu** (right-side Slate dock, opens on click) — sigil + name (Cinzel) + key chip (`RMB`/`Q`/`R`/`SPC`); a chips row (principle in dust-cyan + `%ds cooldown` dim mono); the description (Garamond, from data); the level track; the action button.
+
+**Mark state grammar** (drawn in `EtchingsArms`): DORMANT = faint (low alpha, no core dot); AWAKE = resting cyan glow (~0.6 alpha, core dot on concentric sigils); HOVERED = full alpha + halo + a key badge (`Q · SNARE`); SELECTED = gold tint + gold halo + dashed gold ring + badge. Dust-cyan (`COL_DUST`) is the idle/hover resonance colour; gold (`COL_READY`) marks selection. Hover is a mouse-motion hit-test within `HIT_R` (redraw only on hovered-site change); click selects → opens the menu.
+
+**Menu state grammar** (the states card): the **level track** header `THE MARK DEEPENS` lists one row per level from the current level up to MAX — pip + blurb: current = gold pip, next = hollow pip, deeper = dim `The resonance goes deeper.` The **action button**: dormant → `Awaken (n Dust)` (the picked reframe of the old `Learn` — same `EtchingsCore` unlock); L1/L2 → the byte-identical `Deepen to L%d (n Dust)`; L3 → inert `Mastered (L%d)`; can't-afford → the button disabled (no red UI). A **dormant** mark's menu shows only a dim not-yet line + the Awaken button (no track). The **dash** menu shows description + principle chip only — no track, no button ("It does not deepen here").
+
+**AWAKEN AUTO-EQUIPS (the one real behavior change):** with no Equip button, awakening a mark equips it to its slot. `EtchingsPanel.learn()` already auto-equips a fresh unlock into an empty matching slot — exactly the case here (a starter is shown only when its slot is empty).
+
+**Pure core** (`EtchingsArmsCore`, `src/town/etchings_arms_core.gd`, unit-tested): `displayed_ability(slot, etchings, starters)` (equipped-else-starter) + `menu_action(def, etchings)` → `{kind: awaken|deepen|mastered, cost, to_level}` (layered on `EtchingsCore.learn_cost`, no cost math duplicated).
+
+**Player-facing copy is data:** two OPTIONAL fields on the `etchings` DataLoader spec — **`desc`** (menu description) and **`level_blurbs`** (array, one per level) — authored in `push.json`/`snare.json`/`shockwave.json` only (missing → empty desc / `L%d` fallback). Removed with the old list (sanctioned game-copy removal): the section headers, `Equip`/`(equipped)` labels, and the dormant `The resonance does not answer this one yet.` line.
+
+**Frozen API** (the smoke drives it): `open / close / learn / equip` (byte-semantics kept; `equip` retained though the screen shows no Equip button), plus `open_menu(slot)` (arms callback) and a `site_ability(slot)` debug getter.
+
+**HUMAN dial placeholders:** the arm silhouettes + sigil geometry (`EtchingsArms`/`SigilIcon`, painterly pass); all visual consts (`HIT_R`, halo/badge/dust sizes, arm dimensions, dock width) at the top of `etchings_arms.gd` / `etchings_panel.gd`; the `STARTERS` map; and ALL new copy (`SUBTITLE`, `DORMANT_DESC`, `DASH_DESC`, `DASH_PRINCIPLE`, `DEEP_BLURB`, `MARK_DEEPENS`, and the `desc`/`level_blurbs` in the three JSONs — plain register, Thomas's territory, no aphorisms). The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
+
 ## Deferred (document-don't-build)
 
 - **Echo tile tooltips / a hold-Tab detail view** (full echo names + descriptions on demand) — the shelf is monograms only for now.

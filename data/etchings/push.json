@@ -21,5 +21,7 @@
 		{"rider": "bowling"}
 	],
 	"weapon_synergy": {"weapon": "sword", "effect": "combo_continues_bonus_finisher"},
-	"summon_seed": false
+	"summon_seed": false,
+	"desc": "A flat shove of force from the open palm. What it hits, it moves. An enemy driven into a wall takes the stone's answer as a second blow, and staggers.",
+	"level_blurbs": ["The shove.", "Wider cone, harder throw.", "It bowls the fallen through their own line."]
 }

@@ -82,6 +82,8 @@ const SCHEMAS: Dictionary = {
 		"levels": {"type": "array", "required": true, "array_of": "dict"},
 		"weapon_synergy": {"type": "dict", "nullable": true},
 		"summon_seed": {"type": "bool"},
+		"desc": {"type": "string"},                          # arms panel menu copy (optional)
+		"level_blurbs": {"type": "array", "array_of": "string"},  # per-level track lines (optional)
 	},
 	"dialogue": {  # architecture-schemas.md §7 — spec + condition vocabulary in act1-story-beats.md
 		"id": {"type": "string", "required": true},

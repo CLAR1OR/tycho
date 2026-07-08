@@ -439,6 +439,13 @@ func _run_smoke() -> void:
 	var etchings: Dictionary = SaveManager.state["combat"]["etchings"]
 	_check(EtchingsCore.level_of(etchings, "push") == 1, "ensure_baseline granted Push at L1")
 	_check(str(etchings["slots"]["rmb"]) == "push", "Push auto-equipped to the RMB slot")
+	# The arms panel shows the four marks (equipped-else-starter + the innate dash).
+	_check(etch.site_ability("rmb") == "push", "RMB site shows the equipped Push")
+	_check(etch.site_ability("q") == "snare", "Q site shows its Snare starter (dormant)")
+	_check(etch.site_ability("spc") == "dash", "SPC site is the innate dash")
+	etch.open_menu("spc")  # the dash menu is read-only — no track, no button, no unlock
+	_check(not EtchingsCore.is_unlocked(SaveManager.state["combat"]["etchings"], "dash"),
+		"opening the dash menu unlocks nothing (it is innate, not an etching)")
 	Ledger.add("resonance-dust", 100.0, "smoke-grant")
 	var dust_before := Ledger.get_amount("resonance-dust")
 	etch.learn("snare")       # Q, unlock 4 — auto-equips to the empty Q slot
@@ -450,6 +457,8 @@ func _run_smoke() -> void:
 		"Snare learned + equipped to Q")
 	_check(EtchingsCore.level_of(etchings, "shockwave") == 1 and str(etchings["slots"]["r"]) == "shockwave",
 		"Shockwave learned + equipped to R")
+	_check(etch.site_ability("q") == "snare" and etch.site_ability("r") == "shockwave",
+		"awakening auto-equipped Snare/Shockwave to their sites (no Equip button)")
 	_check(absf((dust_before - Ledger.get_amount("resonance-dust")) - 10.0) < 0.001,
 		"learning Snare(4) + Shockwave(6) spent 10 Dust via the Ledger (reason etching)")
 	var edefs := EtchingsCore.defs()

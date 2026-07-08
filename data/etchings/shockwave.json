@@ -20,5 +20,7 @@
 		{"rider": "slow_field"}
 	],
 	"weapon_synergy": {"weapon": "sword", "effect": "next_swings_finisher"},
-	"summon_seed": false
+	"summon_seed": false,
+	"desc": "The ground answers the fist. Everything near is thrown outward, and even the armored stumble.",
+	"level_blurbs": ["The blast.", "Wider, harder.", "It leaves the ground unsettled behind it."]
 }
