@@ -272,6 +272,13 @@ func _run_smoke() -> void:
 	var panel: TechPanel = _scene_node().call("open_tech_panel")
 	await _settle(3)
 
+	# Star chart (R1) state grammar: arithmetic (no prereq, unfunded) reads AVAILABLE, and
+	# masonry reads LOCKED behind it — before any research.
+	_check(panel.star_state("med-arithmetic-zero") == &"available",
+		"chart: arithmetic reads available before research")
+	_check(panel.star_state("med-masonry-arch") == &"locked",
+		"chart: masonry reads locked behind arithmetic")
+
 	# Shard turn-in economy (2026-07-06): investing spends KNOWLEDGE ONLY. Knowledge
 	# Shards convert to Knowledge only by turning them in at the desk. Run 1's boss and
 	# the sim above left shards in the pouch — turn them in and watch Knowledge grow by
@@ -361,6 +368,11 @@ func _run_smoke() -> void:
 		_check(str(arch.call("act", "load")) == "holds", "braced + keyed: the gateway holds")
 		await _settle(3)
 		panel.finish()
+	# Both nodes now read RESEARCHED on the chart (finish() routed through TechChartCore).
+	_check(panel.star_state("med-arithmetic-zero") == &"researched",
+		"chart: arithmetic reads researched after solving")
+	_check(panel.star_state("med-masonry-arch") == &"researched",
+		"chart: masonry reads researched after the gateway")
 	panel.close()
 	await _settle(3)
 	var researched: Array = SaveManager.state["tech"]["researched"]

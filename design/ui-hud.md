@@ -73,6 +73,36 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** `SlateTheme`'s sizes / margins / radii and the pause backdrop colour are placeholders; the shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
+## Research screen — Star chart (R1) (decided + built 2026-07-08)
+
+> Human picked **R1 — Star chart** on claude.ai/design (project "Tycho UI", the "Research Screen" group): the tech tree drawn as Sophia's constellation map — the strongest thematic fit (Tycho Brahe charted stars; Sophia charts what the resonance knows). The old LIST + NODE screens merge into a chart; the solve flow (READ → QUIZ/PUZZLE → LOCKED/AHA) keeps its scrolling reading page with two small Slate touches.
+
+`TechPanel` (`src/learning/tech_panel.gd`) is now a fullscreen `Control` with two child roots toggled by screen: the **chart** (`TechChart`, `src/learning/tech_chart.gd`, custom-drawn in `_draw` like the HUDs) plus the header/dock/hint/close, and the **reading page** (the original margin→scroll→rows stack) for the post-invest solve flow.
+
+**Components (chart screen):**
+- **Header** — top-left Cinzel title `Sophia's Desk — Research` (byte-identical) + a dim Garamond subtitle (placeholder UI copy). Top-right a **carry chip** (mono knowledge in the knowledge colour + shards in the shards colour, with dim labels) and the **turn-in button** (shipped `Turn in %d Knowledge Shards → %d Knowledge`, disabled at 0, same Sfx + `TechState.turn_in_shards`).
+- **Constellation** — each node is a star at a `chart_pos`; prereq edges are lines between stars. Clicking a researchable star selects it → `select_node` (→ `TechState.set_active`, unchanged) and fills the dock; a dashed ring marks the selection. Locked / researched stars are inert to clicks.
+- **Detail dock** (right) — Slate PanelContainer: node name (Cinzel), meta (tier caps gold for KEY · AGE n · puzzle kind · 🧠), a progress bar + `n / cost knowledge` (mono, knowledge colour), `Requires:` (✓ when researched) and `Unlocks:` (building ids resolved to display names), then the action: ready → the shipped `It's ready…` line + `Read & solve`; else `Invest everything you carry`. No flavor quote (dialogue is human territory).
+- **Age-II tease** — a few unnamed dim dots toward the right edge + a right-edge darkening fade + a dim caps label (decorative constants, no data).
+- **Starfield dust** — a fixed const array of faint dots (deterministic; never re-randomized per frame/open).
+- **Hint chip** (bottom-center) + **Close** (bottom-left).
+
+**State grammar** (pure `TechChartCore`, `src/learning/tech_chart_core.gd`, unit-tested — layered on the existing TechCore predicates):
+- `node_state` precedence: **researched** (gold disc) > **locked** (prereq unmet — dim dot, `needs <prereq>`) > **ready** (funded — gold ring + glow, the screen's one call-to-action) > **active** (== `tech.active`, not ready — cyan ring + a progress arc, `n/cost · Sophia's focus`) > **available** (slate outline, cost meta).
+- Quiz-lock is ORTHOGONAL: a *ready* node whose quiz is locked shows its meta in the peril red (`ask again after a run`) — the ONLY red on the screen.
+- `edge_kind(prereq_state, dependent_state)`: **lit** (prereq researched — gold line) > **dim** (dependent still locked — dashed) > **open** (both ends ≥ available — solid slate).
+- `chart_pos(def, id)`: the def's authored `chart_pos` when valid, else a DETERMINISTIC in-band fallback from the id (x 0.1–0.55, y 0.15–0.8) so an unpositioned node never crashes or overlaps the dock; `has_chart_pos` lets the panel warn on fallback.
+
+**`chart_pos` authoring rule:** optional `"chart_pos": [x, y]` normalized 0..1 in each `data/tech/<id>.json` (spec field on the `tech` domain). Author it to place the star on the map; omit it and the node still renders at a stable fallback. Placeholders today: arithmetic `[0.18, 0.58]`, masonry `[0.34, 0.46]`.
+
+**Colour source:** the stone/food/knowledge resource colours were lifted UP from `TownHud` to `SlateHud` (next to gold/ore/dust/shards) so the chart reads the knowledge colour off the ONE dial source.
+
+**Solve-flow touches (restyle only):** the AHA title (`✦ <name>`) renders in gold (`COL_READY`); everything else on READ/QUIZ/LOCKED/AHA is byte-identical.
+
+**Frozen API** (the smoke drives it): `open / close / select_node / invest_all / turn_in_shards / begin_read / begin_quiz / answer / begin_puzzle / puzzle_node / finish / on_locked_screen`, plus a `star_state(id)` debug getter.
+
+**HUMAN dial placeholders:** all chart visual numbers (star radii per state, glow/arc/ring widths, dust positions/alpha, right-fade width, hit radius, dock width/bar height) live at the top of `tech_chart.gd` + `tech_panel.gd` under a placeholder block; the new UI copy (subtitle, carry/dock labels, hint, age-II label, quiz-lock meta) is placeholder too. The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
+
 ## Deferred (document-don't-build)
 
 - **Echo tile tooltips / a hold-Tab detail view** (full echo names + descriptions on demand) — the shelf is monograms only for now.

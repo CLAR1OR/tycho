@@ -26,10 +26,9 @@ class_name TownHud
 # =====================================================================================
 # Town-specific style — placeholders. (Shared palette + fonts + sizes live in SlateHud.)
 # =====================================================================================
-# New resource colours (Color(r/255,...) so const-foldable; hex in the comment).
-const COL_STONE := Color(181.0/255, 173.0/255, 160.0/255)         # #b5ada0
-const COL_FOOD := Color(164.0/255, 217.0/255, 122.0/255)          # #a4d97a
-const COL_KNOWLEDGE := Color(159.0/255, 220.0/255, 255.0/255)     # #9fdcff
+# The stone/food/knowledge resource colours were lifted UP to SlateHud (2026-07-08, the
+# research star chart reads the knowledge colour off the ONE dial source) — they resolve
+# here by inheritance, alongside COL_GOLD/COL_ORE/COL_DUST/COL_SHARDS.
 # Resource strip layout
 const COL_GAP := 16.0            # gap between columns
 const VALUE_LABEL_GAP := 4.0     # gap between a column's value and its dim label

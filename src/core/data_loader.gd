@@ -46,6 +46,10 @@ const SCHEMAS: Dictionary = {
 		"thinking_tool": {"type": "bool"},
 		"explanation": {"type": "string"},  # the read-before-the-puzzle text
 		"aha": {"type": "string"},          # the post-solve reveal
+		# Normalized 0..1 [x, y] star position on the research constellation (R1 star
+		# chart). Optional — TechChartCore.chart_pos falls back to a deterministic
+		# in-band position from the id when absent, so an unpositioned node never breaks.
+		"chart_pos": {"type": "array", "array_of": "float"},
 	},
 	"weapons": {  # PRD §7.2 — relative mods over the feel-tuned baseline kit
 		"id": {"type": "string", "required": true},

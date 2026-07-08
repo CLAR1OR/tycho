@@ -30,6 +30,9 @@ const COL_GOLD := Color(255.0/255, 230.0/255, 128.0/255)           # #ffe680
 const COL_ORE := Color(176.0/255, 164.0/255, 224.0/255)            # #b0a4e0
 const COL_DUST := Color(128.0/255, 230.0/255, 255.0/255)           # #80e6ff
 const COL_SHARDS := Color(208.0/255, 143.0/255, 255.0/255)         # #d08fff
+const COL_STONE := Color(181.0/255, 173.0/255, 160.0/255)          # #b5ada0
+const COL_FOOD := Color(164.0/255, 217.0/255, 122.0/255)           # #a4d97a
+const COL_KNOWLEDGE := Color(159.0/255, 220.0/255, 255.0/255)      # #9fdcff
 # Fonts — files under assets/fonts/ (all OFL; provenance in assets/fonts/SOURCES.md).
 # Roles: DISPLAY = engraved caps (monograms, section heads), NUM = every number/readout
 # (mono, so digits don't shuffle as they tick), BODY = prose (hint lines). Swap a role =

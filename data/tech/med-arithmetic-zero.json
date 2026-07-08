@@ -8,6 +8,7 @@
 	"unlocks": [],
 	"auto_solve_after_runs": 5,
 	"thinking_tool": true,
+	"chart_pos": [0.18, 0.58],
 	"explanation": "Positional notation is a way of writing numbers in which the value of a digit depends on its place. It uses ten symbols, 0 through 9. A digit's position gives its size: in 47, the 4 stands in the tens place and means forty, while the 7 stands in the ones place. The same ten symbols can write any whole number.\n\nThe system reached Europe from India by way of Arab mathematicians, spreading through translation centers such as Toledo during the twelfth century. For calculation it replaced Roman numerals. Roman numerals can record a number but are poorly suited to arithmetic. Multiplying XLVII by XXIII is hard without an abacus, because the symbols are labels rather than values in a place system. In positional notation, addition, subtraction, multiplication, and division become fixed step-by-step procedures on the digits, and those procedures can be taught to anyone.\n\nZero is the part that makes the system consistent. It is a placeholder that marks an empty position. Without it, 407 would read as 47, because nothing would hold the tens place open. Accepting zero as a number in its own right, rather than only a mark for absence, took several centuries. Once it was accepted, numbers such as 47 and 407 could no longer be confused, and calculation gained a reliable basis for accounting, surveying, astronomy, and engineering.",
 	"puzzle": {
 		"kind": "quiz",
