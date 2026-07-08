@@ -183,7 +183,7 @@ func _button(text: String, action: Callable, disabled: bool) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.disabled = disabled
-	b.theme_type_variation = &"MenuButton"
+	b.theme_type_variation = &"SlateMenuButton"
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
 	b.pressed.connect(action)

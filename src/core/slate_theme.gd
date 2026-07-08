@@ -16,7 +16,10 @@ class_name SlateTheme
 ##   TitleLabel  — Cinzel display caps, panel titles.
 ##   NumLabel    — mono, purely-numeric readout labels.
 ##   DimLabel    — Garamond in the dim key colour, hints / footnotes / statuses.
-##   MenuButton  — Button in Cinzel with roomier margins (the pause menu's big buttons).
+##   SlateMenuButton — Button in Cinzel with roomier margins (the pause menu's big
+##                     buttons). NOT "MenuButton": that is a built-in Godot class, and a
+##                     theme type variation may not shadow one (Theme.set_type_variation
+##                     rejects it — found 2026-07-08).
 
 const FS_DEFAULT := 16
 const FS_TITLE := 20
@@ -25,7 +28,7 @@ const FS_MENU_BUTTON := 18
 const BTN_RADIUS := 8
 const PANEL_RADIUS := 10
 const PANEL_ALPHA := 0.97
-## Button content margins (x, y) — the plain Button vs. the roomier MenuButton.
+## Button content margins (x, y) — the plain Button vs. the roomier SlateMenuButton.
 const BTN_MARGIN := Vector2(14, 8)
 const MENU_BTN_MARGIN := Vector2(20, 12)
 ## Hover text (a touch brighter than the resting COL_TEXT).
@@ -84,10 +87,10 @@ static func get_theme() -> Theme:
 	t.set_font("font", "DimLabel", body)
 	t.set_color("font_color", "DimLabel", SlateHud.COL_KEY_TEXT)
 
-	t.set_type_variation("MenuButton", "Button")
-	_apply_button(t, &"MenuButton", MENU_BTN_MARGIN)
-	t.set_font("font", "MenuButton", display)
-	t.set_font_size("font_size", "MenuButton", FS_MENU_BUTTON)
+	t.set_type_variation("SlateMenuButton", "Button")
+	_apply_button(t, &"SlateMenuButton", MENU_BTN_MARGIN)
+	t.set_font("font", "SlateMenuButton", display)
+	t.set_font_size("font_size", "SlateMenuButton", FS_MENU_BUTTON)
 
 	_theme = t
 	return t
