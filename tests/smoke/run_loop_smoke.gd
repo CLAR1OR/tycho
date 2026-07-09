@@ -690,6 +690,68 @@ func _run_smoke() -> void:
 		await _settle(2)
 		_check(not (pause as Control).visible and not get_tree().paused,
 			"pause menu closed and unpaused after the geometry check")
+
+	# --- Settings — "The quiet page" (SET1, 2026-07-09) --------------------------------------
+	# SAFETY: the profile is GLOBAL (the human's real profile.json, shared across their real
+	# slots). Snapshot the settings section now and restore it EXACTLY at the end of this block.
+	# (Slot writes stay on the throwaway slot 99 as always.)
+	var settings_snapshot: Dictionary = (SaveManager.profile["settings"] as Dictionary).duplicate(true)
+	# Entry 1: game.open_settings() (the title-screen path uses this with no return target).
+	var spanel: SettingsPanel = _game.call("open_settings")
+	await _settle(3)
+	_check(spanel != null, "open_settings returns a settings panel")
+	_check(get_tree().get_first_node_in_group("settings_panel") != null, "settings panel joined its group")
+	var svp2: Vector2 = get_viewport().get_visible_rect().size
+	_check((spanel as Control).size == svp2,
+		"settings panel spans the viewport (%s == %s)" % [str((spanel as Control).size), str(svp2)])
+	# A volume drag live-applies: the profile AND the Music bus follow the hand immediately.
+	spanel.set_volume("music_volume", 0.5)
+	_check(absf(spanel.volume("music_volume") - 0.5) < 0.001, "set_volume moved music to 0.5")
+	_check(absf(float(SaveManager.profile["settings"]["music_volume"]) - 0.5) < 0.001,
+		"the profile settings followed the slider live")
+	var mus_db := AudioServer.get_bus_volume_db(AudioServer.get_bus_index("Music"))
+	_check(absf(mus_db - linear_to_db(0.5)) < 0.01,
+		"the Music bus followed the slider live (%.2f dB ~= %.2f)" % [mus_db, linear_to_db(0.5)])
+	# The window-mode chip writes + applies (headless-guarded — no DisplayServer call, no crash).
+	spanel.set_window_mode("fullscreen")
+	_check(spanel.window_mode() == "fullscreen", "set_window_mode switched to fullscreen")
+	_check(str(SaveManager.profile["settings"]["window_mode"]) == "fullscreen",
+		"the profile window_mode updated")
+	# ESC closes + persists ONCE on close. Re-read the profile off disk to prove the write.
+	_esc()
+	await _settle(3)
+	_check(get_tree().get_first_node_in_group("settings_panel") == null, "ESC closed the settings panel")
+	_check(not get_tree().paused, "ESC-close unpaused the tree (the panel owned the pause in town)")
+	var disk_profile := _read_profile_from_disk()
+	_check(absf(float((disk_profile["settings"] as Dictionary).get("music_volume", -1.0)) - 0.5) < 0.001,
+		"disk: the settings write persisted on close (music_volume 0.5)")
+	# RESTORE the human's real settings EXACTLY, and confirm the restore hit disk.
+	SaveManager.profile["settings"] = settings_snapshot.duplicate(true)
+	SaveManager.save_profile()
+	Music.apply_audio_settings()
+	var restored := _read_profile_from_disk()
+	_check((restored["settings"] as Dictionary) == settings_snapshot,
+		"the human's real settings were restored on disk")
+
+	# --- Settings via the pause menu (SET1) — opens OVER the pause without stealing it ---------
+	pause = get_tree().get_first_node_in_group("pause_menu")
+	pause.open()
+	await _settle(2)
+	pause.open_settings()  # the same method the Settings button calls
+	await _settle(3)
+	_check(not (pause as Control).visible, "the pause menu hid when settings opened over it")
+	_check(get_tree().paused, "the tree stays paused (the pause menu still owns the pause)")
+	_check(get_tree().get_first_node_in_group("settings_panel") != null, "settings opened over the pause menu")
+	_esc()
+	await _settle(3)
+	_check(get_tree().get_first_node_in_group("settings_panel") == null, "ESC closed settings over the pause menu")
+	_check((pause as Control).visible, "the pause menu reappeared after settings closed")
+	_check(get_tree().paused, "the tree is still paused (settings never owned the pause here)")
+	_esc()
+	await _settle(3)
+	_check(not (pause as Control).visible and not get_tree().paused,
+		"a second ESC closed the pause menu and unpaused")
+
 	var gold_pre_run := Ledger.get_amount("gold")
 	var runs_pre_run := int(SaveManager.state["story"]["counters"]["runs"])
 	_game.call("_start_run")
@@ -721,6 +783,19 @@ func _run_smoke() -> void:
 	await _settle(5)
 	_check(_scene_node() == null, "Save & Quit returned to the slot-select screen")
 	_check(Music.current_id == "title", "slot select plays the title track after Save & Quit")
+	# Settings entry from the title screen (SET1): the quiet corner opens the page.
+	var ssel: Node = get_tree().get_first_node_in_group("slot_select")
+	_check(ssel != null and bool(ssel.call("has_settings_entry")),
+		"the slot select exposes the corner settings entry")
+	ssel.emit_signal("settings_requested")
+	await _settle(3)
+	var tpanel: SettingsPanel = get_tree().get_first_node_in_group("settings_panel")
+	_check(tpanel != null and (tpanel as Control).size == get_viewport().get_visible_rect().size,
+		"the title-screen settings entry opens a panel spanning the viewport")
+	if tpanel != null:
+		tpanel.close()
+	await _settle(3)
+	_check(not get_tree().paused, "the title settings panel unpaused on close (it owned the pause)")
 	_game.call("choose_slot", SMOKE_SLOT)
 	await _settle(10)
 	_check(_scene_file() == "town.tscn", "re-choosing the slot loads town (got %s)" % _scene_file())
@@ -1004,6 +1079,17 @@ func _read_slot_from_disk() -> Dictionary:
 	var f := FileAccess.open(SaveManager.slot_path(SMOKE_SLOT), FileAccess.READ)
 	if f == null:
 		_check(false, "could not re-read the slot file from disk")
+		return {}
+	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	return parsed if parsed is Dictionary else {}
+
+
+## Re-read the profile straight off disk (bypassing SaveManager.profile) — proves the settings
+## write-on-close persisted (SET1). The profile is GLOBAL, so callers snapshot + restore it.
+func _read_profile_from_disk() -> Dictionary:
+	var f := FileAccess.open(SaveManager.profile_path(), FileAccess.READ)
+	if f == null:
+		_check(false, "could not re-read the profile file from disk")
 		return {}
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
 	return parsed if parsed is Dictionary else {}

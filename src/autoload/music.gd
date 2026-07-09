@@ -44,16 +44,17 @@ func _ready() -> void:
 		p.volume_db = SILENCE_DB
 		add_child(p)
 		_players.append(p)
-	_apply_settings()
+	apply_audio_settings()
 
 
 # Known shutdown notice (same as Sfx): a track still mid-play at quit prints
 # "N resources still in use at exit" — AudioServer release order, not a leak.
 
 
-## Apply the profile's linear audio volumes (0..1) to the Music/SFX/UI buses.
-## Data-only per audio.md — no settings UI yet; a slider screen calls this later.
-func _apply_settings() -> void:
+## Apply the profile's linear audio volumes (0..1) to the Music/SFX/UI buses. Called at boot
+## AND live by the settings screen (SettingsPanel — SET1, 2026-07-09) the moment a slider moves,
+## so the bus follows the hand; the profile is persisted once, on the panel's close.
+func apply_audio_settings() -> void:
 	var settings: Dictionary = SaveManager.profile.get("settings", {})
 	for bus_name: String in ["Music", "SFX", "UI"]:
 		var key := bus_name.to_lower() + "_volume"

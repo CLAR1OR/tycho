@@ -48,6 +48,9 @@ func _ready() -> void:
 	# resource strip, so game.gd holds no HUD readout of its own.
 	EventBus.run_ended.connect(_on_run_ended)
 	EventBus.tech_researched.connect(_on_tech_researched)
+	# Apply the profile's window mode once at boot (SaveManager loaded the profile as an
+	# autoload; headless-guarded inside). Volumes already rode Music._ready. (SET1, 2026-07-09.)
+	SettingsPanel.apply_window_mode(SaveManager.profile)
 	# Playtest cheat panel (F2) — lives on the HUD layer so it survives scene swaps.
 	var cheats := CheatPanel.new()
 	cheats.setup(self)
@@ -67,6 +70,9 @@ func _show_slot_select() -> void:
 	select.slot_chosen.connect(func(slot: int) -> void:
 		select.queue_free()
 		choose_slot(slot))
+	# The title screen's quiet "settings" corner opens the settings page (no return target —
+	# the slot select stays up behind the backdrop; the panel owns + drops the pause). SET1.
+	select.settings_requested.connect(func() -> void: open_settings())
 	$HUD.add_child(select)
 
 
@@ -301,6 +307,20 @@ func current_scene() -> Node:
 ## True when we are at the boot/quit slot-select screen (no scene loaded) — the menu is inert.
 func on_slot_select() -> bool:
 	return _scene == null
+
+
+## Open the settings page (SET1, 2026-07-09) onto the HUD layer. `return_to` (the pause menu, from
+## its Settings button) is reshown when the page closes; the title-screen entry passes null (the
+## slot select stays up behind the backdrop). Returns the panel so the smoke can drive it.
+func open_settings(return_to: Control = null) -> SettingsPanel:
+	var panel := SettingsPanel.new()
+	$HUD.add_child(panel)
+	panel.open()
+	if return_to != null:
+		panel.closed.connect(func() -> void:
+			if is_instance_valid(return_to) and return_to.has_method("reshow"):
+				return_to.call("reshow"))
+	return panel
 
 
 ## Forfeit the current run — "like it never happened" (design 2026-07-07). Roll the whole

@@ -67,8 +67,9 @@ static func default_profile() -> Dictionary:
 		# Audio volumes are LINEAR 0..1 (Music autoload converts to bus dB); the
 		# settings UI can lag (design/audio.md) — data-only for now. Controls +
 		# accessibility land with their screens; defaults-merge fills them for
-		# existing profiles that predate a key.
-		"settings": {"music_volume": 1.0, "sfx_volume": 1.0, "ui_volume": 1.0},
+		# existing profiles that predate a key. window_mode ("windowed"/"fullscreen") is
+		# read via SettingsCore.window_mode (any other value → windowed) — SET1, 2026-07-09.
+		"settings": {"music_volume": 1.0, "sfx_volume": 1.0, "ui_volume": 1.0, "window_mode": "windowed"},
 		"achievements": {},   # id -> {unlocked_at, progress}
 	}
 

@@ -33,7 +33,7 @@ One file per slot + one shared profile file. Settings/accessibility are profile-
 }
 
 // profile.json (shared across slots)
-{ "profile_version": 1, "settings": { "music_volume": 1.0, "sfx_volume": 1.0, "ui_volume": 1.0 /* linear 0..1, applied to buses in Music._ready; controls + accessibility land with their screens */ }, "achievements": {"id": {"unlocked_at": "…", "progress": 3}} }
+{ "profile_version": 1, "settings": { "music_volume": 1.0, "sfx_volume": 1.0, "ui_volume": 1.0, "window_mode": "windowed" /* linear 0..1 volumes applied to buses live by the settings screen (SET1, 2026-07-09) + at boot; window_mode "windowed"/"fullscreen" read via SettingsCore.window_mode (any other → windowed); controls + accessibility land with their screens */ }, "achievements": {"id": {"unlocked_at": "…", "progress": 3}} }
 ```
 
 - **No mid-run saves in v1**: save on town return + autosave checkpoints between floors (quit mid-run → resume at floor start). Runs are 20–25 min; floor-granularity is enough. *(Implemented 2026-07-02 — `game.gd` writes the checkpoint as a floor's first room loads; `RunState.to_checkpoint()/resume_from()`.)* **Statistics invariant (2026-07-07):** because the resume re-reads the last floor-start checkpoint from disk, any counter earned after it (e.g. the final-boss `boss_kills` in the kill→pedestal window) is not yet persisted — quitting discards it and the resume re-earns it exactly once. This stays correct only as long as nothing writes to disk mid-run outside the floor-checkpoint snapshot, so the ESC menu's in-run **Save & Quit writes NOTHING to disk** (the checkpoint IS the save); **Forfeit** rolls the slot back to a portal-entry snapshot and re-saves that (overwriting the run's checkpoints).

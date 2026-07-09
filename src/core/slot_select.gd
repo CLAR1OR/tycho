@@ -23,6 +23,8 @@ class_name SlotSelect
 ## sky's own placeholders in SlotSelectSky).
 
 signal slot_chosen(slot: int)
+## A quiet "settings" word in the corner was clicked (SET1, 2026-07-09) — game.gd opens the page.
+signal settings_requested
 
 # =====================================================================================
 # Style / copy — placeholders. (Shared palette + fonts are in SlateHud.)
@@ -49,6 +51,9 @@ const FS_CONFIRM := 15
 const FS_FLAVOR := 14
 const NEW_NAME := "New saga"             # placeholder copy
 const FLAVOR := "an unwritten sky"       # placeholder copy
+const SETTINGS_TEXT := "settings"        # placeholder copy — the quiet corner link (SET1)
+const FS_SETTINGS := 15
+const SETTINGS_MARGIN := 24.0
 const CONFIRM_TEXT := "Really delete?"   # existing string — byte-identical
 const ROMAN := ["I", "II", "III", "IV", "V", "VI"]
 
@@ -57,6 +62,7 @@ var slot_count: int = 3
 var _sky: SlotSelectSky
 var _plaques: Array[Control] = []
 var _armed_delete: int = -1              # slot awaiting delete confirmation; -1 = none
+var _settings_link: Label
 
 
 func _ready() -> void:
@@ -67,6 +73,23 @@ func _ready() -> void:
 	theme = SlateTheme.get_theme()
 	_sky = SlotSelectSky.new()
 	add_child(_sky)
+	# A quiet "settings" word in the bottom-right corner (SET1) — hover lightens, click opens the
+	# page. Unobtrusive: it does not disturb the sky/plaque composition.
+	_settings_link = Label.new()
+	_settings_link.text = SETTINGS_TEXT
+	_settings_link.theme_type_variation = &"DimLabel"
+	_settings_link.mouse_filter = Control.MOUSE_FILTER_STOP
+	_settings_link.add_theme_font_size_override("font_size", FS_SETTINGS)
+	_settings_link.gui_input.connect(func(e: InputEvent) -> void:
+		if e is InputEventMouseButton and e.pressed \
+				and (e as InputEventMouseButton).button_index == MOUSE_BUTTON_LEFT:
+			Sfx.play("ui-click")
+			settings_requested.emit())
+	_settings_link.mouse_entered.connect(func() -> void:
+		_settings_link.add_theme_color_override("font_color", SlateHud.COL_TEXT))
+	_settings_link.mouse_exited.connect(func() -> void:
+		_settings_link.add_theme_color_override("font_color", SlateHud.COL_KEY_TEXT))
+	add_child(_settings_link)
 	_refresh()
 
 
@@ -110,6 +133,11 @@ func armed_slot() -> int:
 	return _armed_delete
 
 
+## The corner settings link exists (smoke/debug — SET1).
+func has_settings_entry() -> bool:
+	return _settings_link != null
+
+
 # --- Build ---------------------------------------------------------------------------
 
 func _refresh() -> void:
@@ -139,6 +167,10 @@ func _process(_delta: float) -> void:
 		var p := _plaques[i]
 		p.size = Vector2(PLAQUE_W, PLAQUE_H)
 		p.position = Vector2(x, top + step * i)
+	if _settings_link != null:
+		_settings_link.position = Vector2(
+			size.x - _settings_link.size.x - SETTINGS_MARGIN,
+			size.y - _settings_link.size.y - SETTINGS_MARGIN)
 
 
 func _build_plaque(slot: int, entry: Dictionary) -> Control:

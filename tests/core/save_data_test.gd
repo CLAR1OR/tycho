@@ -68,6 +68,8 @@ func test_default_profile_and_migrate() -> void:
 	# Audio volumes (linear 0..1) exist from day one so Music._ready can read them.
 	for key in ["music_volume", "sfx_volume", "ui_volume"]:
 		check_eq(float(p["settings"][key]), 1.0, "settings default %s = 1.0" % key)
+	# window_mode (SET1, 2026-07-09) defaults to windowed.
+	check_eq(str(p["settings"]["window_mode"]), "windowed", "settings default window_mode = windowed")
 
 
 func test_profile_migrate_fills_missing_audio_settings() -> void:
@@ -78,3 +80,5 @@ func test_profile_migrate_fills_missing_audio_settings() -> void:
 	check_eq(float(out["settings"]["music_volume"]), 0.4, "existing volume preserved")
 	check_eq(float(out["settings"]["sfx_volume"]), 1.0, "missing sfx volume filled from defaults")
 	check_eq(float(out["settings"]["ui_volume"]), 1.0, "missing ui volume filled from defaults")
+	# A profile predating window_mode (SET1, 2026-07-09) gains it via the nested defaults-merge.
+	check_eq(str(out["settings"]["window_mode"]), "windowed", "missing window_mode filled from defaults")

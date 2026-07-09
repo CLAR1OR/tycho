@@ -102,6 +102,22 @@ func close() -> void:
 	get_viewport().gui_release_focus()
 
 
+## The Settings button (SET1, 2026-07-09): hide the menu WITHOUT unpausing (the pause stays ours),
+## then open the settings page over us via game.gd, asking to be reshown when it closes. Public so
+## the smoke drives the same path the button uses.
+func open_settings() -> void:
+	visible = false
+	_game.call("open_settings", self)
+
+
+## Reappear after the settings page closed over us: the pause is still ours, so DON'T touch it (and
+## no Sfx — this is not a fresh open). Just show, resync the fullscreen rect, and rebuild.
+func reshow() -> void:
+	visible = true
+	size = get_viewport_rect().size
+	_rebuild()
+
+
 # --- Actions (public — gated actions no-op with a visible reason) --------------------
 
 ## True when leaving the current scene is allowed: town (or any scene without the gate) is
@@ -158,6 +174,7 @@ func _rebuild() -> void:
 	_set_status(_status_line(in_run, allowed))
 
 	_button("Resume", close, false)
+	_button("Settings", open_settings, false)
 	if in_run:
 		# Forfeit is offered only in a run (there is nothing to abandon in town).
 		_button("Forfeit Run (abandon it, keep nothing)", forfeit, not allowed)
