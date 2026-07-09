@@ -494,6 +494,28 @@ text = "Thomas's Favorite Spot"
 font_size = 36
 outline_size = 8
 
+[node name="PlanningTable" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -4)
+collision_layer = 0
+collision_mask = 1
+monitorable = false
+
+[node name="Mesh" type="MeshInstance3D" parent="PlanningTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
+mesh = SubResource("DeskMesh")
+surface_material_override/0 = SubResource("DeskMat")
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlanningTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("PlotShape")
+
+[node name="Label" type="Label3D" parent="PlanningTable"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+billboard = 1
+text = "Planning Table — E to survey"
+font_size = 36
+outline_size = 8
+
 [node name="Player" parent="." instance=ExtResource("2")]
 
 [node name="CameraRig" parent="." instance=ExtResource("3")]

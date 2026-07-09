@@ -69,7 +69,6 @@ var _topright: HBoxContainer
 var _carry: HBoxContainer
 var _turnin_btn: Button
 var _dock: PanelContainer
-var _close_btn: Button
 # Reading page
 var _page_root: Control
 var _rows: VBoxContainer
@@ -101,6 +100,15 @@ func open() -> void:
 func close() -> void:
 	get_tree().paused = false
 	queue_free()
+
+
+func _input(event: InputEvent) -> void:
+	# ESC closes the panel from ANY screen (chart / read / quiz / locked / puzzle / aha) — the
+	# 2026-07-09 ESC-close pass replaces the chart Close and the read/locked "Close (keeps
+	# progress)" buttons. Sub-screen navigation (answers, begin-quiz, Back) is untouched.
+	if event.is_action_pressed("ui_cancel"):
+		close()
+		get_viewport().set_input_as_handled()
 
 
 func _process(_delta: float) -> void:
@@ -229,6 +237,8 @@ func _build_chart() -> void:
 	_chart_root.add_child(_chart)
 	_chart.setup(_defs, select_node)
 
+	# (No Close button — ESC closes the panel; see _input. 2026-07-09 ESC-close pass.)
+
 	# Header: title + subtitle (top-left).
 	var title := Label.new()
 	title.text = "Sophia's Desk — Research"
@@ -255,13 +265,6 @@ func _build_chart() -> void:
 	_topright.add_child(_turnin_btn)
 	_chart_root.add_child(_topright)
 
-	# Dock holder (rebuilt per selection) + Close.
-	_close_btn = Button.new()
-	_close_btn.text = "Close"
-	_close_btn.pressed.connect(func() -> void: Sfx.play("ui-click"))
-	_close_btn.pressed.connect(close)
-	_chart_root.add_child(_close_btn)
-
 
 ## Position the header group, dock, and Close each frame while the chart is visible (their
 ## container sizes only settle after a layout pass, so absolute placement is simplest).
@@ -270,8 +273,6 @@ func _reposition() -> void:
 		_topright.position = Vector2(size.x - MARGIN - _topright.size.x, MARGIN - 4.0)
 	if _dock != null:
 		_dock.position = Vector2(size.x - MARGIN - DOCK_W, DOCK_TOP)
-	if _close_btn != null:
-		_close_btn.position = Vector2(MARGIN, size.y - MARGIN - _close_btn.size.y)
 
 
 func _show_chart() -> void:
@@ -477,7 +478,7 @@ func _show_read() -> void:
 		_button("To the gateway — build it", begin_puzzle)
 	else:
 		_button("I have it — ask me", begin_quiz)
-	_button("Close (keeps progress)", close)
+	# (ESC closes from here, keeping progress — the 2026-07-09 ESC-close pass.)
 
 
 func _show_quiz(feedback: String = "") -> void:
@@ -514,7 +515,7 @@ func _show_locked() -> void:
 	_title(str(def["name"]))
 	_reading("Sophia: That's not it. Go make a run and clear your head. Ask me again when you're back.")
 	_button("Back", _show_chart)
-	_button("Close (keeps progress)", close)
+	# (ESC closes from here, keeping progress — the 2026-07-09 ESC-close pass.)
 
 
 func _show_aha() -> void:

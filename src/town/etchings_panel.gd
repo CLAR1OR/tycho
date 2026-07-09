@@ -43,7 +43,6 @@ var _arms: EtchingsArms
 var _title: Label
 var _subtitle: Label
 var _dock: PanelContainer
-var _close_btn: Button
 
 
 func _ready() -> void:
@@ -82,18 +81,19 @@ func open() -> void:
 	_subtitle.theme_type_variation = &"DimLabel"
 	_subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_subtitle)
-	# Close (bottom-left).
-	_close_btn = Button.new()
-	_close_btn.text = "Close"
-	_close_btn.pressed.connect(func() -> void: Sfx.play("ui-click"))
-	_close_btn.pressed.connect(close)
-	add_child(_close_btn)
 	get_tree().paused = true
 
 
 func close() -> void:
 	get_tree().paused = false
 	queue_free()
+
+
+func _input(event: InputEvent) -> void:
+	# ESC closes the panel (the 2026-07-09 ESC-close pass replaces the Close button).
+	if event.is_action_pressed("ui_cancel"):
+		close()
+		get_viewport().set_input_as_handled()
 
 
 func _process(_delta: float) -> void:
@@ -106,8 +106,6 @@ func _process(_delta: float) -> void:
 		_title.position = Vector2(MARGIN + 8.0, MARGIN)
 	if _subtitle != null:
 		_subtitle.position = Vector2(MARGIN + 9.0, MARGIN + 32.0)
-	if _close_btn != null:
-		_close_btn.position = Vector2(MARGIN, size.y - MARGIN - _close_btn.size.y)
 	if _dock != null:
 		_dock.position = Vector2(size.x - MARGIN - DOCK_W, DOCK_TOP)
 

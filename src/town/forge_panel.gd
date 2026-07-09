@@ -33,7 +33,6 @@ var _selected: String = ""
 var _anvil: ForgeAnvil
 var _title: Label
 var _subtitle: Label
-var _close_btn: Button
 var _strip: PanelContainer
 
 
@@ -68,12 +67,6 @@ func open() -> void:
 	_subtitle.theme_type_variation = &"DimLabel"
 	_subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_subtitle)
-	# Close (bottom-left).
-	_close_btn = Button.new()
-	_close_btn.text = "Close"
-	_close_btn.pressed.connect(func() -> void: Sfx.play("ui-click"))
-	_close_btn.pressed.connect(close)
-	add_child(_close_btn)
 	# Default selection = the equipped weapon.
 	_selected = str(SaveManager.state["combat"].get("current_weapon", "sword"))
 	if not _defs.has(_selected):
@@ -88,6 +81,15 @@ func close() -> void:
 	queue_free()
 
 
+func _input(event: InputEvent) -> void:
+	# ESC closes the panel (the 2026-07-09 ESC-close pass replaces the Close button). The pause
+	# menu stays inert: its own _input bails while the tree is paused, and marking the event
+	# handled keeps it from opening on the same press.
+	if event.is_action_pressed("ui_cancel"):
+		close()
+		get_viewport().set_input_as_handled()
+
+
 func _process(_delta: float) -> void:
 	# Anchors set in a Control's own _ready under town.gd's $HUD CanvasLayer get no layout pass
 	# (size stays 0,0) — sync to the viewport, like the etchings/tech panels do.
@@ -98,8 +100,6 @@ func _process(_delta: float) -> void:
 		_title.position = Vector2(MARGIN + 8.0, MARGIN)
 	if _subtitle != null:
 		_subtitle.position = Vector2(MARGIN + 9.0, MARGIN + 32.0)
-	if _close_btn != null:
-		_close_btn.position = Vector2(MARGIN, size.y - MARGIN - _close_btn.size.y)
 	if _strip != null:
 		var w := maxf(0.0, size.x - 2.0 * STRIP_GUTTER)
 		_strip.custom_minimum_size.x = w

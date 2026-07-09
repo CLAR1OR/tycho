@@ -32,6 +32,7 @@ var _in_npc: Area3D = null          # the NPC the player is standing at (or null
 var _in_desk: bool = false
 var _in_forge: bool = false
 var _in_meditation: bool = false    # standing at Thomas's favorite spot
+var _in_table: bool = false         # standing at Herzog's Planning Table (the survey)
 
 var _hud: TownHud = null            # the Slate town HUD (day chip + resource strip + toast)
 
@@ -40,6 +41,7 @@ var _hud: TownHud = null            # the Slate town HUD (day chip + resource st
 @onready var _desk: Area3D = $SophiasDesk
 @onready var _forge: Area3D = $MarasForge
 @onready var _meditation: Area3D = $MeditationSpot
+@onready var _table: Area3D = $PlanningTable
 @onready var _portal: Area3D = $DungeonPortal
 
 
@@ -76,6 +78,12 @@ func _ready() -> void:
 	_meditation.body_exited.connect(func(body: Node3D) -> void:
 		if body is Player:
 			_in_meditation = false)
+	_table.body_entered.connect(func(body: Node3D) -> void:
+		if body is Player:
+			_in_table = true)
+	_table.body_exited.connect(func(body: Node3D) -> void:
+		if body is Player:
+			_in_table = false)
 	_desk.body_entered.connect(func(body: Node3D) -> void:
 		if body is Player:
 			_in_desk = true)
@@ -90,6 +98,9 @@ func _ready() -> void:
 			_in_forge = false)
 	# A finished research can unlock plots while we stand here — refresh live.
 	EventBus.tech_researched.connect(func(_tech_id: String) -> void: _refresh_plots())
+	# A build now happens behind the BuildPanel (B2) — refresh the plot labels/meshes when it
+	# reports a level built (the plot mesh grows, the label re-prices the next level).
+	EventBus.building_built.connect(_on_building_built)
 	# The Slate town HUD (design/ui-hud.md): day chip + resource strip + per-resource
 	# day-projections + the bottom hint; game.gd fires the overnight toast via
 	# show_day_toast on the run-end return. 1 day = 1 run; the Well-Fed status only means
@@ -119,6 +130,9 @@ func _unhandled_input(event: InputEvent) -> void:
 			_flash_facility(_forge, "Mara: not yet.")
 	elif _in_meditation:
 		_try_meditate()
+	elif _in_table:
+		if open_survey_panel() == null:
+			_flash_facility(_table, "Herzog: not yet.")
 	elif _in_npc != null:
 		talk_to(str(_in_npc.get_meta("npc_id")))
 	elif _in_plot != null:
@@ -153,6 +167,31 @@ func open_forge_panel() -> ForgePanel:
 	if not UnlocksCore.is_unlocked(SaveManager.state, "weapons"):
 		return null
 	var panel := ForgePanel.new()
+	$HUD.add_child(panel)
+	panel.open()
+	return panel
+
+
+## Public (interact + smoke driver): open a build plot's BuildPanel (B2 — Herzog's ledger),
+## or null if the build system hasn't been unlocked yet (B4). Mirror of the forge/desk.
+func open_build_panel(building_id: String) -> BuildPanel:
+	if not UnlocksCore.is_unlocked(SaveManager.state, "building"):
+		return null
+	if not _building_defs.has(building_id):
+		push_error("Town: missing building def \"%s\"" % building_id)
+		return null
+	var panel := BuildPanel.new()
+	$HUD.add_child(panel)
+	panel.open(building_id)
+	return panel
+
+
+## Public (interact + smoke driver): open Herzog's Planning Table survey (B3 — the whole-town
+## read-only sheet), or null if the build system hasn't been unlocked yet (B4).
+func open_survey_panel() -> SurveyPanel:
+	if not UnlocksCore.is_unlocked(SaveManager.state, "building"):
+		return null
+	var panel := SurveyPanel.new()
 	$HUD.add_child(panel)
 	panel.open()
 	return panel
@@ -244,29 +283,23 @@ func _refresh_indicators() -> void:
 
 # --- Build plots ------------------------------------------------------------------
 
+## Pressing E at a build plot now opens that building's BuildPanel (B2 — Herzog's ledger),
+## where the build transaction lives (byte-identical, just relocated behind the page's button).
+## Pre-B4 the plots stay shut: the label already says so; a press just flashes the hint. A
+## tech-locked building DOES open the panel (it shows the readable "why" — the research it needs).
 func _try_build(building_id: String) -> void:
 	if not _building_defs.has(building_id):
 		push_error("Town: missing building def \"%s\"" % building_id)
 		return
-	# The build plots stay shut until Herzog opens the ledger (B4, PRD §7.1). The
-	# label already says so; a press just flashes the hint.
 	if not UnlocksCore.is_unlocked(SaveManager.state, "building"):
 		_flash_plot_label(_plot_for(building_id), "Herzog: not yet.")
 		return
-	var def: Dictionary = _building_defs[building_id]
-	if not TownCore.is_unlocked(def, SaveManager.state["tech"]["researched"]):
-		return  # the label already says what research it needs
-	var town: Dictionary = SaveManager.state["town"]
-	var level := TownCore.building_level(town, building_id)
-	var cost := TownCore.next_level_cost(def, level)
-	if cost.is_empty():
-		return  # maxed — the label already says so
-	if not Ledger.try_spend_all(cost, "building-cost"):
-		_flash_plot_label(_plot_for(building_id), "Not enough resources")
-		return
-	SaveManager.state["town"] = TownCore.set_building(town, building_id, level + 1)
-	EventBus.building_built.emit(building_id, level + 1)
-	SaveManager.save_current()  # a built building must never be lost to a crash
+	open_build_panel(building_id)
+
+
+## A build reported by the BuildPanel — refresh the plot labels + meshes (the plot mesh grows
+## per level, the label re-prices the next level). Wired to EventBus.building_built in _ready.
+func _on_building_built(_building_id: String, _level: int) -> void:
 	_refresh_plots()
 
 
@@ -282,6 +315,9 @@ func _refresh_facilities() -> void:
 	# spot is a placeholder meditation beat (see _try_meditate).
 	_refresh_facility(_meditation, "etchings", "Thomas's Favorite Spot", "E to meditate",
 		"Thomas hasn't shown you stillness")
+	# Herzog's Planning Table (B3 — the survey) gates on the build system like the plots.
+	_refresh_facility(_table, "building", "Planning Table", "E to survey",
+		"Herzog hasn't opened the ledger")
 	_refresh_plots()
 
 

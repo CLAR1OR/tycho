@@ -56,9 +56,14 @@ func _run_smoke() -> void:
 	_check(not UnlocksCore.is_unlocked(SaveManager.state, "building"), "fresh save: build plots locked")
 	_check(_scene_node().call("open_forge_panel") == null, "forge panel refuses while locked")
 	_check(_scene_node().call("open_tech_panel") == null, "research panel refuses while locked")
-	_scene_node().call("_try_build", "sophias-study")
+	# The build path is now the BuildPanel (B2) + the Planning Table survey (B3) — both refuse
+	# (return null) while the build system is locked; a fresh save builds nothing.
+	_check(_scene_node().call("open_build_panel", "sophias-study") == null,
+		"build panel refuses while the building system is locked")
+	_check(_scene_node().call("open_survey_panel") == null,
+		"survey panel refuses while the building system is locked")
 	_check(TownCore.building_level(SaveManager.state["town"], "sophias-study") == 0,
-		"build refused while the building system is locked")
+		"nothing built while the building system is locked")
 
 	# --- New enemy types (2026-07-06): both scenes must load, extend EnemyDummy, and
 	# carry their signature exports — so the wave pipeline can spawn them in a real room. ---
@@ -220,13 +225,33 @@ func _run_smoke() -> void:
 	# mark_shown replaced the story dict several times — re-grab the counters ref.
 	c = SaveManager.state["story"]["counters"]
 
-	# --- Build in town ---------------------------------------------------------------
-	# The wave gold (>= 40) buys Sophia's Study L1; a later day tick must produce.
+	# --- Build in town — via the BuildPanel (B2, 2026-07-09) ---------------------------
+	# The wave gold (>= 40) buys Sophia's Study L1; a later day tick must produce. The build
+	# transaction is byte-identical, just relocated behind the panel's button (open → build →
+	# ESC-close). Prove the panel geometry net + the three level entries + the ESC-close pass.
 	var gold_before_build := Ledger.get_amount("gold")
-	_scene_node().call("_try_build", "sophias-study")
+	var bpanel: BuildPanel = _scene_node().call("open_build_panel", "sophias-study")
+	_check(bpanel != null, "the plot opens the build panel post-B4")
+	await _settle(3)
+	var bvp := get_viewport().get_visible_rect().size
+	_check((bpanel as Control).size == bvp,
+		"build panel spans the viewport (%s == %s)" % [str((bpanel as Control).size), str(bvp)])
+	_check(int(bpanel.call("entry_count")) == 3, "build panel shows the building's three level entries")
+	_check(str(bpanel.call("shown_building")) == "sophias-study", "build panel shows the pressed building")
+	bpanel.call("build")
 	var lvl: int = TownCore.building_level(SaveManager.state["town"], "sophias-study")
-	_check(lvl == 1, "build plot built the study (level %d)" % lvl)
+	_check(lvl == 1, "build panel built the study (level %d)" % lvl)
 	_check(Ledger.get_amount("gold") < gold_before_build, "build spent gold")
+	# ESC-close pass (2026-07-09): synthesize ui_cancel — the panel closes, the tree unpauses,
+	# and the pause menu does NOT open on that press (the panel marks the event handled; the
+	# pause menu's own _input bails while the tree is paused).
+	var pmenu: PauseMenu = get_tree().get_first_node_in_group("pause_menu")
+	_esc()
+	await _settle(3)
+	_check(get_tree().get_first_node_in_group("build_panel") == null, "ESC closed the build panel")
+	_check(not get_tree().paused, "ESC-close unpaused the tree")
+	_check(pmenu == null or not (pmenu as Control).visible,
+		"the pause menu did not open on the ESC-close press")
 
 	# --- Desk still locked; B3 (+ the Food day tick) fire on the NEXT town entry ------
 	# B3 (Sophia cracks the shards) is eligible (run 1's 3 boss kills tripped its gate)
@@ -236,8 +261,25 @@ func _run_smoke() -> void:
 	# the Food-upkeep day tick (design/food-upkeep.md) in together.
 	_check(not UnlocksCore.is_unlocked(SaveManager.state, "tech"), "research desk locked before B3")
 	Ledger.add("gold", 40.0, "smoke-grant")
-	_scene_node().call("_try_build", "farm")
+	var fpanel: BuildPanel = _scene_node().call("open_build_panel", "farm")
+	fpanel.call("build")
+	fpanel.call("close")
+	await _settle(3)
 	_check(TownCore.building_level(SaveManager.state["town"], "farm") == 1, "farm built (ungated)")
+
+	# --- Planning Table survey (B3, 2026-07-09) — a whole-town read-only sheet -----------
+	# One ledger row per building def, INCLUDING the dormant town-walls def (no plot in the
+	# scene — a row needs no plot). Post-B4 it opens; assert it spans the viewport + shows all
+	# four rows, then close.
+	var survey: SurveyPanel = _scene_node().call("open_survey_panel")
+	_check(survey != null, "the Planning Table opens the survey post-B4")
+	await _settle(3)
+	_check((survey as Control).size == get_viewport().get_visible_rect().size,
+		"survey panel spans the viewport")
+	_check(int(survey.call("row_count")) == 4,
+		"survey lists every building def incl. dormant town-walls (%d rows)" % int(survey.call("row_count")))
+	survey.call("close")
+	await _settle(3)
 	var cheats: CheatPanel = get_tree().get_first_node_in_group("cheat_panel")
 	_check(cheats != null, "cheat panel available")
 	# Buildings now: study + farm (2) → upkeep 2 + 2 = 4; farm L1 makes 3 food; a fat
@@ -267,9 +309,15 @@ func _run_smoke() -> void:
 	# --- Research at Sophia's desk ---------------------------------------------------
 	# Quarry must be tech-gated first; then drive the REAL panel path end-to-end:
 	# arithmetic (prereq) → masonry → quarry buildable. Smoke funds the research.
-	_scene_node().call("_try_build", "quarry")
+	# A tech-locked building now OPENS the build panel (it shows the readable why — the
+	# research it needs) but its build() refuses; the level stays 0.
+	var qlock: BuildPanel = _scene_node().call("open_build_panel", "quarry")
+	_check(qlock != null, "a tech-locked building still opens the build panel (the readable why)")
+	qlock.call("build")
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 0,
-		"quarry blocked before masonry is researched")
+		"tech-locked quarry build refused before masonry is researched")
+	qlock.call("close")
+	await _settle(3)
 	var panel: TechPanel = _scene_node().call("open_tech_panel")
 	await _settle(3)
 
@@ -379,7 +427,10 @@ func _run_smoke() -> void:
 	var researched: Array = SaveManager.state["tech"]["researched"]
 	_check(researched.has("med-arithmetic-zero") and researched.has("med-masonry-arch"),
 		"both nodes researched through read → quiz → aha (%s)" % str(researched))
-	_scene_node().call("_try_build", "quarry")
+	var qpanel: BuildPanel = _scene_node().call("open_build_panel", "quarry")
+	qpanel.call("build")
+	qpanel.call("close")
+	await _settle(3)
 	_check(TownCore.building_level(SaveManager.state["town"], "quarry") == 1,
 		"masonry unlock makes the quarry buildable")
 
@@ -1002,6 +1053,14 @@ func _test_abilities_in_run(player: Player) -> void:
 	await _settle(1)
 	_check(brute.call("is_staggered"), "Shockwave force-staggered the armored Brute")
 	_check(not player.call("try_cast", "r"), "Shockwave on cooldown — a second immediate cast is refused")
+
+
+## Synthesize an ESC (ui_cancel) press through the viewport — drives the panel ESC-close pass.
+func _esc() -> void:
+	var ev := InputEventAction.new()
+	ev.action = "ui_cancel"
+	ev.pressed = true
+	get_viewport().push_input(ev)
 
 
 func _settle(frames: int) -> void:
