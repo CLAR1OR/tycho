@@ -28,6 +28,7 @@ var _final_boss_disk_checked: bool = false  # the statistics invariant window (2
 # RunHud coverage (the Slate in-run HUD, 2026-07-07) — each checked once.
 var _shelf_checked: bool = false      # echo shelf tile count == folded pick count
 var _pickup_checked: bool = false     # pickup strip lights on a drop
+var _echo_geom_checked: bool = false  # echo offer panel geometry + mark count (O1, 2026-07-09)
 
 
 func _ready() -> void:
@@ -782,6 +783,15 @@ func _play_room() -> void:
 		_postboss_echo_tested = true
 		_check(echo_panel != null, "guaranteed post-boss echo offer fired")
 	if echo_panel != null:
+		# The O1 offer panel (2026-07-09): the marks bloom over the whole dimmed screen — the
+		# geometry net (it spans the viewport) + one mark per offered echo (pool full → OFFER_SIZE).
+		if not _echo_geom_checked:
+			_echo_geom_checked = true
+			var vp := get_viewport().get_visible_rect().size
+			_check(echo_panel.get("size") == vp,
+				"echo offer panel spans the viewport (%s vs %s)" % [echo_panel.get("size"), vp])
+			_check(int(echo_panel.call("mark_count")) == EchoCore.OFFER_SIZE,
+				"echo offer shows one mark per offered echo (%d)" % int(echo_panel.call("mark_count")))
 		echo_panel.call("pick", 0)  # take the offered echo, like a player
 		await _settle(6)
 		# The RunHud echo shelf rebuilt on the pick — one tile per folded pick.

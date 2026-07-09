@@ -189,8 +189,32 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** the sky gradient stops + star/constellation/ridge geometry + title size/spacing/glow (all consts atop `slot_select_sky.gd`), the plaque sizes / chip styles / delete-button styling (consts atop `slot_select.gd`), and ALL flavor copy (`choose a saga`, `New saga`, `an unwritten sky`). The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
+## Echo offer — The etchings answer (O1) (decided + built 2026-07-09)
+
+> Human picked **O1 — The etchings answer** on claude.ai/design ("Echo Offer" group). No panel, no cards: the in-run pick-1-of-3 (PRD §7.5) fires with the game already paused, the whole screen dims hard, and **three resonance marks bloom over the dimmed battlefield** — the same ring-and-glow language as the etchings screen's marks (E1), dust-cyan, each carrying the echo's Cinzel monogram (the exact glyph it will wear on the RunHud echo shelf — continuity is the point).
+
+`EchoOfferPanel` (`src/combat/echo_offer_panel.gd`) is a fullscreen `Control` (base was `PanelContainer`), `PROCESS_MODE_ALWAYS`, in group `echo_offer`, mouse-filter STOP so the whole screen catches hover + clicks. It **draws everything in `_draw`** (the panel IS the screen — dimmer backdrop, header, marks) and hit-tests hover/click in `_gui_input`, with the CanvasLayer viewport-size sync in `_process` + at `present()` time (the old await-a-frame recenter hack dies with the box). The pure display rules are **`EchoOfferCore`** (`src/combat/echo_offer_core.gd`, unit-tested); the panel owns only pixels + hit-testing. `combat_room.gd`'s `present_echo_offer` and `game.gd`'s `_offer_echo` are UNCHANGED (spawned/wired exactly as before).
+
+**Components:**
+- **Dimmer backdrop** — a near-opaque `rgba(8,7,12,.62)` over the whole screen (placeholder const, precedent `pause_menu.gd`).
+- **Header** (top-centre, ~13% down) — the Garamond title `Your etchings glow.` + a caps mono sub `CHOOSE AN ECHO` (letter-spaced via a `FontVariation` `SPACING_GLYPH`, fainter).
+- **The marks** — a shallow arc (three at normalized x ≈ 0.25/0.50/0.75, the exact-middle one lifted ~38px when the count is odd and ≥3; 1–2-mark offers centre gracefully, keys map 1..n). Per mark: a dust-cyan ring (radius ~75) with a radial inner glow (layered fills, like the S2 title glow); the **Cinzel monogram** (`HudCore.monogram(def.name)`, reused — never duplicated); a small mono **key badge** (the digit) at the ring top; the **name** in Cinzel beneath; the **effect lines** in mono beneath that (the def's `desc` split at `", "` — display split only, desc data untouched).
+
+**State grammar** (the shared O-states card): IDLE = part-alpha cyan ring + faint glow; **HOVERED** = full `COL_DUST` border + halo + brighter monogram (mouse-motion hit-test within a per-mark rect, redraw only on change) — E1's mark wake. A **drawback clause** (a segment starting `but `) renders in a **soft red** (`COL_DRAWBACK` `#c98181`, a local const, softer than `COL_PERIL` — the offer's only red). A **held ×n badge** (gold, `RunState.echoes.count(id)` — stackables only) sits at the ring's upper-right, mirroring the shelf's gold count badge. A **synergy** echo (non-empty `requires`) gets a woven double ring (a faint outer second stroke) + a parents line under the name: `woven from SWIFT STEP + QUICK DASH` (requires ids resolved to def names, upper-cased, `" + "`-joined; the `woven from …` wrapper is a panel copy const).
+
+**Pick flow (FROZEN):** click a mark or press its number key → `pick(index)`; the panel plays `Sfx.play("echo-pick")`, **unpauses BEFORE reporting the pick** (so the callback runs in a live tree), `queue_free()`s, then calls back with the echo id — synchronous, no animation delay on the pick path. `present(offer_ids, on_pick)` pauses the tree + plays `echo-open`. `_input` number keys 1..3 kept (`set_input_as_handled`). A `mark_count()` debug getter for the smoke.
+
+**Sanctioned string changes:** the old single title `Your etchings glow — choose an Echo` splits into the title `Your etchings glow.` + a caps `CHOOSE AN ECHO` sub (kills the em dash). **Removed** (sanctioned): the hint line `click a card or press 1 / 2 / 3` — the key badges on the rings carry the affordance (precedent E1's dropped hint chip).
+
+**Sanctioned data edit (one file):** `data/echoes/tempest-stride.json` desc `SYNERGY: +10% move speed and -15% dash cooldown` → `+10% move speed, -15% dash cooldown` — the `SYNERGY:` prefix moves into the woven-ring treatment, and the comma form matches every other multi-effect desc so the line split works. No other data file changes; no save-schema change.
+
+**Deferred juice (document-don't-build):** the mock's **gold pick-flash** on the chosen ring and the **fly-to-shelf** animation of the monogram down to the RunHud echo shelf — a later juice pass. `pick()` stays synchronous so the frozen unpause-before-callback ordering is untouched.
+
+**HUMAN dial placeholders:** the dimmer colour, the ring radius / glow layers+alphas / halo / weave, the arc base + lift, all font sizes, the drawback red + hover-monogram + held-border colours, the hit-box, and ALL copy (`TITLE`, `SUB`, `WOVEN_FMT`) — all consts atop `echo_offer_panel.gd`. The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
+
 ## Deferred (document-don't-build)
 
 - **Echo tile tooltips / a hold-Tab detail view** (full echo names + descriptions on demand) — the shelf is monograms only for now.
+- **Echo offer pick-flash + fly-to-shelf** — the O1 pick is instant; the gold flash on the chosen ring and the monogram flying down to the echo shelf are a later juice pass (see "Echo offer — O1").
 - **Ability cooldown pie-wedge** — v1 uses a flat face-darken + seconds; a radial sweep is a later flourish.
 - **Painterly art pass** — the HUD is placeholder primitives (the fonts are real as of 2026-07-07); the eventual painterly treatment rides the general art pass.
