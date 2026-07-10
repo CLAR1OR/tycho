@@ -48,6 +48,9 @@ res://
 - **End-to-end smoke (agent tool):** `godot --headless res://tests/smoke/run_loop_smoke.tscn` boots the real game and drives a full run (slot-select → 2-floor clear incl. a mid-run quit + checkpoint resume → boss → town return → build/research/forge → death run → day tick), exit 0/1. It must run as a SCENE, not `-s` — `-s` scripts never get autoloads. Uses a throwaway save slot (99); the boot itself loads no slot.
 - Agents run tests before every commit that touches `src/`.
 
+## Tools
+- **Economy simulator:** `/home/clarior/Godot_v4.7-stable_linux.x86_64 --headless --path . res://tools/economy_sim.tscn` — simulates 40 runs × 3 seeds through the REAL pure cores + `data/` numbers and writes its report to `design/economy-sim.md` (analysis tooling, not game code; assumptions + policies documented atop `tools/economy_sim.gd`).
+
 ## Git & workflow
 - Work on `main` (solo project); branch only for risky experiments. Commit per meaningful change (working agreement), message prefixes: `feat: / fix: / content: / design: / chore:`.
 - `.godot/` is already gitignored. **Commit `.import` files and `project.godot`** — asset imports must reproduce.

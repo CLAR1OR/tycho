@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://c8g7q3j4k2n1a"]
+
+[ext_resource type="Script" path="res://tools/economy_sim.gd" id="1"]
+
+[node name="EconomySim" type="Node"]
+script = ExtResource("1")

@@ -38,6 +38,11 @@ var _run_snapshot: Dictionary = {}
 # (design/ui-hud.md). Set in _on_run_ended, consumed + cleared in _goto_town — a Forfeit
 # reaches town WITHOUT setting it, so it never toasts (Forfeit ticks no day).
 var _last_day_tick: Dictionary = {}
+# Run telemetry (2026-07-10, diagnostics tooling — NOT the save system; see
+# Telemetry.append's header). Stamped in _start_run alongside _run_snapshot, read in
+# _on_run_ended / forfeit_run to build a record: elapsed wall time and the resource
+# deltas the run earned (current Ledger vs. the snapshot taken at portal entry).
+var _run_start_ms: int = 0
 
 @onready var _world: Node = $World
 
@@ -117,6 +122,7 @@ func _start_run() -> void:
 	# Ledger explicitly — state["ledger"] only syncs on save, so it can lag the real amounts.
 	_run_snapshot = SaveManager.state.duplicate(true)
 	_run_snapshot["ledger"] = Ledger.to_dict()
+	_run_start_ms = Time.get_ticks_msec()
 	var run_number := int(SaveManager.state["story"]["counters"]["runs"]) + 1
 	RunState.start_run(
 		{"floors": run_floors, "rooms_min": rooms_min, "rooms_max": rooms_max},
@@ -270,10 +276,18 @@ func _finish_at_artifact() -> void:
 	RunState.finish_at_artifact()
 
 
-func _on_run_ended(_victory: bool, _floor_reached: int, _stats: Dictionary) -> void:
+func _on_run_ended(victory: bool, floor_reached: int, stats: Dictionary) -> void:
 	# The counters + the full-clear codex shard rode StoryState, and Sophia's tech
 	# auto-solve rode TechState (both fired already — they subscribed first as
 	# autoloads). game.gd handles only the scene-flow tail.
+	# Telemetry (2026-07-10): a diagnostics record of the just-finished run, BEFORE the
+	# day tick below adds town production into the Ledger — resource_deltas should read
+	# what the RUN earned, not the town's overnight tick on top of it.
+	Telemetry.append(TelemetryCore.build_record(
+		RunState.run_number, SaveManager.current_slot,
+		TelemetryCore.OUTCOME_VICTORY if victory else TelemetryCore.OUTCOME_DEATH,
+		floor_reached, int(stats.get("room", 0)), _run_elapsed_s(),
+		RunState.echoes, _run_resource_deltas()))
 	SaveManager.state["checkpoint"] = null  # the run is over — nothing to resume
 	# The day tick: 1 day = 1 run, win OR die (locked decision, PRD §6.2). The tick
 	# also runs the Food upkeep pass (design/food-upkeep.md): production comes in, the
@@ -340,6 +354,12 @@ func open_settings(return_to: Control = null) -> SettingsPanel:
 func forfeit_run() -> void:
 	if not RunState.in_run():
 		return
+	# Telemetry (2026-07-10): capture BEFORE the rollback below, while RunState.run /
+	# .echoes and the live Ledger still reflect the run that's being thrown away.
+	Telemetry.append(TelemetryCore.build_record(
+		RunState.run_number, SaveManager.current_slot, TelemetryCore.OUTCOME_FORFEIT,
+		RunFlow.floor_reached(RunState.run), int(RunState.run.get("room", 0)), _run_elapsed_s(),
+		RunState.echoes, _run_resource_deltas()))
 	RunState.abort_run()                                  # (a) no run_ended/death/counters
 	SaveManager.state = _run_snapshot.duplicate(true)     # (b) restore portal-entry state
 	# _collect_from_systems() re-collects ONLY the Ledger on save — reset it to the snapshot
@@ -371,6 +391,30 @@ func _return_to_slot_select() -> void:
 		_scene.queue_free()
 		_scene = null
 	_show_slot_select()
+
+
+# --- Telemetry (2026-07-10) -----------------------------------------------------------
+
+func _run_elapsed_s() -> float:
+	return float(Time.get_ticks_msec() - _run_start_ms) / 1000.0
+
+
+## What the run earned: current Ledger vs. the portal-entry snapshot (_run_snapshot,
+## captured in _start_run). Covers every resource id touched on either side.
+func _run_resource_deltas() -> Dictionary:
+	var before: Dictionary = _run_snapshot.get("ledger", {})
+	var now := Ledger.to_dict()
+	var ids := {}
+	for id: String in before:
+		ids[id] = true
+	for id: String in now:
+		ids[id] = true
+	var deltas := {}
+	for id: String in ids:
+		var d := float(now.get(id, 0.0)) - float(before.get(id, 0.0))
+		if d != 0.0:
+			deltas[id] = d
+	return deltas
 
 
 # --- Save / HUD ---------------------------------------------------------------------

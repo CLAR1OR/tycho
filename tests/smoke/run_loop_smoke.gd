@@ -39,6 +39,11 @@ func _ready() -> void:
 
 func _run_smoke() -> void:
 	_boot_game()
+	# Run telemetry (2026-07-10, diagnostics tooling, NOT the save system): redirect to a
+	# throwaway temp file for the WHOLE smoke, so a real run/death/forfeit here never
+	# touches the human's real user://telemetry/runs.jsonl.
+	var telemetry_path := OS.get_temp_dir().path_join("tycho_smoke_telemetry_%d.jsonl" % OS.get_process_id())
+	Telemetry.path_override = telemetry_path
 	await get_tree().process_frame
 	await get_tree().process_frame
 
@@ -166,6 +171,17 @@ func _run_smoke() -> void:
 	_check(Ledger.get_amount("knowledge-shards") >= 1.0, "boss dropped knowledge shards")
 	_check(RunState.echoes.size() >= 1, "echo picks recorded (%d)" % RunState.echoes.size())
 	_check(RunState.player_health > 0, "player HP carried between rooms (%d)" % RunState.player_health)
+
+	# --- Run telemetry (2026-07-10) — the diagnostics JSONL file, written on run_ended ---
+	_check(FileAccess.file_exists(telemetry_path), "telemetry file exists after the first run")
+	var t1 := _last_telemetry_line(telemetry_path)
+	_check(not t1.is_empty(), "the last telemetry line parses as JSON")
+	if not t1.is_empty():
+		_check(str(t1.get("outcome", "")) == "victory",
+			"run-1 telemetry recorded outcome=victory (%s)" % str(t1.get("outcome", "")))
+		var floors_configured := int(_game.get("run_floors"))
+		_check(int(t1.get("floor_reached", -1)) == floors_configured,
+			"run-1 telemetry recorded floor_reached=%d (%s)" % [floors_configured, str(t1.get("floor_reached"))])
 
 	# StoryState (autoload) updates the counters BEFORE game.gd's deferred town-swap
 	# save runs — re-read the slot file from disk to prove the ordering guarantee: the
@@ -622,6 +638,10 @@ func _run_smoke() -> void:
 	_check(int(c["runs"]) == runs_before + 4, "died run still ticks the day")
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
 	_check(Ledger.get_amount("stone") >= 2.0, "quarry produced stone on the day tick")
+	# Run telemetry (2026-07-10): the death outcome, appended to the SAME redirected file.
+	var t2 := _last_telemetry_line(telemetry_path)
+	_check(not t2.is_empty() and str(t2.get("outcome", "")) == "death",
+		"run-2 telemetry recorded outcome=death (%s)" % (str(t2.get("outcome", "")) if not t2.is_empty() else "missing"))
 
 	# --- Dialogue on the run-2 death return: B5, and the twin-suppression proof ------
 	# deaths just hit 1, so a3-first-death's gate (deaths>=1) is finally met — but `a3`
@@ -848,6 +868,8 @@ func _run_smoke() -> void:
 		"counters survived the Save & Quit round-trip (%d)" % int(SaveManager.state["story"]["counters"]["runs"]))
 
 	SaveManager.delete_slot(SMOKE_SLOT)
+	if FileAccess.file_exists(telemetry_path):
+		DirAccess.remove_absolute(telemetry_path)  # tidy up the redirected telemetry temp file
 	print("---")
 	if _failures.is_empty():
 		print("SMOKE OK — full loop: town → run → boss → town → death → town")
@@ -1153,6 +1175,20 @@ func _read_profile_from_disk() -> Dictionary:
 		_check(false, "could not re-read the profile file from disk")
 		return {}
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
+	return parsed if parsed is Dictionary else {}
+
+
+## Parse the LAST line of the (redirected) telemetry JSONL file as a Dictionary, or
+## {} if the file is missing/empty/unparseable. Used to prove each run/forfeit
+## appends its own record (2026-07-10).
+func _last_telemetry_line(path: String) -> Dictionary:
+	var f := FileAccess.open(path, FileAccess.READ)
+	if f == null:
+		return {}
+	var lines := f.get_as_text().split("\n", false)
+	if lines.is_empty():
+		return {}
+	var parsed: Variant = JSON.parse_string(lines[lines.size() - 1])
 	return parsed if parsed is Dictionary else {}
 
 

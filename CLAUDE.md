@@ -31,7 +31,9 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 
 **Content vs budget (the real gap — the engine is done, the game is ~15% authored):** tech nodes 2/14 · echoes ~25/~50 · enemies 5/12 · bosses 1 placeholder/5 · buildings 4/13 · attunements 7/~7 (placeholder) · dialogue ~52/~370 pieces · achievements 0/~25 · spine ~9/~22 scenes (Phases C/D mostly unauthored). Counts: `design/content-budget.md`.
 
-**Validation baseline:** **230 unit test cases** + **286 smoke ok-checks** (±1 known door-sigil nondeterminism) + editor pass clean. Commands + rules (throwaway slot 99, one smoke per invocation, profile.json is GLOBAL — the human's real profile): `design/godot-conventions.md` § Testing.
+**Validation baseline:** **234 unit test cases** + **290 smoke ok-checks** (±1 known door-sigil nondeterminism) + editor pass clean. Commands + rules (throwaway slot 99, one smoke per invocation, profile.json is GLOBAL — the human's real profile): `design/godot-conventions.md` § Testing.
+
+**Tools (2026-07-10):** headless economy sim (`tools/economy_sim.gd`, report + red flags in `design/economy-sim.md`; command in `design/godot-conventions.md` § Tools) + run telemetry (`Telemetry`/`TelemetryCore`, one JSONL record per run end/forfeit to `user://telemetry/runs.jsonl` — diagnostics only, outside `user://saves/`).
 
 **Environment:** Godot binary `/home/clarior/Godot_v4.7-stable_linux.x86_64` (project on 4.7); F5 = the full game loop; Godot MCP wired in `~/.claude.json`.
 
@@ -39,7 +41,7 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 
 **Next actions (HUMAN):** (1) content-gate verdict — research Arithmetic then Masonry at Sophia's desk, judge *delight vs. homework*; (2) asset-pipeline gate — one rigged `.glb` per `assets/README.md`; (3) curate dialogue — `design/dialogue/drafts-review-2026-07-06.md` first (§6 has placeholder E2 lines), then `drafts-review-2026-07-04.md`; (4) ongoing dials — feel numbers, strata palettes + the 5 legibility passes, audio mix; Kenney packs + Suno-vs-Udio + the dream-motif instrument (`design/audio.md`).
 
-**Next agent chunks (agreed order):** economy sim + run telemetry → boss #1 design doc (`design/bosses/`, unblocked by the feel gate) → dialogue volume (define remaining arc beats first, add a `max_floor` counter) → remaining tech nodes (blocked on the content-gate verdict).
+**Next agent chunks (agreed order):** boss #1 design doc (`design/bosses/`, unblocked by the feel gate) → dialogue volume (define remaining arc beats first, add a `max_floor` counter) → remaining tech nodes (blocked on the content-gate verdict).
 
 ## Working agreement
 - **Documentation is sacred.** Keep `Tycho Roguelite.md` (design bible) and this file accurate and current. A new agent must be able to pick up the project from these two docs alone. Update them as part of any task that changes scope, decisions, or structure.
