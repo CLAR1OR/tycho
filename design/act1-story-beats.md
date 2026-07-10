@@ -39,7 +39,7 @@ Phases overlap in play — gates, not a strict sequence. `[cutscene]` = painterl
 | C3 | **Tilly's reports begin.** Refugees on the roads. Burned villages, far west. Armies that "weren't men." Background rumble, escalating snippet series. | C1 + run count ≥ 12 |
 | C4 | **The first dream.** Mid-act arrival, per decision: a woman at a desk by candlelight, etchings like his, working at something urgent. She *notices him noticing her*. Cuts off. [cutscene] | codex shards ≥ 2 |
 | C5 | **Dreams escalate with the artifact.** Each new shard = stronger dream-link: glimpses of her captivity, her *deliberateness* — she is not flailing, she is executing a plan. (Snippet series, 1 per shard.) | each codex shard after C4 |
-| C6 | **The age turns.** Printing Press or Telescope researched → Renaissance begins visually; town skin advances. Sophia's Study → toward University. [cutscene] | first Renaissance tech |
+| C6 | **The age turns.** Printing Press or Telescope researched → Renaissance begins visually; town skin advances. The Library visibly transforms into the University (its Renaissance band opener — `town-economy.md`). [cutscene] | first Renaissance tech |
 
 ### Phase D — The climax (the emperor gets a face)
 | # | Beat | Gate |

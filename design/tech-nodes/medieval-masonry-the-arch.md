@@ -11,8 +11,8 @@
 | tier | KEY |
 | cost | 40 Knowledge (illustrative — tune later) |
 | prerequisites | `med-arithmetic-zero` (Arithmetic & Zero) |
-| unlocks | **Quarry** (Stone resource) + **Town Walls** (the strategy-layer seed) |
-| supersedes / retires | — (Timber/Stone retire later, at the Industrial age) |
+| unlocks | **Quarry** (Stone resource) + **Town Walls** (the strategy-layer seed) + **the Cathedral** may begin (Great Work — `town-economy.md`, 2026-07-10; `data/tech/med-masonry-arch.json` sync pending the town-economy implementation chunk) |
+| supersedes / retires | — (Stone retires later, at the Industrial age) |
 | status | drafted — awaiting playtest. **In-game since 2026-07-02** (`data/tech/med-masonry-arch.json`); the **§5 interactive puzzle is BUILT** (same day, replacing the interim quiz): pure `src/learning/arch_puzzle_core.gd` (the §9 scripted state machine) + clickable diagram `src/learning/puzzle_arch.gd`. Placeholder visuals; click-to-place stands in for drag-and-drop; hints cycle freely (the 1-per-run limit and the pointed profile's mechanical payoff are deferred — pointed is visual-only). This .md remains the authoring source. **Explanation/aha rewritten 2026-07-06** to a neutral encyclopedic register (the "aliens' wikipedia" voice — no em dashes, no rhetorical questions, third person); §4/§5/§6 mirror `data/tech/med-masonry-arch.json`. |
 
 ## 2. One-line pitch

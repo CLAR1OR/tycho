@@ -49,7 +49,7 @@ The ledger is a dumb map; all *meaning* lives in resource definitions.
   "id": "stone", "name": "Stone", "icon": "…",
   "role": "material",            // research|money|material|energy|military|combat|story  (the bible's fixed roles)
   "age_active": 1,               // first age it exists
-  "supersedes": "timber",        // or null — drives the "graceful retirement" UI fold
+  "supersedes": null,            // or a resource id (e.g. iron supersedes stone) — drives the "graceful retirement" UI fold
   "retired_by": "steel",         // or null — set when a later resource folds this one into baseline
   "sources": ["quarry", "run-drop"]   // documentation + achievement hooks, not logic
 }
@@ -65,7 +65,7 @@ Ledger API (autoload): `get(id)`, `add(id, n)`, `try_spend(id, n) -> bool`. Ever
   "id": 2, "name": "Renaissance",
   "entered_by": "any-tech-of-age",   // rule: first researched tech of age N advances the town to N
   "town_skin": "town_renaissance",   // scene/skin id — the visible age turn
-  "retires_resources": [],           // fold-to-baseline list (e.g. age 3 retires timber/stone)
+  "retires_resources": [],           // fold-to-baseline list (e.g. age 3 retires stone)
   "music": "…", "palette": "…"
 }
 ```
@@ -128,11 +128,16 @@ One generic evaluator reads these; new achievements are data entries. Unlocks li
   "well_fed": false }                // last day-tick Food-upkeep status (food-upkeep.md, 2026-07-05)
 
 // data/buildings/<id>.json
-{ "id": "quarry", "name": "Quarry", "category": "production",   // production|research|infrastructure|shop
+{ "id": "quarry", "name": "Quarry", "category": "production",   // production|research|infrastructure|shop|great-work
   "age": 1, "unlocked_by": {"type": "tech", "id": "med-masonry-arch"},
-  "levels": [                        // exactly 3 per the bible
-    {"cost": {"gold": 50, "timber": 20}, "effects": [{"kind": "produce", "resource": "stone", "per_day": 2}], "visual": "quarry_l1"},
-    {…}, {…}
+  "levels": [                        // AGE-BANDED (2026-07-10, town-economy.md): Age I = L1–3, each later age +2 (cap 11);
+                                     // arrays grow as later ages are authored. Thomas's Hut + the Cathedral opt out of the uniform ladder.
+    {"cost": {"gold": 50}, "effects": [{"kind": "produce", "resource": "stone", "per_day": 2}], "visual": "quarry_l1"},
+    {"unlocked_by": {"type": "tech", "id": "med-wheel-axle"}, …},   // any level may carry its own tech gate (in-band gates + band openers)
+    {…},
+    {"unlocked_by": {"type": "tech", "id": "ind-…"}, "rename": "Mine",
+     "cost": {"gold": 400, "iron": 30}, "effects": [{"kind": "produce", "resource": "iron", "per_day": 3}], "visual": "mine_l4"}
+     // a band opener may rename the building and change its output — levels REPLACE, so the new produce line just states the new resource
   ] }
 ```
 

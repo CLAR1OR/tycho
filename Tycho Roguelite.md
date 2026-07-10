@@ -145,7 +145,7 @@ RUN  ──drops──▶  Resonance Ore ─▶ Weapons (Mara)
                  Codex Shards ─▶ endgame meta-puzzle (story only)
                  Gold ─▶ build / upgrade buildings (Mayor)
 
-TOWN ──passive──▶ Knowledge / day  (Study → Library → Observatory → University)
+TOWN ──passive──▶ Knowledge / day  (Study, Library→University, Observatory)
                   └─▶ slowly researches Tech even between runs
 
 TECH ──unlocks──▶ buildings, weapon/etching categories, passive bonuses, next Age
@@ -168,9 +168,8 @@ Each tech researched: **read explanation → solve a short puzzle/quiz → unloc
 
 | Age | Resource  | Produced by                | Used for   |
 | --- | --------- | -------------------------- | ---------- |
-| I   | Knowledge | Study → Library → Observatory → University | Research (the passive tick) |
-| I   | Timber    | Woodcutter's Lodge         | Construction material |
-| I   | Stone     | Quarry (unlocked by Masonry) | Construction material (+ small chance of Resonance Ore) |
+| I   | Knowledge | Sophia's Study, Library (→University), Observatory | Research (the passive tick) |
+| I   | Stone     | Quarry (unlocked by Masonry) | Construction material — **the only Age-I material** (Timber cut 2026-07-10, `design/town-economy.md`) (+ small chance of Resonance Ore) |
 | I   | Food      | Farm                       | Day-tick **upkeep → Well-Fed bonus** (+% to all other production incl. Knowledge; never a penalty — designed 2026-07-03, `design/food-upkeep.md`) |
 | I   | Gold      | Market (sells surplus)     | Construction & upgrades |
 
@@ -186,7 +185,7 @@ The roles:
 | **Research** | Knowledge (+ Knowledge Shards from runs) | No — same currency, generated faster by better buildings |
 | **Money** | Gold | No — money is money the whole way through |
 | **Upkeep** *(added 2026-07-03)* | Food — feeds the town (day-tick upkeep → **Well-Fed** production bonus; Act II: provisions armies & cities — see `design/food-upkeep.md`) | No — Food stays Food; only the scale grows |
-| **Material** | what you build with | **Yes** — Timber/Stone → (Iron) → Steel → Oil/composites → Nanomaterial |
+| **Material** | what you build with | **Yes** — Stone → (Iron) → Steel → Oil/composites → Nanomaterial. **One Material per age** (Timber cut 2026-07-10 — Stone is the medieval material, and stays it through the Renaissance; the swap arrives with the Industrial spike) |
 | **Energy** | powers production; born as a *tracked* resource in the Industrial age | **Yes** — implicit (water/muscle) → Coal → Electricity → Fusion |
 | **Military input** | feeds summons/armies; born when the strategy layer seeds (Renaissance) | **Yes** — Saltpeter → Munitions → … |
 | **Combat / artefact** | Resonance Ore (weapons), Resonance Dust (etchings) | **No — constant across all ages** |
@@ -194,7 +193,7 @@ The roles:
 
 Two load-bearing choices:
 - **Resonance resources never change — and that's lore-correct.** They are nanobot/alien tech, not era-tech, so the combat economy stays stable while the *civilian* economy modernizes. The player's combat mental model is never disrupted.
-- **Graceful retirement.** Advancing an age folds the previous material into a cheap "you have plenty now" baseline (greyed/collapsed in the UI). You stop micromanaging Timber once you have Steel — the bottleneck moves up, the count stays flat.
+- **Graceful retirement.** Advancing an age folds the previous material into a cheap "you have plenty now" baseline (greyed/collapsed in the UI). You stop micromanaging Stone once you have Steel — the bottleneck moves up, the count stays flat.
 
 **Pacing — complexity tracks history.** Don't add a resource every age. The **Industrial Revolution *is* the resource-complexity spike**, so the jump lives there; the other ages stay light. The curve rises, peaks at Industrial, then eases at Future (post-scarcity on-ramp — also the intended answer to the "Dyson sphere makes resources obsolete" worry). The complexity curve mirrors the subject being taught.
 
@@ -202,9 +201,9 @@ Per-age additions (later-age headline techs are named as design intent; they liv
 
 | Age | New resource | Unlocked by (tech) | Role | Used for | What retires |
 | --- | --- | --- | --- | --- | --- |
-| **I Medieval** | Timber, Stone | start / Masonry & the Arch | Material | Buildings | — |
+| **I Medieval** | Stone | Masonry & the Arch | Material | Buildings (the only Age-I material) | — |
 | **II Renaissance** | **Saltpeter** | Gunpowder & Ballistics | Military input | Gunpowder for early cannon/ranged → seeds the summon/army economy. [Historically *the* strategic bottleneck — niter beds, "saltpetermen", the India trade.] Printing/optics boost *Knowledge* as building effects, not new resources. | — |
-| **III Industrial** | **Coal → Power**, **Steel** | Steam Engine / Bessemer Steelmaking | Energy + Material | Coal powers factories → production multiplier; Steel = advanced buildings & machinery. [Coke-smelted iron comes first, then Bessemer steel (1856) supersedes it within the age.] | Timber/Stone/iron fold into baseline |
+| **III Industrial** | **Coal → Power**, **Steel** | Steam Engine / Bessemer Steelmaking | Energy + Material | Coal powers factories → production multiplier; Steel = advanced buildings & machinery. [Coke-smelted iron comes first, then Bessemer steel (1856) supersedes it within the age.] | Stone/iron fold into baseline |
 | **IV Modern** | **Electricity**, **Oil** | Electrification / Internal Combustion + Petrochemistry | Energy + Material | Electricity replaces Coal as the power currency; Oil doubles as plastics/composites feedstock. [Computing arrives as a *Knowledge multiplier* building, not a resource.] | Coal retires; Steel stays a commodity |
 | **V Future** | **Fusion**, **Nanomaterial** | Fusion Power / Nanotechnology | Energy + Material | Fusion → Dyson-scale & FTL; Nanomaterial = engineered matter (**lore payoff: now *we* build the nanobots**) | Economy collapses toward just energy + matter |
 
@@ -318,21 +317,21 @@ Each age has his own screen, so that it is not too overwhelming. We can switch t
 | **Empirical Observation** 🧠 | KEY | Evidence over authority; recording data; Brahe's measurements | Observatory; +Knowledge; tutorial node | — (start) |
 | **Arithmetic & Zero** 🧠 | KEY | Positional notation, zero as a number, notation as a thinking tool | +% research efficiency; enables Market | Empirical Observation |
 | Writing & Parchment | support | External memory — why writing lets knowledge accumulate | Library | — |
-| Three-Field Rotation | support | Crop rotation, legumes & soil nitrogen | Farm boost (Food) | — |
-| The Wheel & Axle | support | Mechanical advantage, simple machines | Cart (production boost) | — |
+| Three-Field Rotation | support | Crop rotation, legumes & soil nitrogen | Farm L3 (better rotation → reliable surplus) | — |
+| The Wheel & Axle | support | Mechanical advantage, simple machines | Quarry L2 (ox-carts haul more stone) | — |
 | **Masonry & the Arch** | KEY | Compression, the keystone, arch vs. lintel | Stone buildings (Quarry, Walls) | Arithmetic & Zero |
 | **Metallurgy (Bloomery→Steel)** | KEY | Smelting, carbon content, why steel is hard | Forge L2 (better/cheaper weapons) | — |
 | Watermill | support | Energy conversion (flow → work) | Mill (boosts production) | Wheel & Axle + Masonry |
-| Mechanical Clock | support | The escapement; measuring time | Production efficiency | Wheel & Axle |
-| Optics & Lenses | support | Refraction, bending light | Spectacles (+research); bridge to Telescope | Empirical Observation + Arithmetic |
+| Mechanical Clock | support | The escapement; measuring time | Mill L3 (timed works) | Wheel & Axle |
+| Optics & Lenses | support | Refraction, bending light | Observatory L3 (better instruments); bridge to Telescope | Empirical Observation + Arithmetic |
 | **Cartography** 🧠 | KEY | Maps as *models*; the map is not the territory | Reveals dungeon layout / hints | Arithmetic & Zero |
 
 **Age II — Renaissance (first sliver only — drives the v1 climax)**
 
 | Node | Tier | Teaches | Unlocks / effect | Prereq |
 | --- | --- | --- | --- | --- |
-| **Printing Press** | KEY | Information replication; exponential spread of ideas | University; large Knowledge jump | Writing + Metallurgy |
-| **Telescope** | KEY | Magnification; observation overturning dogma | Observatory L2 | Optics & Lenses |
+| **Printing Press** | KEY | Information replication; exponential spread of ideas | **Library → University** (its Renaissance band opener); large Knowledge jump | Writing + Metallurgy |
+| **Telescope** | KEY | Magnification; observation overturning dogma | Observatory's Renaissance band | Optics & Lenses |
 | **Gunpowder & Ballistics** | KEY | Combustion chemistry + projectile motion | Bridges to the coming war; fires the city-guard/emperor intel thread → **end of v1** | Metallurgy |
 
 **Ages III–V (Industrial / Modern / Future):** data slots only, unauthored in v1. Filled when later acts are built.
@@ -342,30 +341,31 @@ Each age has his own screen, so that it is not too overwhelming. We can switch t
 
 ### Town Upgrades
 
-We build/upgrade buildings at the Mayor by spending **Gold + materials (Timber/Stone)**. Categories:
+> Deep detail (roster, level bands, Market/Cathedral specs, placeholder numbers, Act-II fold): **`design/town-economy.md`** (designed 2026-07-10 — replaced the original 13-building / flat-3-level table).
+
+We build/upgrade buildings at the Mayor by spending **Gold + the age's Material (Stone in Age I)**. Categories:
 - **Production:** make a resource at a flat rate per level (no worker assignment — lean model).
-- **Research:** add to Knowledge/day (the passive tick); a couple give meta-effects (Observatory = puzzle hints, University = multiplier).
-- **Infrastructure:** raise caps / unlock capability (Market = trading, Walls = morale + strategy seed).
+- **Research:** add to Knowledge/day (the passive tick); a couple give meta-effects (Observatory = puzzle hints + next-tech preview, Library = the Knowledge multiplier).
+- **Infrastructure:** raise caps / unlock capability (Market = trading + the gold sink, Walls = morale + strategy seed).
+- **Great Work:** the Cathedral — one per age, 3 huge staged levels, the prestige gold+stone sink.
 
-All buildings have **3 levels**. Building = L1; each upgrade bumps the effect, may add an effect, **and changes the visual** — this is how the town visibly grows through the age.
+**The level model (locked with the human 2026-07-10): buildings persist for the whole game; ages unlock level bands.** Age I = **L1–3**; each later age adds **+2 levels** (cap **L11**, Future age). The first level of each band is gated by a tech of that age and paid partly in that age's Material; **band openers transform the building** (new visual, sometimes a new name or output — Library→University, Quarry→Mine), the second level is the stat bump. Each upgrade **changes the visual** — this is how the town visibly grows through every age. The town isn't a roster that churns; it's one skyline that deepens. Exceptions: Thomas's Hut (never changes, per lore) and the Cathedral (its own 3-stage ladder per age).
 
-**Age I — Medieval buildings**
+**The roster — 9 buildable + 2 shops** (Timber/Woodcutter's Lodge/Cart cut 2026-07-10; University = the Library's Renaissance band):
 
-| Building | Type | Unlocked by | Function |
+| Building | Type | Unlocked by | Function (Age I) → transforms into |
 | --- | --- | --- | --- |
-| Sophia's Study | Research | start | Base Knowledge/day (the passive research tick) |
-| Woodcutter's Lodge | Production | start | Produces Timber |
-| Farm | Production | start | Produces Food (town upkeep → Well-Fed production bonus) |
+| Sophia's Study | Research | start | Base Knowledge/day + the shard turn-in desk; stays Sophia's, re-skinned per age |
+| Farm | Production | start | Produces Food (town upkeep → Well-Fed production bonus); L3 via Three-Field Rotation; stays the Farm all game |
 | Mara's Forge | Shop | start | Weapon upgrades; **L2 via Metallurgy** = cheaper/stronger |
 | Thomas's Hut | Shop | start | Etching upgrades (active abilities) **+ Passive Attunements** (persistent passive upgrades — more life, etc.). **Never changes across ages** (per lore) |
-| Library | Research | Writing & Parchment | +Knowledge/day |
-| Quarry | Production | Masonry & the Arch | Produces Stone (+ small chance of Resonance Ore) |
-| Town Walls | Infrastructure | Masonry & the Arch | Morale/flavor now; **foreshadows the strategy layer** |
-| Observatory | Research | Empirical Observation | +Knowledge **and reveals a free hint** on tech puzzles |
-| Mill | Production | Watermill | Boosts a production building's output |
-| Market | Infrastructure | Arithmetic & Zero | Trade surplus resources ↔ Gold |
-| Cart | Infrastructure | The Wheel & Axle | Production boost |
-| University | Research | Printing Press (Renaissance) | Large Knowledge multiplier |
+| Library | Research | Writing & Parchment | **+% Knowledge** (the first multiplier building) → **University** (Renaissance, via Printing Press) |
+| Quarry | Production | Masonry & the Arch | Produces Stone (+ small chance of Resonance Ore); L2 via The Wheel & Axle → **Mine** (Industrial — output flips to the age's Material) |
+| Town Walls | Infrastructure | Masonry & the Arch | Morale/flavor now; **foreshadows the strategy layer** → real Fortifications (Act II defense stat) |
+| Observatory | Research | Empirical Observation | **+Knowledge AND a free hint** on the active tech puzzle + next-tech preview; L3 via Optics; Renaissance band via Telescope |
+| Mill | Production | Watermill | Boosts Farm & Quarry output (+%); L3 via Mechanical Clock |
+| Market | Infrastructure | Arithmetic & Zero | Sells Food surplus; Gold→Stone/Food exchange (the repeatable gold sink); one rotating caravan deal per day → **Bank** (later age). Never trades Resonance (IC-14) |
+| Cathedral | Great Work | Masonry & the Arch | One per age, 3 staged levels (scaffolding → structure → finished) — the big gold+stone sink; themed bonus + achievement on completion |
 
 
 
@@ -381,9 +381,9 @@ How each Act-I piece folds forward:
 
 - **One town → many towns.** A town is a reusable *data object* (id, buildings[], production, levels), instantiated once in v1, N times later. ("buildable in other cities too" — already noted in Resources.)
 - **Passive production → logistics.** Flat-rate production stays as-is; depth comes from having many towns and a new *military sink* (raise/maintain summons, fortify, march), not from adding worker-micro to each town.
-- **Resources fold forward, never get replaced.** Gold/Timber/Stone/Food keep their meaning; the layer adds military sinks and likely a Resonance-derived summon resource (fitting — the emperor's summons *are* artefact-powered). Knowledge keeps driving the tech tree.
+- **Resources fold forward, never get replaced.** Gold/Stone/Food keep their meaning; the layer adds military sinks and likely a Resonance-derived summon resource (fitting — the emperor's summons *are* artefact-powered). Knowledge keeps driving the tech tree.
 - **The roguelite becomes a verb in the strategy layer.** Runs still yield Resonance + Knowledge Shards, plus a new use: **summons.** Tycho personally runs the hard dungeons; summons auto-clear lower ones (passive economic engine) *and* are the army units on the map — one system, two contexts. This is the bridge from roguelite to 4X.
-- **Buildings gain strategic functions per age.** The Production/Research/Infrastructure categories extend; Infrastructure grows military buildings (summoning circle, Walls → real fortifications). **Town Walls in Age I is the literal seed** — flavor now, a defense stat later.
+- **Buildings gain strategic functions per age.** The Production/Research/Infrastructure categories extend; Infrastructure grows military buildings (summoning circle, Walls → real fortifications). **Town Walls in Age I is the literal seed** — flavor now, a defense stat later. A city is a **building-level vector** over the same defs (`design/town-economy.md` — age-banded levels): liberated towns start low and climb the same ladders, and each can raise its own Great Work.
 - **The tech tree is the shared spine across all three pillars.** It already keys content by age; later nodes simply unlock *unit / strategy-building / space-tech* in addition to today's building/resource/capability.
 - **Cartography is the map hook.** The Medieval "maps as models" node and the dungeon minimap generalize into the strategic overworld map.
 

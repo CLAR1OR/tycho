@@ -42,7 +42,7 @@ Completionists stretch further via difficulty tiers; the spine fits the budget.
 
 | Item | Count | Notes |
 | --- | --- | --- |
-| **Buildings** | **13** × 3 levels | Per the bible's table. Each level = visual change; budget ~2 model variants per building (L1, L2/L3 shared where possible) + Thomas's Hut never changes (1 model, by lore). |
+| **Buildings** | **9 buildable + 2 shops** (2026-07-10, `town-economy.md` — Timber/Woodcutter/Cart cut; University = the Library's Renaissance band; Cathedral Great Work added) | v1 authors the Age-I band (3 levels each) + the Library→University L4 opener + 3 Cathedral stages. Each level = visual change; budget ~2 model variants per building (L1, L2/L3 shared where possible) + Thomas's Hut never changes (1 model, by lore) + 3 Cathedral stage models + 1 University variant. |
 | **Town map** | 1, with **2 age-skins** (Medieval, early-Renaissance) | The age turn must be *seen*. |
 | **Shop/system UI screens** | **11** | Tech tree (per-age screens), etchings, forge, mayor/build, market, echo-pick HUD, codex viewer, dialogue box, achievements, save slots, ESC pause menu (Resume / Forfeit / Save & Quit, built 2026-07-07). |
 

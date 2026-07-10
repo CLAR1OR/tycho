@@ -11,9 +11,9 @@
 On each **day tick** (1 day = 1 run; magnitude room-scaled since 2026-07-10 — production AND the upkeep below both multiply by the run's `rooms_cleared × PER_ROOM_TICK` (0.1) BEFORE the Well-Fed evaluation, so the fed/short judgment is made on the scaled numbers and a short run eats proportionally less):
 
 1. The town **consumes Food**: `upkeep = base + 1 per built building` (placeholder — scales gently with town size, no population micro).
-2. If the stock covers upkeep → the town is **Well-Fed** for that tick: **+25%** (placeholder) to *all other* day-tick production — Timber, Stone, Gold, and **Knowledge**.
+2. If the stock covers upkeep → the town is **Well-Fed** for that tick: **+25%** (placeholder) to *all other* day-tick production — Stone, Gold, and **Knowledge**.
 3. If the stock falls short → the town simply **isn't** Well-Fed. **No penalty, no spiral, no starvation state** — you lose the bonus, nothing more. (Mirrors the no-death-penalty philosophy: the economy deals in bonuses, not punishments.)
-4. Surplus beyond upkeep just accumulates; the **Market** sells surplus for Gold (already designed).
+4. Surplus beyond upkeep just accumulates; the **Market** auto-sells surplus above a keep-buffer for Gold (spec + placeholder rates: `town-economy.md`, designed 2026-07-10).
 
 UI: one small **Well-Fed indicator** on the day-tick summary / town HUD (a full or empty granary icon) — the whole mechanic must be readable at a glance.
 
@@ -36,7 +36,7 @@ The mechanism — a **consume-then-status** pass in the day tick — is exactly 
 | Farm output L1/2/3 | 3 / 5 / 8 Food per day |
 | Upkeep | 2 base + 1 per built building |
 | Well-Fed bonus | +25% to all other day-tick production |
-| Market surplus sale | existing Market rules |
+| Market surplus sale | `town-economy.md` Market spec (1 gold/Food above a 2×-upkeep keep-buffer, placeholder) |
 
 ## Open questions (playtest)
 
