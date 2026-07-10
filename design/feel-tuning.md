@@ -377,6 +377,24 @@ Every ability number is a **data field**, not a `# FEEL:` export — edit the JS
 
 ---
 
+## Passive Attunements — `data/attunements/*.json` (data dials, `design/etchings.md`, built 2026-07-10)
+
+The seven persistent passives (the Dust two-sink baseline UNDER echoes). All numbers are placeholders — dial like economy numbers, no code edit. Each file has `costs_dust: [L1, L2, L3]` (Resonance Dust) and a `levels` array of 3 **absolute** effect entries (level N = the TOTAL effect at that level, not a delta).
+
+| Attunement | Dial (per level) |
+| --- | --- |
+| **vitality** | `levels[i].mods[0].add` — flat `max_health` (20 / 40 / 60) |
+| **recovery** | `levels[i].pct` — fraction of MISSING HP healed on room clear (0.04 / 0.07 / 0.10) |
+| **quickening** | `levels[i].mods[0].mult` — `dash_cooldown` multiplier (0.9 / 0.82 / 0.75) |
+| **resonance-flow** | `levels[i].mult` — ability cast-cooldown multiplier (0.9 / 0.82 / 0.75) |
+| **focus** | `levels[i].mods[*].mult` — `attack_damage`/`_finisher` multiplier (1.08 / 1.16 / 1.25) |
+| **resilience** | `levels[i].amount` — flat HP off each hit, floored at 1 (1 / 2 / 3) |
+| **attunement** | `levels[i].mult` — Dust/Ore find multiplier; keep tame, bounded at 3 levels (1.1 / 1.2 / 1.3) |
+
+> `costs_dust` [2,3,4]/attunement → ~63 Dust to max all 7 (near the ability kit's ≈60–70 — the shared-Dust tension is the point; move both together). The `stat`-kind mods reuse EchoCore's exact handles; changing a `stat` name is a code concern (must match a `player.gd` `@export`), the numbers are free. Page copy/layout consts live atop `src/town/attunements_page.gd`.
+
+---
+
 ## Dungeon strata + hazards (data dials, `design/dungeon-strata.md`, built 2026-07-10)
 
 Floor identity is DATA, not code — dial these like FEEL numbers (no code edit):

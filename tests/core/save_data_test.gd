@@ -38,6 +38,10 @@ func test_migrate_slot_repairs_partial_save() -> void:
 	check_eq(float(out["ledger"]["gold"]), 7.0, "ledger contents preserved")
 	check(out.has("combat"), "missing sections restored from defaults")
 	check_eq(out["combat"]["assist_mode"]["enabled"], false, "nested defaults restored")
+	# combat.attunements (Passive Attunements, PRD §7.4): an old save that predates it
+	# gets the empty map back via defaults-merge (so AttunementsCore reads level 0).
+	check(out["combat"].has("attunements"), "combat.attunements filled for an old save")
+	check_eq(out["combat"]["attunements"], {}, "attunements defaults to an empty map")
 
 
 func test_migrate_slot_handles_unknown_old_version() -> void:

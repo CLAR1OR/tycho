@@ -35,14 +35,22 @@ const DEEP_BLURB := "The resonance goes deeper."
 const DORMANT_DESC := "The mark is there, under the skin. It has not answered yet."
 const DASH_PRINCIPLE := "inertia"
 const DASH_DESC := "The first mark. It was on him when he woke, and it goes deeper than the others do. It does not deepen here."
+## The two-page tab row (E1 = the marks; the second page = Passive Attunements). Placeholder copy.
+const TAB_MARKS := "THE MARKS"
+const TAB_BODY := "THE BODY"
+const TAB_TOP := 70.0
 
 var _defs: Dictionary = {}
 var _selected: String = ""
+var _page: String = "marks"  # "marks" (the E1 arms) or "body" (attunements)
 
 var _arms: EtchingsArms
 var _title: Label
 var _subtitle: Label
 var _dock: PanelContainer
+var _attn_page: AttunementsPage
+var _tab_marks: Button
+var _tab_body: Button
 
 
 func _ready() -> void:
@@ -81,7 +89,59 @@ func open() -> void:
 	_subtitle.theme_type_variation = &"DimLabel"
 	_subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_subtitle)
+	# The attunements page (bible, PRD §7.4) — hidden behind the arms until the tab swaps.
+	# Built once; it reads the save + Ledger on each refresh.
+	_attn_page = AttunementsPage.new()
+	_attn_page.set_anchors_preset(Control.PRESET_FULL_RECT)
+	add_child(_attn_page)
+	_attn_page.setup(AttunementsCore.defs(), deepen_attunement)
+	_attn_page.visible = false
+	# The tab row (added LAST so the tabs sit above the pages). Two quiet mono-caps chips.
+	_tab_marks = _make_tab(TAB_MARKS, "marks")
+	_tab_body = _make_tab(TAB_BODY, "body")
+	add_child(_tab_marks)
+	add_child(_tab_body)
+	_apply_page()
 	get_tree().paused = true
+
+
+func _make_tab(text: String, page: String) -> Button:
+	var b := Button.new()
+	b.text = text
+	b.flat = true
+	b.theme_type_variation = &"NumLabel"
+	b.focus_mode = Control.FOCUS_NONE
+	b.pressed.connect(func() -> void:
+		Sfx.play("ui-click")
+		switch_page(page))
+	return b
+
+
+## Swap between the marks page (E1) and the attunements page. Public for the smoke.
+func switch_page(page: String) -> void:
+	if page != "marks" and page != "body":
+		return
+	_page = page
+	_apply_page()
+
+
+func _apply_page() -> void:
+	var marks := _page == "marks"
+	if _arms != null:
+		_arms.visible = marks
+	if _dock != null:
+		_dock.visible = marks
+	if _attn_page != null:
+		_attn_page.visible = not marks
+		if not marks:
+			_attn_page.refresh()
+	# Selected tab = gold; the other dim.
+	if _tab_marks != null:
+		_tab_marks.add_theme_color_override("font_color",
+			SlateHud.COL_READY if marks else SlateHud.COL_KEY_TEXT)
+	if _tab_body != null:
+		_tab_body.add_theme_color_override("font_color",
+			SlateHud.COL_READY if not marks else SlateHud.COL_KEY_TEXT)
 
 
 func close() -> void:
@@ -108,6 +168,10 @@ func _process(_delta: float) -> void:
 		_subtitle.position = Vector2(MARGIN + 9.0, MARGIN + 32.0)
 	if _dock != null:
 		_dock.position = Vector2(size.x - MARGIN - DOCK_W, DOCK_TOP)
+	if _tab_marks != null:
+		_tab_marks.position = Vector2(MARGIN + 9.0, TAB_TOP)
+	if _tab_body != null:
+		_tab_body.position = Vector2(MARGIN + 9.0 + _tab_marks.size.x + 18.0, TAB_TOP)
 
 
 # --- Public (menu buttons, arms callback, and the smoke driver all land here) ----------
@@ -155,6 +219,35 @@ func equip(slot: String, id: String) -> void:
 	if _arms != null:
 		_arms.refresh()
 	_build_menu()
+
+
+## Deepen a Passive Attunement (bible, PRD §7.4), spending Resonance Dust — the SAME sink as
+## the abilities. No-op if maxed or unaffordable. Persists + refreshes the attunements page.
+func deepen_attunement(id: String) -> void:
+	var adefs := AttunementsCore.defs()
+	if not adefs.has(id):
+		push_error("EtchingsPanel: unknown attunement \"%s\"" % id)
+		return
+	var attn: Dictionary = SaveManager.state["combat"].get("attunements", {})
+	if not AttunementsCore.can_deepen(adefs[id], Ledger.get_amount("resonance-dust"), attn):
+		return
+	var cost := AttunementsCore.next_cost(adefs[id], AttunementsCore.level(attn, id))
+	if not Ledger.try_spend("resonance-dust", float(cost), "attunement"):
+		return
+	SaveManager.state["combat"]["attunements"] = AttunementsCore.deepen(attn, id)
+	SaveManager.save_current()
+	if _attn_page != null:
+		_attn_page.refresh()
+
+
+## The current level of an attunement (0 = un-owned). Smoke/debug.
+func attunement_level(id: String) -> int:
+	return AttunementsCore.level(SaveManager.state["combat"].get("attunements", {}), id)
+
+
+## True when the attunements ("body") page is showing. Smoke/debug.
+func show_attunements() -> bool:
+	return _page == "body"
 
 
 ## The ability a site displays (equipped-else-starter; "dash" for the SPC site). Smoke/debug.

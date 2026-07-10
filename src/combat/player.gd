@@ -65,6 +65,14 @@ enum State { NORMAL, DASHING, ATTACKING }
 var max_health: int = MAX_HEALTH
 var health: int = MAX_HEALTH
 
+## Passive Attunement hooks (bible "Passive Attunements", PRD §7.4). Set at spawn from
+## AttunementsCore over the save's combat.attunements; default = no effect. Resilience
+## subtracts a flat amount from each hit (floored so a hit never drops below 1 — no
+## immunity); Resonance Flow scales ability cast cooldowns. Neither carries feel value of
+## its own — the attunement DATA is the dial, so no `# FEEL:` tag.
+var flat_damage_reduction: int = 0
+var ability_cooldown_mult: float = 1.0
+
 ## External push accumulator (design/dungeon-strata.md drift fields). A DriftField adds
 ## into this each physics tick; it is folded into velocity and reset every frame just
 ## before move_and_slide, so it never persists past the field. Additive only — carries
@@ -482,7 +490,8 @@ func try_cast(slot: String) -> bool:
 		return false
 	var def: Dictionary = _etch_defs[id]
 	var b := EtchingsCore.effective_behavior(def, EtchingsCore.level_of(_etch_state, id))
-	_cast_cd[slot] = float(def.get("cooldown_s", 5.0))
+	# Resonance Flow attunement scales the cast cooldown (mult 1.0 = unchanged).
+	_cast_cd[slot] = float(def.get("cooldown_s", 5.0)) * ability_cooldown_mult
 	match id:
 		"push": _cast_push(b)
 		"bolt": _cast_bolt(b)
@@ -625,7 +634,9 @@ func ability_hud_text() -> String:
 func take_damage(amount: int, _from: Vector3 = Vector3.ZERO) -> void:
 	if _iframe_t > 0.0:
 		return
-	health = maxi(0, health - amount)
+	# Resilience attunement: flat reduction, floored at 1 (a hit always costs something).
+	var dmg := maxi(1, amount - flat_damage_reduction)
+	health = maxi(0, health - dmg)
 	_iframe_t = maxf(_iframe_t, hit_grace)  # post-hit grace: crowds can't double-tap
 	health_changed.emit(health, max_health)
 	Sfx.play("player-hurt", global_position)

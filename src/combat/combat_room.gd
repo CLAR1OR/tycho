@@ -89,6 +89,9 @@ var _last_hp: int = Player.MAX_HEALTH
 # Never reset within the room — the ESC menu may forfeit / quit only when the room is
 # cleared OR the player is still untouched (can_menu_quit).
 var _damage_taken: bool = false
+# Passive Attunement run-hooks (bible, PRD §7.4), set from the save at setup:
+var _find_mult: float = 1.0     # Attunement: Dust/Ore find-rate multiplier (per-kill ore roll)
+var _recovery_pct: float = 0.0  # Recovery: % of missing HP healed on room clear
 var _hud: RunHud  # the in-run HUD (design/ui-hud.md) — chip / HP / echoes / abilities / boss
 
 @onready var _player: Player = $Player
@@ -143,6 +146,19 @@ func _ready() -> void:
 			WeaponCore.flat_level(combat, weapon_id))
 	else:
 		push_error("CombatRoom: unknown current_weapon \"%s\" — using the base kit" % weapon_id)
+	# Passive Attunements (bible, PRD §7.4) — the persistent baseline UNDER echoes. Apply
+	# order: base feel exports → weapon → ATTUNEMENTS → echoes. Stat-kind attunements ride
+	# EchoCore's SAME mod math (no duplicate engine); the non-stat kinds set player/room
+	# hooks (Resilience DR, Resonance Flow cooldown mult, the find-rate + recovery caches).
+	var attn: Dictionary = combat.get("attunements", {})
+	var adefs := AttunementsCore.defs()
+	var amods := AttunementsCore.stat_mods(attn, adefs)
+	if not amods.is_empty():
+		EchoCore.apply_to_player(_player, {"id": "attunements", "mods": amods})
+	_player.flat_damage_reduction = AttunementsCore.damage_reduction(attn, adefs)
+	_player.ability_cooldown_mult = AttunementsCore.ability_cooldown_mult(attn, adefs)
+	_find_mult = AttunementsCore.find_rate_mult(attn, adefs)
+	_recovery_pct = AttunementsCore.heal_on_clear_pct(attn, adefs)
 	EchoCore.apply_all_to_player(_player, RunState.echoes)
 	if RunState.player_health > 0:
 		_player.restore_health(RunState.player_health)
@@ -338,7 +354,8 @@ func _wave_spawn_pos(i: int, count: int) -> Vector3:
 
 func _on_enemy_died(enemy: EnemyDummy) -> void:
 	Ledger.add("gold", float(randi_range(gold_per_enemy_min, gold_per_enemy_max)), "run-drop")
-	if randf() < ore_drop_chance:
+	# Attunement find-rate lifts the per-kill ore chance (mult 1.0 = unchanged).
+	if randf() < ore_drop_chance * _find_mult:
 		Ledger.add("resonance-ore", 1.0, "run-drop")
 	_enemies.erase(enemy)
 	if not _enemies.is_empty() or _cleared:
@@ -350,6 +367,11 @@ func _on_enemy_died(enemy: EnemyDummy) -> void:
 		return
 	_cleared = true
 	_hud.mark_cleared()
+	# Recovery attunement (design/run-structure.md): heal a % of MISSING HP when a room is
+	# cleared by fighting (combat + boss; reprieve breathers clear without this path). The
+	# boss valve's 30% is added on top by game.gd — both are % of missing, as intended.
+	if _recovery_pct > 0.0:
+		apply_missing_heal(_recovery_pct)
 	if kind == RunFlow.KIND_BOSS:
 		Ledger.add("gold", float(boss_gold), "boss-drop")
 		Ledger.add("knowledge-shards", float(boss_shards), "boss-drop")
@@ -627,3 +649,9 @@ func _on_player_health_changed(hp: int, max_hp: int) -> void:
 ## (_cleared is set the instant they open). game.gd routes the menu's gate check here.
 func can_menu_quit() -> bool:
 	return _cleared or not _damage_taken
+
+
+## The Recovery attunement's heal-on-clear pct configured for this room (0.0 when un-owned).
+## For the smoke to drive one recovery heal deterministically via apply_missing_heal.
+func recovery_pct() -> float:
+	return _recovery_pct

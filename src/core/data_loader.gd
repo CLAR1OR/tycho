@@ -85,7 +85,18 @@ const SCHEMAS: Dictionary = {
 		"desc": {"type": "string"},                          # arms panel menu copy (optional)
 		"level_blurbs": {"type": "array", "array_of": "string"},  # per-level track lines (optional)
 	},
-	"dialogue": {  # architecture-schemas.md §7 — spec + condition vocabulary in act1-story-beats.md
+	"attunements": {  # bible "Passive Attunements" + PRD 7.4 — persistent passive baseline UNDER echoes.
+			# Levels are ABSOLUTE/replace (level N states its TOTAL effect). Each level entry
+			# carries a `kind`: stat (echo {stat,add,mult} mods) | heal_on_clear (pct of missing)
+			# | find_rate (mult) | damage_reduction (flat int) | ability_cooldown (mult). Numbers
+			# are tuning placeholders (feel-tuning.md), read by AttunementsCore.
+			"id": {"type": "string", "required": true},
+			"name": {"type": "string", "required": true},
+			"desc": {"type": "string", "required": true},
+			"costs_dust": {"type": "array", "required": true, "array_of": "int"},  # [L1, L2, L3] Dust
+			"levels": {"type": "array", "required": true, "array_of": "dict"},     # 3 per bible; {kind, ...}
+		},
+		"dialogue": {  # architecture-schemas.md §7 — spec + condition vocabulary in act1-story-beats.md
 		"id": {"type": "string", "required": true},
 		"source": {"type": "string", "required": true,
 			"one_of": ["spine", "arc", "contextual", "bark"]},

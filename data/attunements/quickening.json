@@ -1,0 +1,11 @@
+{
+	"id": "quickening",
+	"name": "Quickening",
+	"desc": "The reflex arc tightens. Shortens the dash cooldown.",
+	"costs_dust": [2, 3, 4],
+	"levels": [
+		{"kind": "stat", "mods": [{"stat": "dash_cooldown", "mult": 0.9}]},
+		{"kind": "stat", "mods": [{"stat": "dash_cooldown", "mult": 0.82}]},
+		{"kind": "stat", "mods": [{"stat": "dash_cooldown", "mult": 0.75}]}
+	]
+}

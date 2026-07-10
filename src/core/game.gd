@@ -224,7 +224,14 @@ func _pay_cache(door: Dictionary, floor_num: int) -> void:
 		str(door.get("sigil", "")), floor_num, bool(door.get("peril", false)))
 	if reward.is_empty():
 		return
-	Ledger.add(str(reward["resource"]), float(reward["amount"]), "door-reward")
+	var resource := str(reward["resource"])
+	var amount := float(reward["amount"])
+	# Attunement find-rate lifts Dust/Ore caches only (gold/echo/reprieve unaffected). Applied
+	# HERE at the payout — DoorCore's pure math is never touched (PRD §10: bounded at 3 levels).
+	if resource == "resonance-dust" or resource == "resonance-ore":
+		var attn: Dictionary = SaveManager.state["combat"].get("attunements", {})
+		amount = roundf(amount * AttunementsCore.find_rate_mult(attn, AttunementsCore.defs()))
+	Ledger.add(resource, amount, "door-reward")
 
 
 ## Roll and present an echo offer, then run `on_done` (echo picks feed the same

@@ -531,6 +531,28 @@ func _run_smoke() -> void:
 		"learning a dormant etching is a no-op")
 	_check((_read_slot_from_disk()["combat"]["etchings"]["unlocked"] as Dictionary).has("shockwave"),
 		"disk: the learned etching kit persisted")
+
+	# --- Passive Attunements — "The Body" page (bible, PRD §7.4, 2026-07-10) --------------
+	# The etchings panel's second page. The E1 arms page stays the default; the tab swaps to
+	# the seven-row attunements sheet. Buy Vitality + Recovery (Dust spent reason "attunement",
+	# persisted to disk); prove the buffs ride the next run's player; refuse a broke purchase.
+	etch.switch_page("body")
+	_check(etch.show_attunements(), "the tab row swaps to the attunements page")
+	var dust_pre_attn := Ledger.get_amount("resonance-dust")
+	var vit_cost := AttunementsCore.next_cost(AttunementsCore.defs()["vitality"], 0)
+	etch.deepen_attunement("vitality")
+	_check(etch.attunement_level("vitality") == 1, "Vitality deepened to L1")
+	_check(absf((dust_pre_attn - Ledger.get_amount("resonance-dust")) - float(vit_cost)) < 0.001,
+		"Vitality L1 spent %d Dust via the Ledger (reason attunement)" % vit_cost)
+	etch.deepen_attunement("recovery")
+	_check(etch.attunement_level("recovery") == 1, "Recovery deepened to L1")
+	_check(int((_read_slot_from_disk()["combat"]["attunements"] as Dictionary).get("vitality", 0)) == 1,
+		"disk: the bought attunement persisted")
+	# Refused purchase when Dust is short: drain the pouch, a deepen must no-op.
+	Ledger.try_spend("resonance-dust", Ledger.get_amount("resonance-dust"), "smoke-drain")
+	etch.deepen_attunement("focus")
+	_check(etch.attunement_level("focus") == 0, "a deepen with no Dust is refused (level unchanged)")
+	Ledger.add("resonance-dust", 20.0, "smoke-grant")  # restore a little for good measure
 	etch.close()
 	await _settle(3)
 
@@ -546,6 +568,25 @@ func _run_smoke() -> void:
 		_check(player.call("equipped_id", "rmb") == "push", "run player carries Push (RMB)")
 		_check(player.call("equipped_id", "q") == "snare", "run player carries Snare (Q)")
 		_check(player.call("equipped_id", "r") == "shockwave", "run player carries Shockwave (R)")
+		# Passive Attunements ride the run player as the baseline UNDER echoes (PRD §7.4).
+		# Vitality L1 raised the max HP by the data value; Resilience/Resonance-Flow unbought
+		# so the DR / cooldown-mult hooks read their sane defaults.
+		var vit_add := int((AttunementsCore.defs()["vitality"]["levels"][0]["mods"][0] as Dictionary)["add"])
+		_check(player.max_health == Player.MAX_HEALTH + vit_add,
+			"Vitality L1 raised the run player's max HP to %d" % (Player.MAX_HEALTH + vit_add))
+		_check(int(player.get("flat_damage_reduction")) == 0, "no Resilience bought → DR hook is 0")
+		_check(absf(float(player.get("ability_cooldown_mult")) - 1.0) < 0.001,
+			"no Resonance Flow bought → ability cooldown mult is 1.0")
+		# Recovery attunement: one heal via the exact clear-time call site (apply_missing_heal
+		# with the room's configured recovery pct) restores % of MISSING HP deterministically.
+		var rroom := _scene_node()
+		if _scene_file() == "combat_room.tscn" and float(rroom.call("recovery_pct")) > 0.0:
+			player.restore_health(60)  # deterministic: 60 of max
+			var rpct := float(rroom.call("recovery_pct"))
+			var want_hp := 60 + DoorCore.heal_missing(60, player.max_health, rpct)
+			rroom.call("apply_missing_heal", rpct)
+			_check(player.health == want_hp,
+				"Recovery healed %d%% of missing on clear (60 -> %d)" % [int(round(rpct * 100.0)), player.health])
 		await _test_abilities_in_run(player)
 		_check(_dualuse_checked, "a strata hazard damaged an enemy by direct call (dual-use)")
 

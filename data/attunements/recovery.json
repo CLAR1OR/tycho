@@ -1,0 +1,11 @@
+{
+	"id": "recovery",
+	"name": "Recovery",
+	"desc": "The host mends between engagements. Clearing a room restores a share of missing health.",
+	"costs_dust": [2, 3, 4],
+	"levels": [
+		{"kind": "heal_on_clear", "pct": 0.04},
+		{"kind": "heal_on_clear", "pct": 0.07},
+		{"kind": "heal_on_clear", "pct": 0.10}
+	]
+}
