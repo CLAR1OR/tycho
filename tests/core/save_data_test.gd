@@ -44,6 +44,21 @@ func test_migrate_slot_repairs_partial_save() -> void:
 	check_eq(out["combat"]["attunements"], {}, "attunements defaults to an empty map")
 
 
+func test_town_market_deal_day_defaults() -> void:
+	# market_deal_done_day (town-economy.md, 2026-07-10): an old save that predates the
+	# Market gets -1 (never accepted) via defaults-merge — no migration step needed.
+	var old := {"save_version": 1, "town": {"id": "home", "name": "Home", "age": 1,
+		"buildings": [{"id": "farm", "level": 2}], "map_pos": null, "well_fed": true}}
+	var out := SaveData.migrate_slot(old)
+	check_eq(int(out["town"]["market_deal_done_day"]), -1,
+		"old saves default market_deal_done_day to -1 (never)")
+	check_eq(bool(out["town"]["well_fed"]), true, "existing town values survive the merge")
+	check_eq(int((out["town"]["buildings"] as Array)[0]["level"]), 2,
+		"built buildings survive the merge")
+	check_eq(int(SaveData.default_slot("s", "t")["town"]["market_deal_done_day"]), -1,
+		"a fresh slot starts at -1 too")
+
+
 func test_migrate_slot_handles_unknown_old_version() -> void:
 	# A version we have no migration for must not loop or crash — it gets defaults.
 	var ancient := {"save_version": 0, "meta": {"name": "Ancient"}}

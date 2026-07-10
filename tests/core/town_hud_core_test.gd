@@ -128,3 +128,16 @@ func test_toast_segments_dust_short_label() -> void:
 	var segs := TownHudCore.toast_segments(
 		{"produced": {"resonance-dust": 2.0}, "food_consumed": 0.0, "well_fed": false})
 	check_eq(str(segs[0]["text"]), "+2 dust", "resonance-dust uses the short 'dust' label")
+
+
+func test_toast_segments_market_sale() -> void:
+	# The Market auto-sell (town-economy.md, 2026-07-10): gold_from_sale > 0 adds a
+	# trade segment after 'eaten'; the stable 0.0 keys add nothing.
+	var quiet := TownHudCore.toast_segments({"produced": {"food": 3.0}, "food_consumed": 2.0,
+		"well_fed": true, "food_sold": 0.0, "gold_from_sale": 0.0})
+	for s: Dictionary in quiet:
+		check(not str(s["text"]).contains("trade"), "no trade segment when nothing sold")
+	var sold := TownHudCore.toast_segments({"produced": {"food": 3.0}, "food_consumed": 2.0,
+		"well_fed": true, "food_sold": 12.0, "gold_from_sale": 12.0})
+	var texts: Array = sold.map(func(s: Dictionary) -> String: return str(s["text"]))
+	check(texts.has("+12 gold in trade"), "the sale reads '+12 gold in trade' (%s)" % str(texts))

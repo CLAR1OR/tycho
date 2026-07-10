@@ -148,7 +148,9 @@ func _survey_row(def: Dictionary, id: String) -> Control:
 	nv.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	nv.add_theme_constant_override("separation", 2)
 	var name_l := Label.new()
-	name_l.text = str(def.get("name", id))
+	# Display names go through TownCore.display_name — a built band opener renames
+	# the building (Library → University, town-economy.md).
+	name_l.text = TownCore.display_name(def, level)
 	name_l.theme_type_variation = &"TitleLabel"
 	nv.add_child(name_l)
 	var cat_l := Label.new()
@@ -184,9 +186,18 @@ func _survey_row(def: Dictionary, id: String) -> Control:
 		if level == 0:
 			y_l.modulate = Color(1, 1, 1, 0.6)  # unbuilt → its L1 yield, dimmer
 		rv.add_child(y_l)
-		var cost := TownCore.next_level_cost(def, level)
+		# The next-level line: cost, "max level", or "Requires <tech>" when the next
+		# level's own gate isn't met (age-banded levels, town-economy.md).
+		var act := BuildPanelCore.action(def, level, SaveManager.state["tech"]["researched"])
 		var nxt := Label.new()
-		nxt.text = MAXED if cost.is_empty() else (NEXT_FMT % _cost_text(cost))
+		match str(act["kind"]):
+			"maxed":
+				nxt.text = MAXED
+			"locked":
+				nxt.text = BuildPanelCore.LOCKED_FMT % BuildPanelCore.gate_tech_name(
+					str(act.get("requires", "")), _tech_defs)
+			_:
+				nxt.text = NEXT_FMT % _cost_text(act["cost"])
 		nxt.theme_type_variation = &"NumLabel"
 		nxt.add_theme_color_override("font_color", SlateHud.COL_KEY_TEXT)
 		rv.add_child(nxt)
@@ -223,8 +234,8 @@ func _cost_text(cost: Dictionary) -> String:
 
 func _gate_name(def: Dictionary) -> String:
 	var gate: Dictionary = def.get("unlocked_by") if def.get("unlocked_by") != null else {}
-	var tech_id := str(gate.get("id", "?"))
-	return str((_tech_defs.get(tech_id, {}) as Dictionary).get("name", tech_id))
+	# An unauthored gate tech reads as the placeholder line, never a raw id.
+	return BuildPanelCore.gate_tech_name(str(gate.get("id", "")), _tech_defs)
 
 
 # --- Draw (bg + the carry readout) ------------------------------------------------------

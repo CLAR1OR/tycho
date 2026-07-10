@@ -1,0 +1,12 @@
+{
+	"id": "cathedral",
+	"name": "Cathedral",
+	"category": "great-work",
+	"age": 1,
+	"unlocked_by": {"type": "tech", "id": "med-masonry-arch"},
+	"levels": [
+		{"cost": {"gold": 400, "stone": 60}, "effects": [{"kind": "capability", "id": "great-work"}], "visual": "cathedral_scaffold"},
+		{"cost": {"gold": 900, "stone": 150}, "effects": [{"kind": "capability", "id": "great-work"}], "visual": "cathedral_structure"},
+		{"cost": {"gold": 2000, "stone": 300}, "effects": [{"kind": "capability", "id": "great-work", "shard_value_add": 1}], "visual": "cathedral_finished"}
+	]
+}

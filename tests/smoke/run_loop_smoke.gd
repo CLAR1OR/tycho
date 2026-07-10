@@ -287,16 +287,16 @@ func _run_smoke() -> void:
 	_check(TownCore.building_level(SaveManager.state["town"], "farm") == 1, "farm built (ungated)")
 
 	# --- Planning Table survey (B3, 2026-07-09) — a whole-town read-only sheet -----------
-	# One ledger row per building def, INCLUDING the dormant town-walls def (no plot in the
-	# scene — a row needs no plot). Post-B4 it opens; assert it spans the viewport + shows all
-	# four rows, then close.
+	# One ledger row per building def, INCLUDING the dormant town-walls def (no plot needed
+	# for a row). Post-B4 it opens; assert it spans the viewport + shows all 9 buildable
+	# defs (town-economy v2, 2026-07-10: +library/observatory/mill/market/cathedral), then close.
 	var survey: SurveyPanel = _scene_node().call("open_survey_panel")
 	_check(survey != null, "the Planning Table opens the survey post-B4")
 	await _settle(3)
 	_check((survey as Control).size == get_viewport().get_visible_rect().size,
 		"survey panel spans the viewport")
-	_check(int(survey.call("row_count")) == 4,
-		"survey lists every building def incl. dormant town-walls (%d rows)" % int(survey.call("row_count")))
+	_check(int(survey.call("row_count")) == 9,
+		"survey lists all 9 building defs incl. the new economy roster (%d rows)" % int(survey.call("row_count")))
 	survey.call("close")
 	await _settle(3)
 	var cheats: CheatPanel = get_tree().get_first_node_in_group("cheat_panel")
@@ -759,6 +759,79 @@ func _run_smoke() -> void:
 	if e2 != null:
 		await _drive_panel(e2, "e2-artifact-waits")
 	_check(bool(SaveManager.state["story"]["flags"].get("e2", false)), "E2 set its flag")
+
+	# --- Town economy v2 (design/town-economy.md, 2026-07-10): Market + Cathedral ------
+	# Arithmetic was researched at the desk above, so the Market def is unlocked. Build
+	# it, then prove the day tick auto-sells the Food surplus down to the keep-buffer.
+	var bdefs := DataLoader.load_domain("buildings")
+	_check(TownCore.is_unlocked(bdefs["market"], SaveManager.state["tech"]["researched"]),
+		"arithmetic makes the Market buildable")
+	Ledger.add("gold", 200.0, "smoke-grant")
+	var mktp: BuildPanel = _scene_node().call("open_build_panel", "market")
+	mktp.call("build")
+	mktp.call("close")
+	await _settle(3)
+	_check(TownCore.building_level(SaveManager.state["town"], "market") == 1, "market built to L1")
+	# Fatten the granary, predict the sale with the REAL core (a simulated run reports
+	# 10 rooms = scale 1.0), then tick a day; the sim's own victory grant is +15 gold.
+	Ledger.add("food", 200.0, "smoke-grant")
+	var sell_want := TownCore.tick(SaveManager.state["town"], bdefs, Ledger.get_amount("food"), 1.0)
+	var gold_pre_sale := Ledger.get_amount("gold")
+	cheats.simulate_run(true)
+	await _settle(10)
+	_check(float(sell_want["food_sold"]) > 0.0
+		and absf(Ledger.get_amount("gold") - (gold_pre_sale + 15.0 + float(sell_want["gold_from_sale"]))) < 0.001,
+		"the day tick auto-sold the surplus (+%.1f gold, reason market-sale)" % float(sell_want["gold_from_sale"]))
+	var buffer_want := TownCore.MARKET_KEEP_BUFFER_DAYS * (TownCore.UPKEEP_BASE
+		+ TownCore.UPKEEP_PER_BUILDING * float((SaveManager.state["town"]["buildings"] as Array).size()))
+	_check(absf(Ledger.get_amount("food") - buffer_want) < 0.001,
+		"the granary fell exactly to the keep-buffer (%.1f)" % Ledger.get_amount("food"))
+	# Exchange + caravan on the trade page (opened via the public town route; in play it
+	# also hangs off the Market BuildPanel's Trade button).
+	Ledger.add("stone", 100.0, "smoke-grant")
+	Ledger.add("food", 50.0, "smoke-grant")
+	var trade: MarketPanel = _scene_node().call("open_market_panel")
+	_check(trade != null, "the built market opens its trade page")
+	await _settle(3)
+	var mcaps := MarketCore.caps(bdefs["market"], 1)
+	var xg := Ledger.get_amount("gold")
+	var xs := Ledger.get_amount("stone")
+	_check(bool(trade.call("buy_stone")), "exchange: bought 1 stone (reason market-exchange)")
+	_check(absf(Ledger.get_amount("gold") - (xg - float(mcaps["buy_stone_gold"]))) < 0.001
+		and absf(Ledger.get_amount("stone") - (xs + 1.0)) < 0.001,
+		"the exchange moved gold->stone at the L1 rate (%d gold each)" % int(mcaps["buy_stone_gold"]))
+	var today_deal := str(trade.call("deal_id", 0))
+	_check(not today_deal.is_empty(), "a caravan deal is on offer (%s)" % today_deal)
+	_check(bool(trade.call("accept_deal", 0)), "the caravan deal accepted once")
+	_check(not bool(trade.call("accept_deal", 0)), "a second accept the same day is refused")
+	_check(int(_read_slot_from_disk()["town"].get("market_deal_done_day", -1)) > 0,
+		"disk: the accepted deal's day persisted")
+	trade.call("close")
+	await _settle(3)
+	# Cathedral: the great-work category rides the normal build panel + transaction.
+	Ledger.add("gold", 500.0, "smoke-grant")
+	Ledger.add("stone", 60.0, "smoke-grant")
+	var catp: BuildPanel = _scene_node().call("open_build_panel", "cathedral")
+	catp.call("build")
+	catp.call("close")
+	await _settle(3)
+	_check(TownCore.building_level(SaveManager.state["town"], "cathedral") == 1,
+		"cathedral stage 1 raised (great-work builds like any building)")
+	# Per-level tech gates: Farm L2 is ungated, L3 waits on the unauthored Three-Field
+	# Rotation (dormant forward ref) — the buy refuses, the level holds.
+	Ledger.add("gold", 1000.0, "smoke-grant")
+	var farmp: BuildPanel = _scene_node().call("open_build_panel", "farm")
+	farmp.call("build")  # L1 -> L2, ungated
+	_check(TownCore.building_level(SaveManager.state["town"], "farm") == 2, "farm raised to L2 (ungated)")
+	farmp.call("build")  # L2 -> L3 must refuse (gate)
+	_check(TownCore.building_level(SaveManager.state["town"], "farm") == 2,
+		"farm L3 refused — its tech gate names an unauthored node")
+	farmp.call("close")
+	await _settle(3)
+	# Grandfathering: gates guard the PURCHASE only — an already-L3 farm still ticks.
+	var fixture := TownCore.set_building({"id": "fix", "buildings": []}, "farm", 3)
+	_check(absf(float((TownCore.tick(fixture, bdefs, 0.0)["produced"] as Dictionary).get("food", 0.0)) - 8.0) < 0.001,
+		"an already-built L3 farm still ticks its 8 food (grandfathered)")
 
 	# --- Forfeit Run — "like it never happened" (ESC menu, design 2026-07-07) ----------
 	# Start a real run, let its first room pay out and clear it, then forfeit: the whole

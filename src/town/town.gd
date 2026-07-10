@@ -186,6 +186,21 @@ func open_build_panel(building_id: String) -> BuildPanel:
 	return panel
 
 
+## Public (smoke driver + reuse): open the Market's trade page (exchange + caravan,
+## design/town-economy.md). Null unless the build system is unlocked AND the Market
+## is built. In play the page opens from the Market's BuildPanel row (its "Trade"
+## button — see BuildPanel.open_market); this is the direct route.
+func open_market_panel() -> MarketPanel:
+	if not UnlocksCore.is_unlocked(SaveManager.state, "building"):
+		return null
+	if TownCore.building_level(SaveManager.state["town"], "market") < 1:
+		return null
+	var panel := MarketPanel.new()
+	$HUD.add_child(panel)
+	panel.open()
+	return panel
+
+
 ## Public (interact + smoke driver): open Herzog's Planning Table survey (B3 — the whole-town
 ## read-only sheet), or null if the build system hasn't been unlocked yet (B4).
 func open_survey_panel() -> SurveyPanel:
@@ -350,10 +365,12 @@ func _refresh_plots() -> void:
 func _refresh_plot(plot: Area3D) -> void:
 	var building_id := str(plot.get_meta("building_id"))
 	var def: Dictionary = _building_defs.get(building_id, {})
-	var display_name := str(def.get("name", building_id))
+	var level := TownCore.building_level(SaveManager.state["town"], building_id)
+	# Display names go through TownCore.display_name — a built band opener renames
+	# the building (Library → University, town-economy.md).
+	var display_name := TownCore.display_name(def, level) if not def.is_empty() else building_id
 	var label := plot.get_node("Label") as Label3D
 	var mesh := plot.get_node("BuildingMesh") as MeshInstance3D
-	var level := TownCore.building_level(SaveManager.state["town"], building_id)
 	# The building visibly grows with its level (placeholder box — PRD: each level
 	# changes the visual).
 	mesh.visible = level > 0
@@ -375,6 +392,14 @@ func _refresh_plot(plot: Area3D) -> void:
 	var cost := TownCore.next_level_cost(def, level)
 	if cost.is_empty():
 		label.text = "%s (max level)" % display_name
+	elif not TownCore.is_level_unlocked(def, level, SaveManager.state["tech"]["researched"]):
+		# The NEXT level carries its own tech gate (age-banded levels) — the plot
+		# still opens the panel (the readable why); the label says what it waits on.
+		var gate: Variant = ((def.get("levels", [])[level]) as Dictionary).get("unlocked_by")
+		var gate_id := str((gate as Dictionary).get("id", "")) if gate is Dictionary else ""
+		label.text = "%s — L%d needs research: %s" % [display_name, level + 1,
+			BuildPanelCore.gate_tech_name(gate_id, _tech_defs)]
+		label.modulate = Color(1, 1, 1, 0.75)
 	else:
 		var action := "build" if level == 0 else "upgrade to L%d" % (level + 1)
 		label.text = "%s — E to %s (%s)" % [display_name, action, _cost_text(cost)]
@@ -382,8 +407,8 @@ func _refresh_plot(plot: Area3D) -> void:
 
 func _gate_name(def: Dictionary) -> String:
 	var gate: Dictionary = def.get("unlocked_by") if def.get("unlocked_by") != null else {}
-	var tech_id := str(gate.get("id", "?"))
-	return str((_tech_defs.get(tech_id, {}) as Dictionary).get("name", tech_id))
+	# An unauthored gate tech reads as the placeholder line, never a raw id.
+	return BuildPanelCore.gate_tech_name(str(gate.get("id", "")), _tech_defs)
 
 
 func _plot_for(building_id: String) -> Area3D:

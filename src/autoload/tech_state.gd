@@ -75,13 +75,17 @@ func invest(def: Dictionary, node_id: String) -> float:
 
 ## Turn in ALL held Knowledge Shards for Knowledge at Sophia's desk (the shards you
 ## bring back; she extracts what they teach). Converts whole shards at
-## SHARD_KNOWLEDGE_VALUE apiece — spend "knowledge-shards", add "knowledge", both under
-## reason "shard-turn-in", atomic like invest. Returns the Knowledge gained (0 at none).
+## SHARD_KNOWLEDGE_VALUE apiece (+ the finished Cathedral's `shard_value_add`
+## capability, town-economy.md 2026-07-10) — spend "knowledge-shards", add
+## "knowledge", both under reason "shard-turn-in", atomic like invest. Returns the
+## Knowledge gained (0 at none).
 func turn_in_shards() -> float:
 	var whole := floorf(Ledger.get_amount("knowledge-shards"))
 	if whole <= 0.0:
 		return 0.0
-	var gained := TechCore.shard_turn_in_value(whole)
+	var bonus := TownCore.capability_value(
+		SaveManager.state["town"], DataLoader.load_domain("buildings"), "shard_value_add")
+	var gained := TechCore.shard_turn_in_value(whole, bonus)
 	if Ledger.try_spend("knowledge-shards", whole, "shard-turn-in"):
 		Ledger.add("knowledge", gained, "shard-turn-in")
 		return gained

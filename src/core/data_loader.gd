@@ -28,10 +28,13 @@ const SCHEMAS: Dictionary = {
 		"id": {"type": "string", "required": true},
 		"name": {"type": "string", "required": true},
 		"category": {"type": "string", "required": true,
-			"one_of": ["production", "research", "infrastructure", "shop"]},
+			"one_of": ["production", "research", "infrastructure", "shop", "great-work"]},
 		"age": {"type": "int", "required": true},
 		"unlocked_by": {"type": "dict", "nullable": true},
-		"levels": {"type": "array", "required": true, "array_of": "dict"},  # exactly 3 per the bible
+		# AGE-BANDED (town-economy.md, 2026-07-10): the array grows as later ages are
+		# authored; taken as-is. Level dicts may carry `unlocked_by` (per-level tech
+		# gate) and `rename` (band openers) — free-form here, documented in schemas §6.
+		"levels": {"type": "array", "required": true, "array_of": "dict"},
 	},
 	"tech": {  # architecture-schemas.md §4 — mirrors design/tech-nodes/<id>.md (the authoring source)
 		"id": {"type": "string", "required": true},
@@ -183,6 +186,25 @@ const MUSIC_SPEC: Dictionary = {
 ## entries are skipped LOUDLY, like the SFX map.
 static func load_music_map() -> Dictionary:
 	return _load_single_file_map(MUSIC_MAP_PATH, MUSIC_SPEC)
+
+
+# The caravan-deal table (design/town-economy.md, 2026-07-10) is ONE file like the
+# SFX/music maps — the same deliberate exception to one-file-per-entity (a deal has
+# no life of its own; the rotation wants one page). id -> {text, give, get}.
+# Deals trade CIVILIAN resources only (gold/stone/food — the Market never trades
+# Resonance, IC-14). The `text` lines are PLACEHOLDER Herzog-register copy.
+const CARAVAN_DEALS_PATH := "res://data/town/caravan-deals.json"
+const CARAVAN_DEAL_SPEC: Dictionary = {
+	"text": {"type": "string", "required": true},  # the deal's one-line pitch (placeholder copy)
+	"give": {"type": "dict", "required": true},    # {resource: amount} the player pays
+	"get": {"type": "dict", "required": true},     # {resource: amount} the player receives
+}
+
+
+## Load + validate data/town/caravan-deals.json: {deal_id: {text, give, get}}.
+## Invalid entries are skipped LOUDLY, like the SFX map.
+static func load_caravan_deals() -> Dictionary:
+	return _load_single_file_map(CARAVAN_DEALS_PATH, CARAVAN_DEAL_SPEC)
 
 
 ## Shared reader for the single-file id->params maps (SFX, music): parse, then

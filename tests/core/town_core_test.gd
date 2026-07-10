@@ -171,3 +171,102 @@ func test_tick_default_scale_is_one_nominal_day() -> void:
 	var implicit := TownCore.tick(town, defs, 20.0)
 	var explicit := TownCore.tick(town, defs, 20.0, 1.0)
 	check_eq(implicit, explicit, "tick(...) == tick(..., 1.0) — default scale is nominal")
+	# The v2 return keys are STABLE — present (0.0) even with no Market built.
+	check(implicit.has("food_sold") and implicit.has("gold_from_sale"),
+		"tick always returns the market keys (stable shape)")
+	check_eq(float(implicit["food_sold"]), 0.0, "no market → food_sold 0.0")
+	check_eq(float(implicit["gold_from_sale"]), 0.0, "no market → gold_from_sale 0.0")
+
+
+# --- Town economy v2: age-banded levels + Market + Cathedral (town-economy.md) --------
+
+func test_is_level_unlocked_gates() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	var farm: Dictionary = defs["farm"]
+	check(TownCore.is_level_unlocked(farm, 0, []), "an ungated level is always unlocked")
+	check(TownCore.is_level_unlocked(farm, 1, []), "farm L2 carries no gate")
+	check(not TownCore.is_level_unlocked(farm, 2, []),
+		"farm L3 is gated by Three-Field Rotation (unauthored — dormant forward ref)")
+	check(TownCore.is_level_unlocked(farm, 2, ["med-three-field-rotation"]),
+		"farm L3 unlocks once its tech is researched")
+	check(not TownCore.is_level_unlocked(defs["quarry"], 1, []),
+		"quarry L2 is gated by The Wheel & Axle")
+	# A forward reference to an unauthored tech id never loud-fails — it just stays shut.
+	check(not TownCore.is_level_unlocked(defs["library"], 3, []),
+		"the Library's University opener waits on ren-printing-press (forward ref)")
+	check(not TownCore.is_level_unlocked(farm, 99, []), "an out-of-range level index is locked")
+
+
+func test_is_level_unlocked_unknown_gate_type_is_locked() -> void:
+	# A typo'd gate type must LOCK (loudly) — mirrors is_unlocked's rule.
+	var def := {"id": "fixture", "levels": [{"unlocked_by": {"type": "wizard", "id": "x"}}]}
+	check(not TownCore.is_level_unlocked(def, 0, ["x"]),
+		"unknown gate type locks the level (push_error fires, visible above)")
+
+
+func test_display_name_rename() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	var lib: Dictionary = defs["library"]
+	check_eq(TownCore.display_name(lib, 0), "Library", "unbuilt library reads Library")
+	check_eq(TownCore.display_name(lib, 3), "Library", "L3 library is still the Library")
+	check_eq(TownCore.display_name(lib, 4), "University",
+		"the built band opener renames it (highest built rename wins)")
+	check_eq(TownCore.display_name(defs["farm"], 2), "Farm", "no rename → the def name")
+
+
+func test_multiplier_folds_into_produced() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Study L1 (1 knowledge) + Library L1 (x1.10 knowledge), starving (no bonus):
+	# 1 x 1.10 = 1.1. Gates guard the PURCHASE only — an already-built library ticks.
+	var town := TownCore.set_building(_empty_town(), "sophias-study", 1)
+	town = TownCore.set_building(town, "library", 1)
+	var p: Dictionary = TownCore.tick(town, defs, 0.0)["produced"]
+	check(absf(float(p.get("knowledge", 0.0)) - 1.1) < 0.0001,
+		"library folds x1.10 into the study's knowledge (got %.3f)" % float(p.get("knowledge", 0.0)))
+	# Mill L1 multiplies food AND stone — with neither produced, both are no-ops.
+	var lone_mill := TownCore.set_building(_empty_town(), "mill", 1)
+	var p2: Dictionary = TownCore.tick(lone_mill, defs, 0.0)["produced"]
+	check(not p2.has("food") and not p2.has("stone"),
+		"a multiplier on a resource nothing produced is a no-op (stays absent)")
+	# Mill + farm, starving: food 3 x 1.10 = 3.3 (food never gets the Well-Fed bonus,
+	# and stock 0 + 3.3 food < upkeep 2+2 = 4 → not fed anyway).
+	var mf := TownCore.set_building(lone_mill, "farm", 1)
+	var r3 := TownCore.tick(mf, defs, 0.0)
+	check(absf(float((r3["produced"] as Dictionary).get("food", 0.0)) - 3.3) < 0.0001,
+		"mill folds x1.10 into the farm's food (3 -> 3.3)")
+
+
+func test_market_auto_sell_math() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Empty town + Market L1: built 1 → nominal upkeep 3, buffer 2x3 = 6. Stock 20,
+	# nothing produced, consumed 3 → after 17 → surplus 11 → sold 11 @ rate 1.0.
+	var town := TownCore.set_building(_empty_town(), "market", 1)
+	var r := TownCore.tick(town, defs, 20.0)
+	check_eq(float(r["food_sold"]), 11.0, "sells the stock above the 2-day buffer (11)")
+	check_eq(float(r["gold_from_sale"]), 11.0, "L1 sell rate 1.0 → 11 gold")
+	# L2's better rate (1.5) — same surplus, more gold.
+	var t2 := TownCore.set_building(_empty_town(), "market", 2)
+	var r2 := TownCore.tick(t2, defs, 20.0)
+	check_eq(float(r2["food_sold"]), 11.0, "the surplus is rate-independent")
+	check_eq(float(r2["gold_from_sale"]), 16.5, "L2 sell rate 1.5 → 16.5 gold")
+	# Short stock: nothing above the buffer → no sale (stable 0.0 keys).
+	var short := TownCore.tick(town, defs, 4.0)
+	check_eq(float(short["food_sold"]), 0.0, "stock at/below the buffer sells nothing")
+	check_eq(float(short["gold_from_sale"]), 0.0, "no surplus → no gold")
+	# The buffer is NOMINAL (scale-independent): scale 2 doubles the upkeep eaten but
+	# not the stock target. built 1 → upkeep 3x2 = 6 eaten; after = 20-6 = 14; buffer 6
+	# → sold 8.
+	var scaled := TownCore.tick(town, defs, 20.0, 2.0)
+	check_eq(float(scaled["food_sold"]), 8.0, "keep-buffer stays nominal under scale (sold 8)")
+
+
+func test_capability_value_sums_current_levels() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	check_eq(TownCore.capability_value(_empty_town(), defs, "shard_value_add"), 0.0,
+		"an empty town has no capability value")
+	var t1 := TownCore.set_building(_empty_town(), "cathedral", 1)
+	check_eq(TownCore.capability_value(t1, defs, "shard_value_add"), 0.0,
+		"cathedral stage 1 carries no shard bonus yet")
+	var t3 := TownCore.set_building(_empty_town(), "cathedral", 3)
+	check_eq(TownCore.capability_value(t3, defs, "shard_value_add"), 1.0,
+		"the finished cathedral adds +1 shard value")

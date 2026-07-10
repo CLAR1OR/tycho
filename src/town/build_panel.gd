@@ -37,6 +37,7 @@ const TITLE := "The Town Ledger"
 const SUBTITLE := "Herzog keeps it current."
 const WELL_FED_FMT := "The town is Well-Fed. Production pays %d%% more."
 const RESEARCH_FMT := "research: %s"
+const TRADE_LABEL := "Trade at the stalls"  # the built Market's row button (PLACEHOLDER copy)
 
 var _defs: Dictionary = {}
 var _tech_defs: Dictionary = {}
@@ -137,6 +138,8 @@ func build() -> void:
 	var cost := TownCore.next_level_cost(def, level)
 	if cost.is_empty():
 		return  # maxed
+	if not TownCore.is_level_unlocked(def, level, SaveManager.state["tech"]["researched"]):
+		return  # the next level's own tech gate isn't met — the page shows Requires …
 	if not Ledger.try_spend_all(cost, "building-cost"):
 		return  # can't afford — the button is disabled at the price
 	SaveManager.state["town"] = TownCore.set_building(town, _building_id, level + 1)
@@ -150,11 +153,28 @@ func shown_building() -> String:
 	return _building_id
 
 
-## The number of level entries on the page (smoke/debug) — always the building's 3 levels.
+## The number of level entries on the page (smoke/debug) — the building's authored
+## levels (age-banded: 3 in Age I, more as later ages land; the Library ships 4).
 func entry_count() -> int:
 	if not _defs.has(_building_id):
 		return 0
 	return (_defs[_building_id].get("levels", []) as Array).size()
+
+
+## Swap this ledger page for the Market's trade page (the "Trade" button — the chosen
+## home of the exchange/caravan UI, see MarketPanel's header). Null unless the shown
+## building is the BUILT Market. Public so the smoke can drive it.
+func open_market() -> MarketPanel:
+	if _building_id != "market":
+		return null
+	if TownCore.building_level(SaveManager.state["town"], "market") < 1:
+		return null
+	var host := get_parent()
+	close()
+	var panel := MarketPanel.new()
+	host.add_child(panel)
+	panel.open()
+	return panel
 
 
 func _refresh() -> void:
@@ -214,6 +234,14 @@ func _build_dock() -> void:
 		box.add_child(res)
 	else:
 		box.add_child(_action_node(def, level))
+		# The built Market's page carries the door to its trade page (the chosen home
+		# of the exchange/caravan UI — see open_market / MarketPanel).
+		if _building_id == "market" and level >= 1:
+			var trade := Button.new()
+			trade.text = TRADE_LABEL
+			trade.pressed.connect(func() -> void: Sfx.play("ui-click"))
+			trade.pressed.connect(func() -> void: open_market())
+			box.add_child(trade)
 
 	add_child(_dock)
 
@@ -270,9 +298,10 @@ func _entry_row(row: Dictionary) -> Control:
 	return hb
 
 
-## The gold build/raise button below max, or the inert "Max level" label at max.
+## The gold build/raise button below max, the inert "Max level" label at max, or the
+## "Requires <tech>" line when the next level's own gate isn't met (age-banded levels).
 func _action_node(def: Dictionary, level: int) -> Control:
-	var action := BuildPanelCore.action(def, level)
+	var action := BuildPanelCore.action(def, level, SaveManager.state["tech"]["researched"])
 	var kind := str(action["kind"])
 	if kind == "maxed":
 		var l := Label.new()
@@ -281,6 +310,15 @@ func _action_node(def: Dictionary, level: int) -> Control:
 		l.add_theme_color_override("font_color", SlateHud.COL_READY)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		return l
+	if kind == "locked":
+		var lock := Label.new()
+		lock.text = BuildPanelCore.LOCKED_FMT % BuildPanelCore.gate_tech_name(
+			str(action.get("requires", "")), _tech_defs)
+		lock.theme_type_variation = &"NumLabel"
+		lock.add_theme_color_override("font_color", SlateHud.COL_KNOWLEDGE)
+		lock.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		return lock
 	var cost: Dictionary = action["cost"]
 	var b := Button.new()
 	if kind == "build":
@@ -303,8 +341,8 @@ func _cost_text(cost: Dictionary) -> String:
 
 func _gate_name(def: Dictionary) -> String:
 	var gate: Dictionary = def.get("unlocked_by") if def.get("unlocked_by") != null else {}
-	var tech_id := str(gate.get("id", "?"))
-	return str((_tech_defs.get(tech_id, {}) as Dictionary).get("name", tech_id))
+	# An unauthored gate tech reads as the placeholder line, never a raw id.
+	return BuildPanelCore.gate_tech_name(str(gate.get("id", "")), _tech_defs)
 
 
 # --- Draw (bg + the big sketch + name/meta + the carry readout) --------------------------
@@ -329,7 +367,9 @@ func _draw() -> void:
 
 
 func _draw_name_meta(def: Dictionary, level: int, cx: float) -> void:
-	var nm := str(def.get("name", _building_id))
+	# Display names go through TownCore.display_name — a built band opener renames
+	# the building (Library → University, town-economy.md).
+	var nm := TownCore.display_name(def, level)
 	var tw := _font_display.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_NAME).x
 	var ty := NAME_Y * size.y + _font_display.get_ascent(FS_NAME)
 	draw_string(_font_display, Vector2(cx - tw * 0.5, ty), nm,

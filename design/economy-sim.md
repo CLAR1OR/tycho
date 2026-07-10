@@ -49,12 +49,22 @@ of town production, a floor-1 death well under one.
   never chosen except when it is the offer's only door — the sim never tracks
   HP, so the spec's "reprieve when hurt" clause never fires); peril is never
   avoided (it only ever raises the payout).
-- **Spend policy each town visit, in order:** (1) turn in all Knowledge Shards,
-  invest all Knowledge into the cheapest available tech node (real prereqs,
-  quiz assumed solved); (2) buildings, cheapest next level first; (3) weapon
-  flat refines when Ore covers it; (4) Dust — the 5 implemented etchings first
-  (new unlocks before any deepening, cheapest within each class) until maxed,
-  then the 7 attunements.
+- **Spend policy each town visit, in order:** (1) turn in all Knowledge Shards
+  (incl. the Cathedral's shard_value_add once its stage 3 stands), invest all
+  Knowledge into the cheapest available tech node (real prereqs, quiz assumed
+  solved); (2) buildings, cheapest next level first — SKIPPING any next level
+  whose own tech gate isn't researched in-sim (only 2 techs exist, so
+  Library/Observatory/Mill stay dormant, Farm caps at L2, Quarry at L1; the
+  Market and the Cathedral participate); (3) weapon flat refines when Ore
+  covers it; (4) Dust — the 5 implemented etchings first (new unlocks before
+  any deepening, cheapest within each class) until maxed, then the 7
+  attunements.
+- **Market:** the day-tick AUTO-SELL runs through the real TownCore.tick (food
+  above the keep-buffer sells at the built level's rate; the sim credits the
+  gold and debits the food exactly like game.gd). The EXCHANGE (gold to
+  stone/food) and the CARAVAN deals are NOT simulated — both are judgment
+  calls a policy bot would only distort; their rates live in
+  data/buildings/market.json + data/town/caravan-deals.json.
 
 ## Per-run table (seed 1001, the primary sample)
 
@@ -63,43 +73,43 @@ of town production, a floor-1 death well under one.
 | 1 | death_floor_1 | 13 | 2 | 0 | 0 | 0 | 1 | 0 |
 | 2 | death_floor_2 | 160 | 2 | 0 | 0 | 0 | 2 | 0 |
 | 3 | death_floor_3 | 404 | 1 | 2 | 0 | 0 | 2 | 0 |
-| 4 | full_clear | 1143 | 4 | 3 | 0 | 0 | 2 | 1 |
-| 5 | full_clear | 1791 | 12 | 0 | 0 | 15 | 3 | 2 |
-| 6 | full_clear | 2429 | 14 | 7 | 0 | 44 | 3 | 2 |
-| 7 | full_clear | 3034 | 17 | 7 | 0 | 72 | 4 | 2 |
-| 8 | full_clear | 3418 | 22 | 3 | 0 | 101 | 4 | 2 |
-| 9 | full_clear | 3834 | 7 | 3 | 0 | 130 | 4 | 2 |
-| 10 | full_clear | 4508 | 28 | 1 | 0 | 163 | 4 | 2 |
-| 11 | full_clear | 4932 | 18 | 1 | 0 | 195 | 4 | 2 |
-| 12 | full_clear | 5042 | 16 | 1 | 0 | 228 | 4 | 2 |
-| 13 | full_clear | 5282 | 41 | 1 | 0 | 264 | 4 | 2 |
-| 14 | full_clear | 5796 | 20 | 2 | 0 | 311 | 4 | 2 |
-| 15 | full_clear | 6400 | 36 | 10 | 0 | 353 | 4 | 2 |
-| 16 | full_clear | 6597 | 10 | 11 | 0 | 400 | 4 | 2 |
-| 17 | full_clear | 7324 | 50 | 2 | 0 | 446 | 4 | 2 |
-| 18 | full_clear | 7140 | 25 | 10 | 0 | 490 | 4 | 2 |
-| 19 | full_clear | 7783 | 52 | 6 | 0 | 534 | 4 | 2 |
-| 20 | full_clear | 8337 | 76 | 5 | 0 | 576 | 4 | 2 |
-| 21 | full_clear | 9060 | 100 | 3 | 0 | 621 | 4 | 2 |
-| 22 | full_clear | 9812 | 129 | 0 | 0 | 667 | 4 | 2 |
-| 23 | full_clear | 10582 | 155 | 10 | 0 | 713 | 4 | 2 |
-| 24 | full_clear | 11315 | 187 | 10 | 0 | 758 | 4 | 2 |
-| 25 | full_clear | 12122 | 220 | 27 | 0 | 804 | 4 | 2 |
-| 26 | full_clear | 12938 | 258 | 32 | 0 | 852 | 4 | 2 |
-| 27 | full_clear | 13733 | 288 | 63 | 0 | 899 | 4 | 2 |
-| 28 | full_clear | 14398 | 316 | 90 | 0 | 944 | 4 | 2 |
-| 29 | full_clear | 15040 | 341 | 110 | 0 | 988 | 4 | 2 |
-| 30 | full_clear | 15695 | 363 | 130 | 0 | 1032 | 4 | 2 |
-| 31 | full_clear | 16426 | 398 | 143 | 0 | 1078 | 4 | 2 |
-| 32 | full_clear | 17242 | 426 | 179 | 0 | 1125 | 4 | 2 |
-| 33 | full_clear | 17972 | 459 | 202 | 0 | 1171 | 4 | 2 |
-| 34 | full_clear | 18756 | 492 | 229 | 0 | 1218 | 4 | 2 |
-| 35 | full_clear | 19356 | 518 | 249 | 0 | 1261 | 4 | 2 |
-| 36 | full_clear | 19991 | 545 | 261 | 0 | 1304 | 4 | 2 |
-| 37 | full_clear | 20688 | 578 | 279 | 0 | 1349 | 4 | 2 |
-| 38 | full_clear | 21360 | 607 | 296 | 0 | 1394 | 4 | 2 |
-| 39 | full_clear | 22028 | 629 | 312 | 0 | 1438 | 4 | 2 |
-| 40 | full_clear | 22830 | 659 | 326 | 0 | 1485 | 4 | 2 |
+| 4 | full_clear | 1083 | 4 | 3 | 0 | 0 | 3 | 1 |
+| 5 | full_clear | 1731 | 12 | 0 | 0 | 15 | 4 | 2 |
+| 6 | full_clear | 2369 | 14 | 7 | 0 | 44 | 4 | 2 |
+| 7 | full_clear | 2974 | 17 | 7 | 0 | 72 | 5 | 2 |
+| 8 | full_clear | 3358 | 22 | 3 | 0 | 101 | 5 | 2 |
+| 9 | full_clear | 3774 | 7 | 3 | 0 | 130 | 5 | 2 |
+| 10 | full_clear | 4448 | 28 | 1 | 0 | 163 | 5 | 2 |
+| 11 | full_clear | 4872 | 18 | 1 | 0 | 195 | 5 | 2 |
+| 12 | full_clear | 5506 | 16 | 1 | 0 | 228 | 5 | 2 |
+| 13 | full_clear | 5748 | 41 | 1 | 0 | 262 | 5 | 2 |
+| 14 | full_clear | 6636 | 20 | 2 | 0 | 304 | 5 | 2 |
+| 15 | full_clear | 7240 | 36 | 10 | 0 | 343 | 5 | 2 |
+| 16 | full_clear | 8062 | 10 | 11 | 0 | 385 | 5 | 2 |
+| 17 | full_clear | 8088 | 50 | 2 | 0 | 428 | 5 | 2 |
+| 18 | full_clear | 8706 | 25 | 10 | 0 | 467 | 5 | 2 |
+| 19 | full_clear | 9348 | 52 | 6 | 0 | 508 | 5 | 2 |
+| 20 | full_clear | 9902 | 76 | 5 | 0 | 546 | 5 | 2 |
+| 21 | full_clear | 10626 | 100 | 3 | 0 | 588 | 5 | 2 |
+| 22 | full_clear | 11002 | 129 | 0 | 0 | 629 | 5 | 2 |
+| 23 | full_clear | 11772 | 155 | 10 | 0 | 671 | 5 | 2 |
+| 24 | full_clear | 12505 | 187 | 10 | 0 | 712 | 5 | 2 |
+| 25 | full_clear | 13312 | 220 | 27 | 0 | 753 | 5 | 2 |
+| 26 | full_clear | 14128 | 258 | 32 | 0 | 797 | 5 | 2 |
+| 27 | full_clear | 14923 | 288 | 63 | 0 | 839 | 5 | 2 |
+| 28 | full_clear | 15588 | 316 | 90 | 0 | 880 | 5 | 2 |
+| 29 | full_clear | 15830 | 341 | 110 | 0 | 921 | 6 | 2 |
+| 30 | full_clear | 16485 | 363 | 130 | 0 | 961 | 6 | 2 |
+| 31 | full_clear | 17216 | 398 | 143 | 0 | 1003 | 6 | 2 |
+| 32 | full_clear | 18032 | 426 | 179 | 0 | 1045 | 6 | 2 |
+| 33 | full_clear | 18762 | 459 | 202 | 0 | 1087 | 6 | 2 |
+| 34 | full_clear | 19546 | 492 | 229 | 0 | 1130 | 6 | 2 |
+| 35 | full_clear | 20146 | 518 | 249 | 0 | 1169 | 6 | 2 |
+| 36 | full_clear | 20781 | 545 | 261 | 0 | 1209 | 6 | 2 |
+| 37 | full_clear | 21478 | 578 | 279 | 0 | 1250 | 6 | 2 |
+| 38 | full_clear | 22150 | 607 | 296 | 0 | 1291 | 6 | 2 |
+| 39 | full_clear | 22818 | 629 | 312 | 0 | 1331 | 6 | 2 |
+| 40 | full_clear | 23620 | 659 | 326 | 0 | 1373 | 6 | 2 |
 
 ## Milestones (first run # reaching each; mean across the 3 seeds)
 
@@ -108,6 +118,9 @@ of town production, a floor-1 death well under one.
 | first building built | 1 | 1 | 1 | 1.0 |
 | first PAID etching awakened (Dust unlock) | 2 | 2 | 2 | 2.0 |
 | Masonry & the Arch researched | 5 | 5 | 5 | 5.0 |
+| Market built (auto-sell live) | 4 | 4 | 4 | 4.0 |
+| Cathedral stage 1 raised | 29 | 29 | 29 | 29.0 |
+| Cathedral complete (stage 3) | never | never | never | never |
 | ability kit maxed (5 implemented etchings @ L3) | 15 | 12 | 13 | 13.3 |
 | all 7 attunements maxed | 24 | 25 | 26 | 25.0 |
 | all 3 weapons' flat track maxed | 18 | 17 | 17 | 17.3 |
@@ -118,8 +131,8 @@ data today (content-budget.md: 11 Medieval + 3 Renaissance; med-arithmetic-zero
 cost 20, med-masonry-arch cost 40 — mean cost 30). Extrapolating that mean cost
 across all 14 nodes (420 Knowledge total) against the sim's steady-state
 Knowledge income is a ROUGH projection from 2 real data points, not a forecast:
-- steady-state Knowledge income (mean of the last 10 runs' per-run gain, seed 1001): 45.2/run
-- 14 nodes @ mean cost 30 = 420 Knowledge -> ~9 runs at that rate (a full v1 tech tree, if it existed today)
+- steady-state Knowledge income (mean of the last 10 runs' per-run gain, seed 1001): 41.2/run
+- 14 nodes @ mean cost 30 = 420 Knowledge -> ~10 runs at that rate (a full v1 tech tree, if it existed today)
 
 ## Red flags
 
@@ -127,13 +140,17 @@ Knowledge income is a ROUGH projection from 2 real data points, not a forecast:
   run 24 (seed 1001). Final Dust balance at run 40: 326 — everything above the
   last purchase is stockpile with nothing left to buy (the dormant etchings and
   future attunements are the intended later sinks).
-- **Gold end-state:** final gold balance at run 40 (seed 1001): 22830. Once every
-  gold purchase is made there is no recurring gold sink — the future Market is
-  the intended home for surplus gold (bible, not yet in data/).
-- **Buildings / Stone:** seed 1001 final levels: farm L3, quarry L3, sophias-study L3, town-walls L3; final Stone: 1134.
-  Every building reaches max within the sample — the room-scaled tick's larger
-  full-clear harvests (quarry included) cleared the old Stone bottleneck; the
-  Walls-L3 100-Stone save-up is now reachable under the cheapest-first policy.
+- **Gold end-state:** final gold balance at run 40 (seed 1001): 23620. The Market's
+  auto-sell and the Cathedral's three stages are in the data now (town-economy.md
+  2026-07-10) — the Cathedral is the big one-time sink, the auto-sell an INCOME
+  stream, and the repeatable exchange (the intended recurring sink) is not
+  simulated, so the idle-gold figure here reads PESSIMISTIC-high; the later-age
+  level bands remain the structural answer.
+- **Buildings / Stone:** seed 1001 final levels: cathedral L1, farm L2, library L0, market L3, mill L0, observatory L0, quarry L1, sophias-study L3, town-walls L2; final Stone: 90.
+  Not every building maxes within the sample — EXPECTED now: the tech-gated
+  levels (Farm L3, Quarry L2+, and all of Library/Observatory/Mill) wait on
+  tech nodes that don't exist as data yet (dormant forward references,
+  town-economy.md), so "maxed" is unreachable by design until they land.
 - **Does ~40 runs cover the spend sinks that exist today?** See the milestones
   table — post-rebalance (2026-07-10) the weapon/Dust sinks are meant to land in
   the mid-game band (weapons ~run 14-22, both Dust sinks ~run 22-32) instead of

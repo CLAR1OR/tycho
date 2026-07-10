@@ -52,6 +52,48 @@ func test_action_build_raise_maxed() -> void:
 	check_eq((a3["cost"] as Dictionary).is_empty(), true, "maxed has no cost")
 
 
+func test_action_locked_by_level_gate() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Farm L3 is gated by Three-Field Rotation (town-economy.md): without it the
+	# action reads "locked" (no cost — no purchase), with it a normal raise.
+	var locked := BuildPanelCore.action(defs["farm"], 2, [])
+	check_eq(str(locked["kind"]), "locked", "an unmet level gate reads locked")
+	check_eq(str(locked["requires"]), "med-three-field-rotation", "locked carries the gate's tech id")
+	check((locked["cost"] as Dictionary).is_empty(), "locked offers no purchasable cost")
+	var open := BuildPanelCore.action(defs["farm"], 2, ["med-three-field-rotation"])
+	check_eq(str(open["kind"]), "raise", "the researched gate opens the raise")
+	check_eq(int((open["cost"] as Dictionary)["gold"]), 525, "the opened raise carries its real cost")
+
+
+func test_gate_tech_name_placeholder_for_unauthored() -> void:
+	var tech_defs := DataLoader.load_domain("tech")
+	check_eq(BuildPanelCore.gate_tech_name("med-masonry-arch", tech_defs),
+		str((tech_defs["med-masonry-arch"] as Dictionary)["name"]),
+		"an authored gate tech shows its real name")
+	check_eq(BuildPanelCore.gate_tech_name("med-three-field-rotation", tech_defs),
+		BuildPanelCore.LOCKED_UNKNOWN_TECH,
+		"an unauthored forward-ref gate reads the placeholder, never a raw id")
+	check_eq(BuildPanelCore.gate_tech_name("", tech_defs), BuildPanelCore.LOCKED_UNKNOWN_TECH,
+		"an empty gate id reads the placeholder")
+
+
+func test_yield_line_multiplier_and_new_capabilities() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	var lib := BuildPanelCore.yield_line((defs["library"]["levels"][0] as Dictionary)["effects"])
+	check_eq(str(lib["text"]), "+10% knowledge", "the library's multiplier reads +10% knowledge")
+	check_eq(str(lib["resource"]), "knowledge", "the multiplier line takes its resource colour")
+	var mill := BuildPanelCore.yield_line((defs["mill"]["levels"][0] as Dictionary)["effects"])
+	check_eq(str(mill["text"]), "+10% food, +10% stone", "the mill joins its two multipliers")
+	check_eq(str(mill["resource"]), "food", "the joined line colours by the first resource")
+	var mkt := BuildPanelCore.yield_line((defs["market"]["levels"][0] as Dictionary)["effects"])
+	check_eq(str(mkt["text"]), BuildPanelCore.CAP_MARKET, "the market capability reads its line")
+	var cat := BuildPanelCore.yield_line((defs["cathedral"]["levels"][2] as Dictionary)["effects"])
+	check_eq(str(cat["text"]), BuildPanelCore.CAP_GREAT_WORK, "the great work reads its line")
+	# The observatory carries produce + a puzzle-hint capability — produce wins the line.
+	var obs := BuildPanelCore.yield_line((defs["observatory"]["levels"][0] as Dictionary)["effects"])
+	check_eq(str(obs["text"]), "1 knowledge a day", "produce outranks a capability on the same level")
+
+
 func test_carry_resources_farm() -> void:
 	var defs := DataLoader.load_domain("buildings")
 	var carry := BuildPanelCore.carry_resources(defs["farm"])
@@ -64,7 +106,10 @@ func test_survey_order_covers_all_ids() -> void:
 	var defs := DataLoader.load_domain("buildings")
 	var order := BuildPanelCore.survey_order(defs)
 	check_eq(order.size(), defs.size(), "survey order lists every building def once")
+	check_eq(order.size(), 9, "all 9 buildable defs are in data (town-economy.md)")
 	check_eq(str(order[0]), "sophias-study", "the designed reading order leads")
 	check_eq(str(order[3]), "town-walls", "the dormant town-walls def gets a row too")
+	check_eq(str(order[4]), "library", "the new buildings follow the designed order")
+	check_eq(str(order[8]), "cathedral", "the great work closes the sheet")
 	# Determinism: the same defs always produce the same order.
 	check_eq(order, BuildPanelCore.survey_order(defs), "survey order is deterministic")

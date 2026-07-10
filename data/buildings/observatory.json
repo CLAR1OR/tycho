@@ -1,0 +1,12 @@
+{
+	"id": "observatory",
+	"name": "Observatory",
+	"category": "research",
+	"age": 1,
+	"unlocked_by": {"type": "tech", "id": "med-empirical-observation"},
+	"levels": [
+		{"cost": {"gold": 90}, "effects": [{"kind": "knowledge", "per_day": 1}, {"kind": "capability", "id": "puzzle-hint"}], "visual": "observatory_l1"},
+		{"cost": {"gold": 280, "stone": 10}, "effects": [{"kind": "knowledge", "per_day": 2}, {"kind": "capability", "id": "puzzle-hint"}], "visual": "observatory_l2"},
+		{"unlocked_by": {"type": "tech", "id": "med-optics-lenses"}, "cost": {"gold": 600, "stone": 22}, "effects": [{"kind": "knowledge", "per_day": 3}, {"kind": "capability", "id": "puzzle-hint"}], "visual": "observatory_l3"}
+	]
+}

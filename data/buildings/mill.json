@@ -1,0 +1,12 @@
+{
+	"id": "mill",
+	"name": "Mill",
+	"category": "production",
+	"age": 1,
+	"unlocked_by": {"type": "tech", "id": "med-watermill"},
+	"levels": [
+		{"cost": {"gold": 150}, "effects": [{"kind": "multiplier", "resource": "food", "mult": 1.10}, {"kind": "multiplier", "resource": "stone", "mult": 1.10}], "visual": "mill_l1"},
+		{"cost": {"gold": 375, "stone": 15}, "effects": [{"kind": "multiplier", "resource": "food", "mult": 1.15}, {"kind": "multiplier", "resource": "stone", "mult": 1.15}], "visual": "mill_l2"},
+		{"unlocked_by": {"type": "tech", "id": "med-mechanical-clock"}, "cost": {"gold": 800, "stone": 40}, "effects": [{"kind": "multiplier", "resource": "food", "mult": 1.25}, {"kind": "multiplier", "resource": "stone", "mult": 1.25}], "visual": "mill_l3"}
+	]
+}

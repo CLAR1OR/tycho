@@ -1,0 +1,13 @@
+{
+	"id": "library",
+	"name": "Library",
+	"category": "research",
+	"age": 1,
+	"unlocked_by": {"type": "tech", "id": "med-writing-parchment"},
+	"levels": [
+		{"cost": {"gold": 100}, "effects": [{"kind": "multiplier", "resource": "knowledge", "mult": 1.10}], "visual": "library_l1"},
+		{"cost": {"gold": 250, "stone": 10}, "effects": [{"kind": "multiplier", "resource": "knowledge", "mult": 1.15}], "visual": "library_l2"},
+		{"cost": {"gold": 625, "stone": 25}, "effects": [{"kind": "multiplier", "resource": "knowledge", "mult": 1.25}], "visual": "library_l3"},
+		{"unlocked_by": {"type": "tech", "id": "ren-printing-press"}, "rename": "University", "cost": {"gold": 600, "stone": 100}, "effects": [{"kind": "multiplier", "resource": "knowledge", "mult": 1.5}], "visual": "university_l4"}
+	]
+}

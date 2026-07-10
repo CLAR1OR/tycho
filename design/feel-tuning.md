@@ -409,6 +409,20 @@ Floor identity is DATA, not code — dial these like FEEL numbers (no code edit)
 
 ---
 
+## Town economy (data dials, `design/town-economy.md`, built 2026-07-10)
+
+ALL placeholder economy numbers — dial like the etching/attunement data (no code edit unless noted; rerun `tools/economy_sim.tscn` after changes):
+
+- **Building costs + yields** — `data/buildings/*.json` (9 files): every level's `cost` (Gold + Stone in Age I), `produce`/`knowledge` per_day, and the `multiplier` mults (Library 1.10/1.15/1.25/1.5 on knowledge; Mill 1.10/1.15/1.25 on food AND stone).
+- **Market rates** — `data/buildings/market.json`, the per-level `capability` effect: `sell_food_rate` (1.0/1.5/2.0), `buy_stone_gold` (5/4/3), `buy_food_gold` (2/2/1), `deal_slots` (1/1/2). Exchange is meant to be WORSE than producing (the soft gold sink).
+- **Auto-sell keep-buffer** — `TownCore.MARKET_KEEP_BUFFER_DAYS` (2.0 × nominal upkeep; code const, commented placeholder).
+- **Caravan deals** — `data/town/caravan-deals.json`: the whole table (5 deals) is a dial — shapes, amounts, and the placeholder Herzog pitch lines.
+- **Cathedral stage costs** — `data/buildings/cathedral.json`: 400g+60s → 900g+150s → 2000g+300s; the completion bonus is L3's `shard_value_add` (1).
+- **Per-level tech gates** — each level's `unlocked_by` (Farm L3, Quarry L2, Mill L3, Observatory L3, Library L4) is data; moving a gate re-paces an age.
+- **UI copy** — the placeholder lines in `BuildPanelCore` (`YIELD_MULT`, `CAP_MARKET`, `CAP_GREAT_WORK`, `LOCKED_FMT`, `LOCKED_UNKNOWN_TECH`), `MarketPanel` (title through deal rows), `BuildPanel.TRADE_LABEL`, and the toast's "+N gold in trade" (`TownHudCore`).
+
+---
+
 ## First dials to try (suggested starting points)
 - **Too easy / too hard:** enemy `attack_damage`, `telegraph_time` (longer = fairer),
   `enemy_count`, `max_attackers`, player `hit_grace`.

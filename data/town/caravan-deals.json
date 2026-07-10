@@ -1,0 +1,7 @@
+{
+	"grain-for-gold": {"text": "The caravan wants grain. They pay well today.", "give": {"food": 10}, "get": {"gold": 25}},
+	"stone-off-a-cart": {"text": "A cart broke an axle. The stone goes cheap.", "give": {"gold": 70}, "get": {"stone": 20}},
+	"salted-stores": {"text": "Salted stores from the coast. The granary takes them.", "give": {"gold": 15}, "get": {"food": 10}},
+	"mason-buys-stone": {"text": "A mason from the river towns buys stone at day rates.", "give": {"stone": 15}, "get": {"gold": 60}},
+	"grain-for-wall-stone": {"text": "Farmers trade grain for wall stone. Fair enough.", "give": {"food": 12}, "get": {"stone": 6}}
+}

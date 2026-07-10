@@ -54,7 +54,9 @@ static func projection_text(delta: float) -> String:
 
 ## Ordered segment dicts [{text, id}] for the overnight toast: produced resources first
 ## (gold, stone, food, knowledge, then anything else alphabetically) as "+5 gold", then
-## a "-5 eaten" segment when any Food was consumed, then a "Well-Fed" segment when fed.
+## a "-5 eaten" segment when any Food was consumed, then a "+12 gold in trade" segment
+## when the Market auto-sold surplus (town-economy.md, 2026-07-10 — the copy is a
+## PLACEHOLDER), then a "Well-Fed" segment when fed.
 static func toast_segments(tick: Dictionary) -> Array:
 	var out: Array = []
 	var produced: Dictionary = tick.get("produced", {})
@@ -73,6 +75,10 @@ static func toast_segments(tick: Dictionary) -> Array:
 	var consumed := float(tick.get("food_consumed", 0.0))
 	if consumed > 0.0:
 		out.append({"text": "%s eaten" % _fmt_amount(-consumed), "id": "eaten"})
+	var sold := float(tick.get("gold_from_sale", 0.0))
+	if sold > 0.0:
+		# Market auto-sell (stable tick keys food_sold/gold_from_sale) — PLACEHOLDER copy.
+		out.append({"text": "%s gold in trade" % _fmt_amount(sold), "id": "gold"})
 	if bool(tick.get("well_fed", false)):
 		out.append({"text": "Well-Fed", "id": "fed"})
 	return out

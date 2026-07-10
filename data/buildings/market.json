@@ -1,0 +1,12 @@
+{
+	"id": "market",
+	"name": "Market",
+	"category": "infrastructure",
+	"age": 1,
+	"unlocked_by": {"type": "tech", "id": "med-arithmetic-zero"},
+	"levels": [
+		{"cost": {"gold": 60}, "effects": [{"kind": "capability", "id": "market", "sell_food_rate": 1.0, "buy_stone_gold": 5, "buy_food_gold": 2, "deal_slots": 1}], "visual": "market_l1"},
+		{"cost": {"gold": 300, "stone": 12}, "effects": [{"kind": "capability", "id": "market", "sell_food_rate": 1.5, "buy_stone_gold": 4, "buy_food_gold": 2, "deal_slots": 1}], "visual": "market_l2"},
+		{"cost": {"gold": 700, "stone": 30}, "effects": [{"kind": "capability", "id": "market", "sell_food_rate": 2.0, "buy_stone_gold": 3, "buy_food_gold": 1, "deal_slots": 2}], "visual": "market_l3"}
+	]
+}

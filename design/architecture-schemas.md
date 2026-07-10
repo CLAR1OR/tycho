@@ -125,7 +125,8 @@ One generic evaluator reads these; new achievements are data entries. Unlocks li
 { "id": "home", "name": "…", "age": 1,
   "buildings": [{"id": "sophias-study", "level": 1}],
   "map_pos": null,                   // null until the strategy layer's overworld exists
-  "well_fed": false }                // last day-tick Food-upkeep status (food-upkeep.md, 2026-07-05)
+  "well_fed": false,                 // last day-tick Food-upkeep status (food-upkeep.md, 2026-07-05)
+  "market_deal_done_day": -1 }       // last day a caravan deal was accepted; -1 = never (town-economy.md, 2026-07-10; defaults-merge fills old saves)
 
 // data/buildings/<id>.json
 { "id": "quarry", "name": "Quarry", "category": "production",   // production|research|infrastructure|shop|great-work
@@ -133,15 +134,17 @@ One generic evaluator reads these; new achievements are data entries. Unlocks li
   "levels": [                        // AGE-BANDED (2026-07-10, town-economy.md): Age I = L1–3, each later age +2 (cap 11);
                                      // arrays grow as later ages are authored. Thomas's Hut + the Cathedral opt out of the uniform ladder.
     {"cost": {"gold": 50}, "effects": [{"kind": "produce", "resource": "stone", "per_day": 2}], "visual": "quarry_l1"},
-    {"unlocked_by": {"type": "tech", "id": "med-wheel-axle"}, …},   // any level may carry its own tech gate (in-band gates + band openers)
+    {"unlocked_by": {"type": "tech", "id": "med-wheel-axle"}, …},   // any level may carry its own tech gate (in-band gates + band openers) — REAL since 2026-07-10 (TownCore.is_level_unlocked; an UNAUTHORED tech id is an intentional dormant forward ref, never a loud failure; gates guard the PURCHASE only — built levels are grandfathered)
     {…},
     {"unlocked_by": {"type": "tech", "id": "ind-…"}, "rename": "Mine",
      "cost": {"gold": 400, "iron": 30}, "effects": [{"kind": "produce", "resource": "iron", "per_day": 3}], "visual": "mine_l4"}
-     // a band opener may rename the building and change its output — levels REPLACE, so the new produce line just states the new resource
+     // a band opener may rename the building (`rename` is REAL — TownCore.display_name, highest BUILT rename wins; v1 ships Library L4 → "University") and change its output — levels REPLACE, so the new produce line just states the new resource
   ] }
 ```
 
-`effects[].kind` is a small typed set (`produce | knowledge | multiplier | capability | upkeep`) — `upkeep` added 2026-07-03 (consumes a resource per tick, grants a status other effects read — Food/Well-Fed in v1, army/city provisioning in Act II; `food-upkeep.md`); strategy-era kinds (`defense`, `summon-capacity`) extend the set later. Production resolves on the **end-of-run tick** (1 day = 1 run, per locked decision; magnitude room-scaled since 2026-07-10 — `TownCore.tick(..., scale)` multiplies all production AND the upkeep by `run_tick_scale(rooms_cleared)` = rooms × 0.1 BEFORE the Well-Fed evaluation; default scale 1.0 = one nominal day keeps per-day callers like the HUD projections unchanged): one `TownTick` pass that reads buildings → writes ledger → emits events — order: produce → scale → upkeep/status → status-modified totals.
+`effects[].kind` is a small typed set (`produce | knowledge | multiplier | capability | upkeep`) — `upkeep` added 2026-07-03 (consumes a resource per tick, grants a status other effects read — Food/Well-Fed in v1, army/city provisioning in Act II; `food-upkeep.md`); `category` gained **`great-work`** (the Cathedral, town-economy.md 2026-07-10); strategy-era kinds (`defense`, `summon-capacity`) extend the set later. Production resolves on the **end-of-run tick** (1 day = 1 run, per locked decision; magnitude room-scaled since 2026-07-10 — `TownCore.tick(..., scale)` multiplies all production AND the upkeep by `run_tick_scale(rooms_cleared)` = rooms × 0.1 BEFORE the Well-Fed evaluation; default scale 1.0 = one nominal day keeps per-day callers like the HUD projections unchanged): one `TownTick` pass that reads buildings → writes ledger → emits events — order: **produce → multipliers → scale → upkeep/status → status-modified totals → Market auto-sell**. `multiplier` is LIVE (2026-07-10): each built building's CURRENT level's multiplier effects fold multiplicatively into `produced` (a resource nothing produced is a no-op). The **Market auto-sell** closes the tick: Food stock above the keep-buffer (`TownCore.MARKET_KEEP_BUFFER_DAYS` 2 × NOMINAL upkeep) sells at the Market's current-level capability `sell_food_rate`; the tick's return gained STABLE keys `food_sold`/`gold_from_sale` (0.0 without a Market), realized on the Ledger by game.gd (reason `market-sale`). `capability` effects carry data payloads read generically via `TownCore.capability_value` (the finished Cathedral's `shard_value_add` feeds `TechCore.shard_turn_in_value(shards, bonus)`) and `TownCore.capability_effect` (the Market's rates/`deal_slots`; the Observatory's `puzzle-hint` ships with NO consumer yet).
+
+**Implementation status (town-economy v2, built 2026-07-10):** everything in this section is live — 9 buildable defs in `data/buildings/` (+ the caravan table `data/town/caravan-deals.json` via `DataLoader.load_caravan_deals()`), per-level gates + renames in `TownCore`, the `MarketPanel` (exchange reason `market-exchange`, caravan reason `caravan`, rotation pure in `MarketCore` — no RNG state), and `town.market_deal_done_day` in the save (defaults-merge migration, tested). Deferred: Observatory hint consumer, achievements (Cathedral completion), exchange/caravan in the economy sim.
 
 ## 7. Dialogue (contract with `act1-story-beats.md`)
 

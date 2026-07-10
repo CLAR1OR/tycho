@@ -42,7 +42,10 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 		# well_fed: last day-tick Food-upkeep status (design/food-upkeep.md). false
 		# until the town has ever ticked with food covering upkeep; defaults-merge
 		# fills it for old saves.
-		"town": {"id": "home", "name": "Home", "age": 1, "buildings": [], "map_pos": null, "well_fed": false},
+		# market_deal_done_day: the last day a caravan deal was accepted (one per day,
+		# town-economy.md 2026-07-10); -1 = never. defaults-merge fills old saves.
+		"town": {"id": "home", "name": "Home", "age": 1, "buildings": [], "map_pos": null,
+			"well_fed": false, "market_deal_done_day": -1},
 		"combat": {
 			"current_weapon": "sword",
 			"weapons": {},

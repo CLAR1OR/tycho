@@ -131,13 +131,18 @@ func _simulate_seed(seed: int, num_runs: int, building_defs: Dictionary, tech_de
 		for id: String in produced:
 			ledger.add(id, float(produced[id]))
 		ledger.try_spend("food", float(tick["food_consumed"]))
+		# Market auto-sell (town-economy.md, 2026-07-10) — the real tick computed it;
+		# realize it exactly like game.gd does (debit the food, credit the gold).
+		if float(tick.get("food_sold", 0.0)) > 0.0:
+			ledger.try_spend("food", float(tick["food_sold"]))
+			ledger.add("gold", float(tick["gold_from_sale"]))
 		town["well_fed"] = bool(tick["well_fed"])
 
 		if full_clear:
 			codex_shards = mini(codex_shards + 1, StoryCore.CODEX_SHARDS_MAX)
 
 		# Spend policy, in order (see class header / report policy section).
-		_turn_in_shards(ledger)
+		_turn_in_shards(ledger, town, building_defs)
 		tech = _invest_knowledge(tech, tech_defs, ledger)
 		town = _spend_buildings(town, building_defs, tech["researched"], ledger)
 		combat = _spend_weapons(combat, weapon_defs, ledger)
@@ -259,12 +264,14 @@ func _floor_profile(floor_defs: Dictionary, floor_num: int) -> Dictionary:
 # --- Spend policy (town visit, in order — see class header) ---------------------------
 
 ## (1) Turn in every whole Knowledge Shard for Knowledge (TechCore.shard_turn_in_value —
-## the same math TechState.turn_in_shards spends, whole shards only).
-func _turn_in_shards(ledger: LedgerCore) -> void:
+## the same math TechState.turn_in_shards spends, whole shards only, incl. the finished
+## Cathedral's shard_value_add capability read off the sim's town).
+func _turn_in_shards(ledger: LedgerCore, town: Dictionary, building_defs: Dictionary) -> void:
 	var whole := floorf(ledger.get_amount("knowledge-shards"))
 	if whole <= 0.0:
 		return
-	var gain := TechCore.shard_turn_in_value(whole)
+	var gain := TechCore.shard_turn_in_value(whole,
+		TownCore.capability_value(town, building_defs, "shard_value_add"))
 	ledger.try_spend("knowledge-shards", whole)
 	ledger.add("knowledge", gain)
 
@@ -315,6 +322,12 @@ func _spend_buildings(town: Dictionary, building_defs: Dictionary, researched: A
 			if not TownCore.is_unlocked(def, researched):
 				continue
 			var lvl := TownCore.building_level(out, id)
+			# Per-level tech gates (age-banded levels, town-economy.md 2026-07-10): a
+			# gated next level whose tech isn't researched in-sim is skipped — with only
+			# 2 authored techs, Library/Observatory/Mill stay dormant, Farm caps at L2,
+			# Quarry at L1; Market + Cathedral participate.
+			if not TownCore.is_level_unlocked(def, lvl, researched):
+				continue
 			var cost := TownCore.next_level_cost(def, lvl)
 			if cost.is_empty() or not ledger.can_afford(cost):
 				continue
@@ -538,12 +551,22 @@ func _build_report(per_seed: Array, tech_defs: Dictionary, etching_defs: Diction
 	lines.append("  never chosen except when it is the offer's only door — the sim never tracks")
 	lines.append("  HP, so the spec's \"reprieve when hurt\" clause never fires); peril is never")
 	lines.append("  avoided (it only ever raises the payout).")
-	lines.append("- **Spend policy each town visit, in order:** (1) turn in all Knowledge Shards,")
-	lines.append("  invest all Knowledge into the cheapest available tech node (real prereqs,")
-	lines.append("  quiz assumed solved); (2) buildings, cheapest next level first; (3) weapon")
-	lines.append("  flat refines when Ore covers it; (4) Dust — the 5 implemented etchings first")
-	lines.append("  (new unlocks before any deepening, cheapest within each class) until maxed,")
-	lines.append("  then the 7 attunements.")
+	lines.append("- **Spend policy each town visit, in order:** (1) turn in all Knowledge Shards")
+	lines.append("  (incl. the Cathedral's shard_value_add once its stage 3 stands), invest all")
+	lines.append("  Knowledge into the cheapest available tech node (real prereqs, quiz assumed")
+	lines.append("  solved); (2) buildings, cheapest next level first — SKIPPING any next level")
+	lines.append("  whose own tech gate isn't researched in-sim (only 2 techs exist, so")
+	lines.append("  Library/Observatory/Mill stay dormant, Farm caps at L2, Quarry at L1; the")
+	lines.append("  Market and the Cathedral participate); (3) weapon flat refines when Ore")
+	lines.append("  covers it; (4) Dust — the 5 implemented etchings first (new unlocks before")
+	lines.append("  any deepening, cheapest within each class) until maxed, then the 7")
+	lines.append("  attunements.")
+	lines.append("- **Market:** the day-tick AUTO-SELL runs through the real TownCore.tick (food")
+	lines.append("  above the keep-buffer sells at the built level's rate; the sim credits the")
+	lines.append("  gold and debits the food exactly like game.gd). The EXCHANGE (gold to")
+	lines.append("  stone/food) and the CARAVAN deals are NOT simulated — both are judgment")
+	lines.append("  calls a policy bot would only distort; their rates live in")
+	lines.append("  data/buildings/market.json + data/town/caravan-deals.json.")
 	lines.append("")
 	lines.append("## Per-run table (seed %d, the primary sample)" % SEEDS[0])
 	lines.append("")
@@ -562,6 +585,9 @@ func _build_report(per_seed: Array, tech_defs: Dictionary, etching_defs: Diction
 		["first building built", func(r: Dictionary) -> bool: return int(r["buildings_built"]) >= 1],
 		["first PAID etching awakened (Dust unlock)", func(r: Dictionary) -> bool: return int(r["etchings_paid"]) >= 1],
 		["Masonry & the Arch researched", func(r: Dictionary) -> bool: return int(r["techs_done"]) >= 2],
+		["Market built (auto-sell live)", func(r: Dictionary) -> bool: return int((r["building_levels"] as Dictionary).get("market", 0)) >= 1],
+		["Cathedral stage 1 raised", func(r: Dictionary) -> bool: return int((r["building_levels"] as Dictionary).get("cathedral", 0)) >= 1],
+		["Cathedral complete (stage 3)", func(r: Dictionary) -> bool: return int((r["building_levels"] as Dictionary).get("cathedral", 0)) >= 3],
 		["ability kit maxed (5 implemented etchings @ L3)", func(r: Dictionary) -> bool: return int(r["etchings_maxed"]) >= EtchingsCore.IMPLEMENTED.size()],
 		["all 7 attunements maxed", func(r: Dictionary) -> bool: return int(r["attunements_maxed"]) >= attunement_defs.size()],
 		["all 3 weapons' flat track maxed", func(r: Dictionary) -> bool: return int(r["weapons_maxed"]) >= weapon_defs.size()],
@@ -632,9 +658,12 @@ func _red_flags(per_seed: Array, building_defs: Dictionary, etching_defs: Dictio
 	out.append("  run %s (seed %d). Final Dust balance at run %d: %.0f — everything above the" % [attn_max, SEEDS[0], NUM_RUNS, float(last["dust"])])
 	out.append("  last purchase is stockpile with nothing left to buy (the dormant etchings and")
 	out.append("  future attunements are the intended later sinks).")
-	out.append("- **Gold end-state:** final gold balance at run %d (seed %d): %.0f. Once every" % [NUM_RUNS, SEEDS[0], float(last["gold"])])
-	out.append("  gold purchase is made there is no recurring gold sink — the future Market is")
-	out.append("  the intended home for surplus gold (bible, not yet in data/).")
+	out.append("- **Gold end-state:** final gold balance at run %d (seed %d): %.0f. The Market's" % [NUM_RUNS, SEEDS[0], float(last["gold"])])
+	out.append("  auto-sell and the Cathedral's three stages are in the data now (town-economy.md")
+	out.append("  2026-07-10) — the Cathedral is the big one-time sink, the auto-sell an INCOME")
+	out.append("  stream, and the repeatable exchange (the intended recurring sink) is not")
+	out.append("  simulated, so the idle-gold figure here reads PESSIMISTIC-high; the later-age")
+	out.append("  level bands remain the structural answer.")
 	var lvls: Dictionary = last["building_levels"]
 	var lvl_bits: PackedStringArray = []
 	var all_maxed := true
@@ -648,9 +677,10 @@ func _red_flags(per_seed: Array, building_defs: Dictionary, etching_defs: Dictio
 		out.append("  full-clear harvests (quarry included) cleared the old Stone bottleneck; the")
 		out.append("  Walls-L3 100-Stone save-up is now reachable under the cheapest-first policy.")
 	else:
-		out.append("  Not every building maxes within the sample — Stone (Quarry-only income,")
-		out.append("  cheapest-first spending never saves toward Walls L3's 100 Stone) remains the")
-		out.append("  building sink's real bottleneck.")
+		out.append("  Not every building maxes within the sample — EXPECTED now: the tech-gated")
+		out.append("  levels (Farm L3, Quarry L2+, and all of Library/Observatory/Mill) wait on")
+		out.append("  tech nodes that don't exist as data yet (dormant forward references,")
+		out.append("  town-economy.md), so \"maxed\" is unreachable by design until they land.")
 	out.append("- **Does ~%d runs cover the spend sinks that exist today?** See the milestones" % NUM_RUNS)
 	out.append("  table — post-rebalance (2026-07-10) the weapon/Dust sinks are meant to land in")
 	out.append("  the mid-game band (weapons ~run 14-22, both Dust sinks ~run 22-32) instead of")

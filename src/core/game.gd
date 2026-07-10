@@ -306,6 +306,11 @@ func _on_run_ended(victory: bool, floor_reached: int, stats: Dictionary) -> void
 	for id: String in produced:
 		Ledger.add(id, float(produced[id]), "town-tick")
 	Ledger.try_spend("food", float(tick["food_consumed"]), "upkeep")
+	# Market auto-sell (town-economy.md, 2026-07-10): the pure tick computed the
+	# surplus sale; realize it on the Ledger AFTER upkeep, same order as the core.
+	if float(tick.get("food_sold", 0.0)) > 0.0:
+		Ledger.try_spend("food", float(tick["food_sold"]), "market-sale")
+		Ledger.add("gold", float(tick["gold_from_sale"]), "market-sale")
 	SaveManager.state["town"]["well_fed"] = bool(tick["well_fed"])
 	_last_day_tick = tick  # the town's overnight toast reads this on the return (_goto_town)
 	call_deferred("_goto_town")

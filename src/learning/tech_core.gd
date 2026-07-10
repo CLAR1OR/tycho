@@ -97,8 +97,11 @@ static func auto_solve_ready(def: Dictionary, tech: Dictionary) -> bool:
 
 ## Knowledge yielded by turning in `shards` whole Knowledge Shards at Sophia's desk
 ## (all held shards convert at SHARD_KNOWLEDGE_VALUE apiece). Whole shards only.
-static func shard_turn_in_value(shards: float) -> float:
-	return floorf(maxf(shards, 0.0)) * SHARD_KNOWLEDGE_VALUE
+## `bonus_per_shard` adds on top of the base value (the Cathedral's completion bonus:
+## TownCore.capability_value(town, defs, "shard_value_add") at the call site —
+## town-economy.md, 2026-07-10). Negative bonuses clamp to 0 (never below base).
+static func shard_turn_in_value(shards: float, bonus_per_shard: float = 0.0) -> float:
+	return floorf(maxf(shards, 0.0)) * (SHARD_KNOWLEDGE_VALUE + maxf(bonus_per_shard, 0.0))
 
 
 # --- Quiz lock (a wrong quiz answer waits one run; 2026-07-06) -----------------------

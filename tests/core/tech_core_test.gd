@@ -78,6 +78,14 @@ func test_shard_turn_in_value() -> void:
 	check_eq(TechCore.shard_turn_in_value(-1.0), 0.0, "negative clamps to zero")
 
 
+func test_shard_turn_in_bonus_per_shard() -> void:
+	# The Cathedral's completion bonus (town-economy.md, 2026-07-10): +1 per shard.
+	check_eq(TechCore.shard_turn_in_value(3.0, 1.0), 18.0, "3 shards at 5+1 apiece → 18")
+	check_eq(TechCore.shard_turn_in_value(2.4, 1.0), 12.0, "whole shards only with a bonus too")
+	check_eq(TechCore.shard_turn_in_value(3.0, 0.0), 15.0, "bonus 0 == the base value")
+	check_eq(TechCore.shard_turn_in_value(3.0, -2.0), 15.0, "a negative bonus clamps to base")
+
+
 func test_quiz_lock() -> void:
 	var tech := _fresh_tech()
 	check(not TechCore.is_quiz_locked(tech, "x"), "a fresh node's quiz is unlocked")
