@@ -1,6 +1,6 @@
 # Boss #1 — Floor 1, The Scanned Cave
 
-> **Drafted 2026-07-10 — DIRECTION NOT YET PICKED (human decision pending).** This doc does two jobs: §1–2 set the **boss grammar shared by all five bosses** (so bosses 2–5 inherit it), §3 offers **three directions for boss #1** with a recommendation. Nothing here is built; the current in-game boss is a pumped-up `enemy_dummy` (`combat_room.gd` BOSS_ID `boss-placeholder`). Per the content budget, bosses are the most expensive single items in v1 — design + arena + feel + tells — and feel numbers are human territory throughout.
+> **Drafted 2026-07-10; DIRECTION A — THE DEN-WARDEN — PICKED BY THE HUMAN same day.** This doc does two jobs: §1–2 set the **boss grammar shared by all five bosses** (so bosses 2–5 inherit it), §3 records the three directions considered (B's hazard integration is folded into A; C is parked as a floor-4 examiner candidate). Open-question leans adopted at the pick: **no escorts** (boss #1 teaches the duel), **single 50% phase threshold**, name placeholder **"The Den-Warden"** (human renames with the dialogue pass), no dedicated reconfiguration sting in v1 (boss track carries it). Per the content budget, bosses are the most expensive single items in v1 — design + arena + feel + tells — and feel numbers are human territory throughout.
 
 ---
 
