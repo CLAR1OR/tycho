@@ -1,0 +1,12 @@
+{
+	"id": "denial-mist",
+	"name": "Denial Mist",
+	"kind": "mist",
+	"telegraph_s": 0.0,
+	"cycle_s": 0.0,
+	"damage": 8,
+	"radius": 3.0,
+	"hurts_enemies": true,
+	"drift_speed": 1.5,
+	"tick_s": 1.0
+}

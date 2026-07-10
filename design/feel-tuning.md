@@ -377,6 +377,20 @@ Every ability number is a **data field**, not a `# FEEL:` export — edit the JS
 
 ---
 
+## Dungeon strata + hazards (data dials, `design/dungeon-strata.md`, built 2026-07-10)
+
+Floor identity is DATA, not code — dial these like FEEL numbers (no code edit):
+
+- **`data/floors/<n>.json` → `environment`**: per-floor palette — `background_color` / `ambient_color` / `light_color` / `ground_color` / `wall_color` / `obstacle_color` (`#hex`), `ambient_energy` / `light_energy` / `fog_density` (floats), `fog_enabled` (bool). Keep floors 1–4 subtle (the deniability rule); enemy/telegraph colours are FIXED and must stay readable against every palette (the legibility passes).
+- **`data/floors/<n>.json` → `hazards.density`**: `{early_rooms, late_rooms}` = the expected hazard count in the floor's first vs last room (interpolated; fractional → seeded probability). Floor 1 is low (0.15 → 0.4).
+- **`data/floors/<n>.json` → `hazards.signature` / `pool` / `props`**: which hazards + dressing a floor uses.
+- **`data/hazards/<id>.json`**: every hazard's `telegraph_s` (reaction window — longer = fairer), `cycle_s` (period), `damage`, `radius`, and the kind extras (`length`/`rotate_deg_s` for the beam, `range`/`projectile_speed` for the watcher, `push_strength` for drift, `drift_speed`/`tick_s` for mist).
+- **Placement/keep-outs** (`StrataCore` consts `HALF_EXTENT`/`KEEP_OUT_SPAWN`/`MIN_SPACING`) and the **beam kill-line width** / **mist bounce bound** (`Hazard` consts) are placeholder code constants, not data — dial only if the play field itself changes.
+
+> **No dedicated hazard SFX yet** — the watcher reuses the arrow sounds; vent/beam/burst/mist are silent (add rows to `data/audio/sfx-map.json` + a hook when desired).
+
+---
+
 ## First dials to try (suggested starting points)
 - **Too easy / too hard:** enemy `attack_damage`, `telegraph_time` (longer = fairer),
   `enemy_count`, `max_attackers`, player `hit_grace`.

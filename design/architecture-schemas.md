@@ -162,7 +162,7 @@ One abstraction, two contexts (dungeon auto-clearer / army unit): `{ id, tier, s
 
 "Floor as data", sibling of §3's "age as data": each floor of the one dungeon is a **stratum profile** — environment (palette/fog/light on the shared geometry kit), a signature hazard, a small prop list. Hazards are their own data domain (scripted: timer + volume + telegraph; dual-use — `hurts_enemies` defaults true).
 
-**Implementation status (2026-07-05):** `data/floors/<n>.json` **exists** with the DOOR fields only — `door_weights` + `peril_chance` (DataLoader `floors` spec; `run-structure.md` first implementation, pure `DoorCore`). The **environment / props / hazards / music_layer** fields below are still to come with the strata build; adding them is purely additive (a spec row per field + the JSON key), so the block below is the target shape, not the current one.
+**Implementation status (strata built 2026-07-10):** `data/floors/<n>.json` now carries the DOOR fields (`door_weights` + `peril_chance` — `run-structure.md`, pure `DoorCore`) **plus the STRATA fields** — `name`, `environment` (colours as `#hex` + energies + fog), `props`, `hazards` (all additive; the door fields are byte-unchanged). `data/hazards/<id>.json` is a new DataLoader domain (`HAZARDS_SPEC`). Pure `StrataCore` (`src/combat/strata_core.gd`) owns `environment_of` (defaults-merge), `hazard_plan` (seeded, combat-rooms-only, density-interpolated, signature-first), and `placement_points`/`prop_plan`; `combat_room.gd` applies the env per-instance (the Environment + Ground/Wall/Obstacle sub-resources are `resource_local_to_scene`) + spawns props (`StrataProps`) + hazards (`Hazard`, group `hazards`, one class dispatched on `kind`). **`music_layer` is NOT added** (per-stratum tracks are deferred). The block below is the shipped shape; `environment` holds any subset of `{background_color, ambient_color, ambient_energy, light_color, light_energy, ground_color, wall_color, obstacle_color, fog_enabled, fog_color, fog_density}` (colours `#hex` strings), and `hazards.density` interpolates an expected count across the floor's rooms (fractional → seeded probability).
 
 ```jsonc
 // data/floors/<n>.json
@@ -173,8 +173,12 @@ One abstraction, two contexts (dungeon auto-clearer / army unit): `{ id, tier, s
   "hazards": { "signature": "burst-crystal", "pool": ["vent-plate", "denial-mist"],
                "density": { "early_rooms": 0.2, "late_rooms": 0.5 } },
   "door_weights": { "gold": 3, "ore": 2, "dust": 1, "echo": 3, "reprieve": 2 },  // BUILT 2026-07-05 — run-structure.md (door choice; pity: ≥2 echo + ≥1 reprieve per floor)
-  "peril_chance": 0.25,                                                          // BUILT 2026-07-05 — elite-modifier doors (hp×1.5/dmg×1.25 at spawn) with doubled rewards
-  "music_layer": "dungeon_3" }
+  "peril_chance": 0.25 }                                                         // BUILT 2026-07-05 — elite-modifier doors (hp×1.5/dmg×1.25 at spawn) with doubled rewards
+  // "music_layer": "dungeon_3"  — DEFERRED (per-stratum music tracks are a later chunk; NOT in the 2026-07-10 strata build)
+
+// data/hazards/<id>.json  — BUILT 2026-07-10 (design/dungeon-strata.md). kind-specific optional
+// fields: beam {length, rotate_deg_s} · node {range, projectile_speed} · drift {push_strength}
+// · mist {drift_speed, tick_s}. Read by src/combat/hazard.gd (one class dispatched on `kind`).
 
 // data/hazards/<id>.json
 { "id": "burst-crystal", "name": "Burst Crystal",

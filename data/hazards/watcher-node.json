@@ -1,0 +1,12 @@
+{
+	"id": "watcher-node",
+	"name": "Watcher Node",
+	"kind": "node",
+	"telegraph_s": 0.4,
+	"cycle_s": 3.0,
+	"damage": 14,
+	"radius": 0.0,
+	"hurts_enemies": true,
+	"range": 22.0,
+	"projectile_speed": 20.0
+}

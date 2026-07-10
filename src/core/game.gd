@@ -140,7 +140,8 @@ func _next_room() -> void:
 	var room := ROOM_SCENE.instantiate()
 	room.setup(
 		int(RunState.run["floor"]), int(RunState.run["room"]),
-		int(RunState.run["rooms_this_floor"]), RunState.room_kind(), RunState.pending_door)
+		int(RunState.run["rooms_this_floor"]), RunState.room_kind(), RunState.pending_door,
+		_floor_profile(int(RunState.run["floor"])))  # the stratum profile (env/props/hazards)
 	_swap(room)
 	room.cleared.connect(_on_room_cleared.bind(room))
 	room.exit_entered.connect(func() -> void: call_deferred("_next_room"))

@@ -71,6 +71,10 @@ var target: Node3D = null
 ## NEVER persist past the field (design/etchings.md Q). Runtime-only, not a FEEL export.
 var slow_factor: float = 1.0
 
+## External push accumulator (design/dungeon-strata.md drift fields) — same additive
+## consume-and-reset hook as the player. Not a FEEL value (the data push_strength is the dial).
+var external_drift: Vector3 = Vector3.ZERO
+
 var _hp: int = 0
 var _state: int = State.IDLE
 var _timer: float = 0.0
@@ -130,6 +134,9 @@ func _physics_process(delta: float) -> void:
 	# Snare field: heavily slow the whole planar motion while inside (restored on exit).
 	velocity.x *= slow_factor
 	velocity.z *= slow_factor
+	# Drift field push (design/dungeon-strata.md): folded in + reset each tick.
+	velocity += external_drift
+	external_drift = Vector3.ZERO
 	if _state == State.IDLE:
 		_face_move()   # a strolling enemy looks where it walks, not at an unseen player
 	else:

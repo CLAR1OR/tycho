@@ -4,6 +4,23 @@
 
 ---
 
+## Implementation status (first slice built 2026-07-10)
+
+**BUILT** (placeholders throughout — every colour, density, and hazard number is a human dial):
+- **Floor-as-data strata fields** on all five `data/floors/<n>.json` (additive; the door/peril fields are byte-unchanged): `name`, `environment` (background/ambient/light/ground/wall/obstacle colours as `#hex` + energies + fog), `props` (2 ids/floor), `hazards` (`{signature, pool[], density{early_rooms, late_rooms}}`).
+- **`data/hazards/<id>.json`** — all six (vent-plate, watcher-node, burst-crystal, sweep-beam, drift-field, denial-mist), a new DataLoader domain (`HAZARDS_SPEC`, loud validation).
+- **Pure `src/combat/strata_core.gd`** (`StrataCore`, static, unit-tested): `environment_of` (defaults-merge so a partial/absent profile keeps today's look), `hazard_plan` (seeded; combat-rooms-only; density interpolated early→late as an expected count with a fractional probability; **signature-first**), `placement_points` + `prop_plan` (seeded scatter with a spawn keep-out + min spacing), `env_value`.
+- **`src/combat/hazard.gd`** (`Hazard`, group `hazards`, code-built, one class dispatched on `kind`) — all six behaviours; telegraphs reuse `CombatFX.ground_telegraph`/`shockwave_ring`, colours FIXED across strata (the readability guard); dual-use `damage_area` (hurts the player always, enemies when `hurts_enemies`); the watcher fires a reused `arrow.gd` on a mask-7 murder-hole.
+- **`src/combat/strata_props.gd`** (`StrataProps`) — placeholder primitive props, **NO collision** (dead-roll rule), unknown id → warn+skip; crystal/void props glow.
+- **`combat_room.gd`** applies the environment (per-instance — the `Environment` sub-resource + Ground/Wall/Obstacle materials are now `resource_local_to_scene`), scatters props on every room kind, and spawns hazards on **combat rooms only** (reprieve = breather, boss = clean arena this slice). `game.gd` passes `_floor_profile(floor)` into `setup()`.
+- **The drift hook**: `player.gd` + `enemy_dummy.gd` gained an additive `external_drift` accumulator (folded into velocity + reset each physics tick) — the ONLY movement-code touch, carries no feel value (the `push_strength` in data is the dial).
+
+**DEFERRED** (documented, not built): damage-triggered burst crystals (player attack scans only touch the `enemies` group — bursts fire on proximity only for now); `music_layer` / per-stratum music tracks; stratum-specific room layouts (identical geometry carries the profile + hazard this slice); difficulty-tier hazard scaling; **dedicated hazard SFX** (the watcher reuses the arrow loose/impact sounds; vent/beam/burst/mist have none — add rows to `data/audio/sfx-map.json` + a hook, same precedent as the Slammer/Charger); and the **five human legibility passes** (readability of each stratum's palette vs the fixed telegraph colours — a human budget line, still pending).
+
+**HUMAN:** every env colour, every hazard number (`data/hazards/*.json`), and every density (`data/floors/*.json` → `hazards.density`) is a placeholder — dial like FEEL numbers. Keep the floors-1–4 gradient subtle (the deniability rule) and run the legibility passes.
+
+---
+
 ## The idea in one paragraph
 
 The dungeon is the nanobots' learning-space — a **constructed** environment. When the egg dissolved, the swarm scanned Tycho's world; the upper floors are its *imitation* of that world. The deeper Tycho descends, the older and less-disguised the construct gets: convincing cave → worked stone that's a little too regular → crystalline seams → clean impossible geometry → the void core where the codex artifact waits. **The imitation thins with depth.** The descent is a visual argument that this place is *made* — and made by something that learned our world from the outside. It foreshadows the nanobot reveal without a word of dialogue, rewards the game's core behavior (observation), and is retro-coherent: on a post-reveal replay the whole dungeon reads as "it was in front of me the entire time."

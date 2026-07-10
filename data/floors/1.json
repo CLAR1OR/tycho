@@ -1,5 +1,25 @@
 {
 	"id": 1,
+	"name": "The Scanned Cave",
+	"environment": {
+		"background_color": "#171208",
+		"ambient_color": "#6b6558",
+		"ambient_energy": 0.6,
+		"light_color": "#ffe9c8",
+		"light_energy": 1.0,
+		"ground_color": "#2a2419",
+		"wall_color": "#332d22",
+		"obstacle_color": "#3a3226",
+		"fog_enabled": false,
+		"fog_color": "#181206",
+		"fog_density": 0.0
+	},
+	"props": ["rock-formation", "stalagmite"],
+	"hazards": {
+		"signature": "vent-plate",
+		"pool": [],
+		"density": { "early_rooms": 0.15, "late_rooms": 0.4 }
+	},
 	"door_weights": { "gold": 3, "ore": 2, "dust": 1, "echo": 3, "reprieve": 2 },
 	"peril_chance": 0.1
 }

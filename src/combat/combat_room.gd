@@ -71,12 +71,18 @@ var incoming_door: Dictionary = {}
 var _peril: bool = false      # elite wave (incoming_door.peril)
 var _reprieve: bool = false   # breather room: no wave, a Wellspring instead
 
+# The floor's stratum profile (design/dungeon-strata.md): environment palette, props,
+# and the hazard plan. Empty {} outside a live run (the sandbox) → default look, no
+# hazards. Passed by game.gd from _floor_profile(floor).
+var _profile: Dictionary = {}
+
 var _enemies: Array[EnemyDummy] = []
 # Sequential waves (design 2026-07-06): a combat room runs 2-3 waves; the room only
 # CLEARS after the last wave falls. Empty for boss/reprieve rooms (they don't wave).
 var _waves: Array = []          # list of Array[String] WaveCore type-ids
 var _wave_index: int = 0
 var _cleared: bool = false
+var _hazard_ids: Array[String] = []  # the strata hazards spawned this room (design/dungeon-strata.md)
 var _door_chosen: bool = false  # first door walked wins — no backtracking
 var _last_hp: int = Player.MAX_HEALTH
 # Hades quit-gate (design 2026-07-07): true once the player has taken a hit IN THIS ROOM.
@@ -91,12 +97,13 @@ var _hud: RunHud  # the in-run HUD (design/ui-hud.md) — chip / HP / echoes / a
 
 
 func setup(p_floor: int, p_room: int, p_rooms_this_floor: int, p_kind: String,
-		p_incoming: Dictionary = {}) -> void:
+		p_incoming: Dictionary = {}, p_profile: Dictionary = {}) -> void:
 	floor_num = p_floor
 	room_index = p_room
 	rooms_this_floor = p_rooms_this_floor
 	kind = p_kind
 	incoming_door = p_incoming.duplicate()
+	_profile = p_profile
 	# Reprieve/peril come from the CHOSEN sigil, never from RunFlow position; a boss room
 	# is always a straight fight (its incoming door is the plain boss door).
 	if kind != RunFlow.KIND_BOSS:
@@ -112,6 +119,13 @@ func _ready() -> void:
 	_portal.visible = false
 	_portal.monitoring = false
 	_portal.body_entered.connect(_on_portal_body_entered)
+	# Strata (design/dungeon-strata.md): paint the environment + scatter props on EVERY
+	# room kind; spawn hazards on combat rooms only (reprieve = breather, boss = clean
+	# arena this slice). Enemy/telegraph colours are NEVER touched — the readability guard.
+	_apply_environment()
+	_spawn_props()
+	if kind == RunFlow.KIND_COMBAT and not _reprieve:
+		_spawn_hazards()
 	# The in-run HUD (design/ui-hud.md) — one code-built Control on the HUD layer.
 	_hud = RunHud.new()
 	$HUD.add_child(_hud)
@@ -146,6 +160,96 @@ func _ready() -> void:
 	var panel := TuningPanel.new()
 	$HUD.add_child(panel)
 	panel.setup(_player, _rig, self)
+
+
+# --- Strata (design/dungeon-strata.md) -------------------------------------------
+# Environment paint + prop dressing + the hazard plan, all off the floor's stratum
+# profile (StrataCore, pure/seeded). The materials + Environment sub-resource are
+# resource_local_to_scene, so mutating them here affects only THIS room instance.
+
+func _apply_environment() -> void:
+	var env := StrataCore.environment_of(_profile)
+	var we := $WorldEnvironment as WorldEnvironment
+	if we != null and we.environment != null:
+		var e := we.environment
+		e.background_color = env["background_color"]
+		e.ambient_light_color = env["ambient_color"]
+		e.ambient_light_energy = float(env["ambient_energy"])
+		e.fog_enabled = bool(env["fog_enabled"])
+		e.fog_light_color = env["fog_color"]
+		e.fog_density = float(env["fog_density"])
+	var light := $DirectionalLight3D as DirectionalLight3D
+	if light != null:
+		light.light_color = env["light_color"]
+		light.light_energy = float(env["light_energy"])
+	# The Ground/Wall/Obstacle materials are shared local sub-resources — set each once.
+	_set_albedo($Floor/Mesh, env["ground_color"])
+	_set_albedo($WallN/Mesh, env["wall_color"])
+	_set_albedo($Obstacles/Pillar1/Mesh, env["obstacle_color"])
+
+
+func _set_albedo(mesh: MeshInstance3D, col: Color) -> void:
+	var mat := mesh.get_surface_override_material(0)
+	if mat is StandardMaterial3D:
+		(mat as StandardMaterial3D).albedo_color = col
+
+
+func _spawn_props() -> void:
+	var ids: Array = _profile.get("props", [])
+	if ids.is_empty():
+		return
+	for entry: Dictionary in StrataCore.prop_plan(ids, _strata_seed("props")):
+		var node := StrataProps.build(str(entry["id"]))
+		if node == null:
+			continue  # unknown id (warned in StrataProps) — never crash a room
+		var p: Vector3 = entry["pos"]
+		node.position = Vector3(p.x, 0.0, p.z)
+		add_child(node)
+
+
+func _spawn_hazards() -> void:
+	var plan := planned_hazards()
+	_hazard_ids = plan
+	if plan.is_empty():
+		return
+	var defs := DataLoader.load_domain("hazards")
+	var pts := StrataCore.placement_points(plan.size(), _strata_seed("place"))
+	for i in plan.size():
+		var id := plan[i]
+		if not defs.has(id):
+			push_error("CombatRoom: hazard plan named unknown hazard \"%s\"" % id)
+			continue
+		var hz := Hazard.new()
+		hz.position = pts[i]
+		hz.configure(defs[id], _strata_seed("cfg-" + id + str(i)))
+		hz.target = _player
+		add_child(hz)
+
+
+## Strata seed: the run seed salted per concern + this room's coordinates, so the plan
+## is reproducible on a checkpoint resume (regenerates by seed) and in the smoke. Mirrors
+## _wave_seed's base (falls back to a fixed seed outside a live run).
+func _strata_seed(salt: String) -> int:
+	var base := int(RunState.run.get("seed", 0)) if RunState.in_run() else 0
+	return hash([base, "strata", salt, floor_num, room_index])
+
+
+## This room's hazard plan (deterministic in the run seed + room coords). Exposed so the
+## smoke can recompute the SAME plan and assert the spawned count matches.
+func planned_hazards() -> Array[String]:
+	return StrataCore.hazard_plan(_profile, room_index, rooms_this_floor,
+		kind == RunFlow.KIND_COMBAT and not _reprieve, _strata_seed("plan"))
+
+
+## The number of hazards this room actually spawned. For the smoke's determinism assert.
+func hazard_count() -> int:
+	return _hazard_ids.size()
+
+
+## The environment background colour applied to this room (post-strata). For the smoke.
+func environment_background() -> Color:
+	var we := $WorldEnvironment as WorldEnvironment
+	return we.environment.background_color if we != null and we.environment != null else Color.BLACK
 
 
 # --- Wave ---------------------------------------------------------------------

@@ -1,0 +1,10 @@
+{
+	"id": "burst-crystal",
+	"name": "Burst Crystal",
+	"kind": "burst",
+	"telegraph_s": 0.6,
+	"cycle_s": 0.0,
+	"damage": 22,
+	"radius": 2.8,
+	"hurts_enemies": true
+}

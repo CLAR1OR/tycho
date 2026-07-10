@@ -1,0 +1,11 @@
+{
+	"id": "drift-field",
+	"name": "Drift Field",
+	"kind": "drift",
+	"telegraph_s": 0.0,
+	"cycle_s": 0.0,
+	"damage": 0,
+	"radius": 5.0,
+	"hurts_enemies": false,
+	"push_strength": 6.0
+}

@@ -1,5 +1,25 @@
 {
 	"id": 3,
+	"name": "The Resonant Stratum",
+	"environment": {
+		"background_color": "#0e1a1c",
+		"ambient_color": "#5fb8c0",
+		"ambient_energy": 0.7,
+		"light_color": "#bfeef2",
+		"light_energy": 1.0,
+		"ground_color": "#1a2a2c",
+		"wall_color": "#22383a",
+		"obstacle_color": "#20343a",
+		"fog_enabled": true,
+		"fog_color": "#123033",
+		"fog_density": 0.02
+	},
+	"props": ["crystal-seam", "crystal-cluster"],
+	"hazards": {
+		"signature": "burst-crystal",
+		"pool": ["watcher-node", "vent-plate", "denial-mist"],
+		"density": { "early_rooms": 0.25, "late_rooms": 0.6 }
+	},
 	"door_weights": { "gold": 3, "ore": 2, "dust": 1, "echo": 3, "reprieve": 2 },
 	"peril_chance": 0.2
 }

@@ -65,6 +65,12 @@ enum State { NORMAL, DASHING, ATTACKING }
 var max_health: int = MAX_HEALTH
 var health: int = MAX_HEALTH
 
+## External push accumulator (design/dungeon-strata.md drift fields). A DriftField adds
+## into this each physics tick; it is folded into velocity and reset every frame just
+## before move_and_slide, so it never persists past the field. Additive only — carries
+## no feel value of its own (the push_strength in the hazard data is the placeholder dial).
+var external_drift: Vector3 = Vector3.ZERO
+
 # --- Weapon (configured per room by WeaponCore from the save's loadout) ---
 ## "melee" = the combo/lunge kit below; "ranged" = draw → loose an arrow → recover.
 var weapon_kind: String = "melee"
@@ -139,6 +145,10 @@ func _physics_process(delta: float) -> void:
 			_handle_dashing(delta)
 		State.ATTACKING:
 			_handle_attacking(delta)
+
+	# Drift field push (design/dungeon-strata.md): folded in + reset each tick.
+	velocity += external_drift
+	external_drift = Vector3.ZERO
 
 	move_and_slide()
 

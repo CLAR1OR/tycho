@@ -103,8 +103,31 @@ const SCHEMAS: Dictionary = {
 		# hazard/props) land LATER — adding them is purely ADDITIVE (a new spec row per
 		# field + the JSON key), so this spec grows, it never reshapes.
 		"id": {"type": "int", "required": true},
+		"name": {"type": "string"},                          # stratum working name (dungeon-strata.md)
+		"environment": {"type": "dict"},                     # palette/fog/light overrides (placeholders)
+		"props": {"type": "array", "array_of": "string"},    # 2-4 dressing prop ids (StrataProps)
+		"hazards": {"type": "dict"},                          # {signature, pool[], density{early,late}}
 		"door_weights": {"type": "dict", "required": true},  # {sigil: weight} over the 5 loot sigils
 		"peril_chance": {"type": "float", "required": true},  # per-door elite-modifier probability [0,1]
+	},
+	"hazards": {  # design/dungeon-strata.md (scripted hazard defs, built 2026-07-10). Numbers are
+		# tuning placeholders (feel-tuning.md), read by src/combat/hazard.gd; NEVER a code const.
+		"id": {"type": "string", "required": true},
+		"name": {"type": "string", "required": true},
+		"kind": {"type": "string", "required": true,
+			"one_of": ["vent", "node", "burst", "beam", "drift", "mist"]},
+		"telegraph_s": {"type": "float", "required": true},   # charge-up read time
+		"cycle_s": {"type": "float", "required": true},       # period; 0 = triggered, not periodic
+		"damage": {"type": "int", "required": true},
+		"radius": {"type": "float", "required": true},
+		"hurts_enemies": {"type": "bool", "required": true},  # dual-use by default
+		"length": {"type": "float"},            # beam: kill-line length
+		"rotate_deg_s": {"type": "float"},      # beam: sweep speed
+		"range": {"type": "float"},             # node: LoS/fire range
+		"projectile_speed": {"type": "float"},  # node: projectile speed
+		"push_strength": {"type": "float"},     # drift: push velocity
+		"drift_speed": {"type": "float"},       # mist: wander speed
+		"tick_s": {"type": "float"},            # mist: damage cadence
 	},
 	"ages": {  # architecture-schemas.md §3
 		"id": {"type": "int", "required": true},

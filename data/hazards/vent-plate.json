@@ -1,0 +1,10 @@
+{
+	"id": "vent-plate",
+	"name": "Vent Plate",
+	"kind": "vent",
+	"telegraph_s": 0.9,
+	"cycle_s": 3.5,
+	"damage": 18,
+	"radius": 2.6,
+	"hurts_enemies": true
+}

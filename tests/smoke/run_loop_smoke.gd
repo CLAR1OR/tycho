@@ -24,6 +24,8 @@ var _wellspring_tested: bool = false
 var _boss_heal_tested: bool = false
 var _postboss_echo_tested: bool = false
 var _multiwave_checked: bool = false  # a real combat room ran >1 wave (2026-07-06)
+var _strata_checked: bool = false     # env applied + hazard plan matches spawned (2026-07-10)
+var _dualuse_checked: bool = false    # a hazard damaged an enemy by direct call (2026-07-10)
 var _final_boss_disk_checked: bool = false  # the statistics invariant window (2026-07-07)
 # RunHud coverage (the Slate in-run HUD, 2026-07-07) — each checked once.
 var _shelf_checked: bool = false      # echo shelf tile count == folded pick count
@@ -115,6 +117,7 @@ func _run_smoke() -> void:
 	_check(rooms_seen < MAX_ROOMS, "run finished within the watchdog (%d rooms)" % rooms_seen)
 	# Door-choice coverage (design/run-structure.md) — each path was hit during the run.
 	_check(_multiwave_checked, "a combat room ran multiple sequential waves")
+	_check(_strata_checked, "a combat room applied its stratum env + spawned its hazard plan")
 	_check(_door_offer_checked, "a door offer with 1-2 distinct sigils was shown")
 	_check(_dust_tested, "a paying door granted its cache on clear (reason door-reward)")
 	_check(_wellspring_tested, "a reprieve door's Wellspring healed 40% of missing")
@@ -544,6 +547,7 @@ func _run_smoke() -> void:
 		_check(player.call("equipped_id", "q") == "snare", "run player carries Snare (Q)")
 		_check(player.call("equipped_id", "r") == "shockwave", "run player carries Shockwave (R)")
 		await _test_abilities_in_run(player)
+		_check(_dualuse_checked, "a strata hazard damaged an enemy by direct call (dual-use)")
 
 	# --- ESC quit-gate (Hades rule, design 2026-07-07) on the run-2 combat room ---------
 	# A hit closes the gate: the room refuses a menu quit and pause_menu.forfeit() no-ops
@@ -949,6 +953,22 @@ func _clear_combat(room: Node) -> void:
 		_check(hud is Control and (hud as Control).size == vp,
 			"RunHud spans the viewport (%s == %s)" % [
 				str((hud as Control).size) if hud is Control else "?", str(vp)])
+		# Strata (design/dungeon-strata.md, 2026-07-10): the room applied its floor's
+		# environment (per-instance, so the local Env sub-resource carries the floor's
+		# background colour), and the number of spawned hazards equals the pure/seeded
+		# plan recomputed here (deterministic in the run seed + room coords).
+		if not _strata_checked:
+			_strata_checked = true
+			var fnum := int(room.get("floor_num"))
+			var prof: Dictionary = DataLoader.load_domain("floors").get(str(fnum), {})
+			var want_bg: Color = StrataCore.environment_of(prof)["background_color"]
+			_check(room.call("environment_background") == want_bg,
+				"combat room applied floor %d's environment background (%s)" % [fnum, want_bg])
+			var planned: Array = room.call("planned_hazards")
+			_check(get_tree().get_nodes_in_group("hazards").size() == planned.size(),
+				"spawned hazard count matches the seeded plan (%d)" % planned.size())
+			_check(int(room.call("hazard_count")) == planned.size(),
+				"the room's hazard_count agrees with its plan")
 	if not _dust_tested:
 		_dust_tested = true
 		var floor_now := int(RunState.run["floor"])
@@ -1139,6 +1159,35 @@ func _test_abilities_in_run(player: Player) -> void:
 	await _settle(1)
 	_check(brute.call("is_staggered"), "Shockwave force-staggered the armored Brute")
 	_check(not player.call("try_cast", "r"), "Shockwave on cooldown — a second immediate cast is refused")
+
+	# Strata hazard dual-use (design/dungeon-strata.md, 2026-07-10): a hazard damages
+	# enemies too (hurts_enemies). Drive it by DIRECT call so the smoke never waits on a
+	# multi-second cycle: drop a dummy far from the player, spawn a vent plate on it, and
+	# call damage_area — the dummy must take damage, the player (10m off) must not.
+	if not _dualuse_checked:
+		_dualuse_checked = true
+		var victim: EnemyDummy = load("res://scenes/combat/enemy_dummy.tscn").instantiate()
+		room.add_child(victim)
+		victim.target = player
+		var vpos := ppos + Vector3(10.0, 0, 0)
+		(victim as Node3D).global_position = vpos
+		await _settle(2)
+		var vhp_before := int(victim.call("current_hp"))
+		var php_before := player.health
+		var hz: Hazard = Hazard.new()
+		room.add_child(hz)
+		(hz as Node3D).global_position = vpos
+		hz.configure(DataLoader.load_domain("hazards")["vent-plate"], 0)
+		hz.target = player
+		hz.damage_area(vpos, float(DataLoader.load_domain("hazards")["vent-plate"]["radius"]))
+		await _settle(2)
+		_check(int(victim.call("current_hp")) < vhp_before or not is_instance_valid(victim),
+			"the vent plate damaged the enemy on it (dual-use)")
+		_check(player.health == php_before, "the distant player took no hazard damage")
+		if is_instance_valid(hz):
+			hz.queue_free()
+		if is_instance_valid(victim):
+			victim.queue_free()
 
 
 ## Synthesize an ESC (ui_cancel) press through the viewport — drives the panel ESC-close pass.
