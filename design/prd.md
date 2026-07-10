@@ -10,7 +10,7 @@
 - **Project:** Tycho Roguelite
 - **Version:** 1.0 (PRD draft)
 - **Date:** 2026-06-19
-- **Status:** Pre-development. Design locked; Phase 0 gates not yet run. This PRD is an **input to**, and is finalized **after**, the Phase 0 gates pass (combat-feel, content, asset-pipeline) — gate outcomes may revise counts and feel targets.
+- **Status:** In development. Design locked. Phase 0 gates: **combat-feel PASSED 2026-07-10** (human verdict, 20th-clear bar, judged with sound — the project go/no-go is green); content gate playable in its intended form (arch puzzle at Sophia's desk), verdict pending; asset-pipeline gate not yet run. This PRD is finalized after all three gates — the remaining two may still revise counts.
 - **Intended phase:** Drives Phase 1+ once Phase 0 gates are green (`../CLAUDE.md` → Build order).
 - **Source docs:** `../Tycho Roguelite.md` (bible, source of truth), `content-budget.md` (the schedule), `act1-story-beats.md` (story spine + dialogue spec), `architecture-schemas.md` (data contracts), `godot-conventions.md` (code rules), `tech-nodes/` (authored nodes).
 
@@ -281,7 +281,7 @@ Per `content-budget.md` (the schedule): authored for **10–15 h** first playthr
 - **Assets:** 2.5D pipeline = Tripo (models) → rig → Quaternius/UAL (animation retarget) → fixed-camera scene; painterly 2D (portraits/cutscenes/cards) via AI image tools in the candlelit-cosmic oil style. **Audio pipeline (2026-07-03, `audio.md`):** SFX = CC0 packs (Kenney) + jfxr, sfx-map as data, pitch jitter, feel-critical subset human-tuned; music = AI-gen (Suno/Udio) human-curated, .ogg loops, per-stratum dungeon tracks; buses Master→Music/SFX/UI, volumes in profile. **Placeholder-first everywhere; never block a system on final art — and don't judge the combat-feel gate silent.** Commit `.import` + `project.godot`; revisit Git LFS past ~1 GB.
 - **Git:** work on `main` (solo); commit per meaningful change; prefixes `feat:/fix:/content:/design:/chore:`.
 - **Milestones (suggested):**
-  1. **Phase 0 gates** (go/no-go before this PRD is finalized): combat-feel gate; content gate (done: Masonry node authored — playtest pending); asset-pipeline gate.
+  1. **Phase 0 gates** (go/no-go before this PRD is finalized): combat-feel gate (**✅ PASSED 2026-07-10** — unblocks the per-weapon feel passes + boss designs per the content-budget sequencing rule); content gate (Masonry node authored + interactive puzzle in-game — playtest verdict pending); asset-pipeline gate (not yet run).
   2. **Skeleton:** Godot project + EventBus + Ledger + save/slots + data-loader/validator.
   3. **Vertical slice:** one floor, one weapon, dash, 2–3 enemies, one boss, Echo HUD, town return, one building, one tech node end-to-end, save/load — proves the full loop.
   4. **Breadth:** scale to full counts per `content-budget.md`, gated format-first.
@@ -292,7 +292,7 @@ Per `content-budget.md` (the schedule): authored for **10–15 h** first playthr
 
 ## 13. Open Questions
 Resolve in playtest / as work proceeds — **do not** silently pick answers.
-- **Combat feel (the project go/no-go):** does a single room pass the "20th clear, still want one more" bar? Until this passes, everything downstream is provisional.
+- ~~**Combat feel (the project go/no-go):** does a single room pass the "20th clear, still want one more" bar?~~ **RESOLVED — PASSED 2026-07-10** (human verdict, with sound). Downstream work is no longer provisional; feel tuning continues open-endedly.
 - **Puzzle format delight-vs-homework:** validated on the Masonry node yet? The authored format gates the other 13 nodes.
 - **Economy numbers:** resource costs, drop rates, Knowledge/day curve, two-sink Resonance balance — all unset; tune in play.
 - **Tech-puzzle pacing between runs:** how many puzzles per run-cadence before it drags? (`content-budget.md` second-order unknown.)
