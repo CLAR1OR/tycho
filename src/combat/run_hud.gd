@@ -82,6 +82,7 @@ const SLOT_KEY_LABEL := {"rmb": "RMB", "q": "Q", "r": "R"}
 var _player: Player = null
 var _boss: EnemyDummy = null
 var _boss_max: int = 1
+var _boss_name: String = ""  # data-driven bosses label the bar with the def's name
 
 var _floor: int = 1
 var _room: int = 1
@@ -154,6 +155,13 @@ func set_boss(boss: EnemyDummy) -> void:
 	queue_redraw()
 
 
+## Data-driven bosses (data/bosses/) put the def's name on the bar; placeholder
+## bosses never call this, so they keep the generic floor label unchanged.
+func set_boss_name(boss_name: String) -> void:
+	_boss_name = boss_name
+	queue_redraw()
+
+
 ## Rebuild the echo shelf from the run's picks (called on room spawn + after each pick).
 func refresh_echoes() -> void:
 	_echoes = HudCore.fold_echoes(RunState.echoes, EchoCore.defs())
@@ -176,6 +184,11 @@ func pickup_visible() -> bool:
 
 func boss_bar_visible() -> bool:
 	return is_instance_valid(_boss) and _boss.current_hp() > 0
+
+
+## The bar's label: the boss def's name when set, else the generic floor label.
+func boss_label() -> String:
+	return _boss_name if not _boss_name.is_empty() else "FLOOR %d — BOSS" % _floor
 
 
 # --- Pickup strip --------------------------------------------------------------------
@@ -346,7 +359,7 @@ func _draw_slot(rect: Rect2, face: String, key: String, cd_left: float, ready_gl
 func _draw_boss_bar() -> void:
 	if not boss_bar_visible():
 		return
-	var label := "FLOOR %d — BOSS" % _floor
+	var label := boss_label()
 	var lh := _font_display.get_height(FS_BOSS)
 	var cx := size.x * 0.5
 	_text_in(Rect2(cx - BOSS_W * 0.5, MARGIN, BOSS_W, lh), label, COL_BOSS_LABEL,

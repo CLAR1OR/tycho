@@ -27,6 +27,8 @@ var _multiwave_checked: bool = false  # a real combat room ran >1 wave (2026-07-
 var _strata_checked: bool = false     # env applied + hazard plan matches spawned (2026-07-10)
 var _dualuse_checked: bool = false    # a hazard damaged an enemy by direct call (2026-07-10)
 var _final_boss_disk_checked: bool = false  # the statistics invariant window (2026-07-07)
+var _den_warden_tested: bool = false        # floor-1 boss = the data-driven Den-Warden (2026-07-10)
+var _placeholder_boss_checked: bool = false # floors without a def keep the placeholder boss
 # RunHud coverage (the Slate in-run HUD, 2026-07-07) — each checked once.
 var _shelf_checked: bool = false      # echo shelf tile count == folded pick count
 var _pickup_checked: bool = false     # pickup strip lights on a drop
@@ -93,6 +95,20 @@ func _run_smoke() -> void:
 				mix_has_charger = true
 	_check(mix_has_slammer and mix_has_charger, "WaveCore mixes in Slammer + Charger from floor 1")
 
+	# --- Boss #1 as data (2026-07-10, design/bosses/floor-1-boss.md): the Den-Warden def
+	# loads + validates, and the pure core agrees on the 50% boundary + the loop wrap. ---
+	var bosses := DataLoader.load_domain("bosses")
+	_check(bosses.has("den-warden"), "data/bosses/den-warden.json loads")
+	var bdef: Dictionary = bosses.get("den-warden", {})
+	_check(BossCore.validate(bdef).is_empty(), "den-warden def passes BossCore.validate")
+	_check(BossCore.phase_for(bdef, 1.0) == 0 and BossCore.phase_for(bdef, 0.51) == 0
+		and BossCore.phase_for(bdef, 0.5) == 1,
+		"BossCore.phase_for: phase 2 starts exactly at the 50% boundary")
+	var wrap := BossCore.next_move(bdef, 1, 2)
+	_check(str(wrap.get("id")) == "vent_call" and int(wrap.get("next_position", -1)) == 0,
+		"BossCore.next_move wraps phase 2's loop (%s -> %d)"
+		% [str(wrap.get("id")), int(wrap.get("next_position", -1))])
+
 	# --- Run 1: full clear over 3 floors, with a mid-run quit + resume at floor 2 ---
 	_game.call("_start_run")
 	await get_tree().process_frame
@@ -128,6 +144,8 @@ func _run_smoke() -> void:
 	_check(_wellspring_tested, "a reprieve door's Wellspring healed 40% of missing")
 	_check(_boss_heal_tested, "a boss kill healed 30% of missing")
 	_check(_postboss_echo_tested, "the guaranteed post-boss echo offer fired")
+	_check(_den_warden_tested, "floor 1's boss was the data-driven Den-Warden")
+	_check(_placeholder_boss_checked, "a later floor still ran the placeholder boss")
 	await _settle(30)
 	_check(_scene_file() == "town.tscn", "victory returns to town (got %s)" % _scene_file())
 	_check(SaveManager.state["checkpoint"] == null, "run over — checkpoint cleared")
@@ -1159,10 +1177,24 @@ func _clear_combat(room: Node) -> void:
 	await _kill_room(room)
 
 
-## A boss room. On the FIRST one, wound the player to a known HP and assert the boss
-## kill repairs 30% of the missing amount (the auto floor-boss valve).
+## A boss room. Floor 1 = the data-driven Den-Warden (design/bosses/floor-1-boss.md):
+## drive its phase machinery once, ending with it vulnerable in phase 2 so the original
+## heal-valve wound+kill rides the same fight. The first later-floor boss room asserts
+## the placeholder fallback once. On the FIRST boss room, wound the player to a known HP
+## and assert the boss kill repairs 30% of the missing amount (the auto floor-boss valve).
 func _clear_boss(room: Node) -> void:
 	var player := _find_player()
+	if not _den_warden_tested and int(room.get("floor_num")) == 1 and player != null:
+		_den_warden_tested = true
+		await _drive_den_warden(room, player)
+	elif not _placeholder_boss_checked and int(room.get("floor_num")) == 2:
+		_placeholder_boss_checked = true
+		var hud2: Node = room.get("_hud")
+		_check(str(room.get("boss_id")) == "boss-placeholder",
+			"floor-2 boss room falls back to the placeholder boss (%s)" % str(room.get("boss_id")))
+		_check(hud2 != null and str(hud2.call("boss_label")) == "FLOOR 2 — BOSS",
+			"placeholder boss keeps the generic bar label (%s)"
+			% (str(hud2.call("boss_label")) if hud2 != null else "no hud"))
 	if player != null and not _boss_heal_tested:
 		_boss_heal_tested = true
 		var hud: Node = room.get("_hud")
@@ -1178,6 +1210,58 @@ func _clear_boss(room: Node) -> void:
 		return
 	await _kill_room(room)
 	await _settle(12)
+
+
+## Floor 1's boss room: assert the data-driven spawn (the def's name on the bar, a clean
+## no-escort arena, dormant vent plates), then damage the boss across the 50% threshold
+## and prove the reconfiguration beat — invulnerable, damage cleanly ignored, resolving
+## on its own into phase 2. Ends with the boss VULNERABLE in phase 2; the caller's
+## heal-valve wound + kill follows immediately (before the first burrow can fire).
+func _drive_den_warden(room: Node, player: Player) -> void:
+	await _settle(6)
+	var enemies := get_tree().get_nodes_in_group("enemies")
+	_check(enemies.size() == 1, "the Den-Warden fights alone — no escorts (%d enemies)" % enemies.size())
+	if enemies.is_empty() or not (enemies[0] is EnemyBoss):
+		_check(false, "floor-1 boss room spawned an EnemyBoss with a def")
+		return
+	var boss: EnemyBoss = enemies[0]
+	_check(boss.has_def(), "the floor-1 boss runs on its data def")
+	_check(str(room.get("boss_id")) == "den-warden",
+		"floor-1 boss_id is den-warden (%s)" % str(room.get("boss_id")))
+	var hud: Node = room.get("_hud")
+	_check(hud != null and str(hud.call("boss_label")) == "The Den-Warden",
+		"boss bar shows the def's name (%s)"
+		% (str(hud.call("boss_label")) if hud != null else "no hud"))
+	# Arena vents: real vent-plate hazards at the def's spots, DORMANT through phase 1.
+	var vents := get_tree().get_nodes_in_group("hazards")
+	var want_vents := (DataLoader.load_domain("bosses")["den-warden"]["arena_vents"] as Array).size()
+	_check(vents.size() == want_vents, "the arena spawned the def's vent plates (%d)" % vents.size())
+	var all_dormant := not vents.is_empty()
+	for v in vents:
+		if not bool(v.get("dormant")):
+			all_dormant = false
+	_check(all_dormant, "arena vents sit dormant in phase 1")
+	# The phase drive below takes real seconds; heal to full so a stray boss hit can't
+	# end the smoke (exact HP is re-pinned by the caller before the heal-valve assert).
+	player.restore_health(player.max_health)
+	# Damage to just ABOVE 50% — the boundary is AT 50%, so this must stay phase 1.
+	var hp_above := int(ceilf(float(boss.max_hp) * 0.5)) + 1
+	boss.take_damage(boss.current_hp() - hp_above)
+	_check(boss.phase_index() == 0 and not boss.is_invulnerable(),
+		"51%% HP: still phase 1 and vulnerable (hp %d)" % boss.current_hp())
+	# Cross the threshold to ~49% -> the reconfiguration beat starts (invulnerable).
+	boss.take_damage(7)
+	_check(boss.is_invulnerable(), "the 50% crossing starts the reconfiguration beat (invulnerable)")
+	var hp_locked := boss.current_hp()
+	boss.take_damage(99)
+	_check(boss.current_hp() == hp_locked, "damage during the reconfiguration beat is cleanly ignored")
+	# The beat resolves on its own in bounded time (reconfigure_s), landing in phase 2.
+	var guard := 0
+	while boss.is_invulnerable() and guard < 40:
+		guard += 1
+		await _settle(6)
+	_check(not boss.is_invulnerable(), "the reconfiguration beat ended on its own")
+	_check(boss.phase_index() == 1, "the boss is in phase 2 after the beat (%d)" % boss.phase_index())
 
 
 ## A reprieve room (no wave). Wound the player, touch the Wellspring, assert 40% heal.

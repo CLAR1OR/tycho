@@ -219,6 +219,34 @@ The 9 active abilities (3 per slot; dash is fixed and not data). Save already ca
 
 ---
 
+## 11. Bosses (added 2026-07-10 — design source: `design/bosses/floor-1-boss.md`)
+
+**Implementation status (boss #1 built 2026-07-10):** the `data/bosses/` domain (spec in `data_loader.gd` SCHEMAS — shape only; the SEQUENCING rules live in `BossCore.validate`: ≥1 phase, thresholds strictly descending from 1.0, loops non-empty over existing move ids, kinds in `BossCore.KINDS`), pure `src/combat/boss_core.gd` (`phase_for`/`next_move`/`should_reconfigure`/`validate`/`def_for_floor` — unit-tested, `tests/core/boss_core_test.gd`), and `src/combat/enemy_boss.gd` (`EnemyBoss extends EnemyDummy` on `scenes/combat/enemy_boss.tscn`) executing the moves by composing the EXISTING telegraph vocabulary (Charger line, dummy strike, Slammer circle, `Hazard` vent plates — grammar rule 1, no new mechanic kinds). `combat_room.gd` resolves the CURRENT floor's def via `BossCore.def_for_floor`; **floors without a def keep the placeholder path unchanged** (`EnemyBoss` without `setup()` falls through to the plain `EnemyDummy` machine + escort pair, `boss_id` = `boss-placeholder`; a broken def push_errors loudly and also falls back). The def's `arena_vents` spawn as REAL `vent-plate` hazards, DORMANT (new `Hazard.set_dormant`/`fire_once` command API) — only the boss's `vent_call` fires them; boss rooms stay clean arenas otherwise. Invulnerability (reconfiguration beat + burrow) resolves on its own in bounded time and damage during it is cleanly ignored (smoke-proven). The RunHud boss bar shows the def's `name` (`set_boss_name`; placeholder floors keep the generic label). One boss authored: `den-warden` (floor 1, 2 phases at the single 50% threshold). All numbers placeholders — dial board in `design/feel-tuning.md` § Boss — Den-Warden.
+
+```jsonc
+// data/bosses/<id>.json — BUILT 2026-07-10 (design/bosses/floor-1-boss.md §4)
+{ "id": "den-warden",
+  "name": "The Den-Warden",              // boss-bar display name (PLACEHOLDER — human renames)
+  "floor": 1,                             // which floor's boss room spawns it (no def -> placeholder boss)
+  "hp": 350, "contact_damage": 20,        // contact_damage = default move damage (moves may override)
+  "reconfigure_s": 1.2,                   // the invulnerable phase-transition beat (s)
+  "phases": [                             // thresholds strictly descending; a phase is entered AT its value
+    { "threshold": 1.0, "loop": ["lunge", "swipe", "circle"] },
+    { "threshold": 0.5, "loop": ["burrow", "erupt", "vent_call"] } ],
+  "moves": {                              // {move_id: {kind, ...numbers}}; kinds = BossCore.KINDS
+    "lunge":  { "kind": "lunge", "telegraph_s": 0.8, "range": 14.0, "speed": 22.0,
+                "damage": 20, "contact_radius": 2.4, "recover_s": 0.8 },
+    "swipe":  { "kind": "swipe", "telegraph_s": 0.7, "radius": 4.5, "arc_deg": 150.0,
+                "strike_s": 0.2, "damage": 24, "recover_s": 0.6 },
+    "circle": { "kind": "circle", "duration_s": 2.0, "speed_mult": 1.2 },
+    "burrow": { "kind": "burrow", "circles": 3, "chain_s": 0.9, "circle_radius": 3.4 },
+    "erupt":  { "kind": "erupt", "radius": 3.4, "damage": 28, "recover_s": 1.0 },
+    "vent_call": { "kind": "vent_call", "stagger_s": 0.45, "recover_s": 0.8 } },
+  "arena_vents": [[-9.0, -9.0], [9.0, -9.0], [-9.0, 5.0], [9.0, 5.0], [0.0, -2.0]] }  // dormant vent spots [x, z]
+```
+
+---
+
 ## The decoupling rule (how the pillars stay separable)
 
 - Systems communicate through **EventBus + the ledger + save sections** — never direct references across pillar boundaries.

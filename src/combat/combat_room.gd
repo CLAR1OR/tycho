@@ -10,7 +10,9 @@ extends Node3D
 ## last kill emits `cleared` → game decides; if the run continues it calls
 ## present_doors() (1-2 sigil doors — design/run-structure.md) or, after a boss,
 ## open_exit() (a single plain portal) → player steps through → `exit_entered`.
-## Boss rooms spawn the placeholder boss + escorts and pay the boss bounty.
+## Boss rooms spawn the floor's data-driven boss (data/bosses/, design/bosses/
+## floor-1-boss.md) — or, on floors without an authored def, the placeholder boss +
+## escorts — and pay the boss bounty either way.
 ##
 ## The INCOMING door (the sigil the player chose to enter here) is passed to setup():
 ## `reprieve` makes this a breather room (no wave, a Wellspring instead), `peril` makes
@@ -35,6 +37,11 @@ const ENEMY_SCENES := {
 
 ## Placeholder until real per-floor bosses land (PRD §7.7 — bosses are human-gated).
 const BOSS_ID := "boss-placeholder"
+
+## The spawned boss's identity: the data/bosses/ def id on floors with an authored
+## def (floor 1 = den-warden, 2026-07-10), else the placeholder fallback. game.gd
+## reads it for room_cleared/boss_killed; set in _spawn_data_boss.
+var boss_id: String = BOSS_ID
 
 const PLAYER_SPAWN := Vector3(0, 0, 18)  # south edge; the wave scatters around centre
 
@@ -286,7 +293,19 @@ func _spawn_wave() -> void:
 		_hud.set_hint("Breather — touch the Wellspring, then choose a door")
 		return
 	if kind == RunFlow.KIND_BOSS:
-		# Boss rooms are a single staged fight — no waves in this chunk.
+		# Boss rooms are a single staged fight — no waves. A floor with an authored def
+		# in data/bosses/ gets the real data-driven boss (design/bosses/floor-1-boss.md:
+		# a clean arena, no escorts, dormant arena vents); floors without one keep the
+		# stats-pumped placeholder + escort pair unchanged.
+		var bdef := BossCore.def_for_floor(DataLoader.load_domain("bosses"), floor_num)
+		if not bdef.is_empty():
+			var errors := BossCore.validate(bdef)
+			if errors.is_empty():
+				_spawn_data_boss(bdef)
+				return
+			for e in errors:
+				push_error("CombatRoom: boss def \"%s\": %s" % [str(bdef.get("id", "?")), e])
+			# fall through to the placeholder — a broken def must never brick a run
 		var boss := _spawn_enemy(ENEMY_BOSS, Vector3(0, 1.0, -14))
 		_hud.set_boss(boss)
 		_spawn_enemy(ENEMY_SKIRMISHER, Vector3(-8, 1.0, -10))
@@ -348,6 +367,51 @@ func _spawn_enemy(scene: PackedScene, pos: Vector3) -> EnemyDummy:
 	enemy.died.connect(_on_enemy_died.bind(enemy))
 	_enemies.append(enemy)
 	return enemy
+
+
+## Spawn a floor's data-driven boss (design/bosses/floor-1-boss.md): setup(def) runs
+## BEFORE add_child (like the peril mults) so _ready reads the def's hp; the def's name
+## labels the HUD boss bar; the arena's vent plates spawn DORMANT for its vent_call.
+## Bounty / heal valve / echo pick / boss_killed all ride the same paths as before.
+func _spawn_data_boss(def: Dictionary) -> void:
+	boss_id = str(def["id"])
+	var boss: EnemyBoss = ENEMY_BOSS.instantiate()
+	boss.position = Vector3(0, 1.0, -14)
+	boss.target = _player
+	boss.setup(def)
+	add_child(boss)
+	boss.died.connect(_on_enemy_died.bind(boss))
+	_enemies.append(boss)
+	boss.set_arena_vents(_spawn_arena_vents(def.get("arena_vents", [])))
+	_hud.set_boss(boss)
+	_hud.set_boss_name(str(def["name"]))
+
+
+## The boss arena's vent plates (floor-1-boss.md rule 4): REAL vent-plate hazards at
+## the def's [x, z] spots, spawned DORMANT — they never self-cycle; only the boss's
+## vent_call move fires them (phase 2). The boss room stays a clean arena otherwise
+## (no random hazard scatter — the strata plan never runs here).
+func _spawn_arena_vents(positions: Array) -> Array[Hazard]:
+	var out: Array[Hazard] = []
+	if positions.is_empty():
+		return out
+	var defs := DataLoader.load_domain("hazards")
+	if not defs.has("vent-plate"):
+		push_error("CombatRoom: arena vents need data/hazards/vent-plate.json")
+		return out
+	for i in positions.size():
+		var p: Array = positions[i]
+		if p.size() < 2:
+			push_error("CombatRoom: arena_vents[%d] must be an [x, z] pair" % i)
+			continue
+		var hz := Hazard.new()
+		hz.position = Vector3(float(p[0]), 0.0, float(p[1]))
+		hz.configure(defs["vent-plate"], _strata_seed("boss-vent-%d" % i))
+		hz.target = _player
+		hz.set_dormant(true)
+		add_child(hz)
+		out.append(hz)
+	return out
 
 
 func _wave_spawn_pos(i: int, count: int) -> Vector3:

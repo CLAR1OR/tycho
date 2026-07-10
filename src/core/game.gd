@@ -187,7 +187,7 @@ func _swap(next_scene: Node) -> void:
 
 func _on_room_cleared(room: Node) -> void:
 	var was_boss: bool = room.kind == RunFlow.KIND_BOSS
-	var boss_id: String = room.BOSS_ID if was_boss else ""
+	var boss_id: String = room.boss_id if was_boss else ""
 	# The door that led INTO this room decides what it PAYS (design/run-structure.md).
 	# Captured before RunState.room_cleared advances / a new door is picked.
 	var incoming: Dictionary = RunState.pending_door.duplicate()

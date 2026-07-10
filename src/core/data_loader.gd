@@ -143,6 +143,21 @@ const SCHEMAS: Dictionary = {
 		"drift_speed": {"type": "float"},       # mist: wander speed
 		"tick_s": {"type": "float"},            # mist: damage cadence
 	},
+	"bosses": {  # design/bosses/floor-1-boss.md §4 — boss identity as data (built 2026-07-10).
+		# Shape-checked here; the SEQUENCING rules (thresholds strictly descending from 1.0,
+		# loop ids exist in moves, executable kinds) live in BossCore.validate — run by the
+		# boss room at spawn (push_error + placeholder fallback) and the unit sweep. Every
+		# number is a tuning placeholder (feel-tuning.md), read by enemy_boss.gd.
+		"id": {"type": "string", "required": true},
+		"name": {"type": "string", "required": true},   # boss-bar display name (PLACEHOLDER — human renames)
+		"floor": {"type": "int", "required": true},     # which floor's boss room spawns it
+		"hp": {"type": "int", "required": true},
+		"contact_damage": {"type": "int", "required": true},   # default move damage (moves may override)
+		"reconfigure_s": {"type": "float", "required": true},  # invulnerable phase-transition beat (s)
+		"phases": {"type": "array", "required": true, "array_of": "dict"},  # [{threshold, loop[]}], descending
+		"moves": {"type": "dict", "required": true},    # {move_id: {kind, ...numbers}} — kinds in BossCore.KINDS
+		"arena_vents": {"type": "array", "array_of": "array"},  # [[x, z]] dormant vent-plate spawn points
+	},
 	"ages": {  # architecture-schemas.md §3
 		"id": {"type": "int", "required": true},
 		"name": {"type": "string", "required": true},

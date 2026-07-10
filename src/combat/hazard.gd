@@ -45,6 +45,13 @@ var _tick_s: float = 1.0           # mist damage cadence
 ## after configure(). Vent/burst/beam/drift/mist damage everyone in radius regardless.
 var target: Node3D = null
 
+# Boss-arena control (design/bosses/floor-1-boss.md): a DORMANT hazard never runs its
+# own cycle — it sits inert until commanded. fire_once() runs ONE standard telegraph ->
+# eruption cycle (vent kind only for now); damage/colour/dual-use rules are the normal
+# ones. Bosses 2-5 reuse this to weaponize their floor's signature hazard.
+var dormant: bool = false
+var _cmd_timer: float = -1.0  # >= 0 while a commanded cycle is pending
+
 var _rng := RandomNumberGenerator.new()
 var _timer: float = 0.0
 var _phase: int = 0                # small per-kind state machine
@@ -88,6 +95,12 @@ func configure(def: Dictionary, rng_seed: int) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if dormant:
+		if _cmd_timer >= 0.0:
+			_cmd_timer -= delta
+			if _cmd_timer < 0.0:
+				_erupt()
+		return
 	match kind:
 		"vent": _tick_vent(delta)
 		"node": _tick_node(delta)
@@ -95,6 +108,31 @@ func _physics_process(delta: float) -> void:
 		"beam": _tick_beam(delta)
 		"drift": _tick_drift(delta)
 		"mist": _tick_mist(delta)
+
+
+# --- External command API (boss arenas) --------------------------------------------
+
+## Dormant hazards skip their own tick loop entirely (spawned inert in boss arenas;
+## the boss's vent_call is the only thing that fires them).
+func set_dormant(on: bool) -> void:
+	dormant = on
+
+
+## Command ONE standard telegraph -> eruption cycle (vent kind). The telegraph is the
+## normal fixed-colour ground circle; the eruption uses the normal dual-use damage.
+func fire_once() -> void:
+	if kind != "vent":
+		push_warning("Hazard.fire_once: only vent hazards take commands (got \"%s\")" % kind)
+		return
+	if _cmd_timer >= 0.0:
+		return  # already firing — a re-command never stacks eruptions
+	_cmd_timer = telegraph_s
+	CombatFX.ground_telegraph(get_parent(), global_position, telegraph_s, radius, COL_WARN)
+
+
+## True while a commanded cycle is pending (telegraph painted, eruption coming).
+func is_firing() -> bool:
+	return _cmd_timer >= 0.0
 
 
 # --- Vent plate: idle -> telegraph -> erupt, on a cycle ---------------------------

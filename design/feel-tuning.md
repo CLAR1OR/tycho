@@ -409,6 +409,29 @@ Floor identity is DATA, not code — dial these like FEEL numbers (no code edit)
 
 ---
 
+## Boss — Den-Warden (floor 1; data dials + 2 exports, `design/bosses/floor-1-boss.md`, built 2026-07-10)
+
+ALL placeholder numbers. Grammar rule 2 applies: boss tells stay LONGER than trash tells (trash baselines: dummy 0.45 s, Slammer/Charger ~0.5–0.6 s).
+
+**A) The def — `data/bosses/den-warden.json`** (dial like the hazard numbers; loop/phase SHAPE is design, not a dial):
+- `hp` 350, `contact_damage` 20 (the default move damage — a move's own `damage` overrides).
+- `reconfigure_s` 1.2 — the invulnerable phase-transition beat at the 50% crossing.
+- `phases[1].threshold` 0.5 — where phase 2 starts (fraction of max HP, entered AT the value).
+- **lunge** `telegraph_s` 0.8 / `range` 14 / `speed` 22 / `damage` 20 / `contact_radius` 2.4 / `recover_s` 0.8 — Charger line grammar at boss length; `recover_s` is the punish beat after each move.
+- **swipe** `telegraph_s` 0.7 / `radius` 4.5 / `arc_deg` 150 / `strike_s` 0.2 / `damage` 24 / `recover_s` 0.6 — dummy strike grammar, wider; damage only inside the frontal arc.
+- **circle** `duration_s` 2.0 / `speed_mult` 1.2 — THE phase-1 punish window (no attack; orbits at `move_speed` × mult × the shared `circle_speed_mult`).
+- **burrow** `circles` 3 / `chain_s` 0.9 / `circle_radius` 3.4 — chained Slammer circles tracking the player (each LOCKED at its start); boss untargetable/invulnerable throughout.
+- **erupt** `radius` 3.4 / `damage` 28 / `recover_s` 1.0 — surfaces under the LAST burrow circle.
+- **vent_call** `stagger_s` 0.45 / `recover_s` 0.8 — the gap between vent firings; the boss stands exposed while calling.
+- `arena_vents` — five `[x, z]` vent-plate spots; the vents' own telegraph/damage numbers are `data/hazards/vent-plate.json` (shared with the floor's trash rooms — dialing one dials both).
+
+**B) Scene `# FEEL` exports — `src/combat/enemy_boss.gd`** (✏️ Inspector on `enemy_boss.tscn`):
+- `move_beat_s` (0.7) — the between-move breather when a move has no `recover_s`.
+- `reconfigure_pulse` (1.35) — the placeholder molt visual's mesh-scale peak.
+- The tscn's inherited dummy exports still shape the walk/orbit (`move_speed` 3.6, `engage_dist` 5.0, `stop_range` 2.4); its `max_hp`/`attack_damage`/`telegraph_time` values only matter on the def-less placeholder floors (2–5).
+
+---
+
 ## Town economy (data dials, `design/town-economy.md`, built 2026-07-10)
 
 ALL placeholder economy numbers — dial like the etching/attunement data (no code edit unless noted; rerun `tools/economy_sim.tscn` after changes):
