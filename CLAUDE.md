@@ -23,15 +23,15 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 **Systems — essentially all v1 plumbing is BUILT, tested, and speaks the Slate UI language:**
 - **Run loop:** doors + peril + healing economy + 2–3-wave rooms + the dissolve ending (`design/run-structure.md`); per-floor checkpoints, forfeit/save-quit with the Hades quit-gate + statistics invariant (PRD §7.13).
 - **Strata + hazards (2026-07-10):** all five floors differ by env profile + props + a signature hazard; all six hazards live, dual-use, data-driven (`design/dungeon-strata.md` — implementation-status block up top).
-- **Combat:** 3 weapons, 5/9 etchings castable, 7 passive attunements (the Dust two-sink baseline UNDER echoes), echoes, 5 enemy types, waves (`design/etchings.md`; `design/feel-tuning.md` = the dial board; F6 sandbox, F1 live sliders, F2 cheat panel).
+- **Combat:** 3 weapons, 5/9 etchings castable, 7 passive attunements (the Dust two-sink baseline UNDER echoes), ~25 echoes (incl. healing + first etching-mod echoes, 2026-07-10), 5 enemy types, waves (`design/etchings.md`; `design/feel-tuning.md` = the dial board; F6 sandbox, F1 live sliders, F2 cheat panel).
 - **Town:** build/survey panels, day tick + Well-Fed upkeep, unlock cascade b1–b4 (`design/food-upkeep.md`, `design/ui-hud.md`).
 - **Learning:** tech research end-to-end incl. the interactive arch puzzle, shard turn-in, quiz-lock, Sophia auto-solve (`design/tech-nodes/`).
 - **Dialogue:** full selection system + force-play + `!`/`!!` indicators; human-authored opening scripts are canonical (`design/act1-story-beats.md`, `design/voice-guides.md`; curation queue in `design/dialogue/`).
 - **Story/save/audio/UI:** StoryState/TechState autoloads, codex + dissolve loop, save slots + profile, settings screen, placeholder SFX/music, every menu screen in Slate (`design/ui-hud.md`, `design/audio.md`, `design/architecture-schemas.md` carries per-section implementation status).
 
-**Content vs budget (the real gap — the engine is done, the game is ~15% authored):** tech nodes 2/14 · echoes 8/~50 · enemies 5/12 · bosses 1 placeholder/5 · buildings 4/13 · attunements 7/~7 (placeholder) · dialogue ~52/~370 pieces · achievements 0/~25 · spine ~9/~22 scenes (Phases C/D mostly unauthored). Counts: `design/content-budget.md`.
+**Content vs budget (the real gap — the engine is done, the game is ~15% authored):** tech nodes 2/14 · echoes ~25/~50 · enemies 5/12 · bosses 1 placeholder/5 · buildings 4/13 · attunements 7/~7 (placeholder) · dialogue ~52/~370 pieces · achievements 0/~25 · spine ~9/~22 scenes (Phases C/D mostly unauthored). Counts: `design/content-budget.md`.
 
-**Validation baseline:** **224 unit test cases** + **280 smoke ok-checks** (±1 known door-sigil nondeterminism) + editor pass clean. Commands + rules (throwaway slot 99, one smoke per invocation, profile.json is GLOBAL — the human's real profile): `design/godot-conventions.md` § Testing.
+**Validation baseline:** **230 unit test cases** + **286 smoke ok-checks** (±1 known door-sigil nondeterminism) + editor pass clean. Commands + rules (throwaway slot 99, one smoke per invocation, profile.json is GLOBAL — the human's real profile): `design/godot-conventions.md` § Testing.
 
 **Environment:** Godot binary `/home/clarior/Godot_v4.7-stable_linux.x86_64` (project on 4.7); F5 = the full game loop; Godot MCP wired in `~/.claude.json`.
 
@@ -39,7 +39,7 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 
 **Next actions (HUMAN):** (1) content-gate verdict — research Arithmetic then Masonry at Sophia's desk, judge *delight vs. homework*; (2) asset-pipeline gate — one rigged `.glb` per `assets/README.md`; (3) curate dialogue — `design/dialogue/drafts-review-2026-07-06.md` first (§6 has placeholder E2 lines), then `drafts-review-2026-07-04.md`; (4) ongoing dials — feel numbers, strata palettes + the 5 legibility passes, audio mix; Kenney packs + Suno-vs-Udio + the dream-motif instrument (`design/audio.md`).
 
-**Next agent chunks (agreed order):** echo pool expansion (incl. healing + etching-mod echoes) → economy sim + run telemetry → boss #1 design doc (`design/bosses/`, unblocked by the feel gate) → dialogue volume (define remaining arc beats first, add a `max_floor` counter) → remaining tech nodes (blocked on the content-gate verdict).
+**Next agent chunks (agreed order):** economy sim + run telemetry → boss #1 design doc (`design/bosses/`, unblocked by the feel gate) → dialogue volume (define remaining arc beats first, add a `max_floor` counter) → remaining tech nodes (blocked on the content-gate verdict).
 
 ## Working agreement
 - **Documentation is sacred.** Keep `Tycho Roguelite.md` (design bible) and this file accurate and current. A new agent must be able to pick up the project from these two docs alone. Update them as part of any task that changes scope, decisions, or structure.

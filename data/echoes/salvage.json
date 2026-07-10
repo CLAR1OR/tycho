@@ -1,0 +1,7 @@
+{
+	"id": "salvage",
+	"name": "Salvage",
+	"desc": "heal 6% of missing HP on ore or dust pickup",
+	"stackable": false,
+	"mods": [{"stat": "heal_on_pickup_pct", "add": 0.06}]
+}

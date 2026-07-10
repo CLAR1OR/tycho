@@ -1,0 +1,12 @@
+{
+	"id": "bloodwell",
+	"name": "Bloodwell",
+	"desc": "heal 6% of missing HP on kill, +30% healing received",
+	"stackable": false,
+	"pool_weight": 2.0,
+	"requires": ["menders-rhythm", "vital-core"],
+	"mods": [
+		{"stat": "heal_on_kill_pct", "add": 0.06},
+		{"stat": "heal_received_mult", "mult": 1.3}
+	]
+}

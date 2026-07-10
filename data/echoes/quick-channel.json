@@ -1,0 +1,7 @@
+{
+	"id": "quick-channel",
+	"name": "Quick Channel",
+	"desc": "-15% ability cooldowns",
+	"stackable": true,
+	"mods": [{"stat": "ability_cooldown_mult", "mult": 0.85}]
+}

@@ -1,0 +1,7 @@
+{
+	"id": "iron-hide",
+	"name": "Iron Hide",
+	"desc": "+40 max health (and heal 40)",
+	"stackable": false,
+	"mods": [{"stat": "max_health", "add": 40}]
+}

@@ -1,0 +1,12 @@
+{
+	"id": "arc-resonance",
+	"name": "Arc Resonance",
+	"desc": "+35% ability damage, -20% ability cooldowns",
+	"stackable": false,
+	"pool_weight": 2.0,
+	"requires": ["resonant-edge", "quick-channel"],
+	"mods": [
+		{"stat": "ability_damage_mult", "mult": 1.35},
+		{"stat": "ability_cooldown_mult", "mult": 0.8}
+	]
+}

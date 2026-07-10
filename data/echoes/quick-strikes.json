@@ -1,0 +1,7 @@
+{
+	"id": "quick-strikes",
+	"name": "Quick Strikes",
+	"desc": "-20% attack recovery",
+	"stackable": true,
+	"mods": [{"stat": "attack_recover", "mult": 0.8}]
+}

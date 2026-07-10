@@ -1,0 +1,7 @@
+{
+	"id": "resonant-edge",
+	"name": "Resonant Edge",
+	"desc": "+25% ability damage",
+	"stackable": false,
+	"mods": [{"stat": "ability_damage_mult", "mult": 1.25}]
+}

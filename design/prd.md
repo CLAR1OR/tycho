@@ -139,7 +139,7 @@ For each: **purpose · trigger · state · resolution · player decision · cont
 - **Purpose:** run-to-run variety and the synergy high; the roguelite's build-of-the-run.
 - **Trigger:** *(cadence designed 2026-07-03 — `run-structure.md`:)* **Echo doors** (≥2 offered per floor, pity-weighted) + **one guaranteed pick after every floor boss** → HUD auto-opens with **3 choices**. Target ≈ 12–17 picks per full run. (**Built 2026-07-05:** the every-combat-room offer is RETIRED — echoes now come only from echo-door rooms + the post-boss guarantee; `run-structure.md`.) Diegetically the etchings glow — nanobots trying configurations.
 - **State:** in-run only (NOT persisted past the run) — sits on top of the persistent attunement baseline.
-- **Resolution:** pick 1 of 3. **~50 echoes**: weapon mods, etching mods, dash mods, stat boosts, + **~8 synergy echoes** that require 2 prior picks.
+- **Resolution:** pick 1 of 3. **~50 echoes**: weapon mods, etching mods, dash mods, stat boosts, healing echoes, + **synergy echoes** that require 2 prior picks. (**Built 2026-07-10 — pool expanded 8→~25:** the **healing** category (Mender's Rhythm / Deep Repair / Salvage, all % of MISSING HP) and the first **etching-mod** category (ability_damage_mult / ability_cooldown_mult handles) are now LIVE, plus 3 synergies; numbers placeholder, `run-structure.md` / `etchings.md`.)
 - **Player decision:** chase a synergy vs. take safe value; commit to a build mid-run.
 - **Content hooks:** `data/echoes/`; synergy prerequisites as data.
 - **Risk:** dominant synergy chains; dead offers (3 useless picks). Needs offer-weighting + RNG protection (§10). Pure-function offer generator (testable).

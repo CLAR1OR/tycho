@@ -1230,6 +1230,56 @@ func _test_abilities_in_run(player: Player) -> void:
 		if is_instance_valid(victim):
 			victim.queue_free()
 
+	await _test_heal_and_etch_echoes(player, room)
+
+
+## Healing + etching-mod echoes (2026-07-10): apply via the REAL EchoCore path, then drive the
+## real hooks. Heal-on-kill through the actual enemy.died → room._on_enemy_died path (amplified by
+## Deep Repair's heal_received_mult); salvage through a real in-run ore pickup; the etching-mod
+## handles moved on the live player and quick-channel folded onto the attunement cooldown mult.
+func _test_heal_and_etch_echoes(player: Player, room: Node) -> void:
+	if _scene_file() != "combat_room.tscn":
+		return
+	var defs := EchoCore.defs()
+	# Etching mods: ability_damage_mult set; quick-channel folds onto the current cooldown mult.
+	EchoCore.apply_to_player(player, defs["resonant-edge"])
+	_check(absf(float(player.get("ability_damage_mult")) - 1.25) < 0.001,
+		"resonant-edge set ability_damage_mult (%.3f)" % float(player.get("ability_damage_mult")))
+	var cd_before := float(player.get("ability_cooldown_mult"))
+	EchoCore.apply_to_player(player, defs["quick-channel"])
+	_check(absf(float(player.get("ability_cooldown_mult")) - cd_before * 0.85) < 0.001,
+		"quick-channel folded ability_cooldown_mult multiplicatively (%.3f)" % float(player.get("ability_cooldown_mult")))
+	# Healing hooks.
+	EchoCore.apply_to_player(player, defs["menders-rhythm"])
+	EchoCore.apply_to_player(player, defs["deep-repair"])
+	_check(float(player.get("heal_on_kill_pct")) > 0.0, "menders-rhythm set heal_on_kill_pct")
+	_check(absf(float(player.get("heal_received_mult")) - 1.5) < 0.001, "deep-repair set heal_received_mult 1.5")
+	# Kill an enemy through the real path (died → room._on_enemy_died heals % of missing, ×deep-repair).
+	var kd: EnemyDummy = load("res://scenes/combat/enemy_dummy.tscn").instantiate()
+	room.add_child(kd)
+	kd.target = player
+	(kd as Node3D).global_position = (player as Node3D).global_position + Vector3(3.0, 0, 0)
+	kd.died.connect(Callable(room, "_on_enemy_died").bind(kd))
+	await _settle(2)
+	player.restore_health(50)
+	var hp0 := player.health
+	var kbase := DoorCore.heal_missing(hp0, player.max_health, float(player.get("heal_on_kill_pct")))
+	var kmult := float(player.get("heal_received_mult"))
+	var kwant := mini(player.max_health, hp0 + int(round(float(kbase) * kmult)))
+	kd.take_damage(99999)  # kill → real _on_enemy_died heal-on-kill path
+	await _settle(2)
+	_check(player.health == kwant,
+		"heal-on-kill fired and deep-repair amplified it (%d -> %d, want %d)" % [hp0, player.health, kwant])
+	# Salvage: an in-run ore pickup heals % of missing (room subscribes to resource_changed).
+	EchoCore.apply_to_player(player, defs["salvage"])
+	player.restore_health(50)
+	var shp := player.health
+	var sbase := DoorCore.heal_missing(shp, player.max_health, float(player.get("heal_on_pickup_pct")))
+	var swant := mini(player.max_health, shp + int(round(float(sbase) * kmult)))
+	Ledger.add("resonance-ore", 1.0, "run-drop")  # a real in-run pickup fires resource_changed
+	await _settle(2)
+	_check(player.health == swant, "salvage healed on an ore pickup (%d -> %d, want %d)" % [shp, player.health, swant])
+
 
 ## Synthesize an ESC (ui_cancel) press through the viewport — drives the panel ESC-close pass.
 func _esc() -> void:

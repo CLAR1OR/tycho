@@ -73,6 +73,18 @@ var health: int = MAX_HEALTH
 var flat_damage_reduction: int = 0
 var ability_cooldown_mult: float = 1.0
 
+## Echo-set combat hooks (in-run only, PRD §7.5). Set by EchoCore.apply_to_player over the
+## run's picked echoes (RunState.echoes, never saved) — these are plain numeric player fields,
+## so EchoCore's generic {stat,add,mult} math reaches them with no special-casing. Healing hooks
+## are % of MISSING HP (design/run-structure.md Part 2 — never flat-to-full). ability_damage_mult
+## scales cast damage; ability_cooldown_mult (above) is shared with attunements — attunements set
+## it first at spawn, echo mults FOLD on top (echoes apply after). No `# FEEL:` tag — the echo
+## DATA is the dial (data/echoes/*.json).
+var heal_on_kill_pct: float = 0.0     # Mender's Rhythm: heal % of missing on each kill
+var heal_received_mult: float = 1.0   # Deep Repair: scales EVERY heal (Wellspring/valve/echoes)
+var heal_on_pickup_pct: float = 0.0   # Salvage: heal % of missing on ore/dust pickup mid-run
+var ability_damage_mult: float = 1.0  # etching-mod: scales ability cast damage
+
 ## External push accumulator (design/dungeon-strata.md drift fields). A DriftField adds
 ## into this each physics tick; it is folded into velocity and reset every frame just
 ## before move_and_slide, so it never persists past the field. Additive only — carries
@@ -502,13 +514,19 @@ func try_cast(slot: String) -> bool:
 	return true
 
 
+## Ability cast damage from a behavior scale, folded with the etching-mod ability_damage_mult
+## echo handle — the single place cast damage derives from the player's attack_damage.
+func _ability_damage(scale: float) -> int:
+	return int(round(float(attack_damage) * scale * ability_damage_mult))
+
+
 func _cast_push(b: Dictionary) -> void:
 	var facing := _flat(-global_transform.basis.z).normalized()
 	var half := deg_to_rad(float(b.get("cone_deg", 100.0))) * 0.5
 	var reach := float(b.get("range", 5.0))
-	var dmg := int(round(float(attack_damage) * float(b.get("damage_scale", 0.6))))
+	var dmg := _ability_damage(float(b.get("damage_scale", 0.6)))
 	var knock := float(b.get("knockback", 16.0))
-	var wall_bonus := int(round(float(attack_damage) * float(b.get("wall_bonus_scale", 1.5))))
+	var wall_bonus := _ability_damage(float(b.get("wall_bonus_scale", 1.5)))
 	var wall_stag := float(b.get("wall_stagger", 0.5))
 	CombatFX.shockwave_ring(get_parent(), global_position + facing * reach * 0.5, reach * 0.6, Color(0.7, 0.9, 1.0))
 	for e in get_tree().get_nodes_in_group("enemies"):
@@ -529,7 +547,7 @@ func _cast_bolt(b: Dictionary) -> void:
 	get_parent().add_child(arrow)
 	var dir := _flat(-global_transform.basis.z).normalized()
 	arrow.global_position = global_position + Vector3.UP * 0.9 + dir * 0.8
-	var dmg := int(round(float(attack_damage) * float(b.get("damage_scale", 0.8))))
+	var dmg := _ability_damage(float(b.get("damage_scale", 0.8)))
 	arrow.setup(dir, dmg, float(b.get("projectile_speed", 26.0)), Color(0.6, 0.85, 1.0))
 
 
@@ -543,7 +561,7 @@ func _cast_snare(b: Dictionary) -> void:
 
 func _cast_shockwave(b: Dictionary) -> void:
 	var radius := float(b.get("radius", 6.0))
-	var base_dmg := float(attack_damage) * float(b.get("damage_scale", 1.4))
+	var base_dmg := float(attack_damage) * float(b.get("damage_scale", 1.4)) * ability_damage_mult
 	var edge := float(b.get("falloff", 0.4))
 	var knock := float(b.get("knockback", 22.0))
 	var stag := float(b.get("stagger_duration", 0.6))
@@ -646,7 +664,10 @@ func take_damage(amount: int, _from: Vector3 = Vector3.ZERO) -> void:
 
 
 func heal(amount: int) -> void:
-	health = mini(max_health, health + amount)
+	# Deep Repair (echo) scales every heal — Wellspring, boss valve, Recovery, and the
+	# healing echoes all route through here, so the multiplier lands uniformly. Clamps at max.
+	var amt := int(round(float(amount) * heal_received_mult))
+	health = mini(max_health, health + amt)
 	health_changed.emit(health, max_health)
 
 

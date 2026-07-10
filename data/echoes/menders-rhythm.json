@@ -1,0 +1,7 @@
+{
+	"id": "menders-rhythm",
+	"name": "Mender's Rhythm",
+	"desc": "heal 4% of missing HP on kill",
+	"stackable": false,
+	"mods": [{"stat": "heal_on_kill_pct", "add": 0.04}]
+}

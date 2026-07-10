@@ -122,6 +122,9 @@ func _ready() -> void:
 	_portal.visible = false
 	_portal.monitoring = false
 	_portal.body_entered.connect(_on_portal_body_entered)
+	# Salvage echo (design/run-structure.md): heal on ore/dust pickup mid-run. The room hears
+	# the Ledger through the bus; the connection auto-drops when the room frees (no cross-room leak).
+	EventBus.resource_changed.connect(_on_resource_changed)
 	# Strata (design/dungeon-strata.md): paint the environment + scatter props on EVERY
 	# room kind; spawn hazards on combat rooms only (reprieve = breather, boss = clean
 	# arena this slice). Enemy/telegraph colours are NEVER touched — the readability guard.
@@ -353,6 +356,10 @@ func _wave_spawn_pos(i: int, count: int) -> Vector3:
 
 
 func _on_enemy_died(enemy: EnemyDummy) -> void:
+	# Mender's Rhythm echo (design/run-structure.md): heal a % of MISSING HP on EVERY kill —
+	# before the wave/clear bookkeeping so it fires on all kills, not just the last.
+	if is_instance_valid(_player) and _player.heal_on_kill_pct > 0.0:
+		apply_missing_heal(_player.heal_on_kill_pct)
 	Ledger.add("gold", float(randi_range(gold_per_enemy_min, gold_per_enemy_max)), "run-drop")
 	# Attunement find-rate lifts the per-kill ore chance (mult 1.0 = unchanged).
 	if randf() < ore_drop_chance * _find_mult:
@@ -502,6 +509,16 @@ func apply_missing_heal(pct: float) -> int:
 	if amount > 0:
 		_player.heal(amount)
 	return amount
+
+
+## Salvage echo hook: an in-run Resonance Ore / Dust pickup heals a % of MISSING HP. Fires on
+## any increase to those two (the run-drop / boss-drop / door-reward reasons all flow through
+## the Ledger's resource_changed). No-op without the echo (heal_on_pickup_pct defaults to 0).
+func _on_resource_changed(id: String, old_amount: float, new_amount: float, _reason: String) -> void:
+	if not is_instance_valid(_player) or _player.heal_on_pickup_pct <= 0.0:
+		return
+	if new_amount > old_amount and (id == "resonance-ore" or id == "resonance-dust"):
+		apply_missing_heal(_player.heal_on_pickup_pct)
 
 
 # --- Wellspring (Reprieve room) --------------------------------------------------

@@ -1,0 +1,10 @@
+{
+	"id": "overcharge",
+	"name": "Overcharge",
+	"desc": "+60% ability damage, but +40% ability cooldowns",
+	"stackable": false,
+	"mods": [
+		{"stat": "ability_damage_mult", "mult": 1.6},
+		{"stat": "ability_cooldown_mult", "mult": 1.4}
+	]
+}

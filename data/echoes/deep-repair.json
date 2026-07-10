@@ -1,0 +1,7 @@
+{
+	"id": "deep-repair",
+	"name": "Deep Repair",
+	"desc": "+50% healing received",
+	"stackable": false,
+	"mods": [{"stat": "heal_received_mult", "mult": 1.5}]
+}

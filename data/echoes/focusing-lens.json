@@ -1,0 +1,7 @@
+{
+	"id": "focusing-lens",
+	"name": "Focusing Lens",
+	"desc": "+10% ability damage",
+	"stackable": true,
+	"mods": [{"stat": "ability_damage_mult", "mult": 1.1}]
+}

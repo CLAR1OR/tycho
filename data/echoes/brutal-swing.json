@@ -1,0 +1,10 @@
+{
+	"id": "brutal-swing",
+	"name": "Brutal Swing",
+	"desc": "+12 attack damage, but +20% attack recovery",
+	"stackable": false,
+	"mods": [
+		{"stat": "attack_damage", "add": 12},
+		{"stat": "attack_recover", "mult": 1.2}
+	]
+}

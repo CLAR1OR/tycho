@@ -94,6 +94,10 @@ static func apply_to_player(player: Player, def: Dictionary) -> void:
 		player.set(stat, new_stats[stat])
 	if player.max_health > max_hp_before:
 		player.heal(player.max_health - max_hp_before)
+	elif player.health > player.max_health:
+		# A max-LOWERING echo (glass-cannon's drawback) must not leave current HP above
+		# the new cap — clamp immediately (restore_health clamps + emits health_changed).
+		player.restore_health(player.max_health)
 
 
 ## Re-apply the whole picked list to a fresh player instance (rooms spawn a new

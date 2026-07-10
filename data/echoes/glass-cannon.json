@@ -1,0 +1,11 @@
+{
+	"id": "glass-cannon",
+	"name": "Glass Cannon",
+	"desc": "+40% attack damage, but -25 max health",
+	"stackable": false,
+	"mods": [
+		{"stat": "attack_damage", "mult": 1.4},
+		{"stat": "attack_damage_finisher", "mult": 1.4},
+		{"stat": "max_health", "add": -25}
+	]
+}

@@ -1,0 +1,10 @@
+{
+	"id": "blink-step",
+	"name": "Blink Step",
+	"desc": "-25% dash cooldown, +15% dash i-frames",
+	"stackable": false,
+	"mods": [
+		{"stat": "dash_cooldown", "mult": 0.75},
+		{"stat": "dash_iframes", "mult": 1.15}
+	]
+}

@@ -1,0 +1,10 @@
+{
+	"id": "storm-dash",
+	"name": "Storm Dash",
+	"desc": "+20% dash speed, +10% move speed",
+	"stackable": false,
+	"mods": [
+		{"stat": "dash_speed", "mult": 1.2},
+		{"stat": "move_speed", "mult": 1.1}
+	]
+}

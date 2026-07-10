@@ -1,0 +1,10 @@
+{
+	"id": "wide-arc",
+	"name": "Wide Arc",
+	"desc": "+25% swing arc",
+	"stackable": false,
+	"mods": [
+		{"stat": "swing_arc_deg", "mult": 1.25},
+		{"stat": "swing_arc_finisher", "mult": 1.25}
+	]
+}

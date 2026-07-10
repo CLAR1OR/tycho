@@ -80,6 +80,7 @@ The etchings' "first word": granted in A1, never swapped, never bought. Upgrades
 
 The Echo pool's etching-mod category can now be authored against real handles:
 - Generic stat handles: `ability_damage_mult`, `ability_cooldown_mult`, per-slot variants (`rmb_*`, `q_*`, `r_*`).
+- **BUILT 2026-07-10 (echo-pool expansion 8→~25):** the two generic handles are LIVE as plain `Player` fields, reached by EchoCore's existing `{stat,add,mult}` math (no engine change). `ability_damage_mult` (default 1.0) is folded into cast damage at the single choke point `player._ability_damage(scale)` (used by Push/Bolt/Shockwave); `ability_cooldown_mult` is the SAME field the Resonance-Flow attunement sets at spawn, so echo mults **fold multiplicatively on top** (attunements apply first, echoes after — verified). Shipped etching-mod echoes: `resonant-edge` (+25% ability damage), `quick-channel` (−15% cooldowns, stackable), `overcharge` (+60% damage / +40% cooldowns drawback), `focusing-lens` (+10% damage, stackable), + the synergy `arc-resonance` (requires resonant-edge + quick-channel). Per-slot variants (`rmb_*` etc.) + ability-specific hooks below remain deferred.
 - Ability-specific echo hooks (examples): "Push resets on kill", "Snare also weakens (enemies take +damage)", "Ward duration doubled", "Shockwave twice, half power". Synergy echoes can require a specific equipped ability (the `requires[]` mechanism already supports this shape).
 
 ## Rational-fiction integrity & dialogue hooks

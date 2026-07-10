@@ -1,0 +1,10 @@
+{
+	"id": "bulwark",
+	"name": "Bulwark",
+	"desc": "+15 max health, +25% post-hit grace",
+	"stackable": false,
+	"mods": [
+		{"stat": "max_health", "add": 15},
+		{"stat": "hit_grace", "mult": 1.25}
+	]
+}
