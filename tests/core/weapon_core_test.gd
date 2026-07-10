@@ -28,8 +28,8 @@ func test_flat_level_state() -> void:
 func test_flat_costs_and_damage_mult() -> void:
 	var defs := DataLoader.load_domain("weapons")
 	var sword: Dictionary = defs["sword"]
-	check_eq(float(WeaponCore.next_flat_cost(sword, 0).get("resonance-ore", 0)), 1.0, "L1 costs 1 ore")
-	check_eq(float(WeaponCore.next_flat_cost(sword, 4).get("resonance-ore", 0)), 8.0, "L5 costs 8 ore")
+	check_eq(float(WeaponCore.next_flat_cost(sword, 0).get("resonance-ore", 0)), 6.0, "L1 costs 6 ore")
+	check_eq(float(WeaponCore.next_flat_cost(sword, 4).get("resonance-ore", 0)), 50.0, "L5 costs 50 ore")
 	check(WeaponCore.next_flat_cost(sword, 5).is_empty(), "flat track caps at 5 levels (PRD §7.2)")
 	check_eq(WeaponCore.damage_mult(sword, 0), 1.0, "level 0 → no bonus")
 	check_eq(WeaponCore.damage_mult(sword, 5), 1.75, "level 5 → +75%")

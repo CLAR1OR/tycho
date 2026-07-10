@@ -10,5 +10,5 @@
 		{"stat": "attack_move_mult", "mult": 0.8}
 	],
 	"projectile": {"speed": 26.0},
-	"flat": {"damage_mult_per_level": 0.15, "costs": [1, 2, 3, 5, 8]}
+	"flat": {"damage_mult_per_level": 0.15, "costs": [6, 12, 20, 32, 50]}
 }

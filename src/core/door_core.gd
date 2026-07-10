@@ -36,9 +36,11 @@ const SIGIL_RESOURCE: Dictionary = {
 }
 
 # --- Economy placeholders (NOT feel numbers — run-economy tuning is an open question,
-# PRD §13; dial these like the drop rates in combat_room). A cache = base + per-floor. ---
-const CACHE_BASE: Dictionary = {"gold": 12.0, "ore": 3.0, "dust": 2.0}
-const CACHE_PER_FLOOR: Dictionary = {"gold": 6.0, "ore": 1.0, "dust": 1.0}
+# PRD §13; dial these like the drop rates in combat_room). A cache = base + per-floor.
+# Rebalanced 2026-07-10 against tools/economy_sim.gd (caches cut ~50%; dust cut least —
+# early etching unlocks must stay reachable within a few runs). ---
+const CACHE_BASE: Dictionary = {"gold": 6.0, "ore": 0.5, "dust": 1.5}
+const CACHE_PER_FLOOR: Dictionary = {"gold": 3.0, "ore": 0.25, "dust": 0.5}
 const PERIL_REWARD_MULT := 2.0  # a peril room pays double
 
 # --- Elite-modifier stub (PRD §7.7 — peril rooms are its first concrete use). Runtime

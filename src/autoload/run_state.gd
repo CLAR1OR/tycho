@@ -66,6 +66,9 @@ func to_checkpoint() -> Dictionary:
 ## as floats; RunFlow int()-casts everything it reads, we coerce the rest here).
 func resume_from(checkpoint: Dictionary) -> void:
 	run = (checkpoint.get("run", {}) as Dictionary).duplicate(true)
+	# JSON round-trip / old checkpoints: coerce the rooms-cleared counter (2026-07-10;
+	# missing on a pre-amendment checkpoint → 0, so its day tick just starts small).
+	run["rooms_cleared"] = int(run.get("rooms_cleared", 0))
 	run_number = int(checkpoint.get("run_number", 1))
 	echoes.assign(checkpoint.get("echoes", []))
 	echo_offers_made = echoes.size()  # offer RNG continues past the picks made so far
@@ -163,4 +166,5 @@ func _end_run() -> void:
 	EventBus.run_ended.emit(
 		bool(run["victory"]),
 		RunFlow.floor_reached(run),
-		{"rooms_this_floor": int(run["rooms_this_floor"]), "room": int(run["room"])})
+		{"rooms_this_floor": int(run["rooms_this_floor"]), "room": int(run["room"]),
+			"rooms_cleared": int(run.get("rooms_cleared", 0))})  # feeds the room-scaled day tick

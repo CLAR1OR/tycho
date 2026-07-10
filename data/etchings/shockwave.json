@@ -5,8 +5,8 @@
 	"principle": "pressure-wave",
 	"cooldown_s": 40.0,
 	"granted_by": null,
-	"cost_unlock_dust": 6,
-	"cost_levels_dust": [6, 9],
+	"cost_unlock_dust": 12,
+	"cost_levels_dust": [12, 18],
 	"behavior": {
 		"damage_scale": 1.4,
 		"radius": 6.0,

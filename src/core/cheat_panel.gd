@@ -17,9 +17,13 @@ const PANEL_WIDTH := 380.0
 const FONT_SIZE := 13
 
 ## A simulated victory pays what a real slice clear's boss pays (combat_room.gd).
-const SIM_BOSS_GOLD := 25.0
+const SIM_BOSS_GOLD := 15.0
 const SIM_BOSS_SHARDS := 1.0
-const SIM_BOSS_ORE := 2.0
+const SIM_BOSS_ORE := 1.0
+## A simulated run reports exactly one NOMINAL day of rooms (10 = 1.0 tick scale,
+## TownCore.PER_ROOM_TICK) so every economy assert built on simulated runs keeps its
+## flat-tick numbers byte-identical (room-scaled tick, 2026-07-10).
+const SIM_ROOMS_CLEARED := 10
 
 var _game: Node = null
 var _rows: VBoxContainer = null
@@ -90,7 +94,7 @@ func simulate_run(victory: bool) -> void:
 		EventBus.dissolved.emit()
 	else:
 		EventBus.death.emit("cheat-sim")
-	EventBus.run_ended.emit(victory, 1, {})
+	EventBus.run_ended.emit(victory, 1, {"rooms_cleared": SIM_ROOMS_CLEARED})
 	_rebuild_if_open()
 
 

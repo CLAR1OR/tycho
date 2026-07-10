@@ -309,7 +309,9 @@ func _run_smoke() -> void:
 
 	cheats.simulate_run(true)  # sim #1 — trips B3 and runs the Food day tick
 	await _settle(10)
-	# food = prior stock + farm harvest (3) - upkeep (2 base + 1/building).
+	# food = prior stock + farm harvest (3) - upkeep (2 base + 1/building). A simulated
+	# run reports exactly 10 rooms cleared = ONE nominal day (SIM_ROOMS_CLEARED), so the
+	# flat-tick numbers here stay byte-identical under the room-scaled tick (2026-07-10).
 	var expected_food := food_before + 3.0 - (2.0 + 1.0 * float(built_count))
 	_check(absf(Ledger.get_amount("food") - expected_food) < 0.001,
 		"food = stock + farm harvest - upkeep (%.1f)" % Ledger.get_amount("food"))
@@ -477,9 +479,17 @@ func _run_smoke() -> void:
 		"disk: completed node's in-progress/auto-solve counter cleared")
 
 	# --- Mara's Forge ----------------------------------------------------------------
-	Ledger.add("resonance-ore", 5.0, "smoke-grant")
+	# Economy expectations recomputed from data/exports (rebalance 2026-07-10): the
+	# refine cost off the real weapon data, the guaranteed-ore floor off the room export.
+	var sword_cost := float(WeaponCore.next_flat_cost(
+		DataLoader.load_domain("weapons")["sword"], 0).get("resonance-ore", 0))
+	var room_probe: Node = (load("res://scenes/combat/combat_room.tscn") as PackedScene).instantiate()
+	var guaranteed_ore := float(room_probe.get("boss_ore")) * float(_game.get("run_floors"))
+	room_probe.free()
+	Ledger.add("resonance-ore", sword_cost, "smoke-grant")
 	var ore_before := Ledger.get_amount("resonance-ore")
-	_check(ore_before >= 7.0, "boss dropped guaranteed ore (have %.0f incl. 5 granted)" % ore_before)
+	_check(ore_before >= sword_cost + guaranteed_ore,
+		"bosses dropped guaranteed ore (have %.0f incl. %.0f granted)" % [ore_before, sword_cost])
 	var forge: ForgePanel = _scene_node().call("open_forge_panel")
 	await _settle(3)
 	# The anvil opens with the EQUIPPED weapon selected (default = sword this early).
@@ -492,7 +502,8 @@ func _run_smoke() -> void:
 	forge.upgrade("sword")
 	_check(WeaponCore.flat_level(SaveManager.state["combat"], "sword") == 1,
 		"forge refined the sword to flat L1")
-	_check(Ledger.get_amount("resonance-ore") == ore_before - 1.0, "refine spent 1 ore")
+	_check(Ledger.get_amount("resonance-ore") == ore_before - sword_cost,
+		"refine spent the data cost (%.0f ore)" % sword_cost)
 	forge.equip("daggers")
 	_check(str(SaveManager.state["combat"]["current_weapon"]) == "daggers", "daggers equipped")
 	forge.close()
@@ -526,8 +537,11 @@ func _run_smoke() -> void:
 		"opening the dash menu unlocks nothing (it is innate, not an etching)")
 	Ledger.add("resonance-dust", 100.0, "smoke-grant")
 	var dust_before := Ledger.get_amount("resonance-dust")
-	etch.learn("snare")       # Q, unlock 4 — auto-equips to the empty Q slot
-	etch.learn("shockwave")   # R, unlock 6 — auto-equips to the empty R slot
+	# The unlock costs come off the real data (rebalanced 2026-07-10), not literals.
+	var kit_cost := float(EtchingsCore.learn_cost(EtchingsCore.defs()["snare"], 0)
+		+ EtchingsCore.learn_cost(EtchingsCore.defs()["shockwave"], 0))
+	etch.learn("snare")       # Q — auto-equips to the empty Q slot
+	etch.learn("shockwave")   # R — auto-equips to the empty R slot
 	etch.equip("q", "snare")  # idempotent (already auto-equipped) — exercises the equip API
 	etch.equip("r", "shockwave")
 	etchings = SaveManager.state["combat"]["etchings"]
@@ -537,8 +551,8 @@ func _run_smoke() -> void:
 		"Shockwave learned + equipped to R")
 	_check(etch.site_ability("q") == "snare" and etch.site_ability("r") == "shockwave",
 		"awakening auto-equipped Snare/Shockwave to their sites (no Equip button)")
-	_check(absf((dust_before - Ledger.get_amount("resonance-dust")) - 10.0) < 0.001,
-		"learning Snare(4) + Shockwave(6) spent 10 Dust via the Ledger (reason etching)")
+	_check(absf((dust_before - Ledger.get_amount("resonance-dust")) - kit_cost) < 0.001,
+		"learning Snare + Shockwave spent their data unlock costs (%.0f Dust, reason etching)" % kit_cost)
 	var edefs := EtchingsCore.defs()
 	_check(not EtchingsCore.can_learn(edefs["sentinel"], 999.0, etchings),
 		"Sentinel is dormant — not learnable even with Dust")
@@ -627,6 +641,14 @@ func _run_smoke() -> void:
 		_check(bool(gate_room.call("can_menu_quit")), "clearing the room reopens the quit-gate")
 		await _settle(90)  # let the door offer settle so no await dangles when the room frees
 
+	# Room-scaled tick (2026-07-10): the death tick's magnitude derives from the rooms
+	# actually cleared this run — compute the expectation from the live state via the
+	# REAL core math (run_tick_scale + tick), never a flat-tick literal.
+	var death_rooms := int(RunState.run.get("rooms_cleared", 0))
+	var stone_pre_death := Ledger.get_amount("stone")
+	var death_tick_want := TownCore.tick(
+		SaveManager.state["town"], DataLoader.load_domain("buildings"),
+		Ledger.get_amount("food"), TownCore.run_tick_scale(death_rooms))
 	if player != null:
 		player.take_damage(99999)
 	await _settle(30)
@@ -637,7 +659,11 @@ func _run_smoke() -> void:
 	# runs: run 1 + sim #1 (B3) + sim #2 (quiz clear) + run 2 death = runs_before + 4.
 	_check(int(c["runs"]) == runs_before + 4, "died run still ticks the day")
 	_check(Ledger.get_amount("knowledge") >= 1.0, "study produced knowledge on the day tick")
-	_check(Ledger.get_amount("stone") >= 2.0, "quarry produced stone on the day tick")
+	_check(death_rooms >= 1, "run 2 cleared at least one room before the death (%d)" % death_rooms)
+	var stone_want := stone_pre_death + float((death_tick_want["produced"] as Dictionary).get("stone", 0.0))
+	_check(absf(Ledger.get_amount("stone") - stone_want) < 0.001,
+		"the death tick's quarry stone scales with rooms cleared (%.2f at scale %.1f)" % [
+			Ledger.get_amount("stone"), TownCore.run_tick_scale(death_rooms)])
 	# Run telemetry (2026-07-10): the death outcome, appended to the SAME redirected file.
 	var t2 := _last_telemetry_line(telemetry_path)
 	_check(not t2.is_empty() and str(t2.get("outcome", "")) == "death",
@@ -902,6 +928,7 @@ func _quit_and_resume() -> void:
 		"checkpoint snapshotted at floor 2 start")
 	var echoes_before := RunState.echoes.duplicate()
 	var hp_before := RunState.player_health
+	var rooms_before_quit := int(RunState.run.get("rooms_cleared", 0))
 	# The door plan is NOT in the checkpoint — it must regenerate identically from the
 	# run seed when the resumed floor's first room loads (design/run-structure.md).
 	var plan_before := RunState.door_plan.duplicate(true)
@@ -939,6 +966,10 @@ func _quit_and_resume() -> void:
 	_check(RunState.echoes == echoes_before, "echo picks survive the quit (via checkpoint)")
 	_check(RunState.player_health == hp_before, "carried HP survives the quit (%d)" % RunState.player_health)
 	_check(RunState.door_plan == plan_before, "the floor-2 door plan regenerates identically on resume")
+	# Room-scaled tick (2026-07-10): the rooms-cleared counter rides the checkpoint
+	# (it lives on the run dict), so the eventual day tick pays the WHOLE run's rooms.
+	_check(int(RunState.run.get("rooms_cleared", -1)) == rooms_before_quit,
+		"rooms-cleared counter survives the quit (%d)" % rooms_before_quit)
 
 
 ## Play one room to completion: clear it (or drive its Wellspring), take any echo
@@ -1038,7 +1069,11 @@ func _clear_combat(room: Node) -> void:
 		RunState.pending_door = {"sigil": "dust", "peril": false}
 		var dust_before := Ledger.get_amount("resonance-dust")
 		await _kill_room(room)
-		var want: float = float(DoorCore.cache_reward("dust", floor_now, false)["amount"])
+		# Mirror game.gd._pay_cache exactly: dust/ore payouts round after the attunement
+		# find-rate mult (matters now that cache bases can be fractional, 2026-07-10).
+		var want: float = roundf(float(DoorCore.cache_reward("dust", floor_now, false)["amount"])
+			* AttunementsCore.find_rate_mult(
+				SaveManager.state["combat"].get("attunements", {}), AttunementsCore.defs()))
 		_check(absf(Ledger.get_amount("resonance-dust") - (dust_before + want)) < 0.001,
 			"dust door paid its cache on clear (+%.0f)" % want)
 		# The kills dropped gold → the RunHud pickup strip is now visible (fades after ~3s).

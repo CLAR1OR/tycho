@@ -32,13 +32,13 @@ extends Node
 
 # --- Income assumptions — READ off src/combat/combat_room.gd's @export DEFAULTS, not
 # invented (cited by line; re-check by hand if that file's defaults ever move) --------
-const GOLD_PER_KILL_MIN := 1        # combat_room.gd:51 gold_per_enemy_min
-const GOLD_PER_KILL_MAX := 3        # combat_room.gd:52 gold_per_enemy_max
+const GOLD_PER_KILL_MIN := 0        # combat_room.gd:53 gold_per_enemy_min
+const GOLD_PER_KILL_MAX := 1        # combat_room.gd:54 gold_per_enemy_max
 const GOLD_PER_KILL_MID := float(GOLD_PER_KILL_MIN + GOLD_PER_KILL_MAX) / 2.0
-const ORE_DROP_CHANCE := 0.12       # combat_room.gd:53 ore_drop_chance (per kill)
-const BOSS_GOLD := 25.0             # combat_room.gd:54 boss_gold
-const BOSS_SHARDS := 1.0            # combat_room.gd:55 boss_shards
-const BOSS_ORE := 2.0               # combat_room.gd:56 boss_ore
+const ORE_DROP_CHANCE := 0.01       # combat_room.gd:55 ore_drop_chance (per kill)
+const BOSS_GOLD := 15.0             # combat_room.gd:56 boss_gold
+const BOSS_SHARDS := 1.0            # combat_room.gd:57 boss_shards
+const BOSS_ORE := 1.0               # combat_room.gd:58 boss_ore
 const BASE_ENEMY_COUNT := 3         # combat_room.gd:42 enemy_count (room's base wave size)
 # Per-kill/door income is applied as its EXPECTED VALUE (bodies * chance), not a rolled
 # RNG outcome — the sim reports pacing means, so the deterministic expectation IS the
@@ -120,11 +120,13 @@ func _simulate_seed(seed: int, num_runs: int, building_defs: Dictionary, tech_de
 		var death_floor := run_num if run_num <= EARLY_DEATH_FLOORS else -1
 		var full_clear := death_floor == -1
 
-		_simulate_run(run_seed, death_floor, floor_defs, ledger, attunements, attunement_defs)
+		var rooms_cleared := _simulate_run(run_seed, death_floor, floor_defs, ledger, attunements, attunement_defs)
 
-		# Day tick (win OR die, per locked design) — the REAL TownCore.tick, verbatim
-		# call shape to game.gd's _on_run_ended.
-		var tick := TownCore.tick(town, building_defs, ledger.get_amount("food"))
+		# Day tick (win OR die, per locked design; magnitude room-scaled since
+		# 2026-07-10) — the REAL TownCore.tick + run_tick_scale, verbatim call shape
+		# to game.gd's _on_run_ended (the sim knows the exact rooms cleared).
+		var tick := TownCore.tick(town, building_defs, ledger.get_amount("food"),
+			TownCore.run_tick_scale(rooms_cleared))
 		var produced: Dictionary = tick["produced"]
 		for id: String in produced:
 			ledger.add(id, float(produced[id]))
@@ -144,6 +146,7 @@ func _simulate_seed(seed: int, num_runs: int, building_defs: Dictionary, tech_de
 
 		records.append({
 			"run": run_num,
+			"rooms_cleared": rooms_cleared,
 			"outcome": "full_clear" if full_clear else ("death_floor_%d" % death_floor),
 			"gold": ledger.get_amount("gold"),
 			"stone": ledger.get_amount("stone"),
@@ -156,6 +159,7 @@ func _simulate_seed(seed: int, num_runs: int, building_defs: Dictionary, tech_de
 			"buildings_maxed": _count_maxed_buildings(town, building_defs),
 			"building_levels": _building_levels(town, building_defs),
 			"techs_done": (tech["researched"] as Array).size(),
+			"etchings_paid": _count_paid_etchings(etchings, etching_defs),
 			"etchings_maxed": _count_maxed_etchings(etchings, etching_defs),
 			"attunements_maxed": _count_maxed_attunements(attunements, attunement_defs),
 			"weapons_maxed": _count_maxed_weapons(combat, weapon_defs),
@@ -167,9 +171,10 @@ func _simulate_seed(seed: int, num_runs: int, building_defs: Dictionary, tech_de
 
 ## Walk one run room-by-room via the REAL RunFlow + DoorCore + WaveCore, adding income
 ## to `ledger` as it goes. Dies (stops early, no boss loot) at `death_floor`'s boss room
-## when death_floor >= 0; otherwise runs the full 5-floor clear.
+## when death_floor >= 0; otherwise runs the full 5-floor clear. Returns the run's
+## rooms-cleared count (RunFlow's own counter — feeds the room-scaled day tick).
 func _simulate_run(run_seed: int, death_floor: int, floor_defs: Dictionary, ledger: LedgerCore,
-		attunements: Dictionary, attunement_defs: Dictionary) -> void:
+		attunements: Dictionary, attunement_defs: Dictionary) -> int:
 	var find_mult := AttunementsCore.find_rate_mult(attunements, attunement_defs)
 	var state := RunFlow.start({"floors": RUN_FLOORS, "rooms_min": ROOMS_MIN, "rooms_max": ROOMS_MAX}, run_seed)
 	var plan: Dictionary = {}
@@ -189,7 +194,7 @@ func _simulate_run(run_seed: int, death_floor: int, floor_defs: Dictionary, ledg
 		var is_boss := RunFlow.room_kind(state) == RunFlow.KIND_BOSS
 
 		if is_boss and floor_num == death_floor:
-			return  # dies here: no clear, no boss loot, no next floor
+			return int(state.get("rooms_cleared", 0))  # dies here: no clear, no boss loot, no next floor
 
 		var bodies := WaveCore.total_enemies(floor_num, room_index, BASE_ENEMY_COUNT)
 		ledger.add("gold", float(bodies) * GOLD_PER_KILL_MID)
@@ -222,7 +227,8 @@ func _simulate_run(run_seed: int, death_floor: int, floor_defs: Dictionary, ledg
 
 		state = RunFlow.advance(state)
 		if bool(state["over"]):
-			return  # full clear
+			return int(state.get("rooms_cleared", 0))  # full clear
+	return int(state.get("rooms_cleared", 0))  # guard tripped (should not happen)
 
 
 func _choose_door(offer: Array) -> Dictionary:
@@ -353,13 +359,15 @@ func _spend_weapons(combat: Dictionary, weapon_defs: Dictionary, ledger: LedgerC
 	return out
 
 
-## (5a) Dust sink, PART ONE: implemented etchings first, cheapest-next-level-first,
+## (5a) Dust sink, PART ONE: implemented etchings first — NEW UNLOCKS before any
+## deepening (breadth-first, what a human actually does), cheapest within each class —
 ## until all 5 are maxed or Dust runs out.
 func _spend_etchings(etchings: Dictionary, etching_defs: Dictionary, ledger: LedgerCore) -> Dictionary:
 	var out := etchings.duplicate(true)
 	while true:
 		var best_id := ""
 		var best_cost := -1
+		var best_is_unlock := false
 		var dust := ledger.get_amount("resonance-dust")
 		for id in EtchingsCore.IMPLEMENTED:
 			if not etching_defs.has(id):
@@ -367,10 +375,15 @@ func _spend_etchings(etchings: Dictionary, etching_defs: Dictionary, ledger: Led
 			var def: Dictionary = etching_defs[id]
 			if not EtchingsCore.can_learn(def, dust, out):
 				continue
-			var cost := EtchingsCore.learn_cost(def, EtchingsCore.level_of(out, id))
-			if best_id == "" or cost < best_cost:
+			var lvl := EtchingsCore.level_of(out, id)
+			var cost := EtchingsCore.learn_cost(def, lvl)
+			var is_unlock := lvl == 0
+			if best_id == "" \
+					or (is_unlock and not best_is_unlock) \
+					or (is_unlock == best_is_unlock and cost < best_cost):
 				best_id = id
 				best_cost = cost
+				best_is_unlock = is_unlock
 		if best_id == "":
 			break
 		ledger.try_spend("resonance-dust", float(best_cost))
@@ -421,6 +434,20 @@ func _building_levels(town: Dictionary, building_defs: Dictionary) -> Dictionary
 	for id: String in building_defs:
 		out[id] = TownCore.building_level(town, id)
 	return out
+
+
+## Implemented etchings unlocked with a real Dust payment (cost_unlock_dust > 0) —
+## i.e. NOT the free B2 Push grant. Feeds the "first paid etching" milestone.
+func _count_paid_etchings(etchings: Dictionary, etching_defs: Dictionary) -> int:
+	var n := 0
+	for id in EtchingsCore.IMPLEMENTED:
+		if not etching_defs.has(id):
+			continue
+		if int(etching_defs[id].get("cost_unlock_dust", 0)) <= 0:
+			continue
+		if EtchingsCore.level_of(etchings, id) >= 1:
+			n += 1
+	return n
 
 
 func _count_maxed_etchings(etchings: Dictionary, etching_defs: Dictionary) -> int:
@@ -492,10 +519,14 @@ func _build_report(per_seed: Array, tech_defs: Dictionary, etching_defs: Diction
 	lines.append("| boss resonance ore | %.0f | combat_room.gd:56 (boss_ore) |" % BOSS_ORE)
 	lines.append("| base room enemy count | %d | combat_room.gd:42 (enemy_count) |" % BASE_ENEMY_COUNT)
 	lines.append("| run shape | %d floors x %d-%d rooms | PRD §7.6 full target (RunFlow.start defaults) |" % [RUN_FLOORS, ROOMS_MIN, ROOMS_MAX])
+	lines.append("| day-tick scale per cleared room | %.2f | TownCore.PER_ROOM_TICK (room-scaled tick, 2026-07-10) |" % TownCore.PER_ROOM_TICK)
 	lines.append("| sample | %d runs x %d seeds | this brief |" % [NUM_RUNS, SEEDS.size()])
 	lines.append("")
 	lines.append("Per-kill and per-door income is applied as its EXPECTED VALUE (bodies x chance),")
-	lines.append("not a rolled RNG outcome — see the class header for why.")
+	lines.append("not a rolled RNG outcome — see the class header for why. The day tick is")
+	lines.append("ROOM-SCALED (2026-07-10): its magnitude = rooms_cleared x PER_ROOM_TICK, via the")
+	lines.append("real TownCore.run_tick_scale — a full 5x6-10 clear is worth ~3-4.5 nominal days")
+	lines.append("of town production, a floor-1 death well under one.")
 	lines.append("")
 	lines.append("## Policies (fixed, as shipped)")
 	lines.append("")
@@ -511,7 +542,8 @@ func _build_report(per_seed: Array, tech_defs: Dictionary, etching_defs: Diction
 	lines.append("  invest all Knowledge into the cheapest available tech node (real prereqs,")
 	lines.append("  quiz assumed solved); (2) buildings, cheapest next level first; (3) weapon")
 	lines.append("  flat refines when Ore covers it; (4) Dust — the 5 implemented etchings first")
-	lines.append("  until maxed, then the 7 attunements.")
+	lines.append("  (new unlocks before any deepening, cheapest within each class) until maxed,")
+	lines.append("  then the 7 attunements.")
 	lines.append("")
 	lines.append("## Per-run table (seed %d, the primary sample)" % SEEDS[0])
 	lines.append("")
@@ -528,6 +560,7 @@ func _build_report(per_seed: Array, tech_defs: Dictionary, etching_defs: Diction
 	lines.append("")
 	var milestone_defs := [
 		["first building built", func(r: Dictionary) -> bool: return int(r["buildings_built"]) >= 1],
+		["first PAID etching awakened (Dust unlock)", func(r: Dictionary) -> bool: return int(r["etchings_paid"]) >= 1],
 		["Masonry & the Arch researched", func(r: Dictionary) -> bool: return int(r["techs_done"]) >= 2],
 		["ability kit maxed (5 implemented etchings @ L3)", func(r: Dictionary) -> bool: return int(r["etchings_maxed"]) >= EtchingsCore.IMPLEMENTED.size()],
 		["all 7 attunements maxed", func(r: Dictionary) -> bool: return int(r["attunements_maxed"]) >= attunement_defs.size()],
@@ -593,32 +626,37 @@ func _red_flags(per_seed: Array, building_defs: Dictionary, etching_defs: Dictio
 	var out: PackedStringArray = []
 	var seed0: Array = per_seed[0]
 	var last: Dictionary = seed0[seed0.size() - 1]
-	out.append("- **Dust two-sink saturation:** etchings maxed at run %s, attunements maxed at" % _fmt_ms(_milestone_run(seed0, func(r: Dictionary) -> bool: return int(r["etchings_maxed"]) >= EtchingsCore.IMPLEMENTED.size())))
-	out.append("  run %s (seed %d). Every Dust point earned after both sinks are full has NOTHING" % [_fmt_ms(_milestone_run(seed0, func(r: Dictionary) -> bool: return int(r["attunements_maxed"]) >= attunement_defs.size())), SEEDS[0]])
-	out.append("  left to buy — final Dust balance at run %d: %.0f (pure stockpile)." % [NUM_RUNS, float(last["dust"])])
-	out.append("- **Gold explodes while Stone stays genuinely scarce — Stone, not Gold, is the")
-	out.append("  economy's real bottleneck.** Final gold balance at run %d (seed %d): %.0f, with" % [NUM_RUNS, SEEDS[0], float(last["gold"])])
-	out.append("  no sink left once every gold-only purchase is done (no shop exists yet to spend")
-	out.append("  surplus gold). Stone tells a different story: only the Quarry produces it, and")
+	var etch_max := _fmt_ms(_milestone_run(seed0, func(r: Dictionary) -> bool: return int(r["etchings_maxed"]) >= EtchingsCore.IMPLEMENTED.size()))
+	var attn_max := _fmt_ms(_milestone_run(seed0, func(r: Dictionary) -> bool: return int(r["attunements_maxed"]) >= attunement_defs.size()))
+	out.append("- **Dust two-sink timing:** etchings maxed at run %s, attunements maxed at" % etch_max)
+	out.append("  run %s (seed %d). Final Dust balance at run %d: %.0f — everything above the" % [attn_max, SEEDS[0], NUM_RUNS, float(last["dust"])])
+	out.append("  last purchase is stockpile with nothing left to buy (the dormant etchings and")
+	out.append("  future attunements are the intended later sinks).")
+	out.append("- **Gold end-state:** final gold balance at run %d (seed %d): %.0f. Once every" % [NUM_RUNS, SEEDS[0], float(last["gold"])])
+	out.append("  gold purchase is made there is no recurring gold sink — the future Market is")
+	out.append("  the intended home for surplus gold (bible, not yet in data/).")
 	var lvls: Dictionary = last["building_levels"]
 	var lvl_bits: PackedStringArray = []
+	var all_maxed := true
 	for id: String in lvls:
 		lvl_bits.append("%s L%d" % [id, int(lvls[id])])
-	out.append("  under the cheapest-first spend policy Stone keeps going to the CHEAPEST Stone")
-	out.append("  cost first (Farm/Study L2-L3 at 8-30 Stone) rather than being saved toward the")
-	out.append("  single priciest item, Town Walls L3 (100 Stone) — which is STILL unbought at")
-	out.append("  run %d (seed %d final levels: %s; final Stone: %.0f). That is a genuine finding" % [NUM_RUNS, SEEDS[0], ", ".join(lvl_bits), float(last["stone"])])
-	out.append("  about the current numbers, not a sim bug: a human optimizing by hand would")
-	out.append("  likely save toward Walls L3 instead, but nothing in the data currently rewards")
-	out.append("  that over spending Stone as soon as it's affordable.")
-	out.append("- **Does ~40 runs cover the spend sinks that exist today?** Mostly. Weapons,")
-	out.append("  etchings, attunements, and the codex all saturate well before run 40 (see the")
-	out.append("  milestones table). Buildings are the exception — see the Stone bottleneck above")
-	out.append("  — so 40 runs is NOT enough to exhaust the building sink under this policy, even")
-	out.append("  though Gold alone would cover it many times over. The sample is oversized for")
-	out.append("  every OTHER sink and undersized for the 14-node tech budget (see the")
-	out.append("  extrapolation above) — expected, since most of v1's content doesn't exist as")
-	out.append("  data yet.")
+		if int(lvls[id]) < ((building_defs[id]["levels"] as Array)).size():
+			all_maxed = false
+	out.append("- **Buildings / Stone:** seed %d final levels: %s; final Stone: %.0f." % [SEEDS[0], ", ".join(lvl_bits), float(last["stone"])])
+	if all_maxed:
+		out.append("  Every building reaches max within the sample — the room-scaled tick's larger")
+		out.append("  full-clear harvests (quarry included) cleared the old Stone bottleneck; the")
+		out.append("  Walls-L3 100-Stone save-up is now reachable under the cheapest-first policy.")
+	else:
+		out.append("  Not every building maxes within the sample — Stone (Quarry-only income,")
+		out.append("  cheapest-first spending never saves toward Walls L3's 100 Stone) remains the")
+		out.append("  building sink's real bottleneck.")
+	out.append("- **Does ~%d runs cover the spend sinks that exist today?** See the milestones" % NUM_RUNS)
+	out.append("  table — post-rebalance (2026-07-10) the weapon/Dust sinks are meant to land in")
+	out.append("  the mid-game band (weapons ~run 14-22, both Dust sinks ~run 22-32) instead of")
+	out.append("  saturating in the first quarter. The sample stays undersized for the 14-node")
+	out.append("  tech budget (see the extrapolation above) — expected, since most of v1's")
+	out.append("  content doesn't exist as data yet.")
 	return "\n".join(out)
 
 

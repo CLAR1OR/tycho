@@ -2,7 +2,8 @@ extends "res://tests/test_suite.gd"
 ## Tests BuildPanelCore (src/town/build_panel_core.gd) — the town-building screens' pure
 ## helpers: the ledger entries, the yield lines, the build action, the carry-resource set, and
 ## the deterministic survey order. Costs/levels come from the real building data
-## (farm 40 gold / 100+8 stone / 210+18 stone; yields 3/5/8 food; walls = a capability effect).
+## (farm 40 gold / 250+8 stone / 525+18 stone — L2/L3 gold rebalanced 2026-07-10;
+## yields 3/5/8 food; walls = a capability effect).
 
 
 func test_entry_rows_farm() -> void:
@@ -13,7 +14,7 @@ func test_entry_rows_farm() -> void:
 	check_eq(str(rows[0]["state"]), "built", "L1 is built at current_level 1")
 	check_eq(str(rows[1]["state"]), "next", "L2 is the next to buy")
 	check_eq(str(rows[2]["state"]), "beyond", "L3 is beyond next")
-	check_eq(int((rows[1]["cost"] as Dictionary)["gold"]), 100, "L2 costs 100 gold")
+	check_eq(int((rows[1]["cost"] as Dictionary)["gold"]), 250, "L2 costs 250 gold")
 	check_eq(int((rows[1]["cost"] as Dictionary)["stone"]), 8, "L2 costs 8 stone")
 
 

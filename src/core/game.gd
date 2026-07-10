@@ -294,9 +294,14 @@ func _on_run_ended(victory: bool, floor_reached: int, stats: Dictionary) -> void
 	# town eats, and covered → Well-Fed → +25% to all other production (already folded
 	# into `produced`). Spend Food AFTER adding production so the stock math matches
 	# the core's "harvest first" rule.
+	# Room-scaled magnitude (human decision 2026-07-10): the tick scales with the run's
+	# cleared rooms. The fallback 10 = one nominal day, protecting any emitter that
+	# doesn't set rooms_cleared (the cheat panel's simulate_run sets it explicitly).
 	Sfx.play("day-chime")
+	var tick_scale := TownCore.run_tick_scale(int(stats.get("rooms_cleared", 10)))
 	var tick := TownCore.tick(
-		SaveManager.state["town"], DataLoader.load_domain("buildings"), Ledger.get_amount("food"))
+		SaveManager.state["town"], DataLoader.load_domain("buildings"),
+		Ledger.get_amount("food"), tick_scale)
 	var produced: Dictionary = tick["produced"]
 	for id: String in produced:
 		Ledger.add(id, float(produced[id]), "town-tick")

@@ -391,7 +391,7 @@ The seven persistent passives (the Dust two-sink baseline UNDER echoes). All num
 | **resilience** | `levels[i].amount` — flat HP off each hit, floored at 1 (1 / 2 / 3) |
 | **attunement** | `levels[i].mult` — Dust/Ore find multiplier; keep tame, bounded at 3 levels (1.1 / 1.2 / 1.3) |
 
-> `costs_dust` [2,3,4]/attunement → ~63 Dust to max all 7 (near the ability kit's ≈60–70 — the shared-Dust tension is the point; move both together). The `stat`-kind mods reuse EchoCore's exact handles; changing a `stat` name is a code concern (must match a `player.gd` `@export`), the numbers are free. Page copy/layout consts live atop `src/town/attunements_page.gd`.
+> `costs_dust` [8,12,16]/attunement (rebalanced 2026-07-10 against `tools/economy_sim.gd`) → 252 Dust to max all 7 (near the full ability kit's ≈270 — the shared-Dust tension is the point; move both together, and re-run the sim after). The `stat`-kind mods reuse EchoCore's exact handles; changing a `stat` name is a code concern (must match a `player.gd` `@export`), the numbers are free. Page copy/layout consts live atop `src/town/attunements_page.gd`.
 
 ---
 

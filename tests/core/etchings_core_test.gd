@@ -29,18 +29,18 @@ func test_implemented_split() -> void:
 
 func test_learn_cost_progression() -> void:
 	var defs := DataLoader.load_domain("etchings")
-	var bolt: Dictionary = defs["bolt"]  # unlock 3, levels [3, 5]
-	check_eq(EtchingsCore.learn_cost(bolt, 0), 3, "unlock cost")
-	check_eq(EtchingsCore.learn_cost(bolt, 1), 3, "L2 cost")
-	check_eq(EtchingsCore.learn_cost(bolt, 2), 5, "L3 cost")
+	var bolt: Dictionary = defs["bolt"]  # unlock 6, levels [6, 10] (rebalanced 2026-07-10)
+	check_eq(EtchingsCore.learn_cost(bolt, 0), 6, "unlock cost")
+	check_eq(EtchingsCore.learn_cost(bolt, 1), 6, "L2 cost")
+	check_eq(EtchingsCore.learn_cost(bolt, 2), 10, "L3 cost")
 	check_eq(EtchingsCore.learn_cost(bolt, 3), -1, "maxed = -1")
 
 
 func test_can_learn_dormant_gate() -> void:
 	var defs := DataLoader.load_domain("etchings")
 	var e := _fresh()
-	check(EtchingsCore.can_learn(defs["bolt"], 3.0, e), "implemented + affordable = learnable")
-	check(not EtchingsCore.can_learn(defs["bolt"], 2.0, e), "can't afford = not learnable")
+	check(EtchingsCore.can_learn(defs["bolt"], 6.0, e), "implemented + affordable = learnable")
+	check(not EtchingsCore.can_learn(defs["bolt"], 5.0, e), "can't afford = not learnable")
 	check(not EtchingsCore.can_learn(defs["sentinel"], 999.0, e), "dormant never learnable, any dust")
 
 

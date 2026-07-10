@@ -8,7 +8,7 @@
 
 ## The mechanic (v1 — deliberately one rule)
 
-On each **day tick** (1 day = 1 run):
+On each **day tick** (1 day = 1 run; magnitude room-scaled since 2026-07-10 — production AND the upkeep below both multiply by the run's `rooms_cleared × PER_ROOM_TICK` (0.1) BEFORE the Well-Fed evaluation, so the fed/short judgment is made on the scaled numbers and a short run eats proportionally less):
 
 1. The town **consumes Food**: `upkeep = base + 1 per built building` (placeholder — scales gently with town size, no population micro).
 2. If the stock covers upkeep → the town is **Well-Fed** for that tick: **+25%** (placeholder) to *all other* day-tick production — Timber, Stone, Gold, and **Knowledge**.

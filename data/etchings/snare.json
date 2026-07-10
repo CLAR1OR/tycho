@@ -5,8 +5,8 @@
 	"principle": "viscosity",
 	"cooldown_s": 12.0,
 	"granted_by": null,
-	"cost_unlock_dust": 4,
-	"cost_levels_dust": [4, 6],
+	"cost_unlock_dust": 8,
+	"cost_levels_dust": [8, 12],
 	"behavior": {
 		"radius": 3.0,
 		"slow_factor": 0.3,

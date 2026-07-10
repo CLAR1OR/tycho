@@ -2,7 +2,7 @@
 	"id": "focus",
 	"name": "Focus",
 	"desc": "The strike lands with intent. Raises weapon damage.",
-	"costs_dust": [2, 3, 4],
+	"costs_dust": [8, 12, 16],
 	"levels": [
 		{"kind": "stat", "mods": [{"stat": "attack_damage", "mult": 1.08}, {"stat": "attack_damage_finisher", "mult": 1.08}]},
 		{"kind": "stat", "mods": [{"stat": "attack_damage", "mult": 1.16}, {"stat": "attack_damage_finisher", "mult": 1.16}]},

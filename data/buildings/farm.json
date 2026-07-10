@@ -6,7 +6,7 @@
 	"unlocked_by": null,
 	"levels": [
 		{"cost": {"gold": 40}, "effects": [{"kind": "produce", "resource": "food", "per_day": 3}], "visual": "farm_l1"},
-		{"cost": {"gold": 100, "stone": 8}, "effects": [{"kind": "produce", "resource": "food", "per_day": 5}], "visual": "farm_l2"},
-		{"cost": {"gold": 210, "stone": 18}, "effects": [{"kind": "produce", "resource": "food", "per_day": 8}], "visual": "farm_l3"}
+		{"cost": {"gold": 250, "stone": 8}, "effects": [{"kind": "produce", "resource": "food", "per_day": 5}], "visual": "farm_l2"},
+		{"cost": {"gold": 525, "stone": 18}, "effects": [{"kind": "produce", "resource": "food", "per_day": 8}], "visual": "farm_l3"}
 	]
 }

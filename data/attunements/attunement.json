@@ -2,7 +2,7 @@
 	"id": "attunement",
 	"name": "Attunement",
 	"desc": "The senses reach for the resonance. Raises Resonance Dust and Ore find rate.",
-	"costs_dust": [2, 3, 4],
+	"costs_dust": [8, 12, 16],
 	"levels": [
 		{"kind": "find_rate", "mult": 1.1},
 		{"kind": "find_rate", "mult": 1.2},

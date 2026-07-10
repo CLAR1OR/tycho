@@ -2,7 +2,7 @@
 	"id": "resilience",
 	"name": "Resilience",
 	"desc": "The body hardens against impact. Subtracts a flat amount from each hit taken.",
-	"costs_dust": [2, 3, 4],
+	"costs_dust": [8, 12, 16],
 	"levels": [
 		{"kind": "damage_reduction", "amount": 1},
 		{"kind": "damage_reduction", "amount": 2},

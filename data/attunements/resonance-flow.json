@@ -2,7 +2,7 @@
 	"id": "resonance-flow",
 	"name": "Resonance Flow",
 	"desc": "The marks recharge faster. Shortens every ability cooldown.",
-	"costs_dust": [2, 3, 4],
+	"costs_dust": [8, 12, 16],
 	"levels": [
 		{"kind": "ability_cooldown", "mult": 0.9},
 		{"kind": "ability_cooldown", "mult": 0.82},

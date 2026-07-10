@@ -120,3 +120,54 @@ func test_short_town_gets_no_penalty() -> void:
 	check_eq(float((r["produced"] as Dictionary).get("knowledge", 0)), 2.0,
 		"short on food = no bonus, but never a penalty (knowledge stays 2)")
 	check_eq(float(r["food_consumed"]), 0.0, "no food to eat → consumes 0, no negative")
+
+
+# --- Room-scaled tick (human decision 2026-07-10) -------------------------------------
+
+func test_run_tick_scale_math() -> void:
+	check_eq(TownCore.run_tick_scale(0), 0.0, "0 rooms cleared → zero tick")
+	check_eq(TownCore.run_tick_scale(10), 1.0, "10 rooms = one nominal day (PER_ROOM_TICK 0.1)")
+	check_eq(TownCore.run_tick_scale(25), 2.5, "25 rooms = 2.5 nominal days")
+	check_eq(TownCore.run_tick_scale(-3), 0.0, "negative input clamps to zero")
+
+
+func test_tick_scale_multiplies_production_and_upkeep() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Quarry L1 (2 stone) + study L2 (2 knowledge), fat granary, scale 2.0:
+	# raw production x2, upkeep (2 base + 2 buildings) x2 = 8, fed → +25% on non-food.
+	var town := TownCore.set_building(_empty_town(), "quarry", 1)
+	town = TownCore.set_building(town, "sophias-study", 2)
+	var r := TownCore.tick(town, defs, 100.0, 2.0)
+	check_eq(float(r["food_consumed"]), 8.0, "upkeep scales: (2+2) x 2.0 = 8")
+	check(bool(r["well_fed"]), "granary covers the scaled upkeep")
+	check_eq(float((r["produced"] as Dictionary).get("stone", 0)), 5.0,
+		"stone 2 x scale 2.0 x well-fed 1.25 = 5")
+	check_eq(float((r["produced"] as Dictionary).get("knowledge", 0)), 5.0,
+		"knowledge 2 x scale 2.0 x well-fed 1.25 = 5")
+	# Fractional scale (a partial run) produces fractional amounts — Ledger holds floats.
+	var frac := TownCore.tick(town, defs, 0.0, 0.5)
+	check_eq(float((frac["produced"] as Dictionary).get("stone", 0)), 1.0,
+		"stone 2 x scale 0.5 = 1 (no bonus, starving)")
+	check_eq(float(frac["food_consumed"]), 0.0, "no food → still consumes nothing under scale")
+
+
+func test_well_fed_boundary_under_scale() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Empty town at scale 0.5: upkeep 2 x 0.5 = 1. Exactly 1 food = well-fed (judged
+	# on the SCALED numbers); one hair under is not.
+	var at := TownCore.tick(_empty_town(), defs, 1.0, 0.5)
+	check(bool(at["well_fed"]), "exactly the scaled upkeep (1.0) is well-fed")
+	check_eq(float(at["food_consumed"]), 1.0, "eats the scaled upkeep at the boundary")
+	var under := TownCore.tick(_empty_town(), defs, 0.99, 0.5)
+	check(not bool(under["well_fed"]), "just short of the scaled upkeep is not well-fed")
+
+
+func test_tick_default_scale_is_one_nominal_day() -> void:
+	var defs := DataLoader.load_domain("buildings")
+	# Backward compat: omitting scale == passing 1.0 — every per-day caller
+	# (HUD projections) keeps meaning one nominal day.
+	var town := TownCore.set_building(_empty_town(), "farm", 1)
+	town = TownCore.set_building(town, "quarry", 1)
+	var implicit := TownCore.tick(town, defs, 20.0)
+	var explicit := TownCore.tick(town, defs, 20.0, 1.0)
+	check_eq(implicit, explicit, "tick(...) == tick(..., 1.0) — default scale is nominal")

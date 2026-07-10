@@ -48,12 +48,14 @@ const PLAYER_SPAWN := Vector3(0, 0, 18)  # south edge; the wave scatters around 
 @export var spawn_jitter: float = 3.0    # FEEL: random wobble on each spawn point (m)
 
 # Drop economy — placeholder numbers (economy tuning is an OPEN question, PRD §13).
-@export var gold_per_enemy_min: int = 1
-@export var gold_per_enemy_max: int = 3
-@export var ore_drop_chance: float = 0.12  # Resonance Ore per kill (weapons sink, PRD §7.10)
-@export var boss_gold: int = 25
+# Rebalanced 2026-07-10 against tools/economy_sim.gd (sink-saturation pass) — that
+# tool's income constants MIRROR these by hand; keep them in sync when dialing.
+@export var gold_per_enemy_min: int = 0
+@export var gold_per_enemy_max: int = 1
+@export var ore_drop_chance: float = 0.01  # Resonance Ore per kill (weapons sink, PRD §7.10)
+@export var boss_gold: int = 15
 @export var boss_shards: int = 1         # Knowledge Shards per stage boss (PRD §7.10)
-@export var boss_ore: int = 2            # guaranteed Resonance Ore per boss
+@export var boss_ore: int = 1            # guaranteed Resonance Ore per boss
 
 signal cleared        # the wave is down; the orchestrator decides what happens next
 signal exit_entered   # the player stepped into the open exit portal

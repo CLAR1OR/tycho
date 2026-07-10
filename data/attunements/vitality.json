@@ -2,7 +2,7 @@
 	"id": "vitality",
 	"name": "Vitality",
 	"desc": "The connection reinforces the flesh. Raises Tycho's maximum health.",
-	"costs_dust": [2, 3, 4],
+	"costs_dust": [8, 12, 16],
 	"levels": [
 		{"kind": "stat", "mods": [{"stat": "max_health", "add": 20}]},
 		{"kind": "stat", "mods": [{"stat": "max_health", "add": 40}]},

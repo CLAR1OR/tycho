@@ -62,10 +62,30 @@ const UPKEEP_BASE: float = 2.0            # a town eats this much even with no b
 const UPKEEP_PER_BUILDING: float = 1.0    # + this per built building
 const WELL_FED_BONUS: float = 0.25        # +25% to all OTHER production when fed
 
+# Room-scaled tick (HUMAN DECISION 2026-07-10 — amends the locked "1 day = 1 run"
+# time model's MAGNITUDE, not its trigger): the tick still fires ONCE at run end
+# (win or die; forfeit still ticks nothing) and the day COUNTER still advances 1 per
+# run (fiction + dialogue gates untouched), but the tick's magnitude scales with
+# rooms cleared. Rationale: a flat tick paid a room-1 suicide the same passive
+# production as a 40-room clear — incentivizing suicide runs. PLACEHOLDER economy
+# number: a "nominal day" = 10 cleared rooms.
+const PER_ROOM_TICK: float = 0.1
 
-## The day tick (fires once per run end, 1 day = 1 run — locked decision): read the
-## town's buildings against their definitions, apply the Food upkeep pass, and return
+
+## The day-tick magnitude for a finished run: rooms_cleared * PER_ROOM_TICK
+## (0 rooms cleared → a zero tick; 10 rooms → exactly one nominal day).
+static func run_tick_scale(rooms_cleared: int) -> float:
+	return float(maxi(0, rooms_cleared)) * PER_ROOM_TICK
+
+
+## The day tick (fires once per run end, 1 day = 1 run — locked decision; magnitude
+## room-scaled since 2026-07-10, see PER_ROOM_TICK above): read the town's buildings
+## against their definitions, apply the Food upkeep pass, and return
 ## `{"produced": {resource_id: amount}, "food_consumed": float, "well_fed": bool}`.
+## `scale` multiplies ALL production AND the upkeep BEFORE the Well-Fed evaluation
+## (well_fed is judged on the scaled numbers; the Ledger holds floats, fractional
+## amounts are fine). The default 1.0 = one nominal day, so every per-day caller
+## (HUD projections, existing tests) keeps its meaning unchanged.
 ## The caller writes `produced` to the Ledger (reason "town-tick") and spends
 ## `food_consumed` from Food (reason "upkeep") AFTER adding production — matching the
 ## "harvest comes in before the town eats" rule below.
@@ -79,7 +99,8 @@ const WELL_FED_BONUS: float = 0.25        # +25% to all OTHER production when fe
 ## Well-Fed is a BONUS, never a penalty: short on food = just no bonus, no starvation
 ## state (mirrors the no-death-penalty philosophy). The town eats what it has even
 ## when short (consume = min(upkeep, available)); the balance can never go negative.
-static func tick(town: Dictionary, building_defs: Dictionary, food_stock: float) -> Dictionary:
+static func tick(town: Dictionary, building_defs: Dictionary, food_stock: float,
+		scale: float = 1.0) -> Dictionary:
 	# --- Raw production (incl. the Farm's Food) ---------------------------------
 	var produced := {}
 	var built := 0
@@ -103,8 +124,12 @@ static func tick(town: Dictionary, building_defs: Dictionary, food_stock: float)
 					produced["knowledge"] = float(produced.get("knowledge", 0.0)) + float(effect.get("per_day", 0.0))
 				_:
 					pass  # multiplier/capability: consumed by later systems, not the tick
+	# --- Room-scale (2026-07-10): production AND upkeep both scale, BEFORE the
+	# Well-Fed evaluation — the status is judged on the scaled numbers. ----------
+	for res: String in produced:
+		produced[res] = float(produced[res]) * scale
 	# --- Upkeep pass: the harvest is in, now the town eats ----------------------
-	var upkeep := UPKEEP_BASE + UPKEEP_PER_BUILDING * float(built)
+	var upkeep := (UPKEEP_BASE + UPKEEP_PER_BUILDING * float(built)) * scale
 	var available := food_stock + float(produced.get("food", 0.0))
 	var well_fed := available >= upkeep
 	var food_consumed := minf(upkeep, available)  # eat what's there; never negative

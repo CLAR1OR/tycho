@@ -6,7 +6,7 @@
 	"cooldown_s": 5.0,
 	"granted_by": "b2",
 	"cost_unlock_dust": 0,
-	"cost_levels_dust": [3, 5],
+	"cost_levels_dust": [6, 10],
 	"behavior": {
 		"damage_scale": 0.6,
 		"cone_deg": 100.0,

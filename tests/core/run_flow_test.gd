@@ -61,3 +61,18 @@ func test_pure_no_mutation() -> void:
 	RunFlow.fail(s)
 	check_eq(s["room"], before["room"], "advance/fail return new dicts, input untouched")
 	check_eq(s["over"], before["over"], "input over-flag untouched")
+
+
+func test_rooms_cleared_counter() -> void:
+	# Feeds the room-scaled day tick (2026-07-10): every advance (incl. bosses) counts.
+	var s := RunFlow.start(CFG, 42)
+	check_eq(int(s["rooms_cleared"]), 0, "starts at 0 rooms cleared")
+	s = RunFlow.advance(RunFlow.advance(s))
+	check_eq(int(s["rooms_cleared"]), 2, "two clears counted")
+	var failed := RunFlow.fail(s)
+	check_eq(int(failed["rooms_cleared"]), 2, "death does not add a clear")
+	# Old checkpoints (pre-amendment run dicts) lack the key — advance defaults it to 0.
+	var old := s.duplicate(true)
+	old.erase("rooms_cleared")
+	var resumed := RunFlow.advance(old)
+	check_eq(int(resumed["rooms_cleared"]), 1, "a run dict without the counter starts from 0")

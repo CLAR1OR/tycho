@@ -29,7 +29,7 @@ func test_menu_action_awaken() -> void:
 	var etch := _etch({"rmb": "", "q": "", "r": ""}, {})  # snare dormant
 	var a := EtchingsArmsCore.menu_action(defs["snare"], etch)
 	check_eq(str(a["kind"]), "awaken", "dormant → awaken")
-	check_eq(int(a["cost"]), 4, "awaken cost = snare unlock cost (4)")
+	check_eq(int(a["cost"]), 8, "awaken cost = snare unlock cost (8)")
 	check_eq(int(a["to_level"]), 1, "awaken reaches L1")
 
 
@@ -38,11 +38,11 @@ func test_menu_action_deepen_progression() -> void:
 	var etch1 := _etch({"rmb": "shockwave", "q": "", "r": ""}, {"shockwave": 1})
 	var a1 := EtchingsArmsCore.menu_action(defs["shockwave"], etch1)
 	check_eq(str(a1["kind"]), "deepen", "L1 → deepen")
-	check_eq(int(a1["cost"]), 6, "deepen L1→L2 cost (6)")
+	check_eq(int(a1["cost"]), 12, "deepen L1→L2 cost (12)")
 	check_eq(int(a1["to_level"]), 2, "deepen reaches L2")
 	var etch2 := _etch({"rmb": "shockwave", "q": "", "r": ""}, {"shockwave": 2})
 	var a2 := EtchingsArmsCore.menu_action(defs["shockwave"], etch2)
-	check_eq(int(a2["cost"]), 9, "deepen L2→L3 cost (9)")
+	check_eq(int(a2["cost"]), 18, "deepen L2→L3 cost (18)")
 
 
 func test_menu_action_mastered_at_max() -> void:

@@ -14,10 +14,10 @@ func test_domain_loads() -> void:
 
 func test_cost_progression_and_cap() -> void:
 	var defs := DataLoader.load_domain("attunements")
-	var vit: Dictionary = defs["vitality"]  # costs_dust [2, 3, 4]
-	check_eq(AttunementsCore.next_cost(vit, 0), 2, "unlock (0->1) cost")
-	check_eq(AttunementsCore.next_cost(vit, 1), 3, "1->2 cost")
-	check_eq(AttunementsCore.next_cost(vit, 2), 4, "2->3 cost")
+	var vit: Dictionary = defs["vitality"]  # costs_dust [8, 12, 16] (rebalanced 2026-07-10)
+	check_eq(AttunementsCore.next_cost(vit, 0), 8, "unlock (0->1) cost")
+	check_eq(AttunementsCore.next_cost(vit, 1), 12, "1->2 cost")
+	check_eq(AttunementsCore.next_cost(vit, 2), 16, "2->3 cost")
 	check_eq(AttunementsCore.next_cost(vit, 3), -1, "maxed = -1")
 
 
@@ -38,9 +38,9 @@ func test_deepen_caps_and_is_pure() -> void:
 
 func test_can_deepen_affordability() -> void:
 	var defs := DataLoader.load_domain("attunements")
-	var vit: Dictionary = defs["vitality"]  # L1 cost 2
-	check(not AttunementsCore.can_deepen(vit, 1.0, {}), "cannot afford L1 with 1 Dust")
-	check(AttunementsCore.can_deepen(vit, 2.0, {}), "can afford L1 with 2 Dust")
+	var vit: Dictionary = defs["vitality"]  # L1 cost 8
+	check(not AttunementsCore.can_deepen(vit, 7.0, {}), "cannot afford L1 with 7 Dust")
+	check(AttunementsCore.can_deepen(vit, 8.0, {}), "can afford L1 with 8 Dust")
 	check(not AttunementsCore.can_deepen(vit, 999.0, {"vitality": 3}), "maxed cannot deepen")
 
 

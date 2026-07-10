@@ -28,6 +28,7 @@ static func start(config: Dictionary, rng_seed: int) -> Dictionary:
 		"floor": 1,
 		"room": 1,  # 1-based index within the floor
 		"rooms_this_floor": _rooms_for_floor(rng_seed, 1, rooms_min, rooms_max),
+		"rooms_cleared": 0,  # total rooms cleared this run (feeds the room-scaled day tick, 2026-07-10)
 		"over": false,
 		"victory": false,
 	}
@@ -45,6 +46,9 @@ static func advance(state: Dictionary) -> Dictionary:
 	if bool(out["over"]):
 		push_error("RunFlow.advance() on a finished run")
 		return out
+	# Every advance = one cleared room (incl. bosses). The .get default keeps old
+	# checkpoints (no counter yet) safe. Feeds TownCore.run_tick_scale at run end.
+	out["rooms_cleared"] = int(out.get("rooms_cleared", 0)) + 1
 	if int(out["room"]) < int(out["rooms_this_floor"]):
 		out["room"] = int(out["room"]) + 1
 	elif int(out["floor"]) < int(out["floors"]):

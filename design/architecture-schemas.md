@@ -27,7 +27,7 @@ One file per slot + one shared profile file. Settings/accessibility are profile-
   "town":    { /* Town object, §6 */ },
   "combat":  { "weapons": {"sword": {"flat": 2, "resonance": ["echo-bite"]}}, "etchings": {"slots": {"rmb": "id", "q": "id", "r": "id"}, "unlocked": {"id": 2}}, "attunements": {"vitality": 2, "quickening": 1}, "assist_mode": {"enabled": false, "stacks": 0} },  // attunements {id: level 1..3} IN USE 2026-07-10 (Passive Attunements, see §10 / design/etchings.md)
   "codex":   { "shards": 1 },   // clamped at StoryCore.CODEX_SHARDS_MAX (placeholder 6, PRD §7.11); grant at max is a no-op
-  "checkpoint": null,           // per-floor autosave: null, or {run, run_number, echoes, player_health}
+  "checkpoint": null,           // per-floor autosave: null, or {run, run_number, echoes, player_health}; the run dict carries rooms_cleared (room-scaled tick, 2026-07-10 — old checkpoints without it resume at 0)
                                 // snapshotted at floor start, cleared on run end (echoes never outlive a run)
   "pillars": { "strategy": {}, "space": {} }   // EMPTY in v1. Reserved keys so Acts II/III extend, never migrate.
 }
@@ -136,7 +136,7 @@ One generic evaluator reads these; new achievements are data entries. Unlocks li
   ] }
 ```
 
-`effects[].kind` is a small typed set (`produce | knowledge | multiplier | capability | upkeep`) — `upkeep` added 2026-07-03 (consumes a resource per tick, grants a status other effects read — Food/Well-Fed in v1, army/city provisioning in Act II; `food-upkeep.md`); strategy-era kinds (`defense`, `summon-capacity`) extend the set later. Production resolves on the **end-of-run tick** (1 day = 1 run, per locked decision): one `TownTick` pass that reads buildings → writes ledger → emits events — order: produce → upkeep/status → status-modified totals.
+`effects[].kind` is a small typed set (`produce | knowledge | multiplier | capability | upkeep`) — `upkeep` added 2026-07-03 (consumes a resource per tick, grants a status other effects read — Food/Well-Fed in v1, army/city provisioning in Act II; `food-upkeep.md`); strategy-era kinds (`defense`, `summon-capacity`) extend the set later. Production resolves on the **end-of-run tick** (1 day = 1 run, per locked decision; magnitude room-scaled since 2026-07-10 — `TownCore.tick(..., scale)` multiplies all production AND the upkeep by `run_tick_scale(rooms_cleared)` = rooms × 0.1 BEFORE the Well-Fed evaluation; default scale 1.0 = one nominal day keeps per-day callers like the HUD projections unchanged): one `TownTick` pass that reads buildings → writes ledger → emits events — order: produce → scale → upkeep/status → status-modified totals.
 
 ## 7. Dialogue (contract with `act1-story-beats.md`)
 

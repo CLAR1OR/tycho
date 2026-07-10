@@ -5,8 +5,8 @@
 	"principle": "self-assembly",
 	"cooldown_s": 40.0,
 	"granted_by": null,
-	"cost_unlock_dust": 6,
-	"cost_levels_dust": [6, 9],
+	"cost_unlock_dust": 12,
+	"cost_levels_dust": [12, 18],
 	"behavior": {
 		"lifetime": 8.0,
 		"bolt_scale": 0.4

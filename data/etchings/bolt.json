@@ -5,8 +5,8 @@
 	"principle": "directed-energy",
 	"cooldown_s": 5.0,
 	"granted_by": null,
-	"cost_unlock_dust": 3,
-	"cost_levels_dust": [3, 5],
+	"cost_unlock_dust": 6,
+	"cost_levels_dust": [6, 10],
 	"behavior": {
 		"damage_scale": 0.8,
 		"range": 16.0,
