@@ -90,6 +90,7 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 
 - **5 floor env profiles** — pure data (`data/floors/*.json`: bg/ambient/light/ground/wall/fog hex + energies). Built 🟨, every colour a human dial; **5 legibility passes pending**.
 - Town environment: 2 age-skins + calm-vs-tension lighting. ⬜
+- Town grass: shader-generated (`GrassPatch` + `grass_blade.gdshader`, CC0 @_Malido — wind sway + walk-through bend; demo `scenes/core/grass_demo.tscn`). 🟨 built, not yet placed in town (waiting on the human's in-flight `town.tscn` edit)
 - Title/slot-select night sky (gradient, stars, cyan constellation, ridge) — code-drawn ⬜.
 - Skyboxes/backdrops per scene: none authored ⬜.
 

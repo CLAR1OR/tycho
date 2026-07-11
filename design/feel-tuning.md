@@ -428,6 +428,16 @@ Every 3D mesh renders through ONE toon shader (`tycho_toon.gdshader`); character
 
 **Opt-outs (how a mesh stays raw):** translucent or unshaded materials are never converted (all FX/telegraph/portal/ghost materials, automatically); set metadata `style_skip` on a `MeshInstance3D` for an explicit opt-out. `scenes/combat/feel_room.tscn` is untouched — the sandbox keeps the raw look. Known gotcha: hard-edged primitives (boxes) can gap at outline corners (split normals) — acceptable on placeholders; smooth-normal models won't.
 
+### Grass — `src/core/grass_patch.gd` (@export → Inspector) + `assets/materials/grass_blade.gdshader` uniforms *(built 2026-07-11; judge in `scenes/core/grass_demo.tscn`)*
+
+| Var | Default | What it does |
+|-----|---------|--------------|
+| `patch_size` / `blade_count` | 12×12 m / 4000 | Patch footprint and density. |
+| `blade_width` / `blade_height` / `height_jitter` | 0.08 / 0.55 / ±0.35 | Blade quad size + per-blade height variance. |
+| `top_color` / `bottom_color` (shader) | green pair | Tip→root gradient; roots also darken by `ambient_occlusion_factor` (0.3). |
+| `wind_direction` / `wind_strength` / `wind_noise_size` / `wind_noise_speed` (shader) | (1, 0, 0.35) / 0.3 / 0.05 / 0.1 | Gust direction, sway amount, gust patch size, gust travel speed. |
+| `player_displacement_strength` / `player_displacement_size` (shader) | 0.4 / 1.0 | How hard and how wide a walker bends the grass (`follow_target` on the patch node). |
+
 ---
 
 ## Boss — Den-Warden (floor 1; data dials + 2 exports, `design/bosses/floor-1-boss.md`, built 2026-07-10)
