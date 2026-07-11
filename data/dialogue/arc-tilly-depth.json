@@ -1,0 +1,36 @@
+{
+	"id": "arc-tilly-depth",
+	"source": "arc",
+	"speakers": [
+		"tilly",
+		"tycho"
+	],
+	"priority": 42,
+	"conditions": [
+		{
+			"counter": "max_floor",
+			"gte": 3
+		},
+		{
+			"counter": "runs",
+			"gte": 6
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "tilly",
+				"text": "Debrief. Third level down. You said the crystal growths burst when anything touches them. What's the range? Two paces? Five?"
+			},
+			{
+				"who": "tycho",
+				"text": "Call it three. Why, planning a visit?"
+			},
+			{
+				"who": "tilly",
+				"text": "Can't visit, so you're my eyes down there. Here's what I took from it. If a thing bursts when touched, you don't clear it out of the way. You make the other fellow walk into it. The guard drills that now. Your monsters are teaching my recruits."
+			}
+		]
+	}
+}

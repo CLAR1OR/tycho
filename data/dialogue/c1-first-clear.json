@@ -1,0 +1,46 @@
+{
+	"id": "c1-first-clear",
+	"source": "spine",
+	"speakers": [
+		"tycho",
+		"sophia"
+	],
+	"priority": 91,
+	"force_play": true,
+	"conditions": [
+		{
+			"counter": "full_clears",
+			"gte": 1
+		}
+	],
+	"sets_flag": "c1",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "The last chamber goes quiet. Where the guardian of the deepest floor stood, a pedestal rises out of the dark. On it sits a shape of fitted stone, socket after empty socket, waiting."
+			},
+			{
+				"who": "",
+				"text": "Tycho reaches out. The shard he carries pulls toward the nearest socket like iron to a lodestone, and seats itself. The shape turns once. Then the light takes him, and he is standing in the town square, whole."
+			},
+			{
+				"who": "tycho",
+				"text": "Sophia. The bottom of that place isn't a floor. It's a thing. A made thing, and my shard belonged to it."
+			},
+			{
+				"who": "sophia",
+				"text": "Slower. Start from the last door."
+			},
+			{
+				"who": "tycho",
+				"text": "A stone assembly, waist high, sockets all over it. My shard went in on its own and the whole thing moved. Then it sent me home. Gently. Like it was done with me for the day."
+			},
+			{
+				"who": "sophia",
+				"text": "Then the shards were never scattered, Tycho. They were dealt. Someone means for you to carry them back down, one at a time, until that thing is full. I want to know what happens when it is."
+			}
+		]
+	}
+}

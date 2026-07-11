@@ -1,0 +1,24 @@
+{
+	"id": "herzog-bark-requisition",
+	"source": "bark",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "Requisitions on my desk before the bell: powder, timber, salt pork. War arrives first as paperwork. I am very good at paperwork."
+			}
+		]
+	}
+}

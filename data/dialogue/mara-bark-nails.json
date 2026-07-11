@@ -1,0 +1,20 @@
+{
+	"id": "mara-bark-nails",
+	"source": "bark",
+	"speakers": [
+		"mara"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "mara",
+				"text": "Slow day, so it's nails. Nobody sings songs about a well-made nail, but every roof in town is holding its breath on them. Here, hold the box. You can be useful while you gossip."
+			}
+		]
+	}
+}

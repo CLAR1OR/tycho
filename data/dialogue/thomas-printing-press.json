@@ -1,0 +1,31 @@
+{
+	"id": "thomas-printing-press",
+	"source": "contextual",
+	"speakers": [
+		"thomas",
+		"tycho"
+	],
+	"priority": 22,
+	"conditions": [
+		{
+			"tech": "ren-printing-press"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "thomas",
+				"text": "A scribe copies one book in a season, boy, and pays for it with his eyes. The new press made a hundred pages while I drank my tea."
+			},
+			{
+				"who": "tycho",
+				"text": "You disapprove?"
+			},
+			{
+				"who": "thomas",
+				"text": "I marvel. And then I wonder. When every man can own the same book, who decides which book it is? Someone will. Someone always does."
+			}
+		]
+	}
+}

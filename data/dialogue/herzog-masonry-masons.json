@@ -1,0 +1,22 @@
+{
+	"id": "herzog-masonry-masons",
+	"source": "contextual",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 22,
+	"conditions": [
+		{
+			"tech": "med-masonry-arch"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "Masons from two villages over came to look at our gateway. They stood under it and argued all morning. Then they asked to stay. Skilled hands, asking us. That wall pays in ways I did not put in the ledger."
+			}
+		]
+	}
+}

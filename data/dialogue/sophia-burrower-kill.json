@@ -1,0 +1,32 @@
+{
+	"id": "sophia-burrower-kill",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 32,
+	"conditions": [
+		{
+			"counter": "boss_kills",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "So the thing at the bottom of the first floor is dead, and it dropped a shard. Give it here. And sit down, you're bleeding on my floor."
+			},
+			{
+				"who": "tycho",
+				"text": "It burrowed. And it had a pattern. Lunge, swipe, circle away. Every time, the same order."
+			},
+			{
+				"who": "sophia",
+				"text": "Beasts don't keep patterns that clean. Hungry things improvise. Write it down exactly, I want the order and the count."
+			}
+		]
+	}
+}

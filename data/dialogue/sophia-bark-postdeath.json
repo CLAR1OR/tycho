@@ -1,0 +1,25 @@
+{
+	"id": "sophia-bark-postdeath",
+	"source": "bark",
+	"speakers": [
+		"sophia"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [
+		{
+			"counter": "deaths",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "You're back, you're limping, and you're pretending you aren't. Sit. Talk me through the last room before you forget it, and I'll trade you soup for accuracy."
+			}
+		]
+	}
+}

@@ -1,0 +1,32 @@
+{
+	"id": "sophia-stratum-5",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 26,
+	"conditions": [
+		{
+			"counter": "max_floor",
+			"gte": 5
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "Read me back what I wrote from your words. A dark like a night sky, underground. Light that runs along lines, like water in channels. Ground that pushes you."
+			},
+			{
+				"who": "tycho",
+				"text": "That's the bottom of the world, as near as I can tell."
+			},
+			{
+				"who": "sophia",
+				"text": "It isn't like anywhere. It isn't even like the floor above it, and every other floor resembles its neighbours. I've stopped trying to fit it to anything I know, and I don't say that easily. Go carefully down there. Write everything."
+			}
+		]
+	}
+}

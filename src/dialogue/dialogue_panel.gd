@@ -76,8 +76,9 @@ func advance() -> void:
 func _show_line() -> void:
 	var line: Dictionary = _lines()[_line_index] if _line_index < _lines().size() else {}
 	var who := str(line.get("who", ""))
-	# An empty speaker is narration (cutscene captions).
-	_who_label.text = who.capitalize() if not who.is_empty() else "—"
+	# An empty speaker is narration (cutscene captions). Names route through the pure
+	# display-name map — `linnea` must render as "The Woman", never her name (Act I rule).
+	_who_label.text = DialogueCore.display_name(who) if not who.is_empty() else "—"
 	_text_label.text = str(line.get("text", ""))
 
 

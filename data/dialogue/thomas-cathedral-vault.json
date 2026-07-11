@@ -1,0 +1,32 @@
+{
+	"id": "thomas-cathedral-vault",
+	"source": "contextual",
+	"speakers": [
+		"thomas",
+		"tycho"
+	],
+	"priority": 24,
+	"conditions": [
+		{
+			"building": "cathedral",
+			"gte": 3
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "thomas",
+				"text": "The vault closed over the nave this week, boy. Men who will never see it finished set stones today, and set them carefully."
+			},
+			{
+				"who": "tycho",
+				"text": "Seems a hard way to spend a life."
+			},
+			{
+				"who": "thomas",
+				"text": "Does it? Then tell me where a thing like that lives. In the stone, or in the ones who won't be there to see the last of it laid?"
+			}
+		]
+	}
+}

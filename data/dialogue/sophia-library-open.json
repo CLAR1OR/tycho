@@ -1,0 +1,32 @@
+{
+	"id": "sophia-library-open",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 24,
+	"conditions": [
+		{
+			"building": "library",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "The library's open. I moved my notes there, second table from the window. Every record in one place, and copies of the shard readings under lock."
+			},
+			{
+				"who": "tycho",
+				"text": "Copies? You barely have time to eat."
+			},
+			{
+				"who": "sophia",
+				"text": "If something happens to me, the work shouldn't die in my desk drawer. Don't make that face. It's just good method."
+			}
+		]
+	}
+}

@@ -59,6 +59,21 @@ func test_town_market_deal_day_defaults() -> void:
 		"a fresh slot starts at -1 too")
 
 
+func test_max_floor_counter_defaults() -> void:
+	# max_floor (deepest floor ever reached, 2026-07-10): an old save whose counters
+	# dict predates it reads 0 via the nested defaults-merge — no migration step needed
+	# — while every counter the save already carries survives untouched.
+	var old := {"save_version": 1, "story": {"flags": {"a3": true},
+		"counters": {"runs": 9, "deaths": 4, "boss_kills": 2, "full_clears": 1}}}
+	var out := SaveData.migrate_slot(old)
+	check_eq(int(out["story"]["counters"]["max_floor"]), 0,
+		"old saves default max_floor to 0 (never measured)")
+	check_eq(int(out["story"]["counters"]["runs"]), 9, "existing counters survive the merge")
+	check_eq(bool(out["story"]["flags"]["a3"]), true, "existing flags survive the merge")
+	check_eq(int(SaveData.default_slot("s", "t")["story"]["counters"]["max_floor"]), 0,
+		"a fresh slot starts max_floor at 0 too")
+
+
 func test_migrate_slot_handles_unknown_old_version() -> void:
 	# A version we have no migration for must not loop or crash — it gets defaults.
 	var ancient := {"save_version": 0, "meta": {"name": "Ancient"}}

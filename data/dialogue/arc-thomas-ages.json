@@ -1,0 +1,31 @@
+{
+	"id": "arc-thomas-ages",
+	"source": "arc",
+	"speakers": [
+		"thomas",
+		"tycho"
+	],
+	"priority": 52,
+	"conditions": [
+		{
+			"age": 2
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "thomas",
+				"text": "I taught students most of my life, boy. A quick one takes a season to learn what you offer him. This town learned a new way of building and a new way of counting in the time it takes a crop to come up."
+			},
+			{
+				"who": "tycho",
+				"text": "We had help."
+			},
+			{
+				"who": "thomas",
+				"text": "So does every student. That's what a teacher is. Here's what I can't put down: a student learns because a teacher chose to teach. Who chose us? And what do they mean to make of the class?"
+			}
+		]
+	}
+}

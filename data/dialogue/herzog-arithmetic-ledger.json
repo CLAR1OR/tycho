@@ -1,0 +1,22 @@
+{
+	"id": "herzog-arithmetic-ledger",
+	"source": "contextual",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 22,
+	"conditions": [
+		{
+			"tech": "med-arithmetic-zero"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "Sophia showed the clerks the new counting. A mark for nothing, and columns that carry. The granary ledger balanced for the first time since I have kept it. I found three years of small theft in one afternoon. Nobody is punished. Everybody knows I know."
+			}
+		]
+	}
+}

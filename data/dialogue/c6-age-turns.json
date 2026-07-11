@@ -1,0 +1,46 @@
+{
+	"id": "c6-age-turns",
+	"source": "spine",
+	"speakers": [
+		"sophia",
+		"herzog",
+		"tycho"
+	],
+	"priority": 82,
+	"force_play": true,
+	"conditions": [
+		{
+			"age": 2
+		}
+	],
+	"sets_flag": "c6",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "It doesn't happen on one day, but there is a day you notice it. New rooflines. Glass in windows that held shutters. Scaffolds on buildings nobody thought to change before."
+			},
+			{
+				"who": "",
+				"text": "The Library grows a second floor, then a lecture hall. Students argue on its steps at midday. Above the old door a mason cuts a new word into the stone: University."
+			},
+			{
+				"who": "sophia",
+				"text": "I used to know every book in that building. Now I don't even know every teacher."
+			},
+			{
+				"who": "herzog",
+				"text": "The ledger hurt for it. It holds classes now. Good trade."
+			},
+			{
+				"who": "tycho",
+				"text": "The whole town looks different from the hill."
+			},
+			{
+				"who": "",
+				"text": "It does. The age has turned."
+			}
+		]
+	}
+}

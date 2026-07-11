@@ -1,0 +1,43 @@
+{
+	"id": "c2-sophia-question",
+	"source": "spine",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 85,
+	"conditions": [
+		{
+			"flag": "c1"
+		},
+		{
+			"flag": "b3"
+		}
+	],
+	"sets_flag": "c2",
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "I've checked the shard teachings every way I know. Against the stars, against my own arches, against anything I can measure. They keep being right."
+			},
+			{
+				"who": "tycho",
+				"text": "That's what teaching is, isn't it? True things."
+			},
+			{
+				"who": "sophia",
+				"text": "Books are written by people, and people slip somewhere. Every scribe I've ever read slips. These don't. Nobody in this town asks the obvious question, so I'll ask it. Who writes truth into stone, gets every line right, and then buries it under monsters?"
+			},
+			{
+				"who": "tycho",
+				"text": "Someone who wants to see who digs."
+			},
+			{
+				"who": "sophia",
+				"text": "That's what worries me. Someone is checking our work."
+			}
+		]
+	}
+}

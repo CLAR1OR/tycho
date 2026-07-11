@@ -1,0 +1,32 @@
+{
+	"id": "sophia-stratum-1",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 30,
+	"conditions": [
+		{
+			"counter": "max_floor",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "Tell me about the first floor again. The cave."
+			},
+			{
+				"who": "tycho",
+				"text": "Like the one I fell into. Warm rock, wet air. Ordinary, except for what lives there."
+			},
+			{
+				"who": "sophia",
+				"text": "You said the rock formations repeat. Count the drip stones next time. Caves grow by accident, so two chambers with the same stones in the same spots would bother me a great deal."
+			}
+		]
+	}
+}

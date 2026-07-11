@@ -1,0 +1,20 @@
+{
+	"id": "wren-bark-doors",
+	"source": "bark",
+	"speakers": [
+		"wren"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 3,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "wren",
+				"text": "...doors again. Every house in this town, the door sits on the long wall. Except the mill and the bathhouse. I asked four builders why. Not one of them had noticed they all do it. Somebody decided that once. I'd like a word with them."
+			}
+		]
+	}
+}

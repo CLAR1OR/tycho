@@ -1,0 +1,32 @@
+{
+	"id": "sophia-stratum-4",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 27,
+	"conditions": [
+		{
+			"counter": "max_floor",
+			"gte": 4
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "Clean planes. Floating stone. Edges too straight for any chisel. You're sure?"
+			},
+			{
+				"who": "tycho",
+				"text": "I walked on one."
+			},
+			{
+				"who": "sophia",
+				"text": "Then past the third floor the place stops pretending to be a cave at all. Everyone will call it sorcery and stop asking. I'm going to keep asking. Pace out the repeats, bring me the angles, and don't stand under anything that floats."
+			}
+		]
+	}
+}

@@ -129,6 +129,11 @@ Format per character: **stance** (how they meet the world) · **tell** (the synt
   - (C4) "You can see me. Good. Don't talk. Look."
   - (C5-series) "West gate. Weak hinge. Not yet. Wait for me."
 
+### The emissary (D3 only — added 2026-07-10, agent draft, curation pending)
+- **Stance:** the Emperor's mouth, not a person. He reads the town like a bill of goods; refusal does not surprise or interest him.
+- **Tell:** ceremonial menace in plain grammar. He is the ONE speaker licensed to be rhetorical — the aphorism ban protects *our* characters from sounding like posters; a herald delivering an ultimatum IS a poster ("The Emperor keeps what kneels."). Flatten him if that reads wrong.
+- **Don't:** anger; negotiation; a second visit's worth of personality. He exists for one scene.
+
 ---
 
 ## Drafting workflow (for snippet batches)

@@ -1,0 +1,23 @@
+{
+	"id": "herzog-market-open",
+	"source": "contextual",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 24,
+	"conditions": [
+		{
+			"building": "market",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "The market is open. Caravans stop now instead of passing through. Rule one is posted at the gate: no trade in the humming stone, at any price. Everything else has a price, and I set it fairly. Mostly fairly."
+			}
+		]
+	}
+}

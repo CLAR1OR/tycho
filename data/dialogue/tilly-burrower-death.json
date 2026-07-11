@@ -1,0 +1,36 @@
+{
+	"id": "tilly-burrower-death",
+	"source": "contextual",
+	"speakers": [
+		"tilly",
+		"tycho"
+	],
+	"priority": 31,
+	"conditions": [
+		{
+			"counter": "deaths",
+			"gte": 2
+		},
+		{
+			"counter": "max_floor",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "tilly",
+				"text": "The burrower got you again. No, don't apologize, this is useful. Walk me through it. Where were you standing when the ground came up?"
+			},
+			{
+				"who": "tycho",
+				"text": "Middle of the room, like a fool."
+			},
+			{
+				"who": "tilly",
+				"text": "Like most people. Feet want open ground, but open ground is where it looks first. Keep a wall near your back and watch the floor, not the thing. I'd drill it with you, but I'm not allowed in. So drill it yourself."
+			}
+		]
+	}
+}

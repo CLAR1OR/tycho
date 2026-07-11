@@ -1,0 +1,22 @@
+{
+	"id": "herzog-age-turned",
+	"source": "contextual",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 21,
+	"conditions": [
+		{
+			"age": 2
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "They tell me we live in a new age now. The scholars have a name for it and everything. Very good. The granary still has to be full by first frost. Ages change. Winter is not impressed."
+			}
+		]
+	}
+}

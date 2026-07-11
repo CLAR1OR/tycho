@@ -1,0 +1,24 @@
+{
+	"id": "tilly-bark-drill-count",
+	"source": "bark",
+	"speakers": [
+		"tilly"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "tilly",
+				"text": "Wall drill at the morning bell, gate drill at dusk. Third company forms a line in the time it takes me to say form a line. Took me half a year to be worth copying. They took a week."
+			}
+		]
+	}
+}

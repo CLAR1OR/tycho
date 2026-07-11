@@ -1,0 +1,32 @@
+{
+	"id": "sophia-stratum-3",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 28,
+	"conditions": [
+		{
+			"counter": "max_floor",
+			"gte": 3
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "You said the third level hums? Rock doesn't hum, Tycho. Instruments hum."
+			},
+			{
+				"who": "tycho",
+				"text": "It's the crystal seams. The light in them moves, and the note sits under your feet."
+			},
+			{
+				"who": "sophia",
+				"text": "Moving light, a held note, louder near the growths. Then the crystals aren't decoration, they're doing something. Instruments hum because something plays them. I want to know what's playing the third floor. Don't touch. Describe."
+			}
+		]
+	}
+}

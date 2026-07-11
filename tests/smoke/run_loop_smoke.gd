@@ -184,6 +184,10 @@ func _run_smoke() -> void:
 	# return), which is a separate counter from a combat death (2026-07-07).
 	_check(int(c["dissolves"]) == 1, "dissolve counted at the codex artifact")
 	_check(int(c["deaths"]) == 0, "the full-clear dissolve is NOT a combat death")
+	# max_floor (2026-07-10): the deepest floor EVER reached, max()'d from run_ended's
+	# floor_reached. The full clear walked every configured floor.
+	_check(int(c["max_floor"]) == int(_game.get("run_floors")),
+		"max_floor recorded the run's deepest floor (%d)" % int(c["max_floor"]))
 	_check(int(SaveManager.state["codex"]["shards"]) == 1, "codex shard slotted")
 	_check(Ledger.get_amount("gold") > 0.0, "gold dropped (%.0f)" % Ledger.get_amount("gold"))
 	_check(Ledger.get_amount("knowledge-shards") >= 1.0, "boss dropped knowledge shards")
@@ -210,8 +214,20 @@ func _run_smoke() -> void:
 	_check(int(disk_c["full_clears"]) == 1, "disk: full clear persisted")
 	_check(int(disk_c["boss_kills"]) >= 1, "disk: boss kills persisted (%d)" % int(disk_c["boss_kills"]))
 	_check(int(disk_c["dissolves"]) == 1, "disk: dissolves counter persisted")
+	_check(int(disk_c["max_floor"]) == int(_game.get("run_floors")),
+		"disk: max_floor persisted (%d)" % int(disk_c["max_floor"]))
 	_check(int(on_disk["codex"]["shards"]) == 1, "disk: codex shard persisted")
 	_check(int(on_disk["meta"]["runs"]) == runs_before + 1, "disk: meta.runs mirror persisted")
+
+	# --- Dialogue volume (2026-07-10): the pool loaded + max_floor gates it -------------
+	var dpool := DataLoader.load_domain("dialogue")
+	_check(dpool.size() == 112, "the full dialogue pool loaded (%d defs)" % dpool.size())
+	# Sophia's stratum reports are the max_floor vocabulary's first consumers: with the
+	# whole run walked, the floor-3 report is eligible and a deeper gate stays shut.
+	_check(DialogueCore.eligible(dpool["sophia-stratum-3"], SaveManager.state),
+		"a max_floor-gated snippet (sophia-stratum-3) is eligible after reaching floor 3")
+	_check(not DialogueCore.eval_condition({"counter": "max_floor", "gte": 4}, SaveManager.state),
+		"max_floor >= 4 stays shut (never reached)")
 
 	# --- Run-1 victory return: the A3 opening cutscene (dissolve-first-run twin) --------
 	# A full clear ends by walking into the codex artifact — Tycho DISSOLVES (not a combat
@@ -406,12 +422,22 @@ func _run_smoke() -> void:
 	await _settle(3)
 
 	# A run has to pass before Sophia will hear the answer again. Simulate one (sim #2).
-	# Nothing force-plays on this return: A3 is set (both a3 twins suppressed), b3 is set
-	# (both b3 twins suppressed), and B5 still needs masonry — so the town swap is silent.
+	# Since the dialogue-volume pass (2026-07-10) this return force-plays C1 ("first full
+	# clear" — the codex-artifact reveal, full_clears>=1): the a3/b3 twins are suppressed,
+	# B5 still needs masonry, and C1 (91) outranks the also-eligible C4 dream (86). It
+	# didn't fire earlier because a3 (run-1 return) and B3 (sim #1) claimed those visits'
+	# one force-play slot — the spec's one-forced-per-visit backlog behaviour.
 	cheats.simulate_run(true)
 	await _settle(10)
-	_check(get_tree().get_first_node_in_group("dialogue_panel") == null,
-		"the quiz-clear return is silent (no eligible force-play)")
+	var c1dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(_panel_id(c1dlg) == "c1-first-clear",
+		"C1 (first-clear artifact reveal) force-plays on the quiz-clear return (%s)" % _panel_id(c1dlg))
+	if c1dlg != null:
+		await _drive_panel(c1dlg, "c1-first-clear")
+	_check(bool(SaveManager.state["story"]["flags"].get("c1", false)), "C1 set its flag")
+	# The cheat sims report floor 1 — max_floor is a max() and must NOT regress.
+	_check(int(SaveManager.state["story"]["counters"]["max_floor"]) == int(_game.get("run_floors")),
+		"max_floor never decreases (floor-1 sims left it alone)")
 	_check(not TechCore.is_quiz_locked(SaveManager.state["tech"], "med-arithmetic-zero"),
 		"finishing a run clears the quiz lock")
 
@@ -715,12 +741,22 @@ func _run_smoke() -> void:
 	_check(str(_scene_node().call("indicator_for_npc", "tilly")) == "!",
 		"Tilly shows ! for an unseen arc beat")
 
-	# Sophia is now a town NPC (talkable from day 0, ungated). After B3 she has arc content.
+	# Sophia is now a town NPC (talkable from day 0, ungated). Her queue since the
+	# dialogue-volume pass (2026-07-10): C2 ("the question nobody asks" — spine, flag
+	# c1+b3) first, then her arc pool, where the new arc-sophia-awe (b3 + runs>=4,
+	# priority 58) precedes arc-sophia-method (55) — the awe-then-method arc order.
 	_check(_scene_node().has_node("NpcSophia"), "Sophia exists as a town NPC")
 	var sdlg: DialoguePanel = _scene_node().call("talk_to", "sophia")
-	_check(sdlg != null, "Sophia is talkable and offers her arc beat (b3 set)")
+	_check(_panel_id(sdlg) == "c2-sophia-question",
+		"Sophia offers C2 first (spine outranks arc; c1 set on the sim-2 return)")
 	if sdlg != null:
-		await _drive_panel(sdlg, "arc-sophia-method")
+		await _drive_panel(sdlg, "c2-sophia-question")
+	_check(bool(SaveManager.state["story"]["flags"].get("c2", false)), "C2 set its flag")
+	var sdlg2: DialoguePanel = _scene_node().call("talk_to", "sophia")
+	_check(_panel_id(sdlg2) == "arc-sophia-awe",
+		"Sophia's next beat is the new awe arc opener (58 over method's 55)")
+	if sdlg2 != null:
+		await _drive_panel(sdlg2, "arc-sophia-awe")
 
 	# Tilly's arc beat, then her indicator clears (only a bark remains; barks don't light it).
 	var tdlg: DialoguePanel = _scene_node().call("talk_to", "tilly")
@@ -760,8 +796,9 @@ func _run_smoke() -> void:
 	# --- E2 "The artifact waits" (Phase E, 2026-07-07) --------------------------------
 	# The codex puzzle completes at CODEX_SHARDS_MAX; the E2 cutscene then force-plays. Cheat
 	# the codex to max (and past it — proving grant_codex_shard clamps), then re-enter town
-	# via a sim so E2's town-entry force-play fires. E2 (codex_shards>=6) is the only eligible
-	# force-play: a3/b3 twins are flag-suppressed and B5 is seen.
+	# via a sim so E2's town-entry force-play fires. E2 (codex_shards>=6, priority 98) tops
+	# the eligible force-plays: a3/b3 twins are flag-suppressed, B5/C1 are seen, and the
+	# C4 dream (86) waits its turn behind it (one forced per visit).
 	while int(SaveManager.state["codex"]["shards"]) < StoryCore.CODEX_SHARDS_MAX:
 		cheats.grant_codex_shard()
 	_check(int(SaveManager.state["codex"]["shards"]) == StoryCore.CODEX_SHARDS_MAX,
@@ -797,6 +834,15 @@ func _run_smoke() -> void:
 	var gold_pre_sale := Ledger.get_amount("gold")
 	cheats.simulate_run(true)
 	await _settle(10)
+	# This town entry's force-play slot goes to C4 (the first dream, codex_shards>=2) —
+	# every earlier visit had a higher-priority beat (a3, B3, C1, B5, E2) in front of it.
+	# The panel names the second bearer's line "The Woman", never her name (display map).
+	var c4dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(_panel_id(c4dlg) == "c4-first-dream",
+		"C4 (the first dream) force-plays once the queue in front of it clears (%s)" % _panel_id(c4dlg))
+	if c4dlg != null:
+		await _drive_panel(c4dlg, "c4-first-dream")
+	_check(bool(SaveManager.state["story"]["flags"].get("c4", false)), "C4 set its flag")
 	_check(float(sell_want["food_sold"]) > 0.0
 		and absf(Ledger.get_amount("gold") - (gold_pre_sale + 15.0 + float(sell_want["gold_from_sale"]))) < 0.001,
 		"the day tick auto-sold the surplus (+%.1f gold, reason market-sale)" % float(sell_want["gold_from_sale"]))
@@ -947,6 +993,15 @@ func _run_smoke() -> void:
 	pause.forfeit()
 	await _settle(30)
 	_check(_scene_file() == "town.tscn", "forfeit returns to town (got %s)" % _scene_file())
+	# The forfeit rolls the RUN back, but seen dialogue stays seen — the C5 dream chain
+	# (one per codex shard after C4, flag-chained c4 -> c5-3 -> c5-4 …) advances on this
+	# entry: shards are maxed, c4 is set, so dream 3 takes the slot.
+	var c53dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(_panel_id(c53dlg) == "c5-dream-3",
+		"the C5 dream series starts on the next entry after C4 (%s)" % _panel_id(c53dlg))
+	if c53dlg != null:
+		await _drive_panel(c53dlg, "c5-dream-3")
+	_check(bool(SaveManager.state["story"]["flags"].get("c5-3", false)), "c5-dream-3 set its chain flag")
 	_check(absf(Ledger.get_amount("gold") - gold_pre_run) < 0.001,
 		"forfeit rolled gold back to the pre-run value (%.0f)" % Ledger.get_amount("gold"))
 	_check(int(SaveManager.state["story"]["counters"]["runs"]) == runs_pre_run,
@@ -983,6 +1038,15 @@ func _run_smoke() -> void:
 	_check(_scene_file() == "town.tscn", "re-choosing the slot loads town (got %s)" % _scene_file())
 	_check(int(SaveManager.state["story"]["counters"]["runs"]) == runs_saved,
 		"counters survived the Save & Quit round-trip (%d)" % int(SaveManager.state["story"]["counters"]["runs"]))
+	_check(int(SaveManager.state["story"]["counters"]["max_floor"]) == int(_game.get("run_floors")),
+		"max_floor survived the Save & Quit round-trip")
+	# The reloaded slot remembers the dream chain (c4/c5-3 flags round-tripped): this
+	# fresh town entry force-plays the NEXT dream in the series.
+	var c54dlg: DialoguePanel = get_tree().get_first_node_in_group("dialogue_panel")
+	_check(_panel_id(c54dlg) == "c5-dream-4",
+		"the C5 chain resumes across the save round-trip (%s)" % _panel_id(c54dlg))
+	if c54dlg != null:
+		await _drive_panel(c54dlg, "c5-dream-4")
 
 	SaveManager.delete_slot(SMOKE_SLOT)
 	if FileAccess.file_exists(telemetry_path):

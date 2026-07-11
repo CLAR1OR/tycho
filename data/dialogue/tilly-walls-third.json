@@ -1,0 +1,32 @@
+{
+	"id": "tilly-walls-third",
+	"source": "contextual",
+	"speakers": [
+		"tilly",
+		"tycho"
+	],
+	"priority": 24,
+	"conditions": [
+		{
+			"building": "town-walls",
+			"gte": 3
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "tilly",
+				"text": "Third course of the wall is finished. I paced the full round at dusk. Strongpoints at the gate and both corners, clear lines along every stretch, and the new height beats the old palisade by twice a man."
+			},
+			{
+				"who": "tycho",
+				"text": "Satisfied?"
+			},
+			{
+				"who": "tilly",
+				"text": "It's the first defense I've walked that I couldn't plan an easy way through. I keep trying. That's the job now, trying to rob us and failing."
+			}
+		]
+	}
+}

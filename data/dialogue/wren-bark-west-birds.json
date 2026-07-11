@@ -1,0 +1,24 @@
+{
+	"id": "wren-bark-west-birds",
+	"source": "bark",
+	"speakers": [
+		"wren"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 3,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "wren",
+				"text": "...birds. Nobody watches the birds. The autumn flocks came out of the west early, and thin, and they didn't land here, they kept east. Something back there is walking through their fields. You can read an army in the sky if you bother. Nobody bothers. Just me."
+			}
+		]
+	}
+}

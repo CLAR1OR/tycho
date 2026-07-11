@@ -1,0 +1,37 @@
+{
+	"id": "c5-dream-6",
+	"source": "spine",
+	"speakers": [
+		"tycho",
+		"linnea"
+	],
+	"priority": 65,
+	"force_play": true,
+	"conditions": [
+		{
+			"counter": "codex_shards",
+			"gte": 6
+		},
+		{
+			"flag": "c5-5"
+		}
+	],
+	"sets_flag": "c5-6",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "The last dream is the stillest. The desk is clean. The papers are gone. She sits facing him squarely, hands folded, like a woman who has finished packing."
+			},
+			{
+				"who": "linnea",
+				"text": "Done waiting soon. You'll know the night."
+			},
+			{
+				"who": "",
+				"text": "For the first time she smiles, small and exact, and the dream ends on her terms, not his."
+			}
+		]
+	}
+}

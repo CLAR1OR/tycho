@@ -1,0 +1,37 @@
+{
+	"id": "c5-dream-5",
+	"source": "spine",
+	"speakers": [
+		"tycho",
+		"linnea"
+	],
+	"priority": 66,
+	"force_play": true,
+	"conditions": [
+		{
+			"counter": "codex_shards",
+			"gte": 5
+		},
+		{
+			"flag": "c5-4"
+		}
+	],
+	"sets_flag": "c5-5",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "The fifth dream opens mid stride. She is at the narrow window, watching something below in the yard. Her lips move, keeping count."
+			},
+			{
+				"who": "linnea",
+				"text": "West gate. Weak hinge. Not yet. Wait for me."
+			},
+			{
+				"who": "",
+				"text": "It takes him a moment to understand she isn't describing her prison. She says it the way a commander says it. Somewhere out there is a west gate, and a plan already older than his part in it."
+			}
+		]
+	}
+}

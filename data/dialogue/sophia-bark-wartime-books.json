@@ -1,0 +1,24 @@
+{
+	"id": "sophia-bark-wartime-books",
+	"source": "bark",
+	"speakers": [
+		"sophia"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "I've started a second book. The first is what the shards teach. The second is what the west is doing, dates and distances, Tilly's reports cross-checked. When the two books start explaining each other, I'll tell you. Pray they don't."
+			}
+		]
+	}
+}

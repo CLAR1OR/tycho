@@ -1,0 +1,32 @@
+{
+	"id": "sophia-observatory-open",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 24,
+	"conditions": [
+		{
+			"building": "observatory",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "The observatory's done. First clear night I charted more than I'd managed in a year of rooftops."
+			},
+			{
+				"who": "tycho",
+				"text": "You look happy. It's unsettling."
+			},
+			{
+				"who": "sophia",
+				"text": "The sky runs exact, Tycho. Exact enough to check the shard tables against, star by star. That's my winter spoken for."
+			}
+		]
+	}
+}

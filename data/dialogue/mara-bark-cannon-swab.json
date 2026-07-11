@@ -1,0 +1,24 @@
+{
+	"id": "mara-bark-cannon-swab",
+	"source": "bark",
+	"speakers": [
+		"mara"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "mara",
+				"text": "Hand me the long swab, would you? The bore gets scrubbed every morning whether she fired or not. I'm not having the town's loudest voice crack from neglect. Isn't that right, you great iron lump."
+			}
+		]
+	}
+}

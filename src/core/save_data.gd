@@ -28,7 +28,11 @@ static func default_slot(slot_name: String, now_iso: String) -> Dictionary:
 			"flags": {},
 			# dissolves: full-clear returns via the codex artifact (2026-07-07) — separate
 			# from deaths (combat only). defaults-merge fills it for old saves.
-			"counters": {"runs": 0, "deaths": 0, "dissolves": 0, "boss_kills": 0, "full_clears": 0},
+			# max_floor: the deepest floor EVER reached across all runs (2026-07-10) —
+			# updated as a max() on run_ended; dialogue gates read it (`max_floor >= N`).
+			# defaults-merge fills it for old saves (reads 0 until a run ends).
+			"counters": {"runs": 0, "deaths": 0, "dissolves": 0, "boss_kills": 0,
+				"full_clears": 0, "max_floor": 0},
 			"seen": [],
 			"talked_to": {},
 			"dialogue_last": {},

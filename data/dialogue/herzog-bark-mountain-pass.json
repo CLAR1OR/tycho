@@ -1,0 +1,20 @@
+{
+	"id": "herzog-bark-mountain-pass",
+	"source": "bark",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "There is a pass in the southern mountains where we buried two mules and a man I owed money to. I think about him when the frost comes early. Check your boots before the season turns. That is the whole lesson."
+			}
+		]
+	}
+}

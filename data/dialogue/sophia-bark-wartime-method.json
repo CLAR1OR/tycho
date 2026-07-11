@@ -1,0 +1,24 @@
+{
+	"id": "sophia-bark-wartime-method",
+	"source": "bark",
+	"speakers": [
+		"sophia"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "Tilly asks me for numbers now. March rates, ration weights, how far a rider covers in a day. Wartime turns out to be arithmetic with consequences. I can do arithmetic."
+			}
+		]
+	}
+}

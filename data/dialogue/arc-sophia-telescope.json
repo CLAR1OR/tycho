@@ -1,0 +1,39 @@
+{
+	"id": "arc-sophia-telescope",
+	"source": "arc",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 52,
+	"conditions": [
+		{
+			"tech": "ren-telescope"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "Tycho. Come to the roof. Now, while it's clear."
+			},
+			{
+				"who": "tycho",
+				"text": "Your hands are shaking."
+			},
+			{
+				"who": "sophia",
+				"text": "I know. Look through it and tell me what you see along the moon's edge."
+			},
+			{
+				"who": "tycho",
+				"text": "Shadow. Rough ground. Mountains?"
+			},
+			{
+				"who": "sophia",
+				"text": "Mountains. No shard told me that. I ground the lenses, I pointed it up, and the moon has mountains like ours. I found it. Me."
+			}
+		]
+	}
+}

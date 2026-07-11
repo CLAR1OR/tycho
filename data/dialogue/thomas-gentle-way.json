@@ -1,0 +1,32 @@
+{
+	"id": "thomas-gentle-way",
+	"source": "contextual",
+	"speakers": [
+		"thomas",
+		"tycho"
+	],
+	"priority": 21,
+	"conditions": [
+		{
+			"counter": "dissolves",
+			"gte": 5
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "thomas",
+				"text": "Five times now the deep place has sent you home the gentle way, boy. Not thrown out. Seen off, like a guest at the end of an evening."
+			},
+			{
+				"who": "tycho",
+				"text": "It beats the other way home."
+			},
+			{
+				"who": "thomas",
+				"text": "No doubt. But I keep wondering which it is. A door closing behind you, or a hand on your shoulder, walking you out. When you stand in that light, which does it feel like?"
+			}
+		]
+	}
+}

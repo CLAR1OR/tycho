@@ -1,0 +1,20 @@
+{
+	"id": "tycho-bark-portal",
+	"source": "bark",
+	"speakers": [
+		"tycho"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "tycho",
+				"text": "Right. In, down, back before supper. I've said that before. One of these days it'll even be true."
+			}
+		]
+	}
+}

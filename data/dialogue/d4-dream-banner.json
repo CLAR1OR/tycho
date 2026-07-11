@@ -1,0 +1,39 @@
+{
+	"id": "d4-dream-banner",
+	"source": "spine",
+	"speakers": [
+		"tycho"
+	],
+	"priority": 76,
+	"force_play": true,
+	"conditions": [
+		{
+			"flag": "d3"
+		},
+		{
+			"flag": "c4"
+		}
+	],
+	"sets_flag": "d4",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "That night she comes through clearer than she ever has, close enough to count her lashes. She is not in the cell. She stands in a high hall, and behind her hangs a banner. Black, worked with gold."
+			},
+			{
+				"who": "",
+				"text": "The same banner that rode up the west road."
+			},
+			{
+				"who": "",
+				"text": "She sees him seeing it. She doesn't flinch. She holds his eyes, lifts her chin toward the banner, and mouths something. No sound crosses. Then black."
+			},
+			{
+				"who": "tycho",
+				"text": "The banner behind her was his. Whatever the emperor has, whatever makes armies that aren't men. It sits in a high hall, and it looks like her."
+			}
+		]
+	}
+}

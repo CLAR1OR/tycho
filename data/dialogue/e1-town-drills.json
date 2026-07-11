@@ -1,0 +1,46 @@
+{
+	"id": "e1-town-drills",
+	"source": "spine",
+	"speakers": [
+		"tilly",
+		"herzog",
+		"tycho"
+	],
+	"priority": 99,
+	"force_play": true,
+	"conditions": [
+		{
+			"flag": "d5"
+		}
+	],
+	"sets_flag": "e1",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "The town Tycho comes home to has changed its posture. Guard drills by the wall before the morning bell. A powder cart under tarpaulin. The cannon manned, its crew bored and awake at once."
+			},
+			{
+				"who": "tilly",
+				"text": "Morning, Tycho. Third company's on the wall today. They're green, but they stand where I put them and they stay there. Ask me in a season and they'll be soldiers."
+			},
+			{
+				"who": "herzog",
+				"text": "The war will come when it comes. Until then: iron, powder, gold. Your hole in the ground provides all three. Keep going down."
+			},
+			{
+				"who": "tycho",
+				"text": "So nothing changes for me."
+			},
+			{
+				"who": "herzog",
+				"text": "Everything changed. Your errands became supply lines."
+			},
+			{
+				"who": "",
+				"text": "The portal still glows at the cave mouth. The shards still teach. The west will take its time arriving. The town has work for every one of his mornings, and so does the dark under the hill."
+			}
+		]
+	}
+}

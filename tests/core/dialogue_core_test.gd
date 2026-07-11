@@ -7,7 +7,8 @@ func _save_state() -> Dictionary:
 	return {
 		"story": {
 			"flags": {"a4": true, "has-resonance-ore": true},
-			"counters": {"runs": 10, "deaths": 2, "dissolves": 1, "boss_kills": 3, "full_clears": 1},
+			"counters": {"runs": 10, "deaths": 2, "dissolves": 1, "boss_kills": 3,
+				"full_clears": 1, "max_floor": 3},
 			"seen": [],
 			"talked_to": {"thomas": 2},
 			"dialogue_last": {},
@@ -38,6 +39,14 @@ func test_condition_vocabulary() -> void:
 	check(not DialogueCore.eval_condition({"counter": "dissolves", "gte": 2}, s), "dissolves gte miss")
 	check(DialogueCore.eval_condition({"counter": "codex_shards", "gte": 2}, s),
 		"codex_shards reads the codex section")
+	check(DialogueCore.eval_condition({"counter": "max_floor", "gte": 3}, s),
+		"max_floor counter read generically from story.counters (2026-07-10)")
+	check(not DialogueCore.eval_condition({"counter": "max_floor", "gte": 4}, s),
+		"max_floor gte miss")
+	var no_mf := _save_state()
+	(no_mf["story"]["counters"] as Dictionary).erase("max_floor")
+	check(not DialogueCore.eval_condition({"counter": "max_floor", "gte": 1}, no_mf),
+		"an old save without the max_floor counter reads 0 (gate stays shut)")
 	check(DialogueCore.eval_condition({"tech": "med-arithmetic-zero"}, s), "tech researched")
 	check(not DialogueCore.eval_condition({"tech": "med-masonry-arch"}, s), "tech not researched")
 	check(DialogueCore.eval_condition({"tech_started": "med-masonry-arch"}, s),
@@ -238,6 +247,59 @@ func test_select_forced_priority() -> void:
 	}
 	check_eq(DialogueCore.select_forced(defs, s), "high",
 		"higher-priority force_play scene is chosen first")
+
+
+func test_display_name_never_says_linnea() -> void:
+	# The second bearer's name is NEVER shown in Act I (voice-guides.md, locked): her
+	# data id `linnea` renders as "The Woman". Everyone else is the capitalized id.
+	check_eq(DialogueCore.display_name("linnea"), "The Woman", "linnea renders as The Woman")
+	check(not DialogueCore.display_name("linnea").contains("Linnea"),
+		"the display label never contains her name")
+	check_eq(DialogueCore.display_name("sophia"), "Sophia", "everyone else capitalizes")
+	check_eq(DialogueCore.display_name("emissary"), "Emissary", "unmapped ids just capitalize")
+
+
+# --- data/dialogue content lint (protects the whole pool — 2026-07-10) ---------------
+
+## Condition keys the engine implements (act1-story-beats.md vocabulary; `gte` is the
+## threshold rider on counter/resource/building/talked_to).
+const KNOWN_CONDITION_KEYS := ["flag", "counter", "tech", "tech_started", "age",
+	"resource", "building", "has", "talked_to", "gte"]
+## Counters the save actually maintains (StoryCore) + the codex_shards alias.
+const KNOWN_COUNTERS := ["runs", "deaths", "dissolves", "boss_kills", "full_clears",
+	"max_floor", "codex_shards"]
+
+
+func test_dialogue_data_sweep() -> void:
+	# Every authored def in data/dialogue/: parses + passes the schema (load_domain is
+	# loud), uses ONLY the implemented condition vocabulary, and every SPOKEN line obeys
+	# the voice-guide bans — no em dashes in dialogue, the second bearer never named,
+	# and no line canonizing the placeholder boss name (floor-1-boss.md: rename-safe).
+	var defs := DataLoader.load_domain("dialogue")
+	check(defs.size() >= 100, "the dialogue pool loaded (%d defs)" % defs.size())
+	for id: String in defs:
+		var def: Dictionary = defs[id]
+		check_eq(str(def.get("id", "")), id, "%s: filename matches the id field" % id)
+		check(DialogueCore.SOURCE_RANK.has(str(def.get("source", ""))),
+			"%s: source is one of spine/arc/contextual/bark" % id)
+		check(not (def.get("speakers", []) as Array).is_empty(), "%s: has an owner" % id)
+		for cond: Dictionary in def.get("conditions", []):
+			for key: Variant in cond:
+				check(KNOWN_CONDITION_KEYS.has(str(key)),
+					"%s: condition key \"%s\" is in the engine vocabulary" % [id, str(key)])
+			if cond.has("counter"):
+				check(KNOWN_COUNTERS.has(str(cond["counter"])),
+					"%s: counter \"%s\" actually exists on the save" % [id, str(cond["counter"])])
+		for line: Dictionary in (def.get("scene", {}) as Dictionary).get("lines", []):
+			var who := str(line.get("who", ""))
+			var text := str(line.get("text", ""))
+			if not who.is_empty():
+				check(not text.contains("—"),
+					"%s: no em dash in a spoken line (voice-guides.md ban)" % id)
+			check(not text.contains("Linnea"),
+				"%s: the second bearer is never named in Act I" % id)
+			check(not text.contains("Den-Warden") and not text.contains("Den Warden"),
+				"%s: the placeholder boss name is never canonized in dialogue" % id)
 
 
 func test_mark_shown() -> void:

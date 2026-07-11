@@ -10,7 +10,8 @@ func _story() -> Dictionary:
 	# A fresh story section, same shape SaveData.default_slot builds.
 	return {
 		"flags": {},
-		"counters": {"runs": 0, "deaths": 0, "dissolves": 0, "boss_kills": 0, "full_clears": 0},
+		"counters": {"runs": 0, "deaths": 0, "dissolves": 0, "boss_kills": 0,
+			"full_clears": 0, "max_floor": 0},
 		"seen": [],
 		"talked_to": {},
 		"dialogue_last": {},
@@ -87,6 +88,37 @@ func test_counters_accumulate() -> void:
 	StoryCore.record_run_end(story, true)
 	check_eq(int(story["counters"]["runs"]), 3, "runs accumulate across win+loss")
 	check_eq(int(story["counters"]["full_clears"]), 2, "only victories count as clears")
+
+
+# --- max_floor (deepest floor ever reached — 2026-07-10) ----------------------------
+
+func test_max_floor_rises_with_floor_reached() -> void:
+	var story := _story()
+	StoryCore.record_run_end(story, false, 2)
+	check_eq(int(story["counters"]["max_floor"]), 2, "a death on floor 2 records max_floor 2")
+	StoryCore.record_run_end(story, true, 5)
+	check_eq(int(story["counters"]["max_floor"]), 5, "a deeper run raises the max")
+
+
+func test_max_floor_never_decreases() -> void:
+	var story := _story()
+	StoryCore.record_run_end(story, true, 3)
+	StoryCore.record_run_end(story, false, 1)
+	check_eq(int(story["counters"]["max_floor"]), 3,
+		"a shallower later run leaves max_floor alone (max, not last)")
+	StoryCore.record_run_end(story, true)  # legacy/default call — floor 0
+	check_eq(int(story["counters"]["max_floor"]), 3, "a default-arg call never lowers it")
+	check_eq(int(story["counters"]["runs"]), 3, "all three runs still ticked")
+
+
+func test_max_floor_missing_key_reads_zero() -> void:
+	# An OLD save's counters dict may lack max_floor entirely (pre-2026-07-10) — the
+	# core must treat the absent key as 0 and create it on the next run end.
+	var story := _story()
+	(story["counters"] as Dictionary).erase("max_floor")
+	StoryCore.record_run_end(story, false, 2)
+	check_eq(int(story["counters"]["max_floor"]), 2,
+		"a counters dict without the key gets it created from 0")
 
 
 # --- Codex shard -------------------------------------------------------------------

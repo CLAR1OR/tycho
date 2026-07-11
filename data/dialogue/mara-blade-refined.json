@@ -1,0 +1,35 @@
+{
+	"id": "mara-blade-refined",
+	"source": "contextual",
+	"speakers": [
+		"mara",
+		"tycho"
+	],
+	"priority": 21,
+	"conditions": [
+		{
+			"flag": "b1"
+		},
+		{
+			"counter": "runs",
+			"gte": 12
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "mara",
+				"text": "Give me the blade a moment. Look at that edge line. You know what's strange? The ore's stopped fighting me on this one. Early on, every pass was an argument."
+			},
+			{
+				"who": "tycho",
+				"text": "And now?"
+			},
+			{
+				"who": "mara",
+				"text": "Now it moves like it knows where we're going. I've either finally learned this stuff, or it's been paying attention. Don't laugh. You haven't held it."
+			}
+		]
+	}
+}

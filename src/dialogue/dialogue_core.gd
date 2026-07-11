@@ -80,6 +80,19 @@ static func owner_of(def: Dictionary) -> String:
 	return str(speakers[0]) if not speakers.is_empty() else ""
 
 
+## Speaker ids whose on-screen label is NOT the capitalized id. Load-bearing for the
+## second bearer (voice-guides.md, locked 2026-07-03): her data id is `linnea` but the
+## name is NEVER spoken or shown in Act I — the UI labels her "The Woman" (the name
+## arrives with Act II). Pure so it's unit-testable; DialoguePanel renders through it.
+const DISPLAY_NAMES := {"linnea": "The Woman"}
+
+
+## The label the dialogue box shows for a line's `who` ("" = narration, shown as a dash
+## by the panel). Everyone but the mapped ids is just the id capitalized.
+static func display_name(who: String) -> String:
+	return str(DISPLAY_NAMES.get(who, who.capitalize()))
+
+
 static func eligible(def: Dictionary, save_state: Dictionary) -> bool:
 	var story: Dictionary = save_state.get("story", {})
 	var id := str(def.get("id", ""))
@@ -122,7 +135,10 @@ static func eval_condition(cond: Dictionary, save_state: Dictionary) -> bool:
 		return bool((story.get("flags", {}) as Dictionary).get(str(cond["flag"]), false))
 	if cond.has("counter"):
 		var counters: Dictionary = story.get("counters", {})
-		# codex_shards reads the codex section; the rest are story counters.
+		# codex_shards reads the codex section; the rest are story counters, read
+		# generically: runs / deaths / dissolves / boss_kills / full_clears /
+		# max_floor (deepest floor ever reached, max()'d on run_ended — 2026-07-10).
+		# A counter absent from an old save reads 0.
 		var value := float(save_state.get("codex", {}).get("shards", 0)) \
 			if str(cond["counter"]) == "codex_shards" \
 			else float(counters.get(str(cond["counter"]), 0))

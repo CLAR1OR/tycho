@@ -1,0 +1,31 @@
+{
+	"id": "mara-dust-sorting",
+	"source": "contextual",
+	"speakers": [
+		"mara",
+		"tycho"
+	],
+	"priority": 21,
+	"conditions": [
+		{
+			"has": "resonance-dust"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "mara",
+				"text": "That glittering dust you keep trailing through my shop. I swept a pile of it into the pan, and it sat there sorting itself by grain. Sorting. Itself."
+			},
+			{
+				"who": "tycho",
+				"text": "You watched it, didn't you."
+			},
+			{
+				"who": "mara",
+				"text": "I tipped it out and swept it up twice more just to watch. Whatever that stuff is, it tidies better than you do."
+			}
+		]
+	}
+}

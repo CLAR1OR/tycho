@@ -1,0 +1,23 @@
+{
+	"id": "herzog-three-clears",
+	"source": "contextual",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 21,
+	"conditions": [
+		{
+			"counter": "full_clears",
+			"gte": 3
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "Three times now you have walked to the bottom of that place and walked home. I once knew a man who swam a strait twice on a bet. He never shut up about it. You haul supplies out of the deep and say nothing. I notice these things. That is all. Carry on."
+			}
+		]
+	}
+}

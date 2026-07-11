@@ -1,0 +1,23 @@
+{
+	"id": "herzog-cathedral-founded",
+	"source": "contextual",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 24,
+	"conditions": [
+		{
+			"building": "cathedral",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "The cathedral foundation is laid. It will not be finished while I hold this office, or the next man's. That is the point of it. A town that starts a thing it won't live to see done is planning to still be here in its grandchildren's time. Good message. Cheap at the price. The price was not cheap."
+			}
+		]
+	}
+}

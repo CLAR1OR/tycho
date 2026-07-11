@@ -1,0 +1,41 @@
+{
+	"id": "d2-first-cannon",
+	"source": "spine",
+	"speakers": [
+		"mara",
+		"herzog"
+	],
+	"priority": 78,
+	"force_play": true,
+	"conditions": [
+		{
+			"tech": "ren-gunpowder"
+		}
+	],
+	"sets_flag": "d2",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "It takes the smithy a month of failures that crack the yard stones, and then one morning it doesn't fail. On the wall above the gate sits an iron throat on a timber carriage, pointed west."
+			},
+			{
+				"who": "",
+				"text": "Half the town turns out for the first shot. The powder speaks once, and across the valley the old dead oak comes apart."
+			},
+			{
+				"who": "mara",
+				"text": "Dad made horseshoes his whole life. I made a cannon. Don't tell him."
+			},
+			{
+				"who": "herzog",
+				"text": "Loud. Ugly. Ours. Build another."
+			},
+			{
+				"who": "",
+				"text": "Nobody says the word war. Everybody thinks it. The town has teeth now, and a direction to point them."
+			}
+		]
+	}
+}

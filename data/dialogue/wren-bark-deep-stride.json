@@ -1,0 +1,25 @@
+{
+	"id": "wren-bark-deep-stride",
+	"source": "bark",
+	"speakers": [
+		"wren"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 3,
+	"conditions": [
+		{
+			"counter": "max_floor",
+			"gte": 4
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "wren",
+				"text": "...you walk different since you found the deep floors. Longer stride. You've been walking on ground that isn't ground, I'd wager, and your legs brought the habit home. Don't look at me like that. Legs remember. They're honest that way."
+			}
+		]
+	}
+}

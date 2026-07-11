@@ -1,0 +1,32 @@
+{
+	"id": "mara-mill-gears",
+	"source": "contextual",
+	"speakers": [
+		"mara",
+		"tycho"
+	],
+	"priority": 24,
+	"conditions": [
+		{
+			"building": "mill",
+			"gte": 1
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "mara",
+				"text": "Have you seen the mill run? Gears, Tycho. A whole building that's secretly one big machine wearing a stone coat. I stood inside an hour just watching the teeth mesh."
+			},
+			{
+				"who": "tycho",
+				"text": "The miller thinks you're strange."
+			},
+			{
+				"who": "mara",
+				"text": "The miller grinds flour with the strongest thing in town and never once looks at it. I look. Somebody should."
+			}
+		]
+	}
+}

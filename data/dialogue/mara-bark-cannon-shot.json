@@ -1,0 +1,24 @@
+{
+	"id": "mara-bark-cannon-shot",
+	"source": "bark",
+	"speakers": [
+		"mara"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "mara",
+				"text": "Recasting the shot batch again. Third one this season, and I'll keep going till they fly true. If she ever has to speak in anger, I want it landing where Tilly points."
+			}
+		]
+	}
+}

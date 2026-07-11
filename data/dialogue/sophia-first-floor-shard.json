@@ -1,0 +1,35 @@
+{
+	"id": "sophia-first-floor-shard",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 31,
+	"conditions": [
+		{
+			"counter": "boss_kills",
+			"gte": 1
+		},
+		{
+			"has": "knowledge-shards"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "The shard you took off the first floor's keeper is different from the ones in the caches. Denser writing, simpler subjects. It reads like the first page of a primer."
+			},
+			{
+				"who": "tycho",
+				"text": "A primer for what?"
+			},
+			{
+				"who": "sophia",
+				"text": "Building. Counting. The things we've been studying, all of it downhill from these first pages. Whoever wrote them decided where we'd start."
+			}
+		]
+	}
+}

@@ -1,0 +1,23 @@
+{
+	"id": "herzog-gold-strongroom",
+	"source": "contextual",
+	"speakers": [
+		"herzog"
+	],
+	"priority": 21,
+	"conditions": [
+		{
+			"resource": "gold",
+			"gte": 1000
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "herzog",
+				"text": "The strongroom is full. I have guarded pay chests for kings that held less. Do not tell anyone I said that. Buy stone with it. A full strongroom helps nobody until it is spent."
+			}
+		]
+	}
+}

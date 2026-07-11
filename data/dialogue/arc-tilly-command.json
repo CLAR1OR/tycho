@@ -1,0 +1,31 @@
+{
+	"id": "arc-tilly-command",
+	"source": "arc",
+	"speakers": [
+		"tilly",
+		"tycho"
+	],
+	"priority": 60,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "tilly",
+				"text": "Bram, take two and walk the west wall. Relief at the gate bell. Go."
+			},
+			{
+				"who": "tycho",
+				"text": "No 'let me see'. No starting over."
+			},
+			{
+				"who": "tilly",
+				"text": "No time for it. The words come out right the first time now. I don't know when that started. I was too busy to notice."
+			}
+		]
+	}
+}

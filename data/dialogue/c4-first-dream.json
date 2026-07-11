@@ -1,0 +1,42 @@
+{
+	"id": "c4-first-dream",
+	"source": "spine",
+	"speakers": [
+		"tycho",
+		"linnea"
+	],
+	"priority": 86,
+	"force_play": true,
+	"conditions": [
+		{
+			"counter": "codex_shards",
+			"gte": 2
+		}
+	],
+	"sets_flag": "c4",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "That night the dream is different. A desk, a candle, a woman bent over her work, papers weighted with a knife. Her sleeves are rolled, and up her forearm run etchings like his."
+			},
+			{
+				"who": "",
+				"text": "She writes fast, checks one page against another, writes again. Working. Urgent. Then she stops mid line and looks up. At him."
+			},
+			{
+				"who": "linnea",
+				"text": "You can see me. Good. Don't talk. Look."
+			},
+			{
+				"who": "",
+				"text": "Her eyes go to the wall behind her. Stone, one narrow window, a heavy door with the hinges on the outside. Then the candle gutters, and the dream is gone."
+			},
+			{
+				"who": "tycho",
+				"text": "Sophia is going to want every word of that written down."
+			}
+		]
+	}
+}

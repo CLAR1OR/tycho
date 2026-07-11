@@ -1,0 +1,43 @@
+{
+	"id": "arc-sophia-awe",
+	"source": "arc",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 58,
+	"conditions": [
+		{
+			"flag": "b3"
+		},
+		{
+			"counter": "runs",
+			"gte": 4
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "Sit down. Look at this. I laid out every shard you've brought me, side by side, oldest first."
+			},
+			{
+				"who": "tycho",
+				"text": "You've been up all night."
+			},
+			{
+				"who": "sophia",
+				"text": "Two nights. Tycho, they don't repeat. A table full of stone and not one of them says the same thing twice. I keep waiting to find the copy, the filler, the mistake. It isn't there."
+			},
+			{
+				"who": "tycho",
+				"text": "Is that good?"
+			},
+			{
+				"who": "sophia",
+				"text": "It's enormous. Ask me again when I've slept."
+			}
+		]
+	}
+}

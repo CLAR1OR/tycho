@@ -20,8 +20,11 @@ One file per slot + one shared profile file. Settings/accessibility are profile-
     "name": "…", "created_at": "…", "updated_at": "…",
     "playtime_s": 0, "age": 1, "act": 1, "runs": 0, "act1_complete": false   // set by beat E1 → slot-screen badge (2026-07-03)
   },
-  "story":   { "flags": {"a1": true}, "counters": {"runs": 0, "deaths": 0, "dissolves": 0, "boss_kills": 0, "full_clears": 0}, "seen": ["snippet-id"] },
+  "story":   { "flags": {"a1": true}, "counters": {"runs": 0, "deaths": 0, "dissolves": 0, "boss_kills": 0, "full_clears": 0, "max_floor": 0}, "seen": ["snippet-id"] },
              // deaths = combat only; dissolves = full-clear returns via the codex artifact (2026-07-07)
+             // max_floor = deepest floor EVER reached — max()'d from run_ended's floor_reached, never
+             // decreases; old saves get it via the defaults-merge (reads 0). Dialogue gates read it
+             // as `max_floor >= N` (2026-07-10, the dialogue-volume pass).
   "tech":    { "researched": ["id"], "in_progress": {"id": 12.5}, "auto_solve_counters": {"id": 3} },
   "ledger":  { "gold": 0, "knowledge": 1.2, "resonance-ore": 0 },   // see §2
   "town":    { /* Town object, §6 */ },
@@ -161,6 +164,8 @@ One generic evaluator reads these; new achievements are data entries. Unlocks li
 ```
 
 Eligibility evaluation reads ONLY `story.flags/counters` + ledger + tech state — all of which are EventBus-maintained. The selector is a pure function `(save_state, character) -> snippet` → unit-testable without the engine running.
+
+**Dialogue-volume pass (2026-07-10):** the pool is 112 files (spine complete through E1; batch record `design/dialogue/drafts-review-2026-07-10.md`). The counter vocabulary gained `max_floor`. Speaker display names route through pure `DialogueCore.display_name()` — a small map for ids whose label is not the capitalized id (today only `linnea` → "The Woman", the Act-I name rule); `DialoguePanel` renders through it. A pool-wide unit lint (`dialogue_core_test.gd::test_dialogue_data_sweep`) enforces: vocabulary-only condition keys/counters, filename == id, no em dashes in spoken lines, no "Linnea" in any text, no placeholder boss name canonized.
 
 ## 8. Summons (Act II seed — schema reserved, NOT implemented)
 

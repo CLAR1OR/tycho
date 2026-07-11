@@ -22,8 +22,9 @@ extends Node
 ##   death            → story.counters.deaths
 ##   dissolved        → story.counters.dissolves  (full-clear return via the codex artifact)
 ##   boss_killed      → story.counters.boss_kills
-##   run_ended        → story.counters.runs (+ meta.runs mirror); on victory also
-##                      story.counters.full_clears + codex.shards (+ codex_shard_added)
+##   run_ended        → story.counters.runs (+ meta.runs mirror) + story.counters.max_floor
+##                      (max() of floor_reached — deepest floor ever, 2026-07-10); on victory
+##                      also story.counters.full_clears + codex.shards (+ codex_shard_added)
 
 
 func _ready() -> void:
@@ -57,12 +58,12 @@ func _on_boss_killed(_boss_id: String, _floor: int) -> void:
 	StoryCore.record_boss_kill(SaveManager.state["story"])
 
 
-## Run ended (win or die). Bumps the run counters, mirrors runs into meta (the
-## slot-select readout), and — on victory (== full clear in the slice) — grants the
-## codex shard. The day tick and the town swap stay in game.gd; the tech auto-solve
-## moved to the TechState autoload.
-func _on_run_ended(victory: bool, _floor_reached: int, _stats: Dictionary) -> void:
-	StoryCore.record_run_end(SaveManager.state["story"], victory)
+## Run ended (win or die). Bumps the run counters (incl. max_floor from the signal's
+## floor_reached), mirrors runs into meta (the slot-select readout), and — on victory
+## (== full clear in the slice) — grants the codex shard. The day tick and the town
+## swap stay in game.gd; the tech auto-solve moved to the TechState autoload.
+func _on_run_ended(victory: bool, floor_reached: int, _stats: Dictionary) -> void:
+	StoryCore.record_run_end(SaveManager.state["story"], victory, floor_reached)
 	SaveManager.state["meta"]["runs"] = SaveManager.state["story"]["counters"]["runs"]
 	if victory:
 		grant_codex_shard()

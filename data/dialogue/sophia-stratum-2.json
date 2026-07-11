@@ -1,0 +1,32 @@
+{
+	"id": "sophia-stratum-2",
+	"source": "contextual",
+	"speakers": [
+		"sophia",
+		"tycho"
+	],
+	"priority": 29,
+	"conditions": [
+		{
+			"counter": "max_floor",
+			"gte": 2
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "sophia",
+				"text": "A hall, below a cave. Arches. Columns. Who built them?"
+			},
+			{
+				"who": "tycho",
+				"text": "Nobody I've met down there."
+			},
+			{
+				"who": "sophia",
+				"text": "Arches are work, Tycho. Somebody cuts every wedge. And you say they're all identical. A mason's arches differ, his hand tires, his stone varies. Identical means one hand made them all, and it never tired. Bring me a drawing."
+			}
+		]
+	}
+}

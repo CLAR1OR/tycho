@@ -1,0 +1,37 @@
+{
+	"id": "c5-dream-4",
+	"source": "spine",
+	"speakers": [
+		"tycho",
+		"linnea"
+	],
+	"priority": 67,
+	"force_play": true,
+	"conditions": [
+		{
+			"counter": "codex_shards",
+			"gte": 4
+		},
+		{
+			"flag": "c5-3"
+		}
+	],
+	"sets_flag": "c5-4",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "Fourth shard, fourth dream. Her cell again. She has the knife from the desk, and she is not using it as a knife. She is scoring a line along the door frame, patient as a mason."
+			},
+			{
+				"who": "linnea",
+				"text": "They count my candles. Not yours. I can work while you sleep."
+			},
+			{
+				"who": "",
+				"text": "She looks at him once before it ends. Not a plea. An appraisal."
+			}
+		]
+	}
+}

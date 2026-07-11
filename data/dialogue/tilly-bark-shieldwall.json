@@ -1,0 +1,24 @@
+{
+	"id": "tilly-bark-shieldwall",
+	"source": "bark",
+	"speakers": [
+		"tilly"
+	],
+	"priority": 1,
+	"once": false,
+	"cooldown_runs": 2,
+	"conditions": [
+		{
+			"flag": "e1"
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "tilly",
+				"text": "Spear count's up, boot count's up, and the baker's boy can hold a shield wall now. Don't smile. I mean it as a report. He's good."
+			}
+		]
+	}
+}

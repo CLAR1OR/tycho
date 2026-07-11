@@ -1,0 +1,41 @@
+{
+	"id": "c5-dream-3",
+	"source": "spine",
+	"speakers": [
+		"tycho",
+		"linnea"
+	],
+	"priority": 68,
+	"force_play": true,
+	"conditions": [
+		{
+			"counter": "codex_shards",
+			"gte": 3
+		},
+		{
+			"flag": "c4"
+		}
+	],
+	"sets_flag": "c5-3",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "The night after the third shard seats itself, she is there again, sharper, as if the dream has been swept clean."
+			},
+			{
+				"who": "",
+				"text": "She is pacing her cell. Not the pacing of a worried woman. She steps, counts, marks the wall with her thumbnail. Measuring it."
+			},
+			{
+				"who": "linnea",
+				"text": "Clearer this time. Whatever you did, do it again."
+			},
+			{
+				"who": "",
+				"text": "She goes back to measuring before the dream lets go, as if he were one item on a list, and the list is long."
+			}
+		]
+	}
+}

@@ -1,0 +1,35 @@
+{
+	"id": "arc-mara-designs",
+	"source": "arc",
+	"speakers": [
+		"mara",
+		"tycho"
+	],
+	"priority": 42,
+	"conditions": [
+		{
+			"flag": "b1"
+		},
+		{
+			"counter": "runs",
+			"gte": 14
+		}
+	],
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "mara",
+				"text": "Look at the curve on that blade. Go on, pick it up. My father never made anything shaped like it. Nobody did. I drew it myself, three drafts, because your ore rings truest along a curve."
+			},
+			{
+				"who": "tycho",
+				"text": "It's beautiful."
+			},
+			{
+				"who": "mara",
+				"text": "It's mine. First thing I've made that isn't his work done over. Now give it back, it's not finished."
+			}
+		]
+	}
+}

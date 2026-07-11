@@ -1,0 +1,47 @@
+{
+	"id": "d5-cliffhanger",
+	"source": "spine",
+	"speakers": [
+		"herzog",
+		"tilly",
+		"sophia",
+		"tycho"
+	],
+	"priority": 75,
+	"force_play": true,
+	"conditions": [
+		{
+			"flag": "d4"
+		}
+	],
+	"sets_flag": "d5",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "Herzog calls them to the hall at first light. No ceremony. Tilly's reports laid out in order on the table, weighted at the corners with cannon shot."
+			},
+			{
+				"who": "herzog",
+				"text": "Tilly. You have been drilling the guard on your own authority. It is now my authority. Captain of the town's defense. Build me soldiers."
+			},
+			{
+				"who": "tilly",
+				"text": "Yes. First muster by week's end. Thank you. I won't waste it."
+			},
+			{
+				"who": "sophia",
+				"text": "He fields armies, Tycho. Armies that aren't men, drawn from the same well your etchings drink from. A sword and a brave brother won't answer that. We need everything this town is becoming, and faster."
+			},
+			{
+				"who": "tycho",
+				"text": "Then I don't stop. The runs feed the forge, and the forge feeds the wall. And if the emperor's strength has a source, I've seen her face. That's more than he knows about us."
+			},
+			{
+				"who": "",
+				"text": "Outside, the drills go on into the dark. To the west the roads are quiet. Nobody in the town mistakes that for peace anymore."
+			}
+		]
+	}
+}

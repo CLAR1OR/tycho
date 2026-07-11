@@ -1,0 +1,44 @@
+{
+	"id": "d1-tilly-briefs",
+	"source": "spine",
+	"speakers": [
+		"tilly",
+		"herzog",
+		"tycho"
+	],
+	"priority": 79,
+	"conditions": [
+		{
+			"flag": "c3"
+		},
+		{
+			"tech_started": "ren-gunpowder"
+		}
+	],
+	"sets_flag": "d1",
+	"scene": {
+		"kind": "talk",
+		"lines": [
+			{
+				"who": "tilly",
+				"text": "I put it all in front of Herzog this morning. Every report since the first families came east. Descriptions, dates, directions. Then your field notes next to them, the ones Sophia keeps."
+			},
+			{
+				"who": "tilly",
+				"text": "Same walk. Same silence. Same wrongness when they bleed. The things burning the west and the things you fight under the ground match, point for point. Somebody out there makes them, or calls them, and he is walking his army east."
+			},
+			{
+				"who": "herzog",
+				"text": "I have sat through many briefings in my life. This one I believe."
+			},
+			{
+				"who": "tycho",
+				"text": "So what changes?"
+			},
+			{
+				"who": "tilly",
+				"text": "Watch rotas doubled. The wall manned at night. And Herzog has me training every hand that can hold a spear. We stop hoping the west road stays quiet, and we get ready for when it doesn't."
+			}
+		]
+	}
+}

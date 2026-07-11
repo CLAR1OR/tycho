@@ -60,11 +60,16 @@ static func record_boss_kill(story: Dictionary) -> void:
 
 ## A run ended, win OR die (EventBus.run_ended, 1 day = 1 run) — always bumps runs;
 ## on victory also bumps full_clears (slice config is one floor, so victory == full
-## clear — PRD §7.11). The meta.runs mirror + the codex shard are cross-section and
-## are applied by StoryState. Mutates story.
-static func record_run_end(story: Dictionary, victory: bool) -> void:
+## clear — PRD §7.11). `floor_reached` (the run_ended payload) folds into max_floor —
+## the deepest floor EVER reached, across all runs (2026-07-10; dialogue gates read it
+## as `max_floor >= N`). A max(): it NEVER decreases — a shallower later run (or the
+## cheat panel's floor-1 sims) leaves it alone; a missing key reads 0 (old saves also
+## get the default via defaults-merge). The meta.runs mirror + the codex shard are
+## cross-section and are applied by StoryState. Mutates story.
+static func record_run_end(story: Dictionary, victory: bool, floor_reached: int = 0) -> void:
 	var counters: Dictionary = story["counters"]
 	counters["runs"] = int(counters["runs"]) + 1
+	counters["max_floor"] = maxi(int(counters.get("max_floor", 0)), floor_reached)
 	if victory:
 		counters["full_clears"] = int(counters["full_clears"]) + 1
 

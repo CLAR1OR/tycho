@@ -1,0 +1,44 @@
+{
+	"id": "d3-the-emissary",
+	"source": "spine",
+	"speakers": [
+		"emissary",
+		"herzog"
+	],
+	"priority": 77,
+	"force_play": true,
+	"conditions": [
+		{
+			"flag": "d1"
+		},
+		{
+			"flag": "d2"
+		}
+	],
+	"sets_flag": "d3",
+	"scene": {
+		"kind": "cutscene",
+		"lines": [
+			{
+				"who": "",
+				"text": "A single rider comes up the west road at a walk. Black banner, worked with gold thread. He stops inside the gate without asking leave and reads the town like a bill of goods."
+			},
+			{
+				"who": "emissary",
+				"text": "I speak for the Emperor. You will have heard what became of the villages that stood apart. His terms are gentle, and offered once. Open your gates, tithe your harvests and your forges, and kneel. The Emperor keeps what kneels."
+			},
+			{
+				"who": "",
+				"text": "The square is silent. Heads turn to Herzog."
+			},
+			{
+				"who": "herzog",
+				"text": "No."
+			},
+			{
+				"who": "",
+				"text": "The emissary waits for the rest of the answer. There is no rest. He turns his horse and goes, and the dust of the west road takes him back the way he came."
+			}
+		]
+	}
+}
