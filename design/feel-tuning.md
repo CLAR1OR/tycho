@@ -438,6 +438,17 @@ Water LOOK dials are the shader's uniform defaults (grouped in the shader: color
 | `make_bed` / `bed_shallow_y` / `bed_deep_y` / `bed_color` | on / −0.5 / −4.0 / silt | The generated sloped floor the absorption gradient reads against (shallow at the town edge, deep out). |
 | `wind_intensity` / `wind_direction` | 0.35 / (1, 0, 0.35) | Fed into the PROJECT-WIDE shader globals at ready (never zero the direction). |
 
+### Shore — `src/core/shore_terrain.gd` (@export → Inspector) *(built 2026-07-11; the curvy waterline)*
+
+The shoreline is never drawn — it emerges where this terrain's height crosses the water surface (the water shader foams at depth≈0). Node origin sits ON the mean waterline.
+
+| Var | Default | What it does |
+|-----|---------|--------------|
+| `width` / `land_depth` / `water_depth` | 80 / 4 / 14 | Strip footprint: beach toward town, bed toward the lake. |
+| `curve_amplitude` / `curve_frequency` / `curve_seed` | 2.0 / 0.08 / 7 | THE shoreline dials: meander size (± m), feature wiggliness, reroll the shape. |
+| `drop_slope` / `land_y` | 0.35 / 0.02 | Bed steepness (absorption gradient) and beach height over the town floor. |
+| `resolution` / `sand_color` | 0.75 m / sand | Grid density and the beach colour (toon-swept at runtime). |
+
 ### Grass — `src/core/grass_patch.gd` (@export → Inspector) + `assets/materials/grass_blade.gdshader` uniforms *(built 2026-07-11; judge in `scenes/core/grass_demo.tscn`)*
 
 | Var | Default | What it does |

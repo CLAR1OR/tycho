@@ -90,6 +90,7 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 
 - **5 floor env profiles** — pure data (`data/floors/*.json`: bg/ambient/light/ground/wall/fog hex + energies). Built 🟨, every colour a human dial; **5 legibility passes pending**.
 - Town environment: 2 age-skins + calm-vs-tension lighting. ⬜
+- Town shore: generated terrain (`ShoreTerrain` — noise-meandering beach/drop-off strip; the curvy shoreline emerges where its height crosses the water). ✅ PLACED 2026-07-11, spans x ±40 past the town
 - Town water: shader-generated (`WaterPlane` + `water_absorption.gdshader`, CC0 Malido — depth absorption, edge foam, caustics, wind waves, walk-in ripples; sloped generated bed). ✅ PLACED 2026-07-11 — the town's south border (WallS mesh hidden, collision kept); needs Forward+ + the project shader globals (`project.godot [shader_globals]`)
 - Town grass: shader-generated (`GrassPatch` + `grass_blade.gdshader`, CC0 @_Malido — wind sway + walk-through bend; demo `scenes/core/grass_demo.tscn`). ✅ PLACED in town 2026-07-11 — meadow around the KayKit trees/player spawn, blades = the human's `assets/models/GrassMesh.res` (via the `blade_mesh` export), bent by the Player
 - Title/slot-select night sky (gradient, stars, cyan constellation, ridge) — code-drawn ⬜.

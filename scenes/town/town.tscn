@@ -8,6 +8,7 @@
 [ext_resource type="Script" uid="uid://kmvyf0xkbrhw" path="res://src/core/grass_patch.gd" id="6_grass"]
 [ext_resource type="ArrayMesh" uid="uid://er8nljgvawhk" path="res://assets/models/GrassMesh.res" id="7_gmesh"]
 [ext_resource type="Script" uid="uid://dewj5vnru7k77" path="res://src/core/water_plane.gd" id="8_water"]
+[ext_resource type="Script" path="res://src/core/shore_terrain.gd" id="10_shore"]
 [ext_resource type="PackedScene" uid="uid://c0py1hpm01tj4" path="res://assets/models/kaykit-forest-gltf/Bush_2_A_Color1.gltf" id="9_jil70"]
 
 [sub_resource type="Environment" id="Env"]
@@ -654,9 +655,15 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.9313707)
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.775711, 0.3763888, 5.7571034)
 
 [node name="Water" type="MeshInstance3D" parent="." unique_id=509291451 node_paths=PackedStringArray("follow_target")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 21.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 23.5)
 script = ExtResource("8_water")
 follow_target = NodePath("../Player")
+size = Vector2(80, 17)
+make_bed = false
+
+[node name="Shore" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 17.5)
+script = ExtResource("10_shore")
 
 [node name="Grass" type="MultiMeshInstance3D" parent="." unique_id=1526648954]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 5)
