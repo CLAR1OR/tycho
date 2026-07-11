@@ -16,8 +16,8 @@ class_name StyleCore
 ## a PLACEHOLDER awaiting the human's dial pass. Shader uniform defaults mirror these.
 
 # --- Core style dials ---------------------------------------------------------------
-const BAND_COUNT := 3                            # style: human-tuned, do not optimize — toon light bands
-const OUTLINE_WIDTH := 0.03                      # style: human-tuned, do not optimize — inverted-hull width (m)
+const BAND_COUNT := 5                            # style: human-tuned, do not optimize — toon light bands
+const OUTLINE_WIDTH := 0.01                       # style: human-tuned, do not optimize — inverted-hull width (m)
 const OUTLINE_COLOR := Color(0.07, 0.06, 0.10)   # style: human-tuned, do not optimize — near-black outline
 
 # --- Ramps (3 stops, dark -> light) ---------------------------------------------------

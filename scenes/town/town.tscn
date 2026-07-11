@@ -1,8 +1,10 @@
-[gd_scene load_steps=34 format=3]
+[gd_scene format=3 uid="uid://d08rmwkidjsj0"]
 
-[ext_resource type="Script" path="res://src/town/town.gd" id="1"]
+[ext_resource type="Script" uid="uid://ddmxi2vavagho" path="res://src/town/town.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/combat/player.tscn" id="2"]
+[ext_resource type="PackedScene" uid="uid://dqf7d7h226yn2" path="res://assets/models/kaykit-forest-gltf/Tree_3_A_Color1.gltf" id="2_v00pm"]
 [ext_resource type="PackedScene" path="res://scenes/core/camera_rig.tscn" id="3"]
+[ext_resource type="PackedScene" uid="uid://cswtner1nao5f" path="res://assets/models/kaykit-forest-gltf/Tree_4_B_Color1.gltf" id="5_6g2qn"]
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 1
@@ -20,11 +22,11 @@ albedo_color = Color(0.3, 0.32, 0.24, 1)
 [sub_resource type="BoxShape3D" id="FloorShape"]
 size = Vector3(34, 1, 34)
 
-[sub_resource type="StandardMaterial3D" id="WallMat"]
-albedo_color = Color(0.36, 0.33, 0.28, 1)
-
 [sub_resource type="BoxMesh" id="WallNSMesh"]
 size = Vector3(34, 2, 1)
+
+[sub_resource type="StandardMaterial3D" id="WallMat"]
+albedo_color = Color(0.36, 0.33, 0.28, 1)
 
 [sub_resource type="BoxShape3D" id="WallNSShape"]
 size = Vector3(34, 2, 1)
@@ -44,13 +46,10 @@ height = 3.5
 transparency = 1
 shading_mode = 0
 albedo_color = Color(1, 0.55, 0.3, 0.35)
-emission_enabled = true
-emission = Color(1, 0.5, 0.2, 1)
-emission_energy_multiplier = 2.0
 
 [sub_resource type="CylinderShape3D" id="PortalShape"]
-radius = 1.4
 height = 3.5
+radius = 1.4
 
 [sub_resource type="BoxMesh" id="PlotMarkerMesh"]
 size = Vector3(3.2, 0.1, 3.2)
@@ -68,13 +67,13 @@ size = Vector3(2.4, 2.2, 2.4)
 albedo_color = Color(0.65, 0.55, 0.4, 1)
 
 [sub_resource type="BoxMesh" id="DeskMesh"]
-size = Vector3(2.0, 1.1, 1.0)
+size = Vector3(2, 1.1, 1)
 
 [sub_resource type="StandardMaterial3D" id="DeskMat"]
 albedo_color = Color(0.45, 0.3, 0.18, 1)
 
 [sub_resource type="BoxMesh" id="ForgeMesh"]
-size = Vector3(1.6, 1.0, 1.2)
+size = Vector3(1.6, 1, 1.2)
 
 [sub_resource type="StandardMaterial3D" id="ForgeMat"]
 albedo_color = Color(0.25, 0.25, 0.3, 1)
@@ -112,557 +111,538 @@ height = 0.4
 [sub_resource type="StandardMaterial3D" id="MeditationMat"]
 albedo_color = Color(0.4, 0.42, 0.5, 1)
 
-[node name="Town" type="Node3D"]
+[node name="Town" type="Node3D" unique_id=452192815]
 script = ExtResource("1")
 
-[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=400520154]
 environment = SubResource("Env")
 
-[node name="DirectionalLight3D" type="DirectionalLight3D" parent="."]
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=507619339]
 transform = Transform3D(0.866, -0.35, 0.354, 0, 0.707, 0.707, -0.5, -0.612, 0.612, 0, 12, 0)
 shadow_enabled = true
 
-[node name="Floor" type="StaticBody3D" parent="."]
+[node name="Floor" type="StaticBody3D" parent="." unique_id=2135814997]
 collision_layer = 4
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="Floor"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+[node name="Mesh" type="MeshInstance3D" parent="Floor" unique_id=635904742]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.42959142, -0.49622202, 0.041474342)
 mesh = SubResource("FloorMesh")
 surface_material_override/0 = SubResource("GroundMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Floor" unique_id=1527614563]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("FloorShape")
 
-[node name="WallN" type="StaticBody3D" parent="."]
+[node name="Tree_3_A_Color12" parent="Floor" unique_id=997526554 instance=ExtResource("2_v00pm")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2496984, 0.4397209, 3.5608397)
+
+[node name="WallN" type="StaticBody3D" parent="." unique_id=2006786604]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -16)
 collision_layer = 4
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="WallN"]
+[node name="Mesh" type="MeshInstance3D" parent="WallN" unique_id=74335224]
 mesh = SubResource("WallNSMesh")
 surface_material_override/0 = SubResource("WallMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="WallN"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallN" unique_id=527429185]
 shape = SubResource("WallNSShape")
 
-[node name="WallS" type="StaticBody3D" parent="."]
+[node name="WallS" type="StaticBody3D" parent="." unique_id=110425941]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 16)
 collision_layer = 4
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="WallS"]
+[node name="Mesh" type="MeshInstance3D" parent="WallS" unique_id=1364388705]
 mesh = SubResource("WallNSMesh")
 surface_material_override/0 = SubResource("WallMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="WallS"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallS" unique_id=228434407]
 shape = SubResource("WallNSShape")
 
-[node name="WallE" type="StaticBody3D" parent="."]
+[node name="WallE" type="StaticBody3D" parent="." unique_id=426197130]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 16, 1, 0)
 collision_layer = 4
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="WallE"]
+[node name="Mesh" type="MeshInstance3D" parent="WallE" unique_id=1093161555]
+transform = Transform3D(0.9999984, -0.001514529, 0.0009733548, 0.0015146412, 0.99999887, -0.00011575523, -0.0009731803, 0.000117212956, 0.9999995, 0, 0, 0)
 mesh = SubResource("WallEWMesh")
 surface_material_override/0 = SubResource("WallMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="WallE"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallE" unique_id=927147013]
 shape = SubResource("WallEWShape")
 
-[node name="WallW" type="StaticBody3D" parent="."]
+[node name="WallW" type="StaticBody3D" parent="." unique_id=34346804]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16, 1, 0)
 collision_layer = 4
 collision_mask = 0
 
-[node name="Mesh" type="MeshInstance3D" parent="WallW"]
+[node name="Mesh" type="MeshInstance3D" parent="WallW" unique_id=2116232803]
 mesh = SubResource("WallEWMesh")
 surface_material_override/0 = SubResource("WallMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="WallW"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="WallW" unique_id=1683271041]
 shape = SubResource("WallEWShape")
 
-[node name="DungeonPortal" type="Area3D" parent="."]
+[node name="DungeonPortal" type="Area3D" parent="." unique_id=1033445616]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.75, -12)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 
-[node name="Mesh" type="MeshInstance3D" parent="DungeonPortal"]
+[node name="Mesh" type="MeshInstance3D" parent="DungeonPortal" unique_id=1651732956]
 mesh = SubResource("PortalMesh")
 surface_material_override/0 = SubResource("PortalMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="DungeonPortal"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="DungeonPortal" unique_id=1566861254]
 shape = SubResource("PortalShape")
 
-[node name="Label" type="Label3D" parent="DungeonPortal"]
+[node name="Label" type="Label3D" parent="DungeonPortal" unique_id=170777117]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
 billboard = 1
 text = "The Dungeon"
 font_size = 48
 outline_size = 8
 
-[node name="BuildPlot" type="Area3D" parent="."]
+[node name="BuildPlot" type="Area3D" parent="." unique_id=1409001468]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 2)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/building_id = "sophias-study"
 
-[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlot"]
+[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlot" unique_id=1975612121]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("PlotMarkerMesh")
 surface_material_override/0 = SubResource("PlotMarkerMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlot"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlot" unique_id=802681327]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlot"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlot" unique_id=2003799443]
 visible = false
 mesh = SubResource("BuildingMesh")
 surface_material_override/0 = SubResource("BuildingMat")
 
-[node name="Label" type="Label3D" parent="BuildPlot"]
+[node name="Label" type="Label3D" parent="BuildPlot" unique_id=89098448]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
 billboard = 1
 text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="BuildPlotQuarry" type="Area3D" parent="."]
+[node name="BuildPlotQuarry" type="Area3D" parent="." unique_id=286537493]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 2)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/building_id = "quarry"
 
-[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotQuarry"]
+[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotQuarry" unique_id=905580297]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("PlotMarkerMesh")
 surface_material_override/0 = SubResource("PlotMarkerMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotQuarry"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotQuarry" unique_id=441283004]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotQuarry"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotQuarry" unique_id=1663501659]
 visible = false
 mesh = SubResource("BuildingMesh")
 surface_material_override/0 = SubResource("BuildingMat")
 
-[node name="Label" type="Label3D" parent="BuildPlotQuarry"]
+[node name="Label" type="Label3D" parent="BuildPlotQuarry" unique_id=955955959]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
 billboard = 1
 text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="BuildPlotFarm" type="Area3D" parent="."]
+[node name="BuildPlotFarm" type="Area3D" parent="." unique_id=2021496727]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, 7)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/building_id = "farm"
 
-[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotFarm"]
+[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotFarm" unique_id=995513077]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("PlotMarkerMesh")
 surface_material_override/0 = SubResource("PlotMarkerMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotFarm"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotFarm" unique_id=185348029]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotFarm"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotFarm" unique_id=2018663748]
 visible = false
 mesh = SubResource("BuildingMesh")
 surface_material_override/0 = SubResource("BuildingMat")
 
-[node name="Label" type="Label3D" parent="BuildPlotFarm"]
+[node name="Label" type="Label3D" parent="BuildPlotFarm" unique_id=1885778193]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
 billboard = 1
 text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="SophiasDesk" type="Area3D" parent="."]
+[node name="SophiasDesk" type="Area3D" parent="." unique_id=944928035]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, -8)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 
-[node name="Mesh" type="MeshInstance3D" parent="SophiasDesk"]
+[node name="Mesh" type="MeshInstance3D" parent="SophiasDesk" unique_id=459230767]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
 mesh = SubResource("DeskMesh")
 surface_material_override/0 = SubResource("DeskMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="SophiasDesk"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="SophiasDesk" unique_id=157283590]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="SophiasDesk"]
+[node name="Label" type="Label3D" parent="SophiasDesk" unique_id=2101009338]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
 billboard = 1
 text = "Sophia's Desk — E to research"
 font_size = 40
 outline_size = 8
 
-[node name="MarasForge" type="Area3D" parent="."]
+[node name="MarasForge" type="Area3D" parent="." unique_id=609783785]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -8)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 
-[node name="Mesh" type="MeshInstance3D" parent="MarasForge"]
+[node name="Mesh" type="MeshInstance3D" parent="MarasForge" unique_id=17311774]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
 mesh = SubResource("ForgeMesh")
 surface_material_override/0 = SubResource("ForgeMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MarasForge"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MarasForge" unique_id=1131013619]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="MarasForge"]
+[node name="Label" type="Label3D" parent="MarasForge" unique_id=1595093316]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
 billboard = 1
 text = "Mara's Forge — E for weapons"
 font_size = 40
 outline_size = 8
 
-[node name="NpcHerzog" type="Area3D" parent="."]
+[node name="NpcHerzog" type="Area3D" parent="." unique_id=225101103]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -4)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/npc_id = "herzog"
 
-[node name="Mesh" type="MeshInstance3D" parent="NpcHerzog"]
+[node name="Mesh" type="MeshInstance3D" parent="NpcHerzog" unique_id=20086981]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("NpcMesh")
 surface_material_override/0 = SubResource("HerzogMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcHerzog"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcHerzog" unique_id=456002981]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="NpcHerzog"]
+[node name="Label" type="Label3D" parent="NpcHerzog" unique_id=139653626]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 billboard = 1
-text = "Herzog — E to talk"
+text = "Herzog "
 font_size = 36
 outline_size = 8
 
-[node name="NpcMara" type="Area3D" parent="."]
+[node name="NpcMara" type="Area3D" parent="." unique_id=800795862]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 10, 0, -4)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/npc_id = "mara"
 
-[node name="Mesh" type="MeshInstance3D" parent="NpcMara"]
+[node name="Mesh" type="MeshInstance3D" parent="NpcMara" unique_id=2074878242]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("NpcMesh")
 surface_material_override/0 = SubResource("MaraMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcMara"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcMara" unique_id=1223885275]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="NpcMara"]
+[node name="Label" type="Label3D" parent="NpcMara" unique_id=563845069]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 billboard = 1
 text = "Mara — E to talk"
 font_size = 36
 outline_size = 8
 
-[node name="NpcTilly" type="Area3D" parent="."]
+[node name="NpcTilly" type="Area3D" parent="." unique_id=1609925550]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5, 0, 10)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/npc_id = "tilly"
 
-[node name="Mesh" type="MeshInstance3D" parent="NpcTilly"]
+[node name="Mesh" type="MeshInstance3D" parent="NpcTilly" unique_id=212151079]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("NpcMesh")
 surface_material_override/0 = SubResource("TillyMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcTilly"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcTilly" unique_id=900155744]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="NpcTilly"]
+[node name="Label" type="Label3D" parent="NpcTilly" unique_id=42328196]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 billboard = 1
 text = "Tilly — E to talk"
 font_size = 36
 outline_size = 8
 
-[node name="NpcWren" type="Area3D" parent="."]
+[node name="NpcWren" type="Area3D" parent="." unique_id=57741300]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0, 10)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/npc_id = "wren"
 
-[node name="Mesh" type="MeshInstance3D" parent="NpcWren"]
+[node name="Mesh" type="MeshInstance3D" parent="NpcWren" unique_id=1613083758]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("NpcMesh")
 surface_material_override/0 = SubResource("WrenMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcWren"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcWren" unique_id=699280479]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="NpcWren"]
+[node name="Label" type="Label3D" parent="NpcWren" unique_id=1301132284]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 billboard = 1
 text = "Wren — E to talk"
 font_size = 36
 outline_size = 8
 
-[node name="NpcThomas" type="Area3D" parent="."]
+[node name="NpcThomas" type="Area3D" parent="." unique_id=1375814523]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 12)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/npc_id = "thomas"
 
-[node name="Mesh" type="MeshInstance3D" parent="NpcThomas"]
+[node name="Mesh" type="MeshInstance3D" parent="NpcThomas" unique_id=721057229]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("NpcMesh")
 surface_material_override/0 = SubResource("ThomasMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcThomas"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcThomas" unique_id=1452722375]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="NpcThomas"]
+[node name="Label" type="Label3D" parent="NpcThomas" unique_id=1405074532]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 billboard = 1
 text = "Thomas — E to talk"
 font_size = 36
 outline_size = 8
 
-[node name="NpcSophia" type="Area3D" parent="."]
+[node name="NpcSophia" type="Area3D" parent="." unique_id=1874160072]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0, -8)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/npc_id = "sophia"
 
-[node name="Mesh" type="MeshInstance3D" parent="NpcSophia"]
+[node name="Mesh" type="MeshInstance3D" parent="NpcSophia" unique_id=335616323]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.85, 0)
 mesh = SubResource("NpcMesh")
 surface_material_override/0 = SubResource("SophiaMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcSophia"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="NpcSophia" unique_id=786499538]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="NpcSophia"]
+[node name="Label" type="Label3D" parent="NpcSophia" unique_id=1741220898]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.3, 0)
 billboard = 1
 text = "Sophia — E to talk"
 font_size = 36
 outline_size = 8
 
-[node name="MeditationSpot" type="Area3D" parent="."]
+[node name="MeditationSpot" type="Area3D" parent="." unique_id=1794250917]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 5, 0, 12)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 
-[node name="Mesh" type="MeshInstance3D" parent="MeditationSpot"]
+[node name="Mesh" type="MeshInstance3D" parent="MeditationSpot" unique_id=460353051]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.2, 0)
 mesh = SubResource("MeditationMesh")
 surface_material_override/0 = SubResource("MeditationMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="MeditationSpot"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="MeditationSpot" unique_id=982770291]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="MeditationSpot"]
+[node name="Label" type="Label3D" parent="MeditationSpot" unique_id=1675500492]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
 billboard = 1
 text = "Thomas's Favorite Spot"
 font_size = 36
 outline_size = 8
 
-[node name="PlanningTable" type="Area3D" parent="."]
+[node name="PlanningTable" type="Area3D" parent="." unique_id=327523093]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4, 0, -4)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 
-[node name="Mesh" type="MeshInstance3D" parent="PlanningTable"]
+[node name="Mesh" type="MeshInstance3D" parent="PlanningTable" unique_id=1129782333]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.55, 0)
 mesh = SubResource("DeskMesh")
 surface_material_override/0 = SubResource("DeskMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="PlanningTable"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PlanningTable" unique_id=1462397078]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="Label" type="Label3D" parent="PlanningTable"]
+[node name="Label" type="Label3D" parent="PlanningTable" unique_id=1632336172]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
 billboard = 1
 text = "Planning Table — E to survey"
 font_size = 36
 outline_size = 8
 
-[node name="BuildPlotLibrary" type="Area3D" parent="."]
+[node name="BuildPlotLibrary" type="Area3D" parent="." unique_id=493412904]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10, 0, 7)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/building_id = "library"
 
-[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotLibrary"]
+[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotLibrary" unique_id=1404932215]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("PlotMarkerMesh")
 surface_material_override/0 = SubResource("PlotMarkerMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotLibrary"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotLibrary" unique_id=1548186300]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotLibrary"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotLibrary" unique_id=1126026003]
 visible = false
 mesh = SubResource("BuildingMesh")
 surface_material_override/0 = SubResource("BuildingMat")
 
-[node name="Label" type="Label3D" parent="BuildPlotLibrary"]
+[node name="Label" type="Label3D" parent="BuildPlotLibrary" unique_id=189294396]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
 billboard = 1
 text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="BuildPlotObservatory" type="Area3D" parent="."]
+[node name="BuildPlotObservatory" type="Area3D" parent="." unique_id=586629403]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0, 12)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/building_id = "observatory"
 
-[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotObservatory"]
+[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotObservatory" unique_id=893401927]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("PlotMarkerMesh")
 surface_material_override/0 = SubResource("PlotMarkerMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotObservatory"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotObservatory" unique_id=976232838]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotObservatory"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotObservatory" unique_id=610275807]
 visible = false
 mesh = SubResource("BuildingMesh")
 surface_material_override/0 = SubResource("BuildingMat")
 
-[node name="Label" type="Label3D" parent="BuildPlotObservatory"]
+[node name="Label" type="Label3D" parent="BuildPlotObservatory" unique_id=956536420]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
 billboard = 1
 text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="BuildPlotMill" type="Area3D" parent="."]
+[node name="BuildPlotMill" type="Area3D" parent="." unique_id=935939279]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13, 0, 12)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/building_id = "mill"
 
-[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotMill"]
+[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotMill" unique_id=1615371391]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("PlotMarkerMesh")
 surface_material_override/0 = SubResource("PlotMarkerMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotMill"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotMill" unique_id=1481635827]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotMill"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotMill" unique_id=1662531928]
 visible = false
 mesh = SubResource("BuildingMesh")
 surface_material_override/0 = SubResource("BuildingMat")
 
-[node name="Label" type="Label3D" parent="BuildPlotMill"]
+[node name="Label" type="Label3D" parent="BuildPlotMill" unique_id=1053881504]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
 billboard = 1
 text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="BuildPlotMarket" type="Area3D" parent="."]
+[node name="BuildPlotMarket" type="Area3D" parent="." unique_id=805499096]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13, 0, -3)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/building_id = "market"
 
-[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotMarket"]
+[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotMarket" unique_id=1726193345]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("PlotMarkerMesh")
 surface_material_override/0 = SubResource("PlotMarkerMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotMarket"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotMarket" unique_id=715428232]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotMarket"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotMarket" unique_id=814356354]
 visible = false
 mesh = SubResource("BuildingMesh")
 surface_material_override/0 = SubResource("BuildingMat")
 
-[node name="Label" type="Label3D" parent="BuildPlotMarket"]
+[node name="Label" type="Label3D" parent="BuildPlotMarket" unique_id=346741417]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
 billboard = 1
 text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="BuildPlotCathedral" type="Area3D" parent="."]
+[node name="BuildPlotCathedral" type="Area3D" parent="." unique_id=250281636]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -8)
 collision_layer = 0
-collision_mask = 1
 monitorable = false
 metadata/building_id = "cathedral"
 
-[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotCathedral"]
+[node name="PlotMarker" type="MeshInstance3D" parent="BuildPlotCathedral" unique_id=1727482932]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
 mesh = SubResource("PlotMarkerMesh")
 surface_material_override/0 = SubResource("PlotMarkerMat")
 
-[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotCathedral"]
+[node name="CollisionShape3D" type="CollisionShape3D" parent="BuildPlotCathedral" unique_id=476780836]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
-[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotCathedral"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0)
+[node name="BuildingMesh" type="MeshInstance3D" parent="BuildPlotCathedral" unique_id=2052093496]
 visible = false
 mesh = SubResource("BuildingMesh")
 surface_material_override/0 = SubResource("BuildingMat")
 
-[node name="Label" type="Label3D" parent="BuildPlotCathedral"]
+[node name="Label" type="Label3D" parent="BuildPlotCathedral" unique_id=159034406]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.2, 0)
 billboard = 1
 text = "Build plot"
 font_size = 40
 outline_size = 8
 
-[node name="Player" parent="." instance=ExtResource("2")]
+[node name="Player" parent="." unique_id=1645624191 instance=ExtResource("2")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.9313707)
 
-[node name="CameraRig" parent="." instance=ExtResource("3")]
+[node name="CameraRig" parent="." unique_id=1547094444 instance=ExtResource("3")]
 
-[node name="HUD" type="CanvasLayer" parent="."]
+[node name="HUD" type="CanvasLayer" parent="." unique_id=1988553245]
+
+[node name="Tree_4_B_Color12" parent="." unique_id=462585273 instance=ExtResource("5_6g2qn")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.775711, 0.3763888, 5.7571034)
