@@ -428,6 +428,16 @@ Every 3D mesh renders through ONE toon shader (`tycho_toon.gdshader`); character
 
 **Opt-outs (how a mesh stays raw):** translucent or unshaded materials are never converted (all FX/telegraph/portal/ghost materials, automatically); set metadata `style_skip` on a `MeshInstance3D` for an explicit opt-out. `scenes/combat/feel_room.tscn` is untouched — the sandbox keeps the raw look. Known gotcha: hard-edged primitives (boxes) can gap at outline corners (split normals) — acceptable on placeholders; smooth-normal models won't.
 
+### Water — `src/core/water_plane.gd` (@export → Inspector) + `assets/materials/water_absorption.gdshader` uniforms *(built 2026-07-11; the town's south border)*
+
+Water LOOK dials are the shader's uniform defaults (grouped in the shader: color / displacement / edge / player / caustics / normal_map — absorption_color, fresnel_color, depth_distance 6, beers_law 4.5, edge_thickness/foam, influence_size 2.5 walk-ripples, displacement_strength 0.08 wave height…). SSR ships DISABLED (`//#define SSR` — re-enable in the shader if wanted; costly, near-invisible at our camera). Node dials:
+
+| Var | Default | What it does |
+|-----|---------|--------------|
+| `size` / `subdivisions` | 34×11 m / 48 | Plane footprint and wave vertex resolution. |
+| `make_bed` / `bed_shallow_y` / `bed_deep_y` / `bed_color` | on / −0.5 / −4.0 / silt | The generated sloped floor the absorption gradient reads against (shallow at the town edge, deep out). |
+| `wind_intensity` / `wind_direction` | 0.35 / (1, 0, 0.35) | Fed into the PROJECT-WIDE shader globals at ready (never zero the direction). |
+
 ### Grass — `src/core/grass_patch.gd` (@export → Inspector) + `assets/materials/grass_blade.gdshader` uniforms *(built 2026-07-11; judge in `scenes/core/grass_demo.tscn`)*
 
 | Var | Default | What it does |

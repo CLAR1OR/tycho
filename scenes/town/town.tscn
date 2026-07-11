@@ -7,6 +7,7 @@
 [ext_resource type="PackedScene" uid="uid://cswtner1nao5f" path="res://assets/models/kaykit-forest-gltf/Tree_4_B_Color1.gltf" id="5_6g2qn"]
 [ext_resource type="Script" uid="uid://kmvyf0xkbrhw" path="res://src/core/grass_patch.gd" id="6_grass"]
 [ext_resource type="ArrayMesh" uid="uid://er8nljgvawhk" path="res://assets/models/GrassMesh.res" id="7_gmesh"]
+[ext_resource type="Script" path="res://src/core/water_plane.gd" id="8_water"]
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 1
@@ -157,6 +158,7 @@ collision_layer = 4
 collision_mask = 0
 
 [node name="Mesh" type="MeshInstance3D" parent="WallS" unique_id=1364388705]
+visible = false
 mesh = SubResource("WallNSMesh")
 surface_material_override/0 = SubResource("WallMat")
 
@@ -649,18 +651,23 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.9313707)
 [node name="Tree_4_B_Color12" parent="." unique_id=462585273 instance=ExtResource("5_6g2qn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.775711, 0.3763888, 5.7571034)
 
+[node name="Water" type="MeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 21.5)
+script = ExtResource("8_water")
+follow_target = NodePath("../Player")
+
 [node name="Grass" type="MultiMeshInstance3D" parent="." unique_id=1526648954]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 5)
+instance_shader_parameters/player_position = Vector3(1000000, 0, 0)
 script = ExtResource("6_grass")
-follow_target = NodePath("../Player")
 blade_mesh = ExtResource("7_gmesh")
 patch_size = Vector2(10, 5)
 blade_count = 4500
 
 [node name="Grass2" type="MultiMeshInstance3D" parent="." unique_id=1202214662]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 9.309418)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.789034, 0, 12.852844)
+instance_shader_parameters/player_position = Vector3(1000000, 0, 0)
 script = ExtResource("6_grass")
-follow_target = NodePath("../Player")
 blade_mesh = ExtResource("7_gmesh")
-patch_size = Vector2(10, 5)
-blade_count = 4500
+patch_size = Vector2(15, 5)
+blade_count = 6000

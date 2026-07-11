@@ -106,6 +106,21 @@ cheat_panel={
 ]
 }
 
+[shader_globals]
+
+wind_intensity={
+"type": "float",
+"value": 0.35
+}
+wind_direction={
+"type": "vec3",
+"value": Vector3(1, 0, 0.35)
+}
+player_position={
+"type": "vec3",
+"value": Vector3(0, 0, 0)
+}
+
 [rendering]
 
 textures/canvas_textures/default_texture_filter=0
