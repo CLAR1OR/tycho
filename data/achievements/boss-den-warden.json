@@ -1,0 +1,7 @@
+{
+	"id": "boss-den-warden",
+	"name": "Warden No More",
+	"desc": "Kill the Den-Warden on the first floor.",
+	"icon": "W",
+	"trigger": {"event": "boss_killed", "where": {"boss_id": "den-warden"}}
+}

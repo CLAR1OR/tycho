@@ -17,6 +17,16 @@ const MAX_ROOMS := 40  # watchdog: run 1 is 3 floors x 5 rooms (+ a resume repla
 var _game: Node
 var _failures: PackedStringArray = []
 
+# SAFETY (achievements, 2026-07-11): profile.json is GLOBAL — the human's REAL profile
+# (settings + achievements, shared across their real slots). The smoke's events unlock
+# real achievements and the Achievements autoload persists them, so the file is
+# snapshotted BYTE-EXACTLY at boot and restored (or deleted, if it did not exist) right
+# before the single exit point below — covering both the ok and the fail path.
+var _profile_existed := false
+var _profile_bytes := PackedByteArray()
+# Every achievement_unlocked the run emitted (captured before anything plays).
+var _unlocks_seen: PackedStringArray = []
+
 # Door-choice coverage flags — each mechanic is exercised once, then skipped (below).
 var _door_offer_checked: bool = false
 var _dust_tested: bool = false
@@ -40,6 +50,12 @@ func _ready() -> void:
 
 
 func _run_smoke() -> void:
+	# FIRST, before any event can make the Achievements autoload write it: snapshot the
+	# human's real profile.json byte-exactly (see the header note; restored at the end).
+	_profile_existed = FileAccess.file_exists(SaveManager.profile_path())
+	if _profile_existed:
+		_profile_bytes = FileAccess.get_file_as_bytes(SaveManager.profile_path())
+	EventBus.achievement_unlocked.connect(func(id: String) -> void: _unlocks_seen.append(id))
 	_boot_game()
 	# Run telemetry (2026-07-10, diagnostics tooling, NOT the save system): redirect to a
 	# throwaway temp file for the WHOLE smoke, so a real run/death/forfeit here never
@@ -218,6 +234,27 @@ func _run_smoke() -> void:
 		"disk: max_floor persisted (%d)" % int(disk_c["max_floor"]))
 	_check(int(on_disk["codex"]["shards"]) == 1, "disk: codex shard persisted")
 	_check(int(on_disk["meta"]["runs"]) == runs_before + 1, "disk: meta.runs mirror persisted")
+
+	# --- Achievements (schemas §5, 2026-07-11): the full clear unlocked first-clear -----
+	# The evaluator rides the same run_ended the counters do; the unlock must be on the
+	# bus, in the profile in memory, AND already persisted to profile.json (the autoload
+	# saves on change). The run's boss kills also unlocked the boss beats along the way.
+	_check(_unlocks_seen.has("first-clear"), "achievement_unlocked(first-clear) observed on the bus")
+	_check(_unlocks_seen.has("boss-den-warden"), "the floor-1 Den-Warden kill unlocked its achievement")
+	var prof_ach: Dictionary = SaveManager.profile["achievements"]
+	_check(AchievementCore.is_unlocked(prof_ach, "first-clear"), "first-clear unlocked in the profile")
+	_check(AchievementCore.is_unlocked(prof_ach, "floor-3"),
+		"the 3-floor clear unlocked the floor-3 gte achievement")
+	_check(not AchievementCore.is_unlocked(prof_ach, "floor-4"),
+		"floor-4 stays locked (never reached)")
+	var disk_ach: Dictionary = (_read_profile_from_disk().get("achievements", {}) as Dictionary)
+	_check(str((disk_ach.get("first-clear", {}) as Dictionary).get("unlocked_at", "")) != "",
+		"disk: first-clear persisted to profile.json (unlocked_at stamped)")
+	# The unlock toast played on its autoload-owned layer (queued through the run's unlocks).
+	var toast: AchievementToast = get_tree().get_first_node_in_group("achievement_toast")
+	_check(toast != null, "the achievement toast lives on its autoload CanvasLayer")
+	_check(toast != null and toast.shown_total() >= 1,
+		"the unlock toast appeared (%d shown so far)" % (toast.shown_total() if toast != null else 0))
 
 	# --- Dialogue volume (2026-07-10): the pool loaded + max_floor gates it -------------
 	var dpool := DataLoader.load_domain("dialogue")
@@ -914,6 +951,36 @@ func _run_smoke() -> void:
 		var pvp: Vector2 = get_viewport().get_visible_rect().size
 		_check((pause as Control).size == pvp,
 			"pause menu spans the viewport (%s == %s)" % [str((pause as Control).size), str(pvp)])
+
+		# --- Achievements page (schemas §5, 2026-07-11) — opens OVER the pause menu -----
+		# The same open-over pattern as Settings: the menu hides without unpausing, the
+		# page lists every def (unlocked lit, locked greyed, hidden masked), a progress
+		# achievement shows its ticks, and ESC brings the menu back.
+		var dlg_progress := AchievementCore.progress_of(
+			SaveManager.profile["achievements"], "dialogue-25")
+		_check(dlg_progress >= 5,
+			"the dialogue_seen progress achievement ticked across the talks (%d)" % dlg_progress)
+		pause.open_achievements()  # the same method the button calls
+		await _settle(3)
+		var apage: AchievementsPanel = get_tree().get_first_node_in_group("achievements_panel")
+		_check(apage != null, "the pause menu's Achievements button opens the page")
+		_check(not (pause as Control).visible, "the pause menu hid under the achievements page")
+		_check(get_tree().paused, "the tree stays paused (the pause menu still owns the pause)")
+		if apage != null:
+			_check((apage as Control).size == pvp,
+				"achievements page spans the viewport (%s == %s)" % [str((apage as Control).size), str(pvp)])
+			_check(apage.row_count() == Achievements.defs().size() and apage.row_count() >= 25,
+				"the page lists every authored def (%d rows)" % apage.row_count())
+			_check(apage.lists_unlocked("first-clear"), "the page lists first-clear as unlocked")
+			_check(not apage.lists_unlocked("full-clears-20"),
+				"a far-off progress achievement renders locked")
+		_esc()
+		await _settle(3)
+		_check(get_tree().get_first_node_in_group("achievements_panel") == null,
+			"ESC closed the achievements page")
+		_check((pause as Control).visible, "the pause menu reappeared after the achievements page")
+		_check(get_tree().paused, "the pause is still the menu's after the page closed")
+
 		pause.close()
 		await _settle(2)
 		_check(not (pause as Control).visible and not get_tree().paused,
@@ -1051,6 +1118,7 @@ func _run_smoke() -> void:
 	SaveManager.delete_slot(SMOKE_SLOT)
 	if FileAccess.file_exists(telemetry_path):
 		DirAccess.remove_absolute(telemetry_path)  # tidy up the redirected telemetry temp file
+	_restore_profile_file()
 	print("---")
 	if _failures.is_empty():
 		print("SMOKE OK — full loop: town → run → boss → town → death → town")
@@ -1421,6 +1489,27 @@ func _read_slot_from_disk() -> Dictionary:
 		return {}
 	var parsed: Variant = JSON.parse_string(f.get_as_text())
 	return parsed if parsed is Dictionary else {}
+
+
+## Put the human's REAL profile.json back exactly as the smoke found it: byte-identical
+## bytes, or gone if it did not exist. Runs at the single exit point (ok AND fail path);
+## asserts the restore so a failed write can never pass silently.
+func _restore_profile_file() -> void:
+	var path := SaveManager.profile_path()
+	if _profile_existed:
+		var f := FileAccess.open(path, FileAccess.WRITE)
+		if f == null:
+			_check(false, "PROFILE RESTORE FAILED — could not open %s for write" % path)
+			return
+		f.store_buffer(_profile_bytes)
+		f = null  # flush + close before the re-read below
+		_check(FileAccess.get_file_as_bytes(path) == _profile_bytes,
+			"the human's real profile.json restored BYTE-EXACTLY")
+	else:
+		if FileAccess.file_exists(path):
+			DirAccess.remove_absolute(path)
+		_check(not FileAccess.file_exists(path),
+			"profile.json removed again (it did not exist before the smoke)")
 
 
 ## Re-read the profile straight off disk (bypassing SaveManager.profile) — proves the settings

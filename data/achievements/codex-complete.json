@@ -1,0 +1,8 @@
+{
+	"id": "codex-complete",
+	"name": "The Codex Whole",
+	"desc": "Slot every shard of the codex artifact.",
+	"icon": "VI",
+	"hidden": true,
+	"trigger": {"event": "codex_shard_added", "where": {"total": {"gte": 6}}}
+}

@@ -1,0 +1,7 @@
+{
+	"id": "tech-arch",
+	"name": "The Stones Hold",
+	"desc": "Research Masonry and the Arch.",
+	"icon": "A",
+	"trigger": {"event": "tech_researched", "where": {"tech_id": "med-masonry-arch"}}
+}

@@ -272,6 +272,16 @@ A new **PlanningTable** (Area3D + placeholder box mesh + Label3D) sits next to `
 
 **HUMAN placeholders:** the backdrop/hover/notch colours + all sizes (consts atop `settings_panel.gd`), `SettingsCore.STEP` + the row labels, and ALL copy (title/subtitle/section heads/chip labels/the ASSIST name+note/footer). Shared palette/fonts live in `SlateHud`.
 
+## Achievements — page + unlock toast (built 2026-07-11)
+
+> Built WITH the achievements system (`architecture-schemas.md` §5) — no claude.ai/design round yet; both pieces are first-pass Slate placeholders the human restyles freely.
+
+**Unlock toast** (`src/core/achievement_toast.gd`, `class_name AchievementToast`, group `achievement_toast`) — a small top-centre Slate strip in the pickup-strip language: gold-bordered panel, gold monogram chip (the def's placeholder `icon` string), a dim mono `ACHIEVEMENT` caption over the name in Cinzel. Slides/fades in (`SLIDE_S` 0.25), holds (`HOLD_S` 3.0), fades (`FADE_S` 0.6); several unlocks queue and play one at a time. It lives on the **Achievements autoload's own CanvasLayer** (layer 90, above game.gd's HUD layer 1), so it works in town AND in-run and survives every scene swap; `PROCESS_MODE_ALWAYS` so it still plays when a panel owns the pause (e.g. `building_built` fires from the paused build panel). Draws itself in `_draw` off `SlateHud`'s shared style.
+
+**Achievements page** (`src/core/achievements_panel.gd`, `class_name AchievementsPanel`, group `achievements_panel`) — a fullscreen Slate Control-tree page (a scrolling list wants containers, not `_draw`) over the shared near-opaque backdrop: Cinzel title, a centred ~700px scrolling column, dim `Esc — back` footer. One row per authored def: monogram chip + name (TitleLabel) + desc (DimLabel) + a right-aligned `n/count` NumLabel for progress achievements (`count > 1`). Locked rows grey to `LOCKED_ALPHA` 0.45; `hidden` defs render fully masked (`???` name/desc/icon) until unlocked. Row order (placeholder): unlocked, then locked visible, then masked — alphabetical within a band. **Conventions:** settings_panel's — ESC closes, `open()` pauses only if the tree wasn't already paused, `close()` unpauses only if it owns the pause, `queue_free` on close, viewport-size sync in `_process`. **Entry point:** a new `Achievements` button on the ESC pause menu (placeholder placement, between Settings and the quit rows; `pause_menu.open_achievements()` hides the menu without unpausing → `game.open_achievements(self)` reshows it on close — the exact Settings pattern). Works at the inert slot-select state like the rest of the menu (the menu itself is inert there).
+
+**HUMAN placeholders:** every const atop both files (toast timings/sizes/layer, page column/alpha/order, the `ACHIEVEMENT` caption + `???` mask + footer copy) and ALL achievement names/descs/icons in `data/achievements/` (26 defs, placeholder copy — curation pending).
+
 ## Deferred (document-don't-build)
 
 - **Echo tile tooltips / a hold-Tab detail view** (full echo names + descriptions on demand) — the shelf is monograms only for now.

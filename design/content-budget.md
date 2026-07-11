@@ -44,7 +44,7 @@ Completionists stretch further via difficulty tiers; the spine fits the budget.
 | --- | --- | --- |
 | **Buildings** | **9 buildable + 2 shops** (2026-07-10, `town-economy.md` — Timber/Woodcutter/Cart cut; University = the Library's Renaissance band; Cathedral Great Work added). **DATA: 9/9 built 2026-07-10** (all Age-I bands + the University L4 opener + 3 Cathedral stages + the Market logic/caravan table; the 2 shops were already live) — **models 0/9** (placeholder boxes/monograms). | v1 authors the Age-I band (3 levels each) + the Library→University L4 opener + 3 Cathedral stages. Each level = visual change; budget ~2 model variants per building (L1, L2/L3 shared where possible) + Thomas's Hut never changes (1 model, by lore) + 3 Cathedral stage models + 1 University variant. |
 | **Town map** | 1, with **2 age-skins** (Medieval, early-Renaissance) | The age turn must be *seen*. |
-| **Shop/system UI screens** | **11** | Tech tree (per-age screens), etchings, forge, mayor/build, market, echo-pick HUD, codex viewer, dialogue box, achievements, save slots, ESC pause menu (Resume / Forfeit / Save & Quit, built 2026-07-07). |
+| **Shop/system UI screens** | **11** | Tech tree (per-age screens), etchings, forge, mayor/build, market, echo-pick HUD, codex viewer, dialogue box, achievements (page + unlock toast **built 2026-07-11**), save slots, ESC pause menu (Resume / Forfeit / Save & Quit, built 2026-07-07). |
 
 ## Story & dialogue (the big one)
 
@@ -65,7 +65,7 @@ Volume model: **Hades-style high volume** — fresh contextual dialogue on nearl
 | --- | --- | --- |
 | Music | **~10 tracks** | Town (2: calm/late-act tension), dungeon (per-stratum tracks in v1 — the "3 intensity layers" moved post-v1, see `audio.md`), boss (2, reused), climax, dream theme, title. **Pipeline (2026-07-03): AI-gen (Suno/Udio) human-curated; CC0 placeholders first — `audio.md`. Placeholders IN (2026-07-04: 4 synthesized seamless loops — title/town/dungeon/boss — via the `Music` autoload, crossfade live).** |
 | SFX | ~120 | Combat-feel critical subset (hits, dashes, pickups) gets human tuning time. **Pipeline (2026-07-03): Kenney/CC0 packs + jfxr one-offs; sfx-map as data — `audio.md`. Placeholders IN (2026-07-04: 15 synthesized sounds, all phase-1 hooks live) — the 20th-clear verdict can be judged with sound.** |
-| Achievements | **~25** at v1 | Event-hook system built early (prepare-for); achievement list itself is cheap data. |
+| Achievements | **~25** at v1 — **26/25 authored 2026-07-11** | Event-hook system built early (prepare-for); achievement list itself is cheap data. **System + data BUILT 2026-07-11** (`architecture-schemas.md` §5: pure `AchievementCore` + `Achievements` autoload + unlock toast + Slate page) — names/descs are PLACEHOLDER copy, human curation pending. |
 
 ## What's expensive vs. cheap (for sequencing)
 

@@ -1,0 +1,7 @@
+{
+	"id": "deaths-10",
+	"name": "Persistent",
+	"desc": "Die ten times. Come back ten times.",
+	"icon": "P",
+	"trigger": {"event": "death", "count": 10}
+}

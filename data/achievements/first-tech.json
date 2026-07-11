@@ -1,0 +1,7 @@
+{
+	"id": "first-tech",
+	"name": "First Discovery",
+	"desc": "Research a technology at Sophia's desk.",
+	"icon": "T",
+	"trigger": {"event": "tech_researched"}
+}

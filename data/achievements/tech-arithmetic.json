@@ -1,0 +1,7 @@
+{
+	"id": "tech-arithmetic",
+	"name": "Counting With Nothing",
+	"desc": "Research Arithmetic and the Zero.",
+	"icon": "Z",
+	"trigger": {"event": "tech_researched", "where": {"tech_id": "med-arithmetic-zero"}}
+}

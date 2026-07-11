@@ -1,0 +1,7 @@
+{
+	"id": "first-clear",
+	"name": "First Clear",
+	"desc": "Finish a full run and bring the shard home.",
+	"icon": "I",
+	"trigger": {"event": "run_ended", "where": {"victory": true}}
+}

@@ -115,11 +115,13 @@ The **EventBus autoload is the spine of the whole architecture**, not just achie
 
 ```jsonc
 // data/achievements/<id>.json
-{ "id": "first-clear", "name": "…", "icon": "…", "hidden": false,
+{ "id": "first-clear", "name": "…", "desc": "…", "icon": "…", "hidden": false,   // icon = placeholder monogram string
   "trigger": {"event": "run_ended", "where": {"victory": true}, "count": 1} }   // count>1 = progress achievement
 ```
 
 One generic evaluator reads these; new achievements are data entries. Unlocks live in `profile.json` (§1).
+
+**Status (2026-07-11) — BUILT.** The data domain (`data/achievements/`, spec in DataLoader, shape above + a required `desc`) feeds pure **`AchievementCore`** (`src/core/achievement_core.gd`): `matches(trigger, event, payload)` — event name + all `where` clauses, where a scalar matches by equality and a `{"gte": N}` object matches `payload[field] >= N`; `apply_event(achievements, defs, event, payload, now_iso)` — **return-a-new-dict** (the TownCore/TechCore convention; nothing holds a live ref to the profile's achievements dict) — inert once unlocked, +1 progress per matching event while locked, unlock at `count` stamping `unlocked_at = now_iso`, plus a `changed` flag so the caller only writes the profile when something moved; `validate(def)` — sequencing the shape schema can't see (`trigger.event` in `KNOWN_PAYLOADS`, every `where` key in that event's payload fields, `count >= 1`, well-formed `gte`), errors pushed loudly at load. The thin **`Achievements` autoload** (`src/autoload/achievements.gd`, registered after TechState) subscribes to the 11 gameplay signals and owns the **signal→payload mapping** (the single home of that contract; the unit suite asserts every `KNOWN_PAYLOADS` name is a real EventBus signal), reassigns `SaveManager.profile["achievements"]`, saves through `SaveManager.save_profile()` **only on change** (`resource_changed` fires constantly), and emits `achievement_unlocked` per unlock. Profile entry: `id -> {progress}` + `unlocked_at` once unlocked (profile-level: shared across slots, survives slot deletion — §1). UI: an **unlock toast** (`AchievementToast`, autoload-owned CanvasLayer, queue + slide/fade, works in town and in-run, PROCESS_MODE_ALWAYS) and the **achievements page** (`AchievementsPanel`, Slate fullscreen, ESC-close + settings-panel pause ownership, opened from the pause menu's Achievements button; `hidden` defs render "???" until unlocked). Content: **26 authored defs** (placeholder copy). `dialogue_seen` gained its emitter (town.gd's mark-shown site — the signal existed unfired). Data couplings: `codex-complete`'s `total >= 6` == `StoryCore.CODEX_SHARDS_MAX` (unit-asserted). Caveat: the F2 cheat panel emits real events, so cheats can unlock achievements — accepted for v1 (diagnostics tool, single human player).
 
 ## 6. Town as data object
 

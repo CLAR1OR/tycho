@@ -110,6 +110,13 @@ func open_settings() -> void:
 	_game.call("open_settings", self)
 
 
+## The Achievements button (schemas §5, 2026-07-11): same pattern as Settings — hide without
+## unpausing, open the achievements page over us, reshow when it closes. Public for the smoke.
+func open_achievements() -> void:
+	visible = false
+	_game.call("open_achievements", self)
+
+
 ## Reappear after the settings page closed over us: the pause is still ours, so DON'T touch it (and
 ## no Sfx — this is not a fresh open). Just show, resync the fullscreen rect, and rebuild.
 func reshow() -> void:
@@ -175,6 +182,8 @@ func _rebuild() -> void:
 
 	_button("Resume", close, false)
 	_button("Settings", open_settings, false)
+	# HUMAN: placeholder placement — move the entry if the menu should stay leaner.
+	_button("Achievements", open_achievements, false)
 	if in_run:
 		# Forfeit is offered only in a run (there is nothing to abandon in town).
 		_button("Forfeit Run (abandon it, keep nothing)", forfeit, not allowed)

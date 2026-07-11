@@ -1,0 +1,7 @@
+{
+	"id": "boss-kills-15",
+	"name": "Boss Hunter",
+	"desc": "Kill fifteen floor bosses.",
+	"icon": "H",
+	"trigger": {"event": "boss_killed", "count": 15}
+}

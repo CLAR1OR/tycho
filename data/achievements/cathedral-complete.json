@@ -1,0 +1,7 @@
+{
+	"id": "cathedral-complete",
+	"name": "The Great Work",
+	"desc": "Finish every stage of the Cathedral.",
+	"icon": "C",
+	"trigger": {"event": "building_built", "where": {"building_id": "cathedral", "level": {"gte": 3}}}
+}

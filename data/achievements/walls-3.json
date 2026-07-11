@@ -1,0 +1,7 @@
+{
+	"id": "walls-3",
+	"name": "Stout Walls",
+	"desc": "Raise the town walls to their third level.",
+	"icon": "W",
+	"trigger": {"event": "building_built", "where": {"building_id": "town-walls", "level": {"gte": 3}}}
+}

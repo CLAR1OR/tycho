@@ -1,0 +1,7 @@
+{
+	"id": "full-clears-5",
+	"name": "Five Clears",
+	"desc": "Finish five full runs.",
+	"icon": "V",
+	"trigger": {"event": "run_ended", "where": {"victory": true}, "count": 5}
+}

@@ -158,6 +158,19 @@ const SCHEMAS: Dictionary = {
 		"moves": {"type": "dict", "required": true},    # {move_id: {kind, ...numbers}} — kinds in BossCore.KINDS
 		"arena_vents": {"type": "array", "array_of": "array"},  # [[x, z]] dormant vent-plate spawn points
 	},
+	"achievements": {  # architecture-schemas.md §5 — the generic EventBus-driven evaluator.
+		# Shape-checked here; the SEQUENCING rules (trigger.event is a known event, where
+		# fields exist in that event's payload, count >= 1, gte objects well-formed) live in
+		# AchievementCore.validate — run by the Achievements autoload at load (push_error +
+		# skip) and the unit sweep. name/desc are PLACEHOLDER copy; icon is a placeholder
+		# monogram string (no art exists).
+		"id": {"type": "string", "required": true},
+		"name": {"type": "string", "required": true},
+		"desc": {"type": "string", "required": true},
+		"icon": {"type": "string", "required": true},
+		"hidden": {"type": "bool"},  # default false; hidden defs render masked until unlocked
+		"trigger": {"type": "dict", "required": true},  # {event, where?, count?} — see AchievementCore
+	},
 	"ages": {  # architecture-schemas.md §3
 		"id": {"type": "int", "required": true},
 		"name": {"type": "string", "required": true},

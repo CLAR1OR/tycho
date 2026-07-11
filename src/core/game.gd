@@ -355,6 +355,20 @@ func open_settings(return_to: Control = null) -> SettingsPanel:
 	return panel
 
 
+## Open the achievements page (schemas §5, 2026-07-11) onto the HUD layer — the same shape as
+## open_settings: `return_to` (the pause menu, from its Achievements button) is reshown when the
+## page closes. Returns the panel so the smoke can drive it.
+func open_achievements(return_to: Control = null) -> AchievementsPanel:
+	var panel := AchievementsPanel.new()
+	$HUD.add_child(panel)
+	panel.open()
+	if return_to != null:
+		panel.closed.connect(func() -> void:
+			if is_instance_valid(return_to) and return_to.has_method("reshow"):
+				return_to.call("reshow"))
+	return panel
+
+
 ## Forfeit the current run — "like it never happened" (design 2026-07-07). Roll the whole
 ## slot back to the portal-entry snapshot: abort RunState (emits nothing → no day tick, no
 ## counters, echoes gone), restore the snapshot to memory AND to the live Ledger (the only

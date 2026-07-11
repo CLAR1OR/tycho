@@ -1,0 +1,7 @@
+{
+	"id": "full-clears-20",
+	"name": "Twenty Clears",
+	"desc": "Finish twenty full runs.",
+	"icon": "XX",
+	"trigger": {"event": "run_ended", "where": {"victory": true}, "count": 20}
+}

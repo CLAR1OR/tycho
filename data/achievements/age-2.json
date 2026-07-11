@@ -1,0 +1,7 @@
+{
+	"id": "age-2",
+	"name": "A New Age",
+	"desc": "Carry the town into its second age.",
+	"icon": "II",
+	"trigger": {"event": "age_advanced", "where": {"age": {"gte": 2}}}
+}

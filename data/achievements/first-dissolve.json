@@ -1,0 +1,8 @@
+{
+	"id": "first-dissolve",
+	"name": "The Way Home",
+	"desc": "Return from a cleared dungeon through the artifact.",
+	"icon": "D",
+	"hidden": true,
+	"trigger": {"event": "dissolved"}
+}

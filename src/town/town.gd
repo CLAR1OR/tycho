@@ -247,6 +247,9 @@ func _play_snippet(def: Dictionary, count_talk: bool) -> DialoguePanel:
 	panel.finished.connect(func() -> void:
 		SaveManager.state["story"] = DialogueCore.mark_shown(
 			SaveManager.state["story"], def, count_talk)
+		# The mark-shown site is the ONE place a snippet becomes "seen" — announce it on
+		# the bus for cross-domain subscribers (the achievements' dialogue_seen progress).
+		EventBus.dialogue_seen.emit(str(def["id"]))
 		SaveManager.save_current()
 		# A cascade beat (b1/b2/b3/b4) may have just set its flag — reopen the facility
 		# it gates without waiting for the next town visit, and refresh the "!"/"!!"

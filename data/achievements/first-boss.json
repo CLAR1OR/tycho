@@ -1,0 +1,7 @@
+{
+	"id": "first-boss",
+	"name": "First Boss Down",
+	"desc": "Kill a floor boss.",
+	"icon": "B",
+	"trigger": {"event": "boss_killed"}
+}

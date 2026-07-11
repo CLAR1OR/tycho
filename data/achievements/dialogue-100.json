@@ -1,0 +1,7 @@
+{
+	"id": "dialogue-100",
+	"name": "Heard The Town Out",
+	"desc": "Hear a hundred conversations in town.",
+	"icon": "F",
+	"trigger": {"event": "dialogue_seen", "count": 100}
+}

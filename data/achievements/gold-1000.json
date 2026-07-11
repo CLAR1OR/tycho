@@ -1,0 +1,7 @@
+{
+	"id": "gold-1000",
+	"name": "A Thousand Gold",
+	"desc": "Hold a thousand gold at once.",
+	"icon": "K",
+	"trigger": {"event": "resource_changed", "where": {"id": "gold", "new_amount": {"gte": 1000}}}
+}

@@ -1,0 +1,7 @@
+{
+	"id": "runs-50",
+	"name": "Fifty Descents",
+	"desc": "Finish fifty runs, won or lost.",
+	"icon": "L",
+	"trigger": {"event": "run_ended", "count": 50}
+}

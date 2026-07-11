@@ -1,0 +1,7 @@
+{
+	"id": "market-built",
+	"name": "Open For Trade",
+	"desc": "Build the Market.",
+	"icon": "M",
+	"trigger": {"event": "building_built", "where": {"building_id": "market"}}
+}

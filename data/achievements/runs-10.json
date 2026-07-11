@@ -1,0 +1,7 @@
+{
+	"id": "runs-10",
+	"name": "Ten Descents",
+	"desc": "Finish ten runs, won or lost.",
+	"icon": "X",
+	"trigger": {"event": "run_ended", "count": 10}
+}

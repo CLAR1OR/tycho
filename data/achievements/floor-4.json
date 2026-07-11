@@ -1,0 +1,7 @@
+{
+	"id": "floor-4",
+	"name": "Fourth Stratum",
+	"desc": "Reach the fourth floor of the dungeon.",
+	"icon": "IV",
+	"trigger": {"event": "run_ended", "where": {"floor_reached": {"gte": 4}}}
+}

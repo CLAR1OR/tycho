@@ -1,0 +1,7 @@
+{
+	"id": "first-building",
+	"name": "Groundwork",
+	"desc": "Raise a building in town.",
+	"icon": "G",
+	"trigger": {"event": "building_built"}
+}
