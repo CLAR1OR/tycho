@@ -28,6 +28,7 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 - **Learning:** tech research end-to-end incl. the interactive arch puzzle, shard turn-in, quiz-lock, Sophia auto-solve (`design/tech-nodes/`).
 - **Dialogue:** full selection system + force-play + `!`/`!!` indicators; human-authored opening scripts are canonical. **Volume pass 2026-07-10:** pool 52→112 files, spine COMPLETE through E1 (C1–C6, D1–D5, E1 + the flag-chained C5 dreams), +6 arc beats/+24 contextuals/+16 barks — all agent drafts awaiting curation; new `max_floor >= N` condition; `linnea` renders as "The Woman" via `DialogueCore.display_name`; a pool-wide unit lint enforces the voice bans (`design/act1-story-beats.md`, `design/voice-guides.md`; queue in `design/dialogue/`).
 - **Story/save/audio/UI:** StoryState/TechState autoloads, codex + dissolve loop, save slots + profile, settings screen, placeholder SFX/music, every menu screen in Slate (`design/ui-hud.md`, `design/audio.md`, `design/architecture-schemas.md` carries per-section implementation status).
+- **Asset plan (2026-07-11):** the full v1 asset inventory + the maker pipeline are doc'd — `design/asset-list.md` (LIVING master list, categorized, append protocol) + `design/asset-pipeline.md` (researched stack ~$24/mo: Tripo Pro + Recraft + Quaternius UAL2/Kenney/KayKit CC0; key strategy = an in-Godot toon/ramp/outline **unification layer as a first-class stage** before any volume generation; aphantasia batch-and-pick workflow; Steam AI-disclosure notes). Zero real visual assets yet (fonts + placeholder audio only) — the pipeline gate stays the unblocker.
 - **Achievements (2026-07-11):** the prepare-for made real — pure `AchievementCore` evaluator over a new `data/achievements/` domain (26 defs, placeholder copy), thin `Achievements` autoload (subscribes to 11 EventBus signals, owns the signal→payload contract, writes `profile.json` on change only), unlock toast + a Slate achievements page off the pause menu; `dialogue_seen` gained its emitter (schemas §5 status block).
 
 **Content vs budget (the real gap — the engine is done, the game is ~15% authored):** tech nodes 2/14 · echoes ~25/~50 · enemies 5/12 · bosses 1 real/5 (placeholder fallback on 2–5) · buildings 9/9 data (+2 shops; models 0/9) · attunements 7/~7 (placeholder) · dialogue ~112/~370 pieces · achievements 26/~25 (placeholder copy, curation pending) · spine COMPLETE through E1 (~22/~22 drafted; most awaiting curation). Counts: `design/content-budget.md`.
@@ -40,7 +41,7 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 
 **Doc-vs-code drift:** RESOLVED 2026-07-10 — Timber/Woodcutter/Cart cut, docs synced, and all 9 buildable defs now exist in `data/` (`design/town-economy.md`). Library/Observatory/Mill wait on unauthored gate techs by design (dormant forward refs, not drift).
 
-**Next actions (HUMAN):** (1) content-gate verdict — research Arithmetic then Masonry at Sophia's desk, judge *delight vs. homework*; (2) asset-pipeline gate — one rigged `.glb` per `assets/README.md`; (3) curate dialogue — `design/dialogue/drafts-review-2026-07-06.md` first (§6 has placeholder E2 lines), then `drafts-review-2026-07-04.md`, then `drafts-review-2026-07-10.md` (the whole spine + the boss rename); (4) ongoing dials — feel numbers, strata palettes + the 5 legibility passes, audio mix; Kenney packs + Suno-vs-Udio + the dream-motif instrument (`design/audio.md`).
+**Next actions (HUMAN):** (1) content-gate verdict — research Arithmetic then Masonry at Sophia's desk, judge *delight vs. homework*; (2) asset-pipeline gate — one rigged `.glb` per `assets/README.md` (refined steps + tool picks: `design/asset-pipeline.md`; run it on a paid Tripo month — free-tier outputs are public/non-commercial); (3) curate dialogue — `design/dialogue/drafts-review-2026-07-06.md` first (§6 has placeholder E2 lines), then `drafts-review-2026-07-04.md`, then `drafts-review-2026-07-10.md` (the whole spine + the boss rename); (4) ongoing dials — feel numbers, strata palettes + the 5 legibility passes, audio mix; Kenney packs + Suno-vs-Udio + the dream-motif instrument (`design/audio.md`).
 
 **Next agent chunks (agreed order):** dialogue volume DONE 2026-07-10 → remaining tech nodes (blocked on the content-gate verdict; 8 are forward-referenced by building gates — see `design/town-economy.md` § tech payoff; 3 dialogue pieces also sit dormant on them). Unblocked candidates while the verdict waits: enemies 5→12, echoes ~25→~50, bosses 2–5 (achievements system DONE 2026-07-11).
 
@@ -58,7 +59,7 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 - **Push back** when something doesn't make sense — a workflow, an ordering, or a contradiction with the locked decisions. Don't silently comply.
 - **Stack:** Godot 4.7, Linux, single-player.
 - **Solo dev + AI:** the human owns ideas, story, playtesting, and combat-feel tuning; agents own systems, content, UI, and plumbing. **Game feel cannot be vibecoded** — leave feel-tuning to hands-on human iteration. Agents never change `# FEEL:` values, `feel_room.tscn`, human-authored dialogue, or existing game-copy strings (sanctioned changes only). All new UI copy / visual numbers ship as placeholders the human dials.
-- **Assets:** working default is 2.5D (3D models on a fixed camera) — Tripo + Quaternius. Placeholder-first; validate look/feel before investing in final art.
+- **Assets:** working default is 2.5D (3D models on a fixed camera) — Tripo + Quaternius. Placeholder-first; validate look/feel before investing in final art. **Any chunk that adds content needing an asset (model, icon, portrait, VFX, SFX hook, …) must append/update its row in `design/asset-list.md` in the same change** — an asset the list doesn't know about is a scope leak. Tools + workflows: `design/asset-pipeline.md`.
 
 ## Build order (do in this order — earlier phases de-risk later ones)
 
@@ -87,6 +88,8 @@ End of Act I — the **evil emperor enters** as the antagonist (cliffhanger into
 - Detailed design docs: `design/` (see `design/README.md`):
   - `design/prd.md` — **the v1 PRD** (start here to build; synthesizes everything below into an implementable spec)
   - `design/content-budget.md` — v1 scope by the numbers (the schedule)
+  - `design/asset-list.md` — **the master asset inventory (LIVING)**: every visual/audio asset v1 needs; content chunks append here
+  - `design/asset-pipeline.md` — the asset maker-pipeline: gen-AI tool stack, per-type workflows, style unification, licensing
   - `design/act1-story-beats.md` — story spine, character arcs, dialogue-system spec
   - `design/architecture-schemas.md` — data schemas + per-section implementation status (save, ledger, ages, tech, achievements, town, dialogue, floors/hazards, etchings)
   - `design/godot-conventions.md` — project structure, code rules, **testing commands** (read before writing any code)

@@ -5,6 +5,8 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 ## What lives here
 - `prd.md` — **the v1 Product Requirements Document.** Synthesizes the bible + the docs below into one implementable spec (systems with trigger/state/resolution, MVP scope, balance risks, open questions). Start here to build; it points back to the detail docs. Does **not** override the bible — the bible wins on conflict.
 - `content-budget.md` — v1 scope by the numbers; **this is the schedule.** Change a count = change the scope.
+- `asset-list.md` — **the master asset inventory (LIVING DOC):** every visual/audio asset v1 needs, categorized (3D animated/static, environment, VFX, 2D UI, illustrations, audio pointer), with status flags. **Append protocol:** any chunk adding content that needs an asset updates its row in the same change (working-agreement rule in `CLAUDE.md`).
+- `asset-pipeline.md` — **how assets get made:** the researched gen-AI tool stack (Tripo Pro + Recraft + CC0 libraries, ~$24/mo), per-asset-type step-by-step pipelines into Godot 4.7, the in-engine toon/ramp/outline style-unification layer (first-class stage), the aphantasia batch-and-pick workflow, licensing/Steam-disclosure notes. Folder layout + the pipeline gate live in `assets/README.md`.
 - `act1-story-beats.md` — the Act I spine, character arcs, and the dialogue-selection system spec.
 - `architecture-schemas.md` — draft data schemas for the architectural prepare-fors + dialogue.
 - `godot-conventions.md` — project structure, code rules, testing. Read before writing any code.
@@ -29,6 +31,7 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - One concept per file. Keep filenames kebab-case and prefixed by age/area where it helps (e.g. `medieval-masonry-the-arch.md`).
 
 ## Status
+- `asset-list.md` + `asset-pipeline.md` — **compiled/researched 2026-07-11** (inventory from the design docs + `data/` def counts; tooling web-verified that day — re-verify prices before subscribing). Plan-stage: nothing proven in-project until the asset-pipeline gate runs.
 - `tech-nodes/medieval-masonry-the-arch.md` — **first authored node (the Content gate).** Validates the format before the rest of the tree is authored. Playtest this for *delight vs. homework* before scaling up.
 - `content-budget.md`, `act1-story-beats.md`, `architecture-schemas.md`, `godot-conventions.md` — **drafted 2026-06-12** as PRD inputs. Beats are skeleton-level (gates + intent, not scripts); schemas are shape-contracts, not final field lists.
 - `prd.md` — **drafted 2026-06-19** from the above. Status: pre-development; to be finalized after the Phase 0 gates pass (gate outcomes may revise counts/feel targets).

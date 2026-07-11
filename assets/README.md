@@ -2,6 +2,8 @@
 
 How art gets into Tycho. **Placeholder-first everywhere** — never block a system on final art (`design/godot-conventions.md`). The working default is 2.5D: 3D models on the fixed camera.
 
+> **WHAT to make:** `design/asset-list.md` (the living master inventory — content chunks append to it). **HOW to make it** (tool stack, per-type workflows, style unification, licensing): `design/asset-pipeline.md`. This file keeps the folder layout + the pipeline gate.
+
 ```
 assets/
   models/   # 3D models (.glb) — Tripo / Quaternius imports
