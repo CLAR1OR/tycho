@@ -43,6 +43,11 @@ func _ready() -> void:
 	if scene != null:
 		var inst := scene.instantiate()
 		_holder.add_child(inst)
+		# Style layer (design/asset-pipeline.md §C): the gate judges every model UNDER
+		# the unification layer — toon on the NEUTRAL character ramp + outline — because
+		# that is how it will render in game (the whole point of the layer). Baked albedo
+		# textures carry through; translucent/unshaded materials are skipped.
+		StyleMaterials.apply_to_tree(inst, StyleCore.NEUTRAL_RAMP, true)
 		_anim_player = _find_anim_player(inst)
 		if _anim_player != null:
 			_collect_animations()
@@ -127,9 +132,10 @@ func _spawn_placeholder() -> void:
 	mesh.height = 1.8
 	body.mesh = mesh
 	body.position.y = 0.9
-	var mat := StandardMaterial3D.new()
-	mat.albedo_color = Color(0.5, 0.55, 0.7)
-	body.material_override = mat
+	# Same unification treatment as a real model (toon, NEUTRAL ramp, outlined), so the
+	# placeholder previews the character look too.
+	body.material_override = StyleMaterials.toon_material(
+		Color(0.5, 0.55, 0.7), StyleCore.NEUTRAL_RAMP, true)
 	_holder.add_child(body)
 
 

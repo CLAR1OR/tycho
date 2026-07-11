@@ -66,7 +66,8 @@ Each floor **introduces** its signature hazard and may sprinkle *earlier* floors
 {
   "id": 3, "name": "The Resonant Stratum",
   "environment": { "palette": "resonant", "fog_color": "#1a2438", "fog_density": 0.04,
-                   "light_temp": 0.35, "emission": "crystal_teal" },
+                   "light_temp": 0.35, "emission": "crystal_teal",
+                   "ramp": ["#161326", "#40405c", "#d8dcef"] },  // OPTIONAL (2026-07-11, style layer): explicit 3-stop toon ramp dark→light; absent = derived from fog/ambient/light (StyleCore.ramp_stops)
   "props": ["crystal-seam", "crystal-cluster", "humming-shard"],
   "hazards": { "signature": "burst-crystal", "pool": ["vent-plate", "denial-mist"],
                "density": { "early_rooms": 0.2, "late_rooms": 0.5 } },

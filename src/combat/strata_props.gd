@@ -29,8 +29,9 @@ const PROPS: Dictionary = {
 
 
 ## Build a placeholder prop node (a MeshInstance3D, no collision) for `id`. Returns null
-## for an unknown id after a loud warning — the room skips it. Caller positions it.
-static func build(id: String) -> MeshInstance3D:
+## for an unknown id after a loud warning — the room skips it. Caller positions it and
+## passes the stratum's toon ramp stops (StyleCore.ramp_stops; empty = NEUTRAL_RAMP).
+static func build(id: String, ramp_stops: Array[Color] = []) -> MeshInstance3D:
 	if not PROPS.has(id):
 		push_warning("StrataProps: unknown prop id \"%s\" — skipped" % id)
 		return null
@@ -57,13 +58,14 @@ static func build(id: String) -> MeshInstance3D:
 			sm.radius = size.x * 0.5
 			sm.height = size.y
 			mesh.mesh = sm
-	var mat := StandardMaterial3D.new()  # fresh per prop — no shared-material aliasing
+	# Style layer (design/asset-pipeline.md §C): props render through the shared toon
+	# shader on the stratum's ramp — fresh material per prop (no shared-material
+	# aliasing), emissive props keep their glow, NO outline on dressing.
+	var stops := ramp_stops if not ramp_stops.is_empty() else StyleCore.NEUTRAL_RAMP
 	var col: Color = spec["color"]
-	mat.albedo_color = col
-	if bool(spec["emissive"]):
-		mat.emission_enabled = true
-		mat.emission = col
-		mat.emission_energy_multiplier = 1.4
+	var emissive := bool(spec["emissive"])
+	var mat := StyleMaterials.toon_material(col, stops, false,
+		col if emissive else Color.BLACK, 1.4 if emissive else 0.0)
 	# surface override (not material_override) so the mesh surface carries a real material —
 	# matches the scene's floor/walls and keeps the headless dummy renderer quiet.
 	mesh.set_surface_override_material(0, mat)

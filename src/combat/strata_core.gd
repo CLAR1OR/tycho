@@ -20,7 +20,9 @@ class_name StrataCore
 # Ground-Wall-Obstacle materials). A floor file's `environment` dict overrides any
 # subset of these keys; anything it omits keeps the default — so a floor with no
 # `environment` at all renders exactly as today (the deniability floor, floor 1, sits
-# closest to this). Colour keys hold Color, the rest hold float/bool.
+# closest to this). Colour keys hold Color, the rest hold float/bool — except `ramp`,
+# an OPTIONAL array of "#rrggbb" stops (dark->light) for the style layer's toon ramp
+# (StyleCore.ramp_stops uses it verbatim; empty/absent = derive from the colours above).
 const ENV_DEFAULTS: Dictionary = {
 	"background_color": Color(0.1, 0.09, 0.14),
 	"ambient_color": Color(0.45, 0.45, 0.55),
@@ -33,6 +35,7 @@ const ENV_DEFAULTS: Dictionary = {
 	"fog_enabled": false,
 	"fog_color": Color(0.1, 0.12, 0.18),
 	"fog_density": 0.0,
+	"ramp": [],
 }
 
 # --- Placement bounds (placeholders; the room is 56x56, walls at +-27) -------------
@@ -62,6 +65,8 @@ static func environment_of(profile: Dictionary) -> Dictionary:
 		var v: Variant = raw[key]
 		if d is Color:
 			env[key] = _to_color(v, d)
+		elif d is Array:
+			env[key] = _to_ramp(v)
 		elif d is bool:
 			env[key] = bool(v)
 		else:
@@ -186,3 +191,17 @@ static func _to_color(v: Variant, fallback: Color) -> Color:
 	if v is Color:
 		return v
 	return fallback
+
+
+## Parse the optional `ramp` env value (["#rrggbb", ...] -> Array[Color]). Invalid
+## entries are skipped, a non-array yields [] — never crash; [] means "no explicit
+## ramp, derive one" (StyleCore).
+static func _to_ramp(v: Variant) -> Array[Color]:
+	var out: Array[Color] = []
+	if v is Array:
+		for item: Variant in v:
+			if item is Color:
+				out.append(item)
+			elif item is String and Color.html_is_valid(item):
+				out.append(Color.html(item))
+	return out

@@ -137,6 +137,12 @@ var _base_mesh_color: Color = Color(0.85, 0.85, 0.9)
 
 
 func _ready() -> void:
+	# Style layer (design/asset-pipeline.md §C): the body renders through the shared toon
+	# shader on the NEUTRAL ramp + the character outline (readability guard). The blade
+	# and hitbox viz are translucent/unshaded — skip-rule territory, left StandardMaterial3D.
+	# Tint/restore goes through StyleMaterials.set_tint; colours are unchanged.
+	_mesh.set_surface_override_material(0,
+		StyleMaterials.toon_material(_base_mesh_color, StyleCore.NEUTRAL_RAMP, true))
 	health_changed.emit(health, max_health)
 	_load_etchings()
 
@@ -689,9 +695,7 @@ func revive() -> void:
 
 
 func _flash(color: Color) -> void:
-	var mat := _mesh.get_active_material(0)
-	if mat is StandardMaterial3D:
-		mat.albedo_color = color
-		await get_tree().create_timer(0.08).timeout
-		if is_instance_valid(self):
-			mat.albedo_color = _base_mesh_color
+	StyleMaterials.set_tint(_mesh, color)
+	await get_tree().create_timer(0.08).timeout
+	if is_instance_valid(self):
+		StyleMaterials.set_tint(_mesh, _base_mesh_color)

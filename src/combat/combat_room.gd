@@ -210,24 +210,33 @@ func _apply_environment() -> void:
 	if light != null:
 		light.light_color = env["light_color"]
 		light.light_energy = float(env["light_energy"])
-	# The Ground/Wall/Obstacle materials are shared local sub-resources — set each once.
-	_set_albedo($Floor/Mesh, env["ground_color"])
-	_set_albedo($WallN/Mesh, env["wall_color"])
-	_set_albedo($Obstacles/Pillar1/Mesh, env["obstacle_color"])
-
-
-func _set_albedo(mesh: MeshInstance3D, col: Color) -> void:
-	var mat := mesh.get_surface_override_material(0)
-	if mat is StandardMaterial3D:
-		(mat as StandardMaterial3D).albedo_color = col
+	# Style layer (design/asset-pipeline.md §C): ground/wall/obstacles render through the
+	# shared toon shader, tinted by this stratum's ramp. ONE material per role, shared by
+	# its meshes — retinting a role still repaints its siblings (previous behaviour), and
+	# each room instance builds fresh materials (the resource_local_to_scene guarantee by
+	# other means). NO outline on environment geometry. Retint later via
+	# StyleMaterials.set_tint (which replaced the old _set_albedo).
+	var ramp := StyleCore.ramp_stops(env)
+	($Floor/Mesh as MeshInstance3D).set_surface_override_material(0,
+		StyleMaterials.toon_material(env["ground_color"], ramp, false))
+	var wall_mat := StyleMaterials.toon_material(env["wall_color"], ramp, false)
+	for wall: Variant in [$WallN/Mesh, $WallS/Mesh, $WallE/Mesh, $WallW/Mesh]:
+		(wall as MeshInstance3D).set_surface_override_material(0, wall_mat)
+	var obstacle_mat := StyleMaterials.toon_material(env["obstacle_color"], ramp, false)
+	for obstacle in $Obstacles.get_children():
+		var m := (obstacle as Node).get_node_or_null("Mesh") as MeshInstance3D
+		if m != null:
+			m.set_surface_override_material(0, obstacle_mat)
 
 
 func _spawn_props() -> void:
 	var ids: Array = _profile.get("props", [])
 	if ids.is_empty():
 		return
+	# Props ride the stratum ramp too (StyleMaterials via StrataProps.build).
+	var ramp := StyleCore.ramp_stops(StrataCore.environment_of(_profile))
 	for entry: Dictionary in StrataCore.prop_plan(ids, _strata_seed("props")):
-		var node := StrataProps.build(str(entry["id"]))
+		var node := StrataProps.build(str(entry["id"]), ramp)
 		if node == null:
 			continue  # unknown id (warned in StrataProps) — never crash a room
 		var p: Vector3 = entry["pos"]

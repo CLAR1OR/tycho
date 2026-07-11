@@ -56,6 +56,8 @@ Failure table: crumpled ball = BoneMap mis-assignment; T-pose slide = library no
 
 ### C. Style unification layer (build FIRST, before volume) — 1–2 days once, then dial-tuning
 
+> **BUILT 2026-07-11** — `tycho_toon.gdshader` + `tycho_outline.gdshader` + `StyleCore`/`StyleMaterials` (`src/core/`); per-floor optional `ramp` env key; characters on `NEUTRAL_RAMP` + outline, town on `TOWN_RAMP`, room geometry/props on the derived stratum ramp; skip rules protect all unshaded/translucent FX; `feel_room` exempt. All values are `# style:` dials (`design/feel-tuning.md` § Style unification).
+
 1. **One toon/cel shader** on every 3D mesh (adapt Flexible Toon Shader / Complete Toon Shader from godotshaders.com): 2–4 light bands, single-dominant-light trick so multi-light rooms don't fragment the look.
 2. **One ramp/gradient texture per stratum** drives band colours (shadows toward OUR hue regardless of what the AI baked) — the highest-leverage dial; maps straight onto `data/floors/*.json` env profiles.
 3. **Palette discipline:** props/buildings = discard AI textures, flat per-surface materials from a project palette constant (or Gradient Snapper in Blender for atlas UVs); hero characters = keep AI albedo but posterize/LUT toward the palette in-shader, or Meshy Retexture to converge.

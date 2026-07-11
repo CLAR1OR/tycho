@@ -72,6 +72,17 @@ func _ready() -> void:
 			npc.body_exited.connect(func(body: Node3D) -> void:
 				if body is Player and _in_npc == npc:
 					_in_npc = null)
+	# Style layer (design/asset-pipeline.md §C): one toon sweep over the whole town on
+	# the warm TOWN_RAMP (the town has no floor profile — its ramp is a StyleCore
+	# `# style:` const). Skip rules leave the portal + every unshaded/translucent FX
+	# untouched; the forge's emissive glow carries through the conversion. The player
+	# already converted itself (children ready first) on NEUTRAL_RAMP. NPC capsules then
+	# get the character outline so they read as characters, not props.
+	StyleMaterials.apply_to_tree(self, StyleCore.TOWN_RAMP)
+	for npc in _npcs:
+		var npc_mesh := npc.get_node_or_null("Mesh") as MeshInstance3D
+		if npc_mesh != null:
+			StyleMaterials.add_outline(npc_mesh)
 	_meditation.body_entered.connect(func(body: Node3D) -> void:
 		if body is Player:
 			_in_meditation = true)

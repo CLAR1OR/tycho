@@ -97,6 +97,12 @@ var _wander_timer: float = 0.0
 func _ready() -> void:
 	_hp = max_hp
 	add_to_group("enemies")
+	# Style layer (design/asset-pipeline.md §C): the body renders through the shared toon
+	# shader on the NEUTRAL ramp + the character outline — identity hues and telegraph
+	# colours read IDENTICALLY on every stratum (the readability guard). All tinting
+	# below goes through StyleMaterials.set_tint; the colours themselves are unchanged.
+	_mesh.set_surface_override_material(0,
+		StyleMaterials.toon_material(base_color, StyleCore.NEUTRAL_RAMP, true))
 	_set_color(_idle_color())   # dormant until it notices the player
 	_circle_dir = 1.0 if randf() < 0.5 else -1.0
 	_flip_timer = randf_range(1.0, 3.0)
@@ -464,25 +470,22 @@ func _flat(v: Vector3) -> Vector3:
 
 
 func _set_color(c: Color) -> void:
-	var mat := _mesh.get_active_material(0)
-	if mat is StandardMaterial3D:
-		mat.albedo_color = c
+	StyleMaterials.set_tint(_mesh, c)
 
 
 func _flash() -> void:
-	var mat := _mesh.get_active_material(0)
-	if mat is StandardMaterial3D:
-		mat.albedo_color = Color.WHITE
-		await get_tree().create_timer(0.06).timeout
-		if is_instance_valid(self) and mat is StandardMaterial3D:
-			# Restore whatever colour the CURRENT state wants (it may have changed
-			# during the flash — e.g. the hit caused a stagger or a wake).
-			match _state:
-				State.IDLE:
-					mat.albedo_color = _idle_color()
-				State.TELEGRAPH:
-					mat.albedo_color = COLOR_TELEGRAPH
-				State.STRIKE:
-					mat.albedo_color = COLOR_STRIKE
-				_:
-					mat.albedo_color = base_color
+	StyleMaterials.set_tint(_mesh, Color.WHITE)
+	await get_tree().create_timer(0.06).timeout
+	if not is_instance_valid(self):
+		return
+	# Restore whatever colour the CURRENT state wants (it may have changed
+	# during the flash — e.g. the hit caused a stagger or a wake).
+	match _state:
+		State.IDLE:
+			_set_color(_idle_color())
+		State.TELEGRAPH:
+			_set_color(COLOR_TELEGRAPH)
+		State.STRIKE:
+			_set_color(COLOR_STRIKE)
+		_:
+			_set_color(base_color)
