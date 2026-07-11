@@ -16,11 +16,15 @@ const GRASS_SHADER: Shader = preload("res://assets/materials/grass_blade.gdshade
 const NO_TARGET := Vector3(1.0e6, 0.0, 0.0)
 
 @export var follow_target: Node3D = null       ## bends the grass it walks through
+## Custom blade/tuft mesh (e.g. assets/models/GrassMesh.res). Root must sit at the
+## mesh origin and UV.y must be 0 at the tip / 1 at the root (the shader's sway +
+## colour convention). null = the built-in QuadMesh blade below.
+@export var blade_mesh: Mesh = null
 @export var patch_size := Vector2(12.0, 12.0)  # style: human-tuned, do not optimize
 @export var blade_count := 4000                # style: human-tuned, do not optimize
-@export var blade_width := 0.08                # style: human-tuned, do not optimize
-@export var blade_height := 0.55               # style: human-tuned, do not optimize
-@export var height_jitter := 0.35              # style: human-tuned, do not optimize — ±fraction of blade_height
+@export var blade_width := 0.08                # style: human-tuned, do not optimize — built-in blade only
+@export var blade_height := 0.55               # style: human-tuned, do not optimize — built-in blade only
+@export var height_jitter := 0.35              # style: human-tuned, do not optimize — ±fraction of blade height
 @export var scatter_seed := 1337               ## deterministic scatter
 
 var _material: ShaderMaterial = null
@@ -34,9 +38,10 @@ func _ready() -> void:
 	material_override = _material
 	# Blades displace in vertex() — grow the cull bounds so swaying tips at the patch
 	# edge don't pop when the origin leaves the frustum.
+	var blade_h := blade_height if blade_mesh == null else blade_mesh.get_aabb().size.y
 	custom_aabb = AABB(
 		Vector3(-patch_size.x * 0.5 - 1.0, 0.0, -patch_size.y * 0.5 - 1.0),
-		Vector3(patch_size.x + 2.0, blade_height * 2.0 + 1.0, patch_size.y + 2.0))
+		Vector3(patch_size.x + 2.0, blade_h * 2.0 + 1.0, patch_size.y + 2.0))
 	set_instance_shader_parameter("player_position", NO_TARGET)
 
 
@@ -46,9 +51,12 @@ func _physics_process(_delta: float) -> void:
 
 
 func _build_multimesh() -> MultiMesh:
-	var blade := QuadMesh.new()
-	blade.size = Vector2(blade_width, blade_height)
-	blade.center_offset = Vector3(0.0, blade_height * 0.5, 0.0)  # root at y=0
+	var blade: Mesh = blade_mesh
+	if blade == null:
+		var quad := QuadMesh.new()
+		quad.size = Vector2(blade_width, blade_height)
+		quad.center_offset = Vector3(0.0, blade_height * 0.5, 0.0)  # root at y=0
+		blade = quad
 	var mm := MultiMesh.new()
 	mm.transform_format = MultiMesh.TRANSFORM_3D
 	mm.mesh = blade

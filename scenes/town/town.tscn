@@ -5,6 +5,8 @@
 [ext_resource type="PackedScene" uid="uid://dqf7d7h226yn2" path="res://assets/models/kaykit-forest-gltf/Tree_3_A_Color1.gltf" id="2_v00pm"]
 [ext_resource type="PackedScene" path="res://scenes/core/camera_rig.tscn" id="3"]
 [ext_resource type="PackedScene" uid="uid://cswtner1nao5f" path="res://assets/models/kaykit-forest-gltf/Tree_4_B_Color1.gltf" id="5_6g2qn"]
+[ext_resource type="Script" path="res://src/core/grass_patch.gd" id="6_grass"]
+[ext_resource type="ArrayMesh" path="res://assets/models/GrassMesh.res" id="7_gmesh"]
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 1
@@ -646,3 +648,12 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.9313707)
 
 [node name="Tree_4_B_Color12" parent="." unique_id=462585273 instance=ExtResource("5_6g2qn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.775711, 0.3763888, 5.7571034)
+
+[node name="Grass" type="MultiMeshInstance3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 5)
+script = ExtResource("6_grass")
+follow_target = NodePath("../Player")
+blade_mesh = ExtResource("7_gmesh")
+patch_size = Vector2(10, 8)
+blade_count = 2500
+

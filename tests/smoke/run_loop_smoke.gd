@@ -57,6 +57,13 @@ func _run_smoke() -> void:
 		_profile_bytes = FileAccess.get_file_as_bytes(SaveManager.profile_path())
 	EventBus.achievement_unlocked.connect(func(id: String) -> void: _unlocks_seen.append(id))
 	_boot_game()
+	# Achievements are INERT once unlocked — and this is the human's REAL profile, so
+	# anything they unlocked playtesting (e.g. first-clear, the Den-Warden) would never
+	# re-fire here and the unlock checks below would rot (first bitten 2026-07-11, the
+	# day the human first cleared floor 1 for real). Reset the IN-MEMORY achievements to
+	# a blank slate for the whole smoke; the byte-exact restore at the exit point puts
+	# the real file back regardless of what the autoload persists in between.
+	SaveManager.profile["achievements"] = {}
 	# Run telemetry (2026-07-10, diagnostics tooling, NOT the save system): redirect to a
 	# throwaway temp file for the WHOLE smoke, so a real run/death/forfeit here never
 	# touches the human's real user://telemetry/runs.jsonl.

@@ -33,7 +33,7 @@ A 2.5D top-down **real-time action roguelite** (Hades-style *feel*) wrapped arou
 
 **Content vs budget (the real gap — the engine is done, the game is ~15% authored):** tech nodes 2/14 · echoes ~25/~50 · enemies 5/12 · bosses 1 real/5 (placeholder fallback on 2–5) · buildings 9/9 data (+2 shops; models 0/9) · attunements 7/~7 (placeholder) · dialogue ~112/~370 pieces · achievements 26/~25 (placeholder copy, curation pending) · spine COMPLETE through E1 (~22/~22 drafted; most awaiting curation). Counts: `design/content-budget.md`.
 
-**Validation baseline:** **299 unit test cases** + **361 smoke ok-checks** (±1 known door-sigil nondeterminism) + editor pass clean. Commands + rules (throwaway slot 99, one smoke per invocation, profile.json is GLOBAL — the human's real profile): `design/godot-conventions.md` § Testing.
+**Validation baseline:** **299 unit test cases** + **362 smoke ok-checks** (±1 known door-sigil nondeterminism) + editor pass clean. Commands + rules (throwaway slot 99, one smoke per invocation, profile.json is GLOBAL — the human's real profile): `design/godot-conventions.md` § Testing.
 
 **Tools (2026-07-10):** headless economy sim (`tools/economy_sim.gd`, report + red flags in `design/economy-sim.md`; command in `design/godot-conventions.md` § Tools) + run telemetry (`Telemetry`/`TelemetryCore`, one JSONL record per run end/forfeit to `user://telemetry/runs.jsonl` — diagnostics only, outside `user://saves/`).
 
