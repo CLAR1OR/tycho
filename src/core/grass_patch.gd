@@ -1,3 +1,4 @@
+@tool
 extends MultiMeshInstance3D
 class_name GrassPatch
 ## A drop-anywhere stylized grass patch: builds a MultiMesh of blade quads scattered
@@ -5,10 +6,16 @@ class_name GrassPatch
 ## (CC0, @_Malido — wind sway + walk-through displacement). Set `follow_target` to
 ## whatever should bend the grass (the player); leave it null for wind only.
 ##
-## The blade is a vertical QuadMesh with its root at this node's origin (UV.y is 0 at
-## the tip, 1 at the root — the shader's sway/colour convention). Scatter is SEEDED —
-## the same patch looks the same every run. Every @export below is a style dial
-## (placeholders; dial board: design/feel-tuning.md § Style unification).
+## @tool: the patch builds itself IN THE EDITOR too, so the meadow is visible while
+## designing the town, and re-scatters live when a dial below changes. The generated
+## MultiMesh/material are cleared right before a scene save and rebuilt right after
+## (NOTIFICATION_EDITOR_PRE/POST_SAVE) — 2500 instance transforms never bloat a .tscn.
+##
+## The default blade is a vertical QuadMesh with its root at this node's origin (UV.y
+## is 0 at the tip, 1 at the root — the shader's sway/colour convention; a custom
+## `blade_mesh` must follow the same convention). Scatter is SEEDED — the same patch
+## looks the same every run. Every dial below is a style dial (placeholders; dial
+## board: design/feel-tuning.md § Style unification).
 
 const GRASS_SHADER: Shader = preload("res://assets/materials/grass_blade.gdshader")
 ## "No one nearby" — parked far away so the displacement never fires (the instance
@@ -19,21 +26,68 @@ const NO_TARGET := Vector3(1.0e6, 0.0, 0.0)
 ## Custom blade/tuft mesh (e.g. assets/models/GrassMesh.res). Root must sit at the
 ## mesh origin and UV.y must be 0 at the tip / 1 at the root (the shader's sway +
 ## colour convention). null = the built-in QuadMesh blade below.
-@export var blade_mesh: Mesh = null
-@export var patch_size := Vector2(12.0, 12.0)  # style: human-tuned, do not optimize
-@export var blade_count := 4000                # style: human-tuned, do not optimize
-@export var blade_width := 0.08                # style: human-tuned, do not optimize — built-in blade only
-@export var blade_height := 0.55               # style: human-tuned, do not optimize — built-in blade only
-@export var height_jitter := 0.35              # style: human-tuned, do not optimize — ±fraction of blade height
-@export var scatter_seed := 1337               ## deterministic scatter
+@export var blade_mesh: Mesh = null:
+	set(v):
+		blade_mesh = v
+		_request_rebuild()
+@export var patch_size := Vector2(12.0, 12.0):  # style: human-tuned, do not optimize
+	set(v):
+		patch_size = v
+		_request_rebuild()
+@export var blade_count := 4000:                # style: human-tuned, do not optimize
+	set(v):
+		blade_count = maxi(v, 1)
+		_request_rebuild()
+@export var blade_width := 0.08:                # style: human-tuned, do not optimize — built-in blade only
+	set(v):
+		blade_width = v
+		_request_rebuild()
+@export var blade_height := 0.55:               # style: human-tuned, do not optimize — built-in blade only
+	set(v):
+		blade_height = v
+		_request_rebuild()
+@export var height_jitter := 0.35:              # style: human-tuned, do not optimize — ±fraction of blade height
+	set(v):
+		height_jitter = v
+		_request_rebuild()
+@export var scatter_seed := 1337:               ## deterministic scatter
+	set(v):
+		scatter_seed = v
+		_request_rebuild()
 
 var _material: ShaderMaterial = null
+var _rebuild_queued := false
 
 
 func _ready() -> void:
-	_material = ShaderMaterial.new()
-	_material.shader = GRASS_SHADER
-	_material.set_shader_parameter("wind_noise", _wind_noise_texture())
+	_build_all()
+	set_instance_shader_parameter("player_position", NO_TARGET)
+
+
+func _physics_process(_delta: float) -> void:
+	if Engine.is_editor_hint():
+		return
+	if follow_target != null:
+		set_instance_shader_parameter("player_position", follow_target.global_position)
+
+
+## Editor-save hygiene: never serialize the generated MultiMesh (2500 transforms) or
+## the runtime ShaderMaterial into the scene file — clear before save, rebuild after.
+func _notification(what: int) -> void:
+	match what:
+		NOTIFICATION_EDITOR_PRE_SAVE:
+			multimesh = null
+			material_override = null
+			custom_aabb = AABB()
+		NOTIFICATION_EDITOR_POST_SAVE:
+			_build_all()
+
+
+func _build_all() -> void:
+	if _material == null:
+		_material = ShaderMaterial.new()
+		_material.shader = GRASS_SHADER
+		_material.set_shader_parameter("wind_noise", _wind_noise_texture())
 	multimesh = _build_multimesh()
 	material_override = _material
 	# Blades displace in vertex() — grow the cull bounds so swaying tips at the patch
@@ -42,12 +96,20 @@ func _ready() -> void:
 	custom_aabb = AABB(
 		Vector3(-patch_size.x * 0.5 - 1.0, 0.0, -patch_size.y * 0.5 - 1.0),
 		Vector3(patch_size.x + 2.0, blade_h * 2.0 + 1.0, patch_size.y + 2.0))
-	set_instance_shader_parameter("player_position", NO_TARGET)
 
 
-func _physics_process(_delta: float) -> void:
-	if follow_target != null:
-		set_instance_shader_parameter("player_position", follow_target.global_position)
+## Coalesce dial changes (Inspector spinners fire per keystroke) into ONE deferred
+## rebuild. Before the node enters the tree, _ready's build covers it.
+func _request_rebuild() -> void:
+	if not is_inside_tree() or _rebuild_queued:
+		return
+	_rebuild_queued = true
+	_deferred_rebuild.call_deferred()
+
+
+func _deferred_rebuild() -> void:
+	_rebuild_queued = false
+	_build_all()
 
 
 func _build_multimesh() -> MultiMesh:
