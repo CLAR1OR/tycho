@@ -7,7 +7,8 @@
 [ext_resource type="PackedScene" uid="uid://cswtner1nao5f" path="res://assets/models/kaykit-forest-gltf/Tree_4_B_Color1.gltf" id="5_6g2qn"]
 [ext_resource type="Script" uid="uid://kmvyf0xkbrhw" path="res://src/core/grass_patch.gd" id="6_grass"]
 [ext_resource type="ArrayMesh" uid="uid://er8nljgvawhk" path="res://assets/models/GrassMesh.res" id="7_gmesh"]
-[ext_resource type="Script" path="res://src/core/water_plane.gd" id="8_water"]
+[ext_resource type="Script" uid="uid://dewj5vnru7k77" path="res://src/core/water_plane.gd" id="8_water"]
+[ext_resource type="PackedScene" uid="uid://c0py1hpm01tj4" path="res://assets/models/kaykit-forest-gltf/Bush_2_A_Color1.gltf" id="9_jil70"]
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 1
@@ -163,6 +164,7 @@ mesh = SubResource("WallNSMesh")
 surface_material_override/0 = SubResource("WallMat")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="WallS" unique_id=228434407]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 3.476118)
 shape = SubResource("WallNSShape")
 
 [node name="WallE" type="StaticBody3D" parent="." unique_id=426197130]
@@ -651,7 +653,7 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.9313707)
 [node name="Tree_4_B_Color12" parent="." unique_id=462585273 instance=ExtResource("5_6g2qn")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.775711, 0.3763888, 5.7571034)
 
-[node name="Water" type="MeshInstance3D" parent="."]
+[node name="Water" type="MeshInstance3D" parent="." unique_id=509291451 node_paths=PackedStringArray("follow_target")]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 21.5)
 script = ExtResource("8_water")
 follow_target = NodePath("../Player")
@@ -671,3 +673,6 @@ script = ExtResource("6_grass")
 blade_mesh = ExtResource("7_gmesh")
 patch_size = Vector2(15, 5)
 blade_count = 6000
+
+[node name="Bush_2_A_Color12" parent="." unique_id=2065137874 instance=ExtResource("9_jil70")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.528803, -1.1489401, 19.153282)

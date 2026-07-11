@@ -16,7 +16,7 @@ render_mode shadows_disabled;
 #define FRESNEL
 #define PLAYER_WAVES
 #define DISPLACEMENT
-//#define SSR
+#define SSR
 
 group_uniforms color;
 uniform vec3 absorption_color : source_color = vec3(1.0, 0.35, 0.0);
