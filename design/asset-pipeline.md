@@ -26,7 +26,7 @@
 
 ## The aphantasia workflow (how taste decisions work without a mind's eye)
 
-1. **Externalize the moodboard.** For ONE canonical object per class (a health-flask icon, one portrait, one dungeon wall), generate 20–30 wildly varied style candidates; the human picks survivors; iterate 2–3 rounds. The winners become the **style bible** — a checked-in folder of reference images that *is* the visual imagination, externalized (`assets_src/anchors/` + `design/style-bible.md` once started).
+1. **Externalize the moodboard.** For ONE canonical object per class (a health-flask icon, one portrait, one dungeon wall), generate 20–30 wildly varied style candidates; the human picks survivors; iterate 2–3 rounds. The winners become the **style bible** — a checked-in folder of reference images that *is* the visual imagination, externalized (`assets_src/anchors/` + `design/style-bible.md` — **STARTED 2026-07-12** with the human-picked town anchor; the bible carries the extracted palette + the five look-carriers + the judging protocol).
 2. **Lock style before volume.** Never generate the 100-icon set until 3–5 approved refs exist; feed them to Recraft's custom style (or a LoRA). All consistency mechanisms are image-upload based — zero drawing anywhere.
 3. **Batch-and-pick over prompt-perfecting.** Generate 4–8 variants per asset; comparative judgment ("which of these is right?") works fine without visualization; regenerate the bottom 20%.
 4. **Every accept/reject is a side-by-side on screen against the bible, never against memory.** Agents produce contact-sheet screenshots (see Validation loop); human decisions take seconds.

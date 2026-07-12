@@ -1,0 +1,15 @@
+Asset: assets_src/anchors/town-style-anchor.png
+Generator: ChatGPT image generation
+Date: 2026-07-12
+Picked by: human (the canonical town style anchor — "a look that I want in the game")
+Style axis: D — stylized 3D toon render (from the style-exploration round, 2026-07-12)
+
+Prompt:
+Stylized low-poly 3D render, hand-painted flat colors, 2-band toon lighting,
+thin dark outline pass, soft rim light, game-art quality like Hades meets Tunic,
+clean silhouettes, no realistic textures. isometric game view, fixed camera
+angle, stylized low-poly buildings. timber-and-stone houses with warm candlelit
+windows, a modest market square, a stone well, a mayor's hall, scaffolding on a
+half-built cathedral, grass meadows and a curving lakeshore at the town's edge,
+a wooded hill with a tiny hermit's hut just outside the walls. Cozy, hopeful,
+lived-in — a town on the verge of an age of discovery.

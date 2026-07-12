@@ -30,11 +30,13 @@ const NEUTRAL_RAMP: Array[Color] = [
 	Color(1.0, 1.0, 1.0),      # style: human-tuned, do not optimize — light end
 ]
 
-## The town has no floor profile — it gets its own ramp (warm daylight neutral).
+## The town has no floor profile — it gets its own ramp. Dusk pass 2026-07-12
+## (human-directed) from the town anchor's extracted palette (design/style-bible.md):
+## cool indigo shadow against warm khaki/glow light — the anchor's light story.
 const TOWN_RAMP: Array[Color] = [
-	Color(0.33, 0.28, 0.26),   # style: human-tuned, do not optimize — warm shadow
-	Color(0.72, 0.66, 0.58),   # style: human-tuned, do not optimize — mid
-	Color(1.0, 0.97, 0.90),    # style: human-tuned, do not optimize — sunlit end
+	Color(0.13, 0.21, 0.29),   # style: human-tuned, do not optimize — indigo shadow (anchor #21354B)
+	Color(0.72, 0.61, 0.45),   # style: human-tuned, do not optimize — warm khaki mid (toward anchor #B88B54)
+	Color(1.0, 0.88, 0.66),    # style: human-tuned, do not optimize — glow-cream light (anchor #E8BC68 lifted)
 ]
 
 # --- Ramp derivation dials ------------------------------------------------------------
@@ -45,12 +47,16 @@ const RAMP_TINT_SATURATION := 0.5   # style: human-tuned, do not optimize — ke
 const RAMP_SATURATION_CAP := 0.4    # style: human-tuned, do not optimize — max saturation of any derived stop
 
 # --- Starter prop palette (medieval placeholder set, for future props/buildings) ------
+# Anchor-derived entries (2026-07-12) carry their extracted hex — design/style-bible.md.
 const PALETTE_PARCHMENT := Color(0.85, 0.79, 0.64)   # style: human-tuned, do not optimize
 const PALETTE_STONE := Color(0.55, 0.54, 0.52)       # style: human-tuned, do not optimize
-const PALETTE_WOOD := Color(0.48, 0.35, 0.23)        # style: human-tuned, do not optimize
+const PALETTE_WOOD := Color(0.30, 0.21, 0.14)        # style: human-tuned, do not optimize — dark timber (anchor #4D3624)
 const PALETTE_VERDIGRIS := Color(0.31, 0.56, 0.48)   # style: human-tuned, do not optimize
 const PALETTE_IRON := Color(0.35, 0.37, 0.40)        # style: human-tuned, do not optimize
 const PALETTE_EMBER := Color(0.85, 0.44, 0.20)       # style: human-tuned, do not optimize
+const PALETTE_ROOF_SLATE := Color(0.16, 0.28, 0.36)  # style: human-tuned, do not optimize — blue-slate roofs (anchor #28475B)
+const PALETTE_ROOF_RUST := Color(0.60, 0.29, 0.13)   # style: human-tuned, do not optimize — rust accent roofs (anchor #9A4B20)
+const PALETTE_WINDOW_GLOW := Color(0.91, 0.74, 0.41) # style: human-tuned, do not optimize — emissive window/torch glow (anchor #E8BC68)
 
 
 ## The 3 ramp stops (dark -> light) a stratum's geometry/props render with, from its

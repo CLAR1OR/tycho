@@ -7,6 +7,7 @@ The master design bible (`../Tycho Roguelite.md`) holds the **locked decisions a
 - `content-budget.md` — v1 scope by the numbers; **this is the schedule.** Change a count = change the scope.
 - `asset-list.md` — **the master asset inventory (LIVING DOC):** every visual/audio asset v1 needs, categorized (3D animated/static, environment, VFX, 2D UI, illustrations, audio pointer), with status flags. **Append protocol:** any chunk adding content that needs an asset updates its row in the same change (working-agreement rule in `CLAUDE.md`).
 - `asset-pipeline.md` — **how assets get made:** the researched gen-AI tool stack (Tripo Pro + Recraft + CC0 libraries, ~$24/mo), per-asset-type step-by-step pipelines into Godot 4.7, the in-engine toon/ramp/outline style-unification layer (first-class stage), the aphantasia batch-and-pick workflow, licensing/Steam-disclosure notes. Folder layout + the pipeline gate live in `assets/README.md`.
+- `style-bible.md` — **the externalized visual imagination (LIVING DOC, started 2026-07-12):** the human-picked style anchors (`assets_src/anchors/`), what carries each look in-engine, the extracted palettes → dial mappings, and the side-by-side judging protocol. Every visual accept/reject is judged against it.
 - `act1-story-beats.md` — the Act I spine, character arcs, and the dialogue-selection system spec.
 - `architecture-schemas.md` — draft data schemas for the architectural prepare-fors + dialogue.
 - `godot-conventions.md` — project structure, code rules, testing. Read before writing any code.

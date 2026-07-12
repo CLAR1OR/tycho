@@ -411,18 +411,18 @@ Floor identity is DATA, not code — dial these like FEEL numbers (no code edit)
 
 ## Style unification — `src/core/style_core.gd` / `assets/materials/*.gdshader` *(built 2026-07-11, design/asset-pipeline.md §C)*
 
-Every 3D mesh renders through ONE toon shader (`tycho_toon.gdshader`); characters (player/enemies/bosses/NPCs/gate models) add the inverted-hull outline pass (`tycho_outline.gdshader`, chained via `next_pass`). Everything below is a **`# style:` dial** — the SAME untouchable contract as `# FEEL:` (human-tuned, agents never optimize), and every current value is a first-guess placeholder. `StyleCore` consts are the source of truth; the two shaders' uniform defaults mirror them — when dialing a default, change BOTH.
+Every 3D mesh renders through ONE toon shader (`tycho_toon.gdshader`); characters (player/enemies/bosses/NPCs/gate models) add the inverted-hull outline pass (`tycho_outline.gdshader`, chained via `next_pass`). Everything below is a **`# style:` dial** — the SAME untouchable contract as `# FEEL:` (human-tuned, agents never optimize). `StyleCore` consts are the source of truth; the two shaders' uniform defaults mirror them — when dialing a default, change BOTH. Anchor-derived values judge against the **town style anchor** (`design/style-bible.md`, started 2026-07-12).
 
 | Var | Default | What it does |
 |-----|---------|--------------|
-| `BAND_COUNT` | 3 | Toon light bands (2 = harshest cel, higher = softer). |
-| `OUTLINE_WIDTH` | 0.03 | Inverted-hull push distance (m). Characters only, never environment/props. |
-| `OUTLINE_COLOR` | near-black `(0.07, 0.06, 0.10)` | Outline colour. |
+| `BAND_COUNT` | 5 (human-dialed from 3) | Toon light bands (2 = harshest cel, higher = softer). Shader uniform default still 3 — sync on next shader dial. |
+| `OUTLINE_WIDTH` | 0.01 (human-dialed from 0.03) | Inverted-hull push distance (m). Characters only, never environment/props. |
+| `OUTLINE_COLOR` | near-black `(0.07, 0.06, 0.10)` | Outline colour. (The town anchor's outlines read dark-WARM — a candidate re-dial, see style-bible.) |
 | `NEUTRAL_RAMP` | cool-dark grey → white (3 stops) | The CHARACTER ramp — never stratum-tinted, so enemy identity hues + telegraph colours read identically on every floor (the readability guard). |
-| `TOWN_RAMP` | warm daylight (3 stops) | The town's ramp (the town has no floor profile). |
+| `TOWN_RAMP` | dusk: indigo shadow → khaki mid → glow-cream (anchor pass 2026-07-12) | The town's ramp (the town has no floor profile). First pass from the anchor's extracted palette — judge in F5 vs the anchor, re-dial freely. |
 | `RAMP_TINT_SATURATION` | 0.5 | Fraction of an env colour's saturation kept when deriving a stratum ramp. |
 | `RAMP_SATURATION_CAP` | 0.4 | Max saturation any derived ramp stop may reach (subtle tint, never a hue takeover). |
-| `PALETTE_*` | parchment / stone / wood / verdigris / iron / ember | Starter medieval palette consts for future props/buildings. |
+| `PALETTE_*` | parchment / stone / wood / verdigris / iron / ember + roof-slate / roof-rust / window-glow (anchor-derived, 2026-07-12) | Starter medieval palette consts for props/buildings. `PALETTE_WINDOW_GLOW` is the planned emissive-window convention (style-bible carrier #3). |
 | `rim_strength` (shader uniform) | 0.0 (off) | Minimal banded rim light on the lit side of characters. |
 | `data/floors/<n>.json` → `environment.ramp` | absent | OPTIONAL per-floor explicit ramp — `["#hex", "#hex", "#hex"]` dark→light, used VERBATIM; absent/empty = derived from the floor's fog/background + ambient + light colours (brightness always from `NEUTRAL_RAMP`, so the dark→light order is structural). |
 
