@@ -24,10 +24,12 @@ const ROOM_SCENE := preload("res://scenes/combat/combat_room.tscn")
 const SLOT_COUNT := 3
 const DEFAULT_SLOT_NAME := "Tycho"
 
-## Run shape for the SLICE — the full game is 5 floors x 6-10 rooms (PRD §7.6).
-@export var run_floors: int = 1
-@export var rooms_min: int = 3
-@export var rooms_max: int = 4
+## Run shape — the full game per PRD §7.6 (the 1-floor slice retired 2026-07-12).
+## Floors 1-4 bosses open the portal down; only floor 5's boss raises the artifact.
+## Rooms-per-floor is pacing the human may dial; the smoke pins its own quick shape.
+@export var run_floors: int = 5
+@export var rooms_min: int = 6
+@export var rooms_max: int = 10
 
 var _scene: Node = null       # the live town or combat room
 var _session_t: float = 0.0   # unsaved playtime (flushed into meta.playtime_s on save)
