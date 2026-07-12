@@ -10,7 +10,7 @@
 
 ### The flow
 
-Clear a room → **two exit doors** open, each marked with a **sigil** previewing the *reward* of the room behind it → step through one; the choice is final (no backtracking — quick reads, release headspace, never a puzzle). Room *content* still comes from the shared layout pool + the floor's enemy mix; the door picks what the room **pays**.
+Clear a room → **two exit doors** open, each marked with a **sigil** previewing the *reward* of the room behind it → step through one; the choice is final (no backtracking — quick reads, release headspace, never a puzzle). Room *content* still comes from the shared layout pool (**real since 2026-07-12** — 30 combat + 3 reprieve + 5 boss arrangements in `data/layouts/`, seeded no-repeat-per-floor pick via `LayoutCore`; `dungeon-strata.md` § Room layouts) + the floor's enemy mix; the door picks what the room **pays**.
 
 - Sometimes only **one** door offers (weighted RNG said so) — no fake choices.
 - The **last room of a floor always opens a single boss door** (distinct sigil; the room-count HUD means it's never a surprise).
@@ -24,7 +24,7 @@ Clear a room → **two exit doors** open, each marked with a **sigil** previewin
 | **Ore** | Resonance Ore cache | Weapon economy. |
 | **Dust** | Resonance Dust cache | Etchings/attunements economy — rarest sigil (matches "rare drops"). |
 | **Echo** | an Echo pick (1 of 3) on clear | **The primary echo source** — see the cadence change below. |
-| **Reprieve** | no combat — a breather room with a **Wellspring** (heal) | Uses the 3 budgeted reprieve layouts. The heal door. |
+| **Reprieve** | no combat — a breather room with a **Wellspring** (heal) | Uses the 3 budgeted reprieve layouts (**built 2026-07-12** — sparse arrangements keeping a clear r≥4 around the Wellspring, `data/layouts/reprieve-*.json`). The heal door. |
 | **Boss** | floor boss (+ Knowledge Shards, floor heal) | Always alone at floor end. |
 
 **Peril marks:** a door can additionally carry a peril mark — the room runs **elite modifiers** (the PRD §7.7 hook's first concrete use) and pays a **boosted reward**. This is the risk/reward lever, kept exactly this legible: scarier sigil, bigger number.

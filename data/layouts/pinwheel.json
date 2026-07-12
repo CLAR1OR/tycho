@@ -1,0 +1,10 @@
+{
+	"id": "pinwheel",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [6, -2], "size": [6, 1.6], "rot": 90},
+		{"kind": "block", "pos": [-6, -2], "size": [6, 1.6], "rot": 90},
+		{"kind": "block", "pos": [0, -8], "size": [6, 1.6]},
+		{"kind": "block", "pos": [0, 4], "size": [6, 1.6]}
+	]
+}

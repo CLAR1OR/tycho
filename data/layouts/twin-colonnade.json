@@ -1,0 +1,14 @@
+{
+	"id": "twin-colonnade",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [-7, -12]},
+		{"kind": "pillar", "pos": [-7, -6]},
+		{"kind": "pillar", "pos": [-7, 0]},
+		{"kind": "pillar", "pos": [-7, 6]},
+		{"kind": "pillar", "pos": [7, -12]},
+		{"kind": "pillar", "pos": [7, -6]},
+		{"kind": "pillar", "pos": [7, 0]},
+		{"kind": "pillar", "pos": [7, 6]}
+	]
+}

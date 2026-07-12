@@ -1,0 +1,8 @@
+{
+	"id": "diagonal-cut",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [0, -2], "size": [16, 1.6], "rot": 45},
+		{"kind": "pillar", "pos": [12, 8]}
+	]
+}

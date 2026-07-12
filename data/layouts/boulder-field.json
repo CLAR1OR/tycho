@@ -1,0 +1,13 @@
+{
+	"id": "boulder-field",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [-13, -9], "radius": 1.8},
+		{"kind": "pillar", "pos": [-4, -13], "radius": 1.0},
+		{"kind": "pillar", "pos": [7, -11], "radius": 1.5},
+		{"kind": "pillar", "pos": [14, -3], "radius": 1.1},
+		{"kind": "pillar", "pos": [5, -2], "radius": 0.9},
+		{"kind": "pillar", "pos": [-8, -1], "radius": 1.6},
+		{"kind": "pillar", "pos": [1, 7]}
+	]
+}

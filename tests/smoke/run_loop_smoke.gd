@@ -1293,6 +1293,17 @@ func _clear_combat(room: Node) -> void:
 				"spawned hazard count matches the seeded plan (%d)" % planned.size())
 			_check(int(room.call("hazard_count")) == planned.size(),
 				"the room's hazard_count agrees with its plan")
+			# Room layouts (PRD §7.6, 2026-07-12): the room picked a layout from
+			# data/layouts/ and built exactly its obstacles (the pure/seeded pick
+			# recomputed here — deterministic in the run seed + floor + room coords).
+			var layout: Dictionary = room.call("planned_layout")
+			_check(not layout.is_empty(),
+				"combat room picked a room layout from the pool")
+			if not layout.is_empty():
+				_check(int(room.call("obstacle_count")) ==
+						(layout["obstacles"] as Array).size(),
+					"built obstacle count matches the layout \"%s\" (%d)"
+					% [str(layout["id"]), (layout["obstacles"] as Array).size()])
 	if not _dust_tested:
 		_dust_tested = true
 		var floor_now := int(RunState.run["floor"])

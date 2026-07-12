@@ -1,0 +1,11 @@
+{
+	"id": "pillar-cross",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [0, -2]},
+		{"kind": "pillar", "pos": [-7, -2]},
+		{"kind": "pillar", "pos": [7, -2]},
+		{"kind": "pillar", "pos": [0, -9]},
+		{"kind": "pillar", "pos": [0, 5]}
+	]
+}

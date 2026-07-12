@@ -1,0 +1,10 @@
+{
+	"id": "reprieve-hearth",
+	"kind": "reprieve",
+	"obstacles": [
+		{"kind": "pillar", "pos": [-7, -9], "radius": 1.0},
+		{"kind": "pillar", "pos": [7, -9], "radius": 1.0},
+		{"kind": "pillar", "pos": [-7, 5], "radius": 1.0},
+		{"kind": "pillar", "pos": [7, 5], "radius": 1.0}
+	]
+}

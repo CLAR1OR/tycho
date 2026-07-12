@@ -1,0 +1,11 @@
+{
+	"id": "shattered-wall",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [-14, -1], "size": [4, 1.6]},
+		{"kind": "block", "pos": [-7, -1], "size": [4, 1.6]},
+		{"kind": "block", "pos": [0, -1], "size": [4, 1.6]},
+		{"kind": "block", "pos": [7, -1], "size": [4, 1.6]},
+		{"kind": "block", "pos": [14, -1], "size": [4, 1.6]}
+	]
+}

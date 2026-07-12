@@ -1,0 +1,12 @@
+{
+	"id": "pillar-ring",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [9, -2]},
+		{"kind": "pillar", "pos": [4.5, 5.8]},
+		{"kind": "pillar", "pos": [-4.5, 5.8]},
+		{"kind": "pillar", "pos": [-9, -2]},
+		{"kind": "pillar", "pos": [-4.5, -9.8]},
+		{"kind": "pillar", "pos": [4.5, -9.8]}
+	]
+}

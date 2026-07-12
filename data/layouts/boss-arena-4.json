@@ -1,0 +1,15 @@
+{
+	"id": "boss-arena-4",
+	"kind": "boss",
+	"floor": 4,
+	"obstacles": [
+		{"kind": "pillar", "pos": [-16, -14], "radius": 1.1},
+		{"kind": "pillar", "pos": [16, -14], "radius": 1.1},
+		{"kind": "pillar", "pos": [-19, -7], "radius": 1.1},
+		{"kind": "pillar", "pos": [19, -7], "radius": 1.1},
+		{"kind": "pillar", "pos": [-16, 0], "radius": 1.1},
+		{"kind": "pillar", "pos": [16, 0], "radius": 1.1},
+		{"kind": "block", "pos": [-10, 10], "size": [4, 1.6]},
+		{"kind": "block", "pos": [10, 10], "size": [4, 1.6]}
+	]
+}

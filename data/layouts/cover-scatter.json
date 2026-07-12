@@ -1,0 +1,12 @@
+{
+	"id": "cover-scatter",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [-10, -8], "size": [3, 1.6], "rot": 20},
+		{"kind": "block", "pos": [8, -10], "size": [3, 1.6], "rot": -35},
+		{"kind": "block", "pos": [-6, 4], "size": [3, 1.6], "rot": 70},
+		{"kind": "block", "pos": [11, 3], "size": [3, 1.6], "rot": -15},
+		{"kind": "pillar", "pos": [2, -4], "radius": 1.0},
+		{"kind": "pillar", "pos": [-14, 8], "radius": 1.4}
+	]
+}

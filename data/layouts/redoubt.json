@@ -1,0 +1,9 @@
+{
+	"id": "redoubt",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [0, -10], "size": [10, 1.6]},
+		{"kind": "block", "pos": [-5, -5], "size": [1.6, 8]},
+		{"kind": "block", "pos": [5, -5], "size": [1.6, 8]}
+	]
+}

@@ -92,6 +92,11 @@ var _waves: Array = []          # list of Array[String] WaveCore type-ids
 var _wave_index: int = 0
 var _cleared: bool = false
 var _hazard_ids: Array[String] = []  # the strata hazards spawned this room (design/dungeon-strata.md)
+# The room-layout pick (PRD §7.6, 2026-07-12): {} = no layout data or a validation
+# failure → the .tscn's authored obstacles stay (graceful degrade, same philosophy as
+# game.gd._floor_profile's clamp). The footprints feed hazard/prop keep-outs + spawn nudges.
+var _layout: Dictionary = {}
+var _layout_footprints: Array = []
 var _door_chosen: bool = false  # first door walked wins — no backtracking
 var _last_hp: int = Player.MAX_HEALTH
 # Hades quit-gate (design 2026-07-07): true once the player has taken a hit IN THIS ROOM.
@@ -134,6 +139,10 @@ func _ready() -> void:
 	# Salvage echo (design/run-structure.md): heal on ore/dust pickup mid-run. The room hears
 	# the Ledger through the bus; the connection auto-drops when the room frees (no cross-room leak).
 	EventBus.resource_changed.connect(_on_resource_changed)
+	# Room layout (PRD §7.6): swap the authored obstacles for this room's seeded pick
+	# from data/layouts/ — BEFORE the environment pass, so the built obstacles get the
+	# stratum tint + toon treatment exactly like the authored ones.
+	_build_layout()
 	# Strata (design/dungeon-strata.md): paint the environment + scatter props on EVERY
 	# room kind; spawn hazards on combat rooms only (reprieve = breather, boss = clean
 	# arena this slice). Enemy/telegraph colours are NEVER touched — the readability guard.
@@ -229,13 +238,110 @@ func _apply_environment() -> void:
 			m.set_surface_override_material(0, obstacle_mat)
 
 
+# --- Room layout (PRD §7.6, design/dungeon-strata.md § Room layouts) ---------------
+# The seeded pick from data/layouts/ replaces the .tscn's authored Obstacles children
+# at runtime; with no layout data (or a validation failure — a CONTENT bug, warned
+# loudly) the authored obstacles stay. Built obstacles mirror the .tscn's setup
+# (StaticBody3D layer 4 / mask 0 + "Mesh" + CollisionShape3D), so _apply_environment's
+# generic $Obstacles sweep tints + toon-converts BOTH paths identically.
+
+const OBSTACLE_Y := 1.5        # obstacle bodies sit at the .tscn's height
+const PILLAR_HEIGHT := 4.0     # mirrors the authored PillarMesh/PillarShape
+const BLOCK_HEIGHT := 3.0      # mirrors the authored BlockMesh/BlockShape
+
+func _build_layout() -> void:
+	var lay := planned_layout()
+	if lay.is_empty():
+		return  # no layout data for this kind/floor — keep the authored obstacles
+	var errors := LayoutCore.validate(lay)
+	if not errors.is_empty():
+		for e in errors:
+			push_warning("CombatRoom: layout \"%s\": %s — keeping the authored obstacles"
+				% [str(lay.get("id", "?")), e])
+		return
+	_layout = lay
+	_layout_footprints = LayoutCore.footprints(lay)
+	var holder := $Obstacles as Node3D
+	for child in holder.get_children():
+		holder.remove_child(child)
+		child.free()  # freed NOW, not queued — _apply_environment sweeps $Obstacles next
+	for obs: Dictionary in lay["obstacles"]:
+		holder.add_child(_build_obstacle(obs))
+
+
+func _build_obstacle(obs: Dictionary) -> StaticBody3D:
+	var body := StaticBody3D.new()
+	var pos: Array = obs["pos"]
+	body.position = Vector3(float(pos[0]), OBSTACLE_Y, float(pos[1]))
+	body.collision_layer = 4
+	body.collision_mask = 0
+	var mesh := MeshInstance3D.new()
+	mesh.name = "Mesh"  # _apply_environment finds the tintable mesh by this name
+	var shape := CollisionShape3D.new()
+	if str(obs["kind"]) == LayoutCore.OB_PILLAR:
+		var r := float(obs.get("radius", LayoutCore.DEFAULT_PILLAR_RADIUS))
+		var cm := CylinderMesh.new()
+		cm.top_radius = r
+		cm.bottom_radius = r
+		cm.height = PILLAR_HEIGHT
+		mesh.mesh = cm
+		var cs := CylinderShape3D.new()
+		cs.radius = r
+		cs.height = PILLAR_HEIGHT
+		shape.shape = cs
+	else:
+		var size: Array = obs["size"]
+		var bm := BoxMesh.new()
+		bm.size = Vector3(float(size[0]), BLOCK_HEIGHT, float(size[1]))
+		mesh.mesh = bm
+		var bs := BoxShape3D.new()
+		bs.size = bm.size
+		shape.shape = bs
+		body.rotation_degrees = Vector3(0.0, float(obs.get("rot", 0.0)), 0.0)
+	body.add_child(mesh)
+	body.add_child(shape)
+	return body
+
+
+## This room's layout pick (deterministic in the run seed + floor + room coords, like
+## planned_hazards). The shuffle seed deliberately omits room_index — LayoutCore salts
+## the per-floor shuffle itself, which is what makes combat layouts non-repeating
+## within a floor. Exposed so the smoke can recompute the SAME pick and assert it.
+func planned_layout() -> Dictionary:
+	var lkind := LayoutCore.KIND_COMBAT
+	if kind == RunFlow.KIND_BOSS:
+		lkind = LayoutCore.KIND_BOSS
+	elif _reprieve:
+		lkind = LayoutCore.KIND_REPRIEVE
+	var base := int(RunState.run.get("seed", 0)) if RunState.in_run() else 0
+	return LayoutCore.pick(DataLoader.load_domain("layouts"), lkind, floor_num,
+		room_index, hash([base, "strata", "layout"]))
+
+
+## The number of obstacles standing in this room (layout-built or authored fallback).
+## For the smoke's determinism assert.
+func obstacle_count() -> int:
+	return ($Obstacles as Node3D).get_child_count()
+
+
+## The layout obstacle footprints inflated by a safety margin — HARD keep-out circles
+## for hazard/prop scatter. Empty on the authored-fallback path (today's behaviour).
+func _layout_keep_outs() -> Array:
+	var out: Array = []
+	for fp: Dictionary in _layout_footprints:
+		out.append({"center": fp["center"], "radius": float(fp["radius"]) + 1.0})
+	return out
+
+
 func _spawn_props() -> void:
 	var ids: Array = _profile.get("props", [])
 	if ids.is_empty():
 		return
 	# Props ride the stratum ramp too (StyleMaterials via StrataProps.build).
 	var ramp := StyleCore.ramp_stops(StrataCore.environment_of(_profile))
-	for entry: Dictionary in StrataCore.prop_plan(ids, _strata_seed("props")):
+	for entry: Dictionary in StrataCore.prop_plan(ids, _strata_seed("props"),
+			StrataCore.PROP_HALF_EXTENT, Vector2(0.0, 18.0), StrataCore.KEEP_OUT_SPAWN,
+			StrataCore.PROP_MIN_SPACING, _layout_keep_outs()):
 		var node := StrataProps.build(str(entry["id"]), ramp)
 		if node == null:
 			continue  # unknown id (warned in StrataProps) — never crash a room
@@ -250,7 +356,9 @@ func _spawn_hazards() -> void:
 	if plan.is_empty():
 		return
 	var defs := DataLoader.load_domain("hazards")
-	var pts := StrataCore.placement_points(plan.size(), _strata_seed("place"))
+	var pts := StrataCore.placement_points(plan.size(), _strata_seed("place"),
+		StrataCore.HALF_EXTENT, Vector2(0.0, 18.0), StrataCore.KEEP_OUT_SPAWN,
+		StrataCore.MIN_SPACING, _layout_keep_outs())
 	for i in plan.size():
 		var id := plan[i]
 		if not defs.has(id):
@@ -427,7 +535,18 @@ func _wave_spawn_pos(i: int, count: int) -> Vector3:
 	# Scatter around the room centre (like feel_room), away from the south spawn.
 	var angle := TAU * float(i) / float(count) + randf_range(-0.3, 0.3)
 	var radius := spawn_radius + randf_range(-spawn_jitter, spawn_jitter)
-	return Vector3(cos(angle) * radius, 1.0, sin(angle) * radius - 4.0)
+	var pos := Vector3(cos(angle) * radius, 1.0, sin(angle) * radius - 4.0)
+	# Layout obstacles: never telegraph an enemy into a pillar/block. Cheap and dumb —
+	# a handful of angle nudges, then accept the original point (never an infinite loop).
+	if _layout_footprints.is_empty() \
+			or not LayoutCore.blocked(_layout_footprints, Vector2(pos.x, pos.z), 1.0):
+		return pos
+	for nudge: float in [0.5, -0.5, 1.0, -1.0, 1.5, -1.5, 2.0, -2.0]:
+		var a := angle + nudge
+		var p := Vector3(cos(a) * radius, 1.0, sin(a) * radius - 4.0)
+		if not LayoutCore.blocked(_layout_footprints, Vector2(p.x, p.z), 1.0):
+			return p
+	return pos
 
 
 func _on_enemy_died(enemy: EnemyDummy) -> void:

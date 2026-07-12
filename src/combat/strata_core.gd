@@ -129,32 +129,34 @@ static func _density_at(density: Dictionary, room_index: int, rooms_this_floor: 
 ## spawn keep-out and (best effort) MIN_SPACING apart. ALWAYS returns exactly `count`
 ## points (keep-outs are strictly honoured; spacing relaxes only if the field is too
 ## packed) so the room spawns as many hazards as the plan named. y = 0 (floor level).
+## `extra_keep_outs` (optional, [{center: Vector2, radius: float}]) are additional HARD
+## keep-out circles — the room-layout obstacle footprints (LayoutCore), 2026-07-12.
 static func placement_points(count: int, seed: int, half_extent: float = HALF_EXTENT,
 		keep_out_center := Vector2(0.0, 18.0), keep_out_radius: float = KEEP_OUT_SPAWN,
-		min_spacing: float = MIN_SPACING) -> Array[Vector3]:
+		min_spacing: float = MIN_SPACING, extra_keep_outs: Array = []) -> Array[Vector3]:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([seed, "placement"])
 	var pts: Array[Vector3] = []
 	for _i in count:
 		var chosen := _pick_point(rng, half_extent, keep_out_center, keep_out_radius,
-			min_spacing, pts)
+			min_spacing, pts, extra_keep_outs)
 		pts.append(chosen)
 	return pts
 
 
 ## A prop plan: an id + position per prop, scattered like hazards but nearer the walls
 ## (props are dressing with NO collision — the dead-roll rule needs nothing of them).
-## Returns [{id, pos}]. Deterministic in (prop_ids, seed).
+## Returns [{id, pos}]. Deterministic in (prop_ids, seed). `extra_keep_outs` as above.
 static func prop_plan(prop_ids: Array, seed: int, half_extent: float = PROP_HALF_EXTENT,
 		keep_out_center := Vector2(0.0, 18.0), keep_out_radius: float = KEEP_OUT_SPAWN,
-		min_spacing: float = PROP_MIN_SPACING) -> Array:
+		min_spacing: float = PROP_MIN_SPACING, extra_keep_outs: Array = []) -> Array:
 	var rng := RandomNumberGenerator.new()
 	rng.seed = hash([seed, "props"])
 	var out: Array = []
 	var placed: Array[Vector3] = []
 	for id: Variant in prop_ids:
 		var p := _pick_point(rng, half_extent, keep_out_center, keep_out_radius,
-			min_spacing, placed)
+			min_spacing, placed, extra_keep_outs)
 		placed.append(p)
 		out.append({"id": str(id), "pos": p})
 	return out
@@ -164,18 +166,27 @@ static func prop_plan(prop_ids: Array, seed: int, half_extent: float = PROP_HALF
 
 static func _pick_point(rng: RandomNumberGenerator, half_extent: float,
 		keep_out_center: Vector2, keep_out_radius: float, min_spacing: float,
-		placed: Array[Vector3]) -> Vector3:
+		placed: Array[Vector3], extra_keep_outs: Array = []) -> Vector3:
 	var fallback := Vector3.ZERO
 	for attempt in _PLACE_TRIES:
 		var x := rng.randf_range(-half_extent, half_extent)
 		var z := rng.randf_range(-half_extent, half_extent)
 		if Vector2(x, z).distance_to(keep_out_center) < keep_out_radius:
 			continue  # keep-outs are HARD — never relaxed
+		if _in_extra_keep_out(Vector2(x, z), extra_keep_outs):
+			continue  # obstacle footprints are HARD too — no hazard inside a pillar
 		var p := Vector3(x, 0.0, z)
 		fallback = p  # last keep-out-safe candidate, used if spacing can't be met
 		if _spaced(p, placed, min_spacing):
 			return p
 	return fallback  # keep-out-safe but tight — accept so count is always met
+
+
+static func _in_extra_keep_out(p: Vector2, keep_outs: Array) -> bool:
+	for ko: Dictionary in keep_outs:
+		if p.distance_to(ko["center"]) < float(ko["radius"]):
+			return true
+	return false
 
 
 static func _spaced(p: Vector3, placed: Array[Vector3], min_spacing: float) -> bool:

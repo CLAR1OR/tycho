@@ -1,0 +1,7 @@
+{
+	"id": "donut",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [0, -3], "size": [7, 7]}
+	]
+}

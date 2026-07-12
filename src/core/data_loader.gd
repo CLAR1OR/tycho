@@ -143,6 +143,18 @@ const SCHEMAS: Dictionary = {
 		"drift_speed": {"type": "float"},       # mist: wander speed
 		"tick_s": {"type": "float"},            # mist: damage cadence
 	},
+	"layouts": {  # PRD §7.6 room-layout pool (built 2026-07-12; design/dungeon-strata.md
+		# § Room layouts). Shape-checked here; the GEOMETRY rules (footprint bounds, the
+		# clear zones, flood-fill connectivity) live in LayoutCore.validate — run by the
+		# combat room at build time (push_warning + authored-obstacle fallback, never a
+		# crash) and the unit sweep. Every arrangement is a PLACEHOLDER awaiting the
+		# human dial pass; the vocabulary is exactly pillar/block (IC-5: one geometry kit).
+		"id": {"type": "string", "required": true},
+		"kind": {"type": "string", "required": true, "one_of": ["combat", "reprieve", "boss"]},
+		"floor": {"type": "int"},  # boss layouts ONLY: which floor's arena this is
+		"obstacles": {"type": "array", "required": true, "array_of": "dict"},
+			# [{kind: "pillar", pos: [x,z], radius?} | {kind: "block", pos, size: [w,d], rot?}]
+	},
 	"bosses": {  # design/bosses/floor-1-boss.md §4 — boss identity as data (built 2026-07-10).
 		# Shape-checked here; the SEQUENCING rules (thresholds strictly descending from 1.0,
 		# loop ids exist in moves, executable kinds) live in BossCore.validate — run by the

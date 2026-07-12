@@ -1,0 +1,12 @@
+{
+	"id": "twin-clusters",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [10, -10]},
+		{"kind": "pillar", "pos": [14, -7]},
+		{"kind": "pillar", "pos": [11, -5]},
+		{"kind": "pillar", "pos": [-10, 6]},
+		{"kind": "pillar", "pos": [-14, 3]},
+		{"kind": "pillar", "pos": [-11, 1]}
+	]
+}

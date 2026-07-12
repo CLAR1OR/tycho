@@ -1,0 +1,10 @@
+{
+	"id": "arena-corners",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [-13, -13], "size": [5, 5], "rot": 45},
+		{"kind": "block", "pos": [13, -13], "size": [5, 5], "rot": 45},
+		{"kind": "block", "pos": [-13, 9], "size": [5, 5], "rot": 45},
+		{"kind": "block", "pos": [13, 9], "size": [5, 5], "rot": 45}
+	]
+}

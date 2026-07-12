@@ -1,0 +1,10 @@
+{
+	"id": "boss-arena-5",
+	"kind": "boss",
+	"floor": 5,
+	"obstacles": [
+		{"kind": "block", "pos": [-18, -5], "size": [3, 3]},
+		{"kind": "block", "pos": [18, -5], "size": [3, 3]},
+		{"kind": "pillar", "pos": [0, 9], "radius": 1.6}
+	]
+}

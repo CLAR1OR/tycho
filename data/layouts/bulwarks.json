@@ -1,0 +1,9 @@
+{
+	"id": "bulwarks",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [-8, -10], "size": [8, 1.6]},
+		{"kind": "block", "pos": [8, -4], "size": [8, 1.6]},
+		{"kind": "block", "pos": [-8, 2], "size": [8, 1.6]}
+	]
+}

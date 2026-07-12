@@ -1,0 +1,12 @@
+{
+	"id": "broken-colonnade",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [-15, -4]},
+		{"kind": "pillar", "pos": [-9, -4]},
+		{"kind": "pillar", "pos": [-3, -4]},
+		{"kind": "pillar", "pos": [3, -4]},
+		{"kind": "pillar", "pos": [9, -4]},
+		{"kind": "pillar", "pos": [15, -4]}
+	]
+}

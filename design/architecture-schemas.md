@@ -204,6 +204,19 @@ One abstraction, two contexts (dungeon auto-clearer / army unit): `{ id, tier, s
 
 Enemy-telegraph colors are fixed across strata; palettes are chosen around them (per-floor human legibility pass — see `dungeon-strata.md`). All numbers are `# FEEL:`/tuning placeholders.
 
+**Room layouts (BUILT 2026-07-12 — PRD §7.6, design source `dungeon-strata.md` § Room layouts):** `data/layouts/<id>.json` is a new DataLoader domain (`layouts` spec in `data_loader.gd`) — the shared pool of **30 combat + 3 reprieve + 5 boss** arrangements of the two-kind kit vocabulary on the one 56×56 room. Shape-checked by the spec; the GEOMETRY rules (±26 bounds, door strip z≤-20, spawn keep-out, Wellspring/boss-band clear zones, flood-fill connectivity) live in pure `LayoutCore.validate` (`src/combat/layout_core.gd`), run at room build (warn + authored-obstacle fallback) and by the unit lint. Picking is seeded (`LayoutCore.pick`): combat = per-floor shuffle indexed by room (no repeats until the pool exhausts), boss filtered by `floor`, reprieve plain seeded. `combat_room.gd` builds the obstacles at runtime and feeds the footprints into `StrataCore.placement_points`/`prop_plan` as hard `extra_keep_outs` + nudges enemy spawn points off them. All arrangements are placeholders (human dial pass pending).
+
+```jsonc
+// data/layouts/<id>.json
+{ "id": "pillar-cross",
+  "kind": "combat",              // combat | reprieve | boss
+  "floor": 1,                    // boss layouts ONLY: which floor's arena; absent otherwise
+  "obstacles": [
+    { "kind": "pillar", "pos": [0, -2], "radius": 1.2 },              // radius optional (1.2)
+    { "kind": "block", "pos": [-8, 4], "size": [10, 1.6], "rot": 45 } // rot deg optional (0); heights fixed by the kit
+  ] }
+```
+
 ## 10. Etching abilities (added 2026-07-03 — design source: `etchings.md`)
 
 **Implementation status (first slice built 2026-07-07):** the `data/etchings/` domain (spec `ETCHINGS_SPEC` in `data_loader.gd`, all 9 authored), pure `src/learning/etchings_core.gd` (unlock/level/cost/equip/`ensure_baseline`/`effective_behavior`), and the `EtchingsPanel` (`src/town/etchings_panel.gd`, opened from Thomas's meditation spot; town.gd `open_etchings_panel()`, B2-gated via UnlocksCore) + the player's RMB/Q/R casting framework are **built and tested**. Five abilities are castable (Push/Bolt/Snare/Shockwave/Surge); four are dormant (data ships, unlearnable in the panel) — implementation status is code (`EtchingsCore.IMPLEMENTED`), not data. The def gained an optional **`behavior`** dict (per-ability cast numbers = the dial board; `design/feel-tuning.md`); level entries carry `<field>_mult` scalars folded in by `effective_behavior`. Save's `combat.etchings` was unchanged (no migration). Deferred: L3 riders, weapon synergies, etching-mod Echoes. **Passive Attunements built 2026-07-10:** new `data/attunements/` domain (spec `ATTUNEMENTS_SPEC` in `data_loader.gd`, 7 authored — `{id, name, desc, costs_dust:[L1,L2,L3], levels:[3 × {kind, …}]}`, ABSOLUTE/replace levels), pure `src/learning/attunements_core.gd`, and a second page on `EtchingsPanel` (`AttunementsPage`). Save's `combat.attunements` (flat `{id: level}`, already in defaults) is now written by the Deepen path (`Ledger` reason `attunement`); applied at run start as the baseline UNDER echoes (base → weapon → attunements → echoes). See `design/etchings.md` implementation-status block.

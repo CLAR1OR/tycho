@@ -1,0 +1,7 @@
+{
+	"id": "lane-splitter",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [0, -4], "size": [1.6, 16]}
+	]
+}

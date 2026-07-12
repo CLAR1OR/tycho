@@ -1,0 +1,9 @@
+{
+	"id": "serpentine",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [-6, -12], "size": [14, 1.6]},
+		{"kind": "block", "pos": [6, -4], "size": [14, 1.6]},
+		{"kind": "block", "pos": [-6, 4], "size": [14, 1.6]}
+	]
+}

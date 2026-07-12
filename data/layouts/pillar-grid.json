@@ -1,0 +1,15 @@
+{
+	"id": "pillar-grid",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [-8, -10], "radius": 1.1},
+		{"kind": "pillar", "pos": [0, -10], "radius": 1.1},
+		{"kind": "pillar", "pos": [8, -10], "radius": 1.1},
+		{"kind": "pillar", "pos": [-8, -2], "radius": 1.1},
+		{"kind": "pillar", "pos": [0, -2], "radius": 1.1},
+		{"kind": "pillar", "pos": [8, -2], "radius": 1.1},
+		{"kind": "pillar", "pos": [-8, 6], "radius": 1.1},
+		{"kind": "pillar", "pos": [0, 6], "radius": 1.1},
+		{"kind": "pillar", "pos": [8, 6], "radius": 1.1}
+	]
+}

@@ -1,0 +1,14 @@
+{
+	"id": "spiral",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [0, -2], "radius": 1.1},
+		{"kind": "pillar", "pos": [5, -6], "radius": 1.1},
+		{"kind": "pillar", "pos": [0, -11], "radius": 1.1},
+		{"kind": "pillar", "pos": [-7, -7], "radius": 1.1},
+		{"kind": "pillar", "pos": [-9, 1], "radius": 1.1},
+		{"kind": "pillar", "pos": [-4, 8], "radius": 1.1},
+		{"kind": "pillar", "pos": [4, 7], "radius": 1.1},
+		{"kind": "pillar", "pos": [10, 1], "radius": 1.1}
+	]
+}

@@ -1,0 +1,10 @@
+{
+	"id": "asymmetric-cluster",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [10, -8], "radius": 1.5},
+		{"kind": "pillar", "pos": [13, -4]},
+		{"kind": "pillar", "pos": [8, -3], "radius": 1.0},
+		{"kind": "block", "pos": [12, -11], "size": [4, 2], "rot": 10}
+	]
+}

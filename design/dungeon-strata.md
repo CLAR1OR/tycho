@@ -14,8 +14,9 @@
 - **`src/combat/strata_props.gd`** (`StrataProps`) — placeholder primitive props, **NO collision** (dead-roll rule), unknown id → warn+skip; crystal/void props glow.
 - **`combat_room.gd`** applies the environment (per-instance — the `Environment` sub-resource + Ground/Wall/Obstacle materials are now `resource_local_to_scene`), scatters props on every room kind, and spawns hazards on **combat rooms only** (reprieve = breather, boss = clean arena this slice). `game.gd` passes `_floor_profile(floor)` into `setup()`.
 - **The drift hook**: `player.gd` + `enemy_dummy.gd` gained an additive `external_drift` accumulator (folded into velocity + reset each physics tick) — the ONLY movement-code touch, carries no feel value (the `push_strength` in data is the dial).
+- **Room-layout pool (2026-07-12, PRD §7.6 — see § Room layouts below):** `data/layouts/*.json` (30 combat + 3 reprieve + 5 boss arenas; a new DataLoader domain) + pure `src/combat/layout_core.gd` (`LayoutCore`: seeded pick — combat layouts never repeat within a floor until the pool is exhausted — geometry validation incl. a flood-fill path guarantee, footprint queries); `combat_room.gd` swaps the .tscn's authored obstacles for the pick at runtime (validation failure / no data → authored fallback, warned). Hazard/prop scatter takes the footprints as HARD keep-outs (`StrataCore` gained an optional `extra_keep_outs` param); enemy spawn points nudge off obstacles. The pool is SHARED across floors per the PRD — every arrangement is a placeholder awaiting the human dial pass.
 
-**DEFERRED** (documented, not built): damage-triggered burst crystals (player attack scans only touch the `enemies` group — bursts fire on proximity only for now); `music_layer` / per-stratum music tracks; stratum-specific room layouts (identical geometry carries the profile + hazard this slice); difficulty-tier hazard scaling; **dedicated hazard SFX** (the watcher reuses the arrow loose/impact sounds; vent/beam/burst/mist have none — add rows to `data/audio/sfx-map.json` + a hook, same precedent as the Slammer/Charger); and the **five human legibility passes** (readability of each stratum's palette vs the fixed telegraph colours — a human budget line, still pending).
+**DEFERRED** (documented, not built): damage-triggered burst crystals (player attack scans only touch the `enemies` group — bursts fire on proximity only for now); `music_layer` / per-stratum music tracks; **stratum-specific room-layout VARIANTS** (the shared layout pool is BUILT 2026-07-12 per the PRD — 30+3+5 in `data/layouts/`; whether floors additionally want per-stratum variants stays an open question below); difficulty-tier hazard scaling; **dedicated hazard SFX** (the watcher reuses the arrow loose/impact sounds; vent/beam/burst/mist have none — add rows to `data/audio/sfx-map.json` + a hook, same precedent as the Slammer/Charger); and the **five human legibility passes** (readability of each stratum's palette vs the fixed telegraph colours — a human budget line, still pending).
 
 **HUMAN:** every env colour, every hazard number (`data/hazards/*.json`), and every density (`data/floors/*.json` → `hazards.density`) is a placeholder — dial like FEEL numbers. Keep the floors-1–4 gradient subtle (the deniability rule) and run the legibility passes.
 
@@ -53,7 +54,7 @@ Each floor **introduces** its signature hazard and may sprinkle *earlier* floors
 2. **Always telegraphed, always learnable.** Visible charge-up, readable cycle. Hazards serve pattern mastery, never gotchas.
 3. **Dual-use by default: hazards damage enemies too.** Baiting the Brute into the beam is the intended play. (Exception only if a specific hazard breaks under it.)
 4. **They compose with enemies, not replace them.** Density stays low in early rooms of a floor, higher in late rooms (data-tunable) — the hazard is the room's *modifier*, the enemies are its *content*.
-5. **Never unwinnable.** Layout validation must guarantee hazards can't block the only path or make a room unclearable (PRD §10 dead-roll rule).
+5. **Never unwinnable.** Layout validation must guarantee hazards can't block the only path or make a room unclearable (PRD §10 dead-roll rule). *Built 2026-07-12: `LayoutCore.validate`'s flood-fill path guarantee + hazard scatter treating obstacle footprints as hard keep-outs — see § Room layouts.*
 6. All damage/cycle/telegraph numbers are `# FEEL:` territory — placeholders until human-tuned.
 
 ## Data shapes (mirrored in `architecture-schemas.md` §9)
@@ -98,6 +99,17 @@ Enemy telegraph and body colors are **fixed across all strata**; every floor pal
   - Sophia, floor 4: "Identical, every arch? I couldn't draw two identical arches if I traced them. Whoever built that doesn't *draw* — it *repeats*."
   - Thomas, late: "A trial has a shape to it. And where there is a shape, there is a hand that shaped it." *(use at most one of these per act — the deniability rule applies to dialogue too)*
 
+## Room layouts (the shared pool — built 2026-07-12, PRD §7.6)
+
+The PRD-locked pool of room shapes, as DATA on the one geometry kit (IC-5): **30 combat + 3 reprieve + 5 boss arenas** in `data/layouts/*.json`, each an arrangement of exactly two obstacle kinds — **pillar** (cylinder, `radius` default 1.2) and **block** (box, `size [w,d]`, optional `rot` degrees) — inside the shared 56×56 room. Heights/collision mirror the .tscn's authored obstacles; built obstacles get the stratum tint + toon ramp identically (the env sweep runs after the build). Combat archetypes: open fields, pillar grids/rings/crosses/colonnades, cover scatters, diagonal cuts, corridors/chokepoints, asymmetric clusters, a donut, lane splitters (~1–9 obstacles each).
+
+**Rules (enforced by `LayoutCore.validate`, unit-linted over every shipped file):**
+- Footprints fully inside ±26 (walls at ±27); the **door strip `z ≤ -20` stays obstacle-free in ALL layouts** (exit line z=-23, doors x ∈ {-6,0,6}); spawn keep-out r=6 around (0,18).
+- Reprieve: clear r≥4 around the Wellspring (0,-2). Boss: the central band **|x| ≤ 13, z ∈ [-21,3]** completely clear (boss spawn/escorts/artifact/burrow room) — perimeter drama only; floor 1's arena clears every den-warden `arena_vent` by ≥3 m (linted).
+- **Flood-fill path guarantee** (the §"Never unwinnable" dead-roll rule made mechanical): footprints +0.8 m player margin rasterized on a 1 m grid; the spawn must reach the door line, no sealed open pocket > 8 cells, ≥60% of open cells reachable.
+
+**Picking (`LayoutCore.pick`, seeded like everything else):** combat layouts are seeded-shuffled once per floor and indexed by room — **no repeat within a floor until the pool is exhausted**; boss (filtered by `floor`) and reprieve use a plain seeded pick. A failed validation or missing data falls back to the .tscn's authored obstacles, loudly. Hazard/prop scatter treats the obstacle footprints (+1 m) as hard keep-outs; enemy spawns nudge off blocked points. **Every arrangement is a placeholder — the human layout dial pass is pending.** Stratum-specific variants: open question below.
+
 ## Cost envelope (why this doesn't reopen the art risk)
 
 Shared kit + **5 environment profiles** (pure data) + **5 signature hazards + 1 shared** (each: one small scene, a timer, a volume) + **2–4 props per floor** + **5 human legibility passes**. Rough estimate ~20–30% over strict single-theme — versus several-fold for true biomes, which stay banned.
@@ -107,5 +119,5 @@ Shared kit + **5 environment profiles** (pure data) + **5 signature hazards + 1 
 - Do the strata land visually with placeholder assets, or does judging them need the asset-pipeline gate's output first?
 - All hazard numbers (damage, cycle, telegraph, density curves) — tune in play.
 - Is floor 5's void too loud too early? (Deniability tuning — it may need to be *quieter* than the concept art instinct wants.)
-- Do some of the ~30 shared combat layouts need stratum-specific variants, or does the profile + hazard carry enough identity on identical geometry?
+- Do some of the 30 shared combat layouts (built 2026-07-12, § Room layouts) need stratum-specific variants, or does the profile + hazard carry enough identity on the shared pool?
 - Does hazard density scale with difficulty tier, or do tiers add hazard *behaviors* (faster cycles) instead?

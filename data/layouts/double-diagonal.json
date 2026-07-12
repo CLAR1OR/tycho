@@ -1,0 +1,8 @@
+{
+	"id": "double-diagonal",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "block", "pos": [-8, 4], "size": [10, 1.6], "rot": 45},
+		{"kind": "block", "pos": [8, -8], "size": [10, 1.6], "rot": -45}
+	]
+}

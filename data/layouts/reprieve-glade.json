@@ -1,0 +1,8 @@
+{
+	"id": "reprieve-glade",
+	"kind": "reprieve",
+	"obstacles": [
+		{"kind": "pillar", "pos": [-14, -10]},
+		{"kind": "pillar", "pos": [13, 6]}
+	]
+}

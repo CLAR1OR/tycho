@@ -1,0 +1,8 @@
+{
+	"id": "open-field",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [-14, -6]},
+		{"kind": "pillar", "pos": [12, 4]}
+	]
+}

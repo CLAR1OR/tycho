@@ -1,0 +1,8 @@
+{
+	"id": "sentinels",
+	"kind": "combat",
+	"obstacles": [
+		{"kind": "pillar", "pos": [-6, -4], "radius": 2.2},
+		{"kind": "pillar", "pos": [6, -4], "radius": 2.2}
+	]
+}
