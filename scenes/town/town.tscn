@@ -8,8 +8,8 @@
 [ext_resource type="Script" uid="uid://kmvyf0xkbrhw" path="res://src/core/grass_patch.gd" id="6_grass"]
 [ext_resource type="ArrayMesh" uid="uid://er8nljgvawhk" path="res://assets/models/GrassMesh.res" id="7_gmesh"]
 [ext_resource type="Script" uid="uid://dewj5vnru7k77" path="res://src/core/water_plane.gd" id="8_water"]
-[ext_resource type="Script" path="res://src/core/shore_terrain.gd" id="10_shore"]
 [ext_resource type="PackedScene" uid="uid://c0py1hpm01tj4" path="res://assets/models/kaykit-forest-gltf/Bush_2_A_Color1.gltf" id="9_jil70"]
+[ext_resource type="Script" uid="uid://dcr2y1bkx0qi3" path="res://src/core/shore_terrain.gd" id="10_shore"]
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 1
@@ -661,9 +661,11 @@ follow_target = NodePath("../Player")
 size = Vector2(80, 17)
 make_bed = false
 
-[node name="Shore" type="MeshInstance3D" parent="."]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 17.5)
+[node name="Shore" type="MeshInstance3D" parent="." unique_id=2050258168]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.006849289, 18.888784)
 script = ExtResource("10_shore")
+curve_frequency = 0.5
+sand_color = Color(0.69628286, 0.513866, 0.3831825, 1)
 
 [node name="Grass" type="MultiMeshInstance3D" parent="." unique_id=1526648954]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 5)
