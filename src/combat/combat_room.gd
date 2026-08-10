@@ -90,6 +90,10 @@ var _enemies: Array[EnemyDummy] = []
 # CLEARS after the last wave falls. Empty for boss/reprieve rooms (they don't wave).
 var _waves: Array = []          # list of Array[String] WaveCore type-ids
 var _wave_index: int = 0
+# The Ember HUD's objective row counts kills within the CURRENT wave (design/ui-hud.md),
+# so both reset every time a wave spawns.
+var _wave_kills: int = 0
+var _wave_size: int = 0
 var _cleared: bool = false
 var _hazard_ids: Array[String] = []  # the strata hazards spawned this room (design/dungeon-strata.md)
 # The room-layout pick (PRD §7.6, 2026-07-12): {} = no layout data or a validation
@@ -445,6 +449,11 @@ func _wave_seed() -> int:
 func _spawn_current_wave() -> void:
 	_update_wave_label()
 	var wave: Array = _waves[_wave_index]
+	# Reset the HUD's objective counter for the new wave (all of a wave's telegraphs run
+	# together, so the count is honest from the moment the markers appear).
+	_wave_kills = 0
+	_wave_size = wave.size()
+	_hud.set_wave_progress(0, _wave_size)
 	for i in wave.size():
 		_telegraph_then_spawn(_scene_for_id(str(wave[i])), _wave_spawn_pos(i, wave.size()))
 
@@ -559,6 +568,8 @@ func _on_enemy_died(enemy: EnemyDummy) -> void:
 	if randf() < ore_drop_chance * _find_mult:
 		Ledger.add("resonance-ore", 1.0, "run-drop")
 	_enemies.erase(enemy)
+	_wave_kills += 1
+	_hud.set_wave_progress(_wave_kills, _wave_size)
 	if not _enemies.is_empty() or _cleared:
 		return
 	# The current wave is down. If a combat room has more waves, spawn the next after a

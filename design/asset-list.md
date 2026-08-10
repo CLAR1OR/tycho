@@ -107,15 +107,17 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 | Hazard FX ×6 | FIXED colours (readability guard) | ⬜ |
 | Signature moments | **dissolve ending**, codex assembly per shard (E2), door-sigil glow, Wellspring heal, peril elite aura, echo-pick bloom (O1) | ⬜ |
 
-## 5. 2D UI / HUD (all code-drawn Slate monograms/primitives today; painterly pass deferred)
+## 5. 2D UI / HUD (all code-drawn today — Slate monograms/primitives on the menus, Ember vector glyphs on the run HUD; painterly pass deferred)
+
+> **Two languages in play since 2026-08-10** (`design/ui-hud.md`): the eleven menu screens speak **Slate** (opaque panels, letter monograms), the in-run HUD speaks **Ember** (no panels, code-drawn vector glyphs). Ember's glyphs are point lists in `EmberHud.GLYPH_*` — real icons would replace them at the single `_glyph()` swap point, so this table's ⬜ rows are the same work either way.
 
 ### Icon sets
 | Set | Built / v1 target | Status |
 |---|---|---|
-| Echo icons | 25 / **~50** | ⬜ monogram tiles |
-| Etching sigils + dash | 9 + 1 | ⬜ placeholder registry |
+| Echo icons | 25 / **~50** | ⬜ monogram medallions (Ember rail) |
+| Etching sigils + dash | 9 + 1 | ⬜ placeholder registry; **6 drawn as Ember vector glyphs** (push, bolt, snare, shockwave, surge, dash) 🟨 |
 | Attunement icons | 7 / ~7 | ⬜ |
-| Resource icons | 7 / 7 (gold, stone, food, knowledge, shards, ore, dust) | ⬜ coloured text |
+| Resource icons | 7 / 7 (gold, stone, food, knowledge, shards, ore, dust) | ⬜; **4 drawn as Ember vector crystals** (gold, ore, dust, shards) 🟨 |
 | Achievement icons | 26 / ~26 | ⬜ monogram strings |
 | Tech-node icons/stars | 2 / **14** (11 Medieval + 3 Renaissance) | ⬜ constellation stars |
 | Building icons | 9 | ⬜ silhouette polys |
@@ -126,8 +128,9 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 Tycho, Sophia, Thomas, Tilly, Mara, Herzog, Wren, The Woman (dream-blurred), emissary. None exist ⬜ (DialoguePanel shows tinted names).
 
 ### Screens & fonts
-- ~15 built Slate screens (RunHud, TownHud, pause, settings, tech chart, etchings, forge, build/survey, market, echo offer, dialogue, slot select/title, achievements + toast, codex) — all 🟨 code-drawn, human restyles freely.
-- Fonts ✅: Cinzel SemiBold, JetBrains Mono Medium, EB Garamond Medium (OFL, committed).
+- ~14 built **Slate** screens (TownHud, pause, settings, tech chart, etchings, forge, build/survey, market, echo offer, dialogue, slot select/title, achievements + toast, codex) + **1 Ember** screen (RunHud) — all 🟨 code-drawn, human restyles freely.
+- Fonts ✅: Cinzel SemiBold, JetBrains Mono Medium, EB Garamond Medium (OFL, committed). **Ember adds no fourth font** — the reference anchors' humanist sans was not adopted (open call).
+- Reference anchors ✅ (`assets_src/anchors/`, `.gdignore`'d): `town-style-anchor.png` (3D look), `in-run-hud-reference.png` + `weapon-menu-reference.png` (the Ember UI language).
 
 ## 6. 2D illustrations (painterly pass — none exist)
 

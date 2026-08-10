@@ -1,10 +1,10 @@
 extends "res://tests/test_suite.gd"
-## Tests HudCore (src/combat/hud_core.gd) — the pure in-run HUD helpers: info-chip
-## segment rules, echo-shelf folding, the monogram scheme, and the low-HP threshold
-## (design/ui-hud.md). All pure, headless.
+## Tests HudCore (src/combat/hud_core.gd) — the pure in-run HUD helpers: room-header
+## segment rules, the objective rows, echo folding, the monogram scheme, and the low-HP
+## threshold (design/ui-hud.md). All pure, headless.
 
 
-# --- Info chip -----------------------------------------------------------------
+# --- Room header ---------------------------------------------------------------
 
 func test_chip_normal_combat() -> void:
 	check_eq(HudCore.chip_text(2, 3, 5, HudCore.KIND_COMBAT, false, 0, 1, false),
@@ -99,6 +99,56 @@ func test_fold_unknown_id_uses_id_as_name() -> void:
 
 func test_fold_empty() -> void:
 	check_eq(HudCore.fold_echoes([], _defs()).size(), 0, "no picks → no tiles")
+
+
+# --- Objective rows (the Ember room block) -------------------------------------
+
+func test_task_rows_combat_counts_the_wave() -> void:
+	var rows := HudCore.task_rows(HudCore.KIND_COMBAT, false, 2, 5)
+	check_eq(rows.size(), 1, "an uncleared combat room has one objective row")
+	check_eq(str(rows[0]["label"]), "Defeat all enemies", "the combat objective")
+	check_eq(int(rows[0]["have"]), 2, "kills so far in the current wave")
+	check_eq(int(rows[0]["want"]), 5, "the current wave's size")
+	check(not bool(rows[0]["done"]), "an uncleared room is not done")
+
+
+func test_task_rows_combat_cleared_has_no_counter() -> void:
+	var rows := HudCore.task_rows(HudCore.KIND_COMBAT, true, 5, 5)
+	check_eq(str(rows[0]["label"]), "Room cleared", "a cleared room states only that")
+	check_eq(int(rows[0]["want"]), 0, "no counter once cleared — the hint names the next action")
+	check(bool(rows[0]["done"]), "a cleared room's row is done")
+
+
+func test_task_rows_boss_names_the_boss() -> void:
+	var rows := HudCore.task_rows(HudCore.KIND_BOSS, false, 0, 0, "The Den-Warden")
+	check_eq(str(rows[0]["label"]), "Defeat The Den-Warden", "the data-driven boss's name")
+	check_eq(int(rows[0]["want"]), 0, "the boss has its own bar, so the row carries no counter")
+
+
+func test_task_rows_boss_without_a_name() -> void:
+	# Floors 2-5 still run the placeholder boss, which never pushes a def name.
+	var rows := HudCore.task_rows(HudCore.KIND_BOSS, false, 0, 0)
+	check_eq(str(rows[0]["label"]), "Defeat the boss", "placeholder bosses fall back to a generic")
+
+
+func test_task_rows_boss_cleared() -> void:
+	var rows := HudCore.task_rows(HudCore.KIND_BOSS, true, 0, 0, "The Den-Warden")
+	check_eq(str(rows[0]["label"]), "Boss felled", "a felled boss reads as done")
+	check(bool(rows[0]["done"]), "and is marked done")
+
+
+func test_task_rows_reprieve_is_a_breather() -> void:
+	# Reprieve rooms clear on entry, so `cleared` must not turn the row into "Room cleared".
+	var rows := HudCore.task_rows(HudCore.KIND_REPRIEVE, true, 0, 0)
+	check_eq(rows.size(), 1, "one row on a breather")
+	check_eq(str(rows[0]["label"]), "Catch your breath", "the breather's own row")
+	check_eq(int(rows[0]["want"]), 0, "no counter on a breather")
+
+
+func test_task_rows_clamp_negative_counts() -> void:
+	var rows := HudCore.task_rows(HudCore.KIND_COMBAT, false, -3, -1)
+	check_eq(int(rows[0]["have"]), 0, "negative kills clamp to 0")
+	check_eq(int(rows[0]["want"]), 0, "a negative wave size clamps to 0 (row loses its counter)")
 
 
 # --- Low HP --------------------------------------------------------------------

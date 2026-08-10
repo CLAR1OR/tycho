@@ -1,13 +1,13 @@
 extends RefCounted
 class_name HudCore
-## Pure presentation helpers for the in-run HUD ("Slate" design — design/ui-hud.md).
+## Pure presentation helpers for the in-run HUD ("Ember" design — design/ui-hud.md).
 ## No engine state: string/array builders + thresholds, all unit-testable headless.
 ## The RunHud node (src/combat/run_hud.gd) does the drawing; this owns the segment
-## rules for the info chip, the echo-shelf folding, the monogram scheme, and the
-## low-HP threshold. Numbers here are semantic (not FEEL) — colours/sizes/timings
-## live as placeholder constants in run_hud.gd.
+## rules for the room header, the objective rows, the echo folding, the monogram
+## scheme, and the low-HP threshold. Numbers here are semantic (not FEEL) —
+## colours/sizes/timings live as placeholder constants in run_hud.gd + ember_hud.gd.
 
-## Room-kind tokens the chip understands. "combat"/"boss" come straight from RunFlow;
+## Room-kind tokens the header understands. "combat"/"boss" come straight from RunFlow;
 ## "reprieve" is a HUD-only distinction the room derives from its incoming door sigil.
 const KIND_COMBAT := "combat"
 const KIND_BOSS := "boss"
@@ -17,7 +17,7 @@ const KIND_REPRIEVE := "reprieve"
 const LOW_HP_THRESHOLD := 0.25
 
 
-## The top-left info chip text, segments joined by " · ":
+## The room block's header text, segments joined by " · ":
 ##   floor short-form always ("F2");
 ##   room segment: "R{room}/{rooms}" for combat, "BOSS" / "Reprieve" for those kinds;
 ##   a " ⚠" is appended to the room segment when the room was entered through a peril door;
@@ -40,6 +40,42 @@ static func chip_text(floor_num: int, room: int, rooms: int, kind: String,
 	if wave_count > 1 and not cleared:
 		segs.append("Wave %d/%d" % [wave_idx + 1, wave_count])
 	return " · ".join(segs)
+
+
+## The room block's objective rows (Ember, 2026-08-10) — the reference anchor's "Tasks"
+## list, filled with state the run already tracks rather than a new objective system.
+## Returns [{label: String, have: int, want: int, done: bool}]; `want <= 0` means the row
+## carries no counter. The header (chip_text) owns floor/room/peril/wave, so no row
+## repeats them.
+##
+## `kills`/`wave_total` describe the CURRENT wave, so the counter restarts each wave while
+## the header's "Wave 2/3" tracks the room. `boss_name` is the data-driven def's name
+## (empty for the placeholder bosses on floors 2-5).
+##
+## The row states the OBJECTIVE; the contextual hint line states the PROMPT ("Exit open —
+## step into the light"). They must not duplicate each other — a cleared room says only
+## that it is cleared and lets the hint name the next action.
+static func task_rows(kind: String, cleared: bool, kills: int, wave_total: int,
+		boss_name: String = "") -> Array:
+	match kind:
+		KIND_REPRIEVE:
+			# Reprieve rooms clear on entry (there is no wave), so `cleared` says nothing
+			# useful here — the row is the breather itself.
+			return [{"label": "Catch your breath", "have": 0, "want": 0, "done": false}]
+		KIND_BOSS:
+			if cleared:
+				return [{"label": "Boss felled", "have": 0, "want": 0, "done": true}]
+			var who := boss_name if not boss_name.is_empty() else "the boss"
+			return [{"label": "Defeat %s" % who, "have": 0, "want": 0, "done": false}]
+		_:
+			if cleared:
+				return [{"label": "Room cleared", "have": 0, "want": 0, "done": true}]
+			return [{
+				"label": "Defeat all enemies",
+				"have": maxi(0, kills),
+				"want": maxi(0, wave_total),
+				"done": false,
+			}]
 
 
 ## Fold a run's echo picks into ordered tiles: [{id, name, monogram, count}], in the

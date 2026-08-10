@@ -481,6 +481,43 @@ Generated geometry, not a model — the anchor's plaza well minus its posts and 
 
 ---
 
+## Ember HUD — `src/core/ember_hud.gd` + `src/combat/run_hud.gd` (`const`, code-only) *(built 2026-08-10; the in-run HUD's reference-anchor redesign, `design/ui-hud.md`)*
+
+Not `# FEEL:`-tagged (no combat feel rides on them) but the same contract: **the human owns every value.** Judge with `tools/render_hud.tscn` for layout, then in F5 over real combat for the last 10%.
+
+**Shared language — `EmberHud`** (both the palette and the glyph table are placeholders):
+
+| Const | Now | What it does |
+| --- | --- | --- |
+| `COL_INK` / `COL_INK_DIM` / `COL_INK_FAINT` | `#e5e4e0` / `#9a9691` / dim @ 0.55 | primary text / labels+keys / completed rows + empty slots |
+| `COL_HAIR` / `COL_RING` | white @ 0.14 / 0.22 | section rules / idle medallion + slot rings |
+| `COL_ACCENT` | `#e0a83c` | **THE gold — state only.** Ready slots, bullets, badges, the HP diamond |
+| `COL_TRACK` | white @ 0.16 | the unfilled part of any bar |
+| `COL_SHADOW` | black @ 0.7 | the 1 px drop under unbacked prose |
+| `COL_GOLD/ORE/DUST/SHARDS` | as Slate | **deliberately shared with `SlateHud`** — a resource means one colour game-wide |
+| `FS_HEAD/LABEL/VALUE/BIG/KEY/MONO` | 12 / 17 / 15 / 22 / 10 / 13 | header · objective+hint prose · counters+HP · resource numbers · key badges · monograms |
+| `TRACKING` / `MARGIN` | 1.6 / 22 | letter-spacing on tracked caps / screen-edge margin |
+| `GLYPH_FILL` / `GLYPH_STROKE` / `GLYPH_ARCS` | unit-square point lists | **every glyph silhouette** — 4 resource crystals + 6 ability marks. Adding one is a `match` arm |
+
+**Run-specific — `RunHud`:**
+
+| Const | Now | What it does |
+| --- | --- | --- |
+| `ECHO_D` / `ECHO_GAP` / `ECHO_BADGE_R` | 38 / 11 / 8 | echo medallion size, spacing, stack-count disc (rail grows **up** from bottom-left) |
+| `HP_W` / `HP_H` / `HP_BOTTOM` | 460 / 5 / 52 | HP bar width, thickness, distance from the bottom edge |
+| `HP_DIAMOND` / `HP_FILL_INSET` | 6.5 / 5 | centre diamond size, where the outward fill starts clear of it |
+| `HP_NUM_HOLD_S` / `HP_NUM_FADE_S` / `HP_NUM_DROP` | 1.5 / 0.6 / 18 | the number fades in on any HP change. **0 hold = follow the anchor exactly (no number); a huge hold = always on** |
+| `COL_HP` / `COL_HP_LOW` | `#c83028` / `#ec4c3e` | bar fill, and its low-HP brightening |
+| `SLOT_D` / `DASH_D` / `SLOT_GAP` | 56 / 40 / 26 | cast-ring and dash-ring diameters; the gap must clear **both** the key label and the neighbour's cooldown arc |
+| `SLOT_RING_W` / `SLOT_ARC_W` / `SLOT_ARC_PAD` | 2 / 3 / 5 | ring thickness, cooldown-arc thickness, arc radius beyond the ring |
+| `GLYPH_SCALE` / `KEY_DROP` / `ABIL_BOTTOM` | 0.52 / 9 / 58 | glyph size as a fraction of its ring, key label drop, dash ring's height off the bottom |
+| `BLOCK_W` / `HEAD_GAP` / `ROW_GAP` / `ROW_VALUE_DROP` | 300 / 36 / 28 / 21 | room block width, resources→header gap, row spacing, label→counter drop |
+| `RES_GLYPH` / `RES_GAP` / `RES_SPACING` / `RES_TOP` | 19 / 12 / 30 / 14 | resource glyph size, glyph→number, between resources, row height below `MARGIN` |
+| `BULLET_HALF` / `BULLET_GAP` / `HEAD_TRACKING` | 4.5 / 13 / 1.8 | objective diamond size, bullet→label, header letter-spacing |
+| `BOSS_W` / `BOSS_H` / `BOSS_DIAMOND` / `BOSS_TRACKING` | 420 / 7 / 7 / 2.6 | boss bar geometry + its name's letter-spacing |
+| `HINT_LIFT` | 30 | hint prose's height above the HP bar |
+| `VIGNETTE_DEPTH/STEPS/ALPHA` | 90 / 24 / 0.30 | low-HP screen edge. **Known dial:** nested `draw_rect` outlines read as faint banding, not a smooth glow (inherited from Slate) |
+
 ## Boss — Den-Warden (floor 1; data dials + 2 exports, `design/bosses/floor-1-boss.md`, built 2026-07-10)
 
 ALL placeholder numbers. Grammar rule 2 applies: boss tells stay LONGER than trash tells (trash baselines: dummy 0.45 s, Slammer/Charger ~0.5–0.6 s).
