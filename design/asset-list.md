@@ -93,7 +93,7 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 - Town environment: 2 age-skins + calm-vs-tension lighting. ⬜
 - Town shore: generated terrain (`ShoreTerrain` — noise-meandering beach/drop-off strip; the curvy shoreline emerges where its height crosses the water). ✅ PLACED 2026-07-11, spans x ±40 past the town
 - Town water: shader-generated (`WaterPlane` + `water_absorption.gdshader`, CC0 Malido — depth absorption, edge foam, caustics, wind waves, walk-in ripples; sloped generated bed). ✅ PLACED 2026-07-11 — the town's south border (WallS mesh hidden, collision kept); needs Forward+ + the project shader globals (`project.godot [shader_globals]`)
-- Town grass: shader-generated (`GrassPatch` + `grass_blade.gdshader`, CC0 @_Malido — wind sway + walk-through bend; demo `scenes/core/grass_demo.tscn`). ✅ PLACED in town 2026-07-11 — meadow around the KayKit trees/player spawn, blades = the human's `assets/models/GrassMesh.res` (via the `blade_mesh` export), bent by the Player
+- Town grass: shader-generated (`GrassPatch` + `grass_blade.gdshader`, CC0 @_Malido — wind sway + walk-through bend; demo `scenes/core/grass_demo.tscn`). ✅ PLACED in town 2026-07-11 — meadow around the tree placeholders/player spawn, blades = the human's `assets/models/GrassMesh.res` (via the `blade_mesh` export), bent by the Player. *(The KayKit stock packs the trees used were removed 2026-08-10 — see below.)*
 - Title/slot-select night sky (gradient, stars, cyan constellation, ridge) — code-drawn ⬜.
 - Skyboxes/backdrops per scene: none authored ⬜.
 
@@ -106,6 +106,8 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 | Boss telegraphs | lunge line, swipe arc, chained circles, burrow/erupt, reconfiguration glow + sting | ⬜ |
 | Hazard FX ×6 | FIXED colours (readability guard) | ⬜ |
 | Signature moments | **dissolve ending**, codex assembly per shard (E2), door-sigil glow, Wellspring heal, peril elite aura, echo-pick bloom (O1) | ⬜ |
+
+> **KayKit stock packs REMOVED 2026-08-10 (human call: "the kaykit was only for testing").** Both the tracked `assets/models/kaykit-forest-gltf/` (2.3 MB — 2 trees + 1 bush in town) and the untracked `addons/kaykit_medieval_hexagon_pack/` (33 MB — 3 buildings the human was trialling in the town square) are gone; all six instances became **block placeholders** in `town.tscn` (`StockBuildingMesh` 5×4×5 for buildings, `TreeBlockMesh` / `BushBlockMesh` for foliage, on two placeholder materials). The town is back to 100 % primitives, which is where the placeholder-first rule wants it until the asset-pipeline gate runs. KayKit stays a *sourcing option* in `design/asset-pipeline.md` — nothing about the pipeline strategy changed, only that no KayKit assets ship in the repo today.
 
 ## 5. 2D UI / HUD (all code-drawn today — Slate monograms/primitives on the menus, Ember vector glyphs on the run HUD; painterly pass deferred)
 

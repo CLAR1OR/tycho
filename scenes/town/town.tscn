@@ -2,14 +2,12 @@
 
 [ext_resource type="Script" uid="uid://ddmxi2vavagho" path="res://src/town/town.gd" id="1"]
 [ext_resource type="PackedScene" path="res://scenes/combat/player.tscn" id="2"]
-[ext_resource type="PackedScene" uid="uid://dqf7d7h226yn2" path="res://assets/models/kaykit-forest-gltf/Tree_3_A_Color1.gltf" id="2_v00pm"]
 [ext_resource type="PackedScene" path="res://scenes/core/camera_rig.tscn" id="3"]
-[ext_resource type="PackedScene" uid="uid://cswtner1nao5f" path="res://assets/models/kaykit-forest-gltf/Tree_4_B_Color1.gltf" id="5_6g2qn"]
 [ext_resource type="Script" uid="uid://kmvyf0xkbrhw" path="res://src/core/grass_patch.gd" id="6_grass"]
 [ext_resource type="ArrayMesh" uid="uid://er8nljgvawhk" path="res://assets/models/GrassMesh.res" id="7_gmesh"]
 [ext_resource type="Script" uid="uid://dewj5vnru7k77" path="res://src/core/water_plane.gd" id="8_water"]
-[ext_resource type="PackedScene" uid="uid://c0py1hpm01tj4" path="res://assets/models/kaykit-forest-gltf/Bush_2_A_Color1.gltf" id="9_jil70"]
 [ext_resource type="Script" uid="uid://dcr2y1bkx0qi3" path="res://src/core/shore_terrain.gd" id="10_shore"]
+[ext_resource type="Script" uid="uid://cjatu0avrfjei" path="res://src/core/town_fountain.gd" id="13_fountain"]
 
 [sub_resource type="Environment" id="Env"]
 background_mode = 1
@@ -108,6 +106,21 @@ albedo_color = Color(0.45, 0.35, 0.22, 1)
 [sub_resource type="StandardMaterial3D" id="SophiaMat"]
 albedo_color = Color(0.55, 0.45, 0.62, 1)
 
+[sub_resource type="BoxMesh" id="StockBuildingMesh"]
+size = Vector3(5, 4, 5)
+
+[sub_resource type="StandardMaterial3D" id="StockBuildingMat"]
+albedo_color = Color(0.45, 0.4, 0.34, 1)
+
+[sub_resource type="BoxMesh" id="TreeBlockMesh"]
+size = Vector3(1.2, 3.5, 1.2)
+
+[sub_resource type="BoxMesh" id="BushBlockMesh"]
+size = Vector3(1.2, 0.8, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="FoliageBlockMat"]
+albedo_color = Color(0.28, 0.36, 0.22, 1)
+
 [sub_resource type="CylinderMesh" id="MeditationMesh"]
 top_radius = 0.6
 bottom_radius = 0.7
@@ -131,7 +144,7 @@ collision_layer = 4
 collision_mask = 0
 
 [node name="Mesh" type="MeshInstance3D" parent="Floor" unique_id=635904742]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.53081775, -0.45186377, 0.01947403)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.4859512, -0.42736864, -0.014944077)
 mesh = SubResource("FloorMesh")
 surface_material_override/0 = SubResource("GroundMat")
 
@@ -139,8 +152,15 @@ surface_material_override/0 = SubResource("GroundMat")
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
 shape = SubResource("FloorShape")
 
-[node name="Tree_3_A_Color12" parent="Floor" unique_id=997526554 instance=ExtResource("2_v00pm")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.2496984, 0.4397209, 3.5608397)
+[node name="TreeBlock1" type="MeshInstance3D" parent="Floor" unique_id=997526554]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.639107, 2.1897209, 3.5608397)
+mesh = SubResource("TreeBlockMesh")
+surface_material_override/0 = SubResource("FoliageBlockMat")
+
+[node name="MarketBlock" type="MeshInstance3D" parent="Floor" unique_id=82596463]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.478127, 2.1502072, 1.2101059)
+mesh = SubResource("StockBuildingMesh")
+surface_material_override/0 = SubResource("StockBuildingMat")
 
 [node name="WallN" type="StaticBody3D" parent="." unique_id=2006786604]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, -16)
@@ -320,7 +340,8 @@ collision_layer = 0
 monitorable = false
 
 [node name="Mesh" type="MeshInstance3D" parent="MarasForge" unique_id=17311774]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.5877466, 0.5, -0.8640137)
+visible = false
 mesh = SubResource("ForgeMesh")
 surface_material_override/0 = SubResource("ForgeMat")
 
@@ -329,9 +350,9 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
 shape = SubResource("PlotShape")
 
 [node name="Label" type="Label3D" parent="MarasForge" unique_id=1595093316]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.4, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 1.7424469, 1.7427216, -1.3894405)
 billboard = 1
-text = "Mara's Forge — E for weapons"
+text = "Mara's Forge"
 font_size = 40
 outline_size = 8
 
@@ -651,14 +672,16 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 2.9313707)
 
 [node name="HUD" type="CanvasLayer" parent="." unique_id=1988553245]
 
-[node name="Tree_4_B_Color12" parent="." unique_id=462585273 instance=ExtResource("5_6g2qn")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.775711, 0.3763888, 5.7571034)
+[node name="TreeBlock2" type="MeshInstance3D" parent="." unique_id=462585273]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 13.775711, 2.1263888, 5.7571034)
+mesh = SubResource("TreeBlockMesh")
+surface_material_override/0 = SubResource("FoliageBlockMat")
 
 [node name="Water" type="MeshInstance3D" parent="." unique_id=509291451 node_paths=PackedStringArray("follow_target")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 23.5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.15972376, -0.17515492, 21.711498)
 script = ExtResource("8_water")
 follow_target = NodePath("../Player")
-size = Vector2(80, 17)
+size = Vector2(10, 5)
 make_bed = false
 
 [node name="Shore" type="MeshInstance3D" parent="." unique_id=2050258168]
@@ -676,12 +699,31 @@ patch_size = Vector2(10, 5)
 blade_count = 4500
 
 [node name="Grass2" type="MultiMeshInstance3D" parent="." unique_id=1202214662]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2.789034, 0, 12.852844)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.16476536, 0, -12.458563)
 instance_shader_parameters/player_position = Vector3(1000000, 0, 0)
 script = ExtResource("6_grass")
 blade_mesh = ExtResource("7_gmesh")
-patch_size = Vector2(15, 5)
-blade_count = 6000
+patch_size = Vector2(40, 10)
+blade_count = 20000
 
-[node name="Bush_2_A_Color12" parent="." unique_id=2065137874 instance=ExtResource("9_jil70")]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.528803, -1.1489401, 19.153282)
+[node name="BushBlock" type="MeshInstance3D" parent="." unique_id=2065137874]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.528803, -0.7489401, 19.153282)
+mesh = SubResource("BushBlockMesh")
+surface_material_override/0 = SubResource("FoliageBlockMat")
+
+[node name="ArcheryRangeBlock" type="MeshInstance3D" parent="." unique_id=1644942779]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.434572, 2.0351799, -13.498395)
+mesh = SubResource("StockBuildingMesh")
+surface_material_override/0 = SubResource("StockBuildingMat")
+
+[node name="BlacksmithBlock" type="MeshInstance3D" parent="." unique_id=1530882518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.53046, 1.9398274, -11.498875)
+mesh = SubResource("StockBuildingMesh")
+surface_material_override/0 = SubResource("StockBuildingMat")
+
+[node name="Fountain" type="StaticBody3D" parent="." unique_id=1782043611]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.041722298, -0.5)
+collision_layer = 4
+collision_mask = 0
+script = ExtResource("13_fountain")
+apron_radius = 3.0
