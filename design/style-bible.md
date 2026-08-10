@@ -10,6 +10,8 @@
 
 Wanted next (one canonical subject per class, per the workflow): a character anchor (Tycho), a dungeon-stratum anchor (floor 1), an icon anchor, a portrait anchor (the bible's painterly oil prompt is the starting point for that separate 2D context).
 
+**Derived from the town anchor so far:** the `TOWN_RAMP` dusk pass + 3 `PALETTE_*` consts (2026-07-12), and the **town-square fountain** (2026-08-10) — the anchor's plaza well minus its posts and slate canopy, built as generated geometry rather than a model since the asset-pipeline gate has not run. Dials: `design/feel-tuning.md` § Style unification → Town fountain.
+
 ## What carries the town look (decomposed 2026-07-12)
 
 The anchor is a 2D painting; the in-game goal is that a screenshot *reads* like it at a glance. Five carriers, four of which are existing dials:
@@ -39,6 +41,8 @@ The anchor is a 2D painting; the in-game goal is that a screenshot *reads* like 
 First `TOWN_RAMP` pass applied 2026-07-12 (human-directed, from this table): indigo shadow → warm khaki mid → glow-cream light. **All values stay `# style:` dials — judge in F5 against the anchor and re-dial freely** (dial board: `design/feel-tuning.md` § Style unification). Pending dial passes: town scene lighting (warm key / cool ambient), grass + shore colors toward the olive/khaki rows, outline color (dark-warm?).
 
 ## Judging protocol (per anchor class)
+
+> **Rendering a candidate (added 2026-08-10):** `godot --path . tools/render_prop.tscn` renders a generated prop at the game's exact camera angle under the town's own light + environment + toon sweep, to `user://prop_render_{game,close}.png` — so step 1 below can compare a real frame against the anchor instead of a mental image. Command + caveats: `design/godot-conventions.md` § Tools.
 
 1. Open the anchor and the candidate (screenshot / contact sheet) side by side.
 2. Ask only "does the candidate read like the anchor at a glance?" — palette, light story, silhouette. Ignore detail fidelity.

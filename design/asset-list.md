@@ -66,6 +66,7 @@ All need: humanoid (or creature) rig + Quaternius UAL retarget, in-place clip va
 | Town map/plots | 1 layout × **2 age-skins** (Medieval, early-Renaissance) | ⬜ |
 | Planning Table prop | 1 | ⬜ |
 | Narrative props: cannon (D2), palisade→stone-wall swap (B5) | 2 | ⬜ |
+| **Town-square fountain** — `TownFountain` (`src/core/town_fountain.gd`), generated geometry, NO model file; derived from the town anchor's plaza well minus its canopy | 1 | ⬜ code-drawn |
 
 ### Dungeon geometry kit + props (2–4 unique props per stratum; props glow on F3/F5; no collision — dead-roll rule)
 | Asset | Status |

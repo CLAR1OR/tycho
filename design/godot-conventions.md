@@ -50,6 +50,12 @@ res://
 
 ## Tools
 - **Economy simulator:** `/home/clarior/Godot_v4.7-stable_linux.x86_64 --headless --path . res://tools/economy_sim.tscn` — simulates 40 runs × 3 seeds through the REAL pure cores + `data/` numbers and writes its report to `design/economy-sim.md` (analysis tooling, not game code; assumptions + policies documented atop `tools/economy_sim.gd`).
+- **Prop renderer:** `godot --path . tools/render_prop.tscn` — renders a generated prop offscreen **at the game's exact camera angle** under the town's own light/environment/toon sweep, and writes `user://prop_render_{game,close}.png`. This is the missing half of the style-bible judging protocol (open the anchor and the render side by side). **NOT `--headless`** — it needs a real GPU context (Forward+ for the water shader); it shrinks and corners its window to stay out of the way. Point it at a different prop by editing the one `TownFountain.new()` line.
+- **Fountain geometry probe:** `godot --headless --path . -s tools/fountain_probe.gd` — asserts `TownFountain`'s generated triangles face the right way (`generate_normals()` derives normals from the same winding convention the rasterizer culls by, so "do the normals point where the helper promised?" answers "is the winding right?") plus bounds/containment/collision sanity. Exit 0/1.
+
+**Gotcha these two tools cost an hour to learn — do not re-learn it:**
+- A `.tscn` `Transform3D`'s 9 basis floats are stored **row-major**, but `Basis(a, b, c)` takes **column** vectors. Transcribing a scene's rows straight into `Basis()` silently gives a different orientation (it flipped the town's key light upside down).
+- **Never filter stderr when a headless run misbehaves.** A GDScript parse error makes `godot --headless -s` sit in a signal handler at 0% CPU forever — it looks exactly like an infinite loop, and the one line explaining it is on stderr.
 
 ## Git & workflow
 - Work on `main` (solo project); branch only for risky experiments. Commit per meaningful change (working agreement), message prefixes: `feat: / fix: / content: / design: / chore:`.

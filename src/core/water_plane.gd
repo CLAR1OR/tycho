@@ -80,14 +80,23 @@ func _notification(what: int) -> void:
 			_build_all()
 
 
+## A fresh water ShaderMaterial with its four generated textures wired up — the ONE
+## place the water look is assembled, so every water body in the game (this plane, the
+## town fountain) is literally the same water. Fresh per call: callers may override
+## uniforms for their own scale (TownFountain does — a basin is not a lake).
+static func build_material() -> ShaderMaterial:
+	var mat := ShaderMaterial.new()
+	mat.shader = WATER_SHADER
+	mat.set_shader_parameter("displacement_texture", _noise_texture(FastNoiseLite.TYPE_SIMPLEX))
+	mat.set_shader_parameter("edge_noise", _noise_texture(FastNoiseLite.TYPE_CELLULAR))
+	mat.set_shader_parameter("normal_map", _noise_texture(FastNoiseLite.TYPE_CELLULAR, true))
+	mat.set_shader_parameter("edge_ramp", _edge_ramp_texture())
+	return mat
+
+
 func _build_all() -> void:
 	if _material == null:
-		_material = ShaderMaterial.new()
-		_material.shader = WATER_SHADER
-		_material.set_shader_parameter("displacement_texture", _noise_texture(FastNoiseLite.TYPE_SIMPLEX))
-		_material.set_shader_parameter("edge_noise", _noise_texture(FastNoiseLite.TYPE_CELLULAR))
-		_material.set_shader_parameter("normal_map", _noise_texture(FastNoiseLite.TYPE_CELLULAR, true))
-		_material.set_shader_parameter("edge_ramp", _edge_ramp_texture())
+		_material = build_material()
 	var plane := PlaneMesh.new()
 	plane.size = size
 	plane.subdivide_width = subdivisions
@@ -136,7 +145,7 @@ func _build_bed() -> MeshInstance3D:
 	return bed
 
 
-func _noise_texture(noise_type: FastNoiseLite.NoiseType, as_normal := false) -> NoiseTexture2D:
+static func _noise_texture(noise_type: FastNoiseLite.NoiseType, as_normal := false) -> NoiseTexture2D:
 	var noise := FastNoiseLite.new()
 	noise.noise_type = noise_type
 	var tex := NoiseTexture2D.new()
@@ -148,7 +157,7 @@ func _noise_texture(noise_type: FastNoiseLite.NoiseType, as_normal := false) -> 
 
 ## The author's edge ramp: a STEEP 1D gradient — white at 0.0, black by 0.08 — that
 ## turns the soft depth/noise masks into crisp foam lines.
-func _edge_ramp_texture() -> GradientTexture1D:
+static func _edge_ramp_texture() -> GradientTexture1D:
 	var grad := Gradient.new()
 	grad.offsets = PackedFloat32Array([0.0, 0.08])
 	grad.colors = PackedColorArray([Color.WHITE, Color.BLACK])

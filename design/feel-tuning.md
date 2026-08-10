@@ -459,6 +459,26 @@ The shoreline is never drawn — it emerges where this terrain's height crosses 
 | `wind_direction` / `wind_strength` / `wind_noise_size` / `wind_noise_speed` (shader) | (1, 0, 0.35) / 0.3 / 0.05 / 0.1 | Gust direction, sway amount, gust patch size, gust travel speed. |
 | `player_displacement_strength` / `player_displacement_size` (shader) | 0.4 / 1.0 | How hard and how wide a walker bends the grass (`follow_target` on the patch node). |
 
+### Town fountain — `src/core/town_fountain.gd` (@export → Inspector) *(built 2026-08-10; the town square's centrepiece)*
+
+Generated geometry, not a model — the anchor's plaza well minus its posts and canopy. Four generated children (Paving / Stone / Submerged / Water) + its own collision; the stone parts are plain StandardMaterial3Ds, so town.gd's toon sweep converts them on `TOWN_RAMP` like any other town mesh, while the water (a `WaterPlane.build_material()` ShaderMaterial, shared with the lake) is skipped by the sweep's existing FX rule.
+
+**Three findings from the render pass (`tools/render_prop.gd`) — the reasons the defaults are what they are.** At the fixed −58° pitch: (1) tiers whose radii are close read as a mushy swirl, so it is ONE chunky step, not a stack; (2) the shader alone over a 0.44 m basin is nearly clear, so the pool only reads as water because everything under `water_y` is its own dark teal material; (3) the apron only reads as paving when `paving_color` sits well below `stone_color`.
+
+| Var | Default | What it does |
+|-----|---------|--------------|
+| `segments` / `pedestal_segments` | 20 / 8 | Radial facets. Low = chunkier (flat normals; the column reads octagonal). |
+| `apron_radius` / `apron_height` / `show_apron` | 3.4 m (town instance overrides to 3.0) / 0.05 / on | The paving circle. Flat and OUTSIDE the collider on purpose — the player walks over it. |
+| `step_radius` / `step_top` | 2.45 / 0.30 | The single step. `step_radius` is also the collision radius. |
+| `rim_outer` / `rim_inner` / `rim_top` | 2.05 / 1.68 / 0.95 | Basin wall: outside face, inside face (difference = rim thickness), sit-on height. |
+| `basin_floor_y` / `water_y` | 0.36 / 0.80 | Bed and surface. Water must stay between them and below `rim_top`. |
+| `pedestal_radius` / `pedestal_top` | 0.34 / 1.45 | The column — the only thing that breaks the flat circular silhouette from above. |
+| `bowl_outer` / `bowl_inner` / `bowl_floor_y` / `bowl_top` | 0.80 / 0.58 / 1.50 / 1.78 | The upper spill bowl. Keep it well inside `rim_inner` or it merges with the rim ring. |
+| `finial_base_radius` / `finial_top_radius` / `finial_top_y` | 0.22 / 0.10 / 2.10 | The spout stub; `finial_top_y` is the total height (NPC capsules are 1.7 m). |
+| `stone_color` / `paving_color` / `submerged_color` | stone grey / dark cobble / deep teal | See finding (3) and (2) above. |
+| `water_depth_distance` / `water_beers_law` / `water_displacement` | 0.55 / 9.0 / 0.02 | Per-instance overrides of the shared water shader — the lake's defaults (6 / 4.5 / 0.08) are tuned for a 34 m body. |
+| `water_uv_metres` | 10.0 | Metres per UV unit, matched to the lake's texel density so the same noise reads at the same physical size. |
+
 ---
 
 ## Boss — Den-Warden (floor 1; data dials + 2 exports, `design/bosses/floor-1-boss.md`, built 2026-07-10)
