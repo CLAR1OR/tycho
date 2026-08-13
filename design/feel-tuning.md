@@ -534,9 +534,10 @@ Not `# FEEL:`-tagged (no combat feel rides on them) but the same contract: **the
 | `COL_TRACK` | white @ 0.16 | the unfilled part of any bar |
 | `COL_SHADOW` | black @ 0.7 | the 1 px drop under unbacked prose |
 | `COL_GOLD/ORE/DUST/SHARDS` | as Slate | **deliberately shared with `SlateHud`** — a resource means one colour game-wide |
-| `FS_HEAD/LABEL/VALUE/BIG/KEY/MONO` | 12 / 17 / 15 / 22 / 10 / 13 | header · objective+hint prose · counters+HP · resource numbers · key badges · monograms |
+| `FS_HEAD/LABEL/VALUE/BIG/KEY/MONO` | 12 / 17 / 15 / 22 / 10 / 13 | section heads · objective labels + list rows · counters+HP · resource numbers · key badges · monograms |
 | `TRACKING` / `MARGIN` | 1.6 / 22 | letter-spacing on tracked caps / screen-edge margin |
-| `GLYPH_FILL` / `GLYPH_STROKE` / `GLYPH_ARCS` | unit-square point lists | **every glyph silhouette** — 4 resource crystals + 6 ability marks. Adding one is a `match` arm |
+| `GLYPH_FILL` / `GLYPH_STROKE` / `GLYPH_ARCS` | unit-square point lists | **every glyph silhouette** — now **22** marks (4 resource crystals + 6 ability + 12 menu). Adding one is a `match` arm. `GLYPH_ARCS` entries take an optional 4th/5th element = the arc's centre offset |
+| **Fonts** | Cinzel / EB Garamond / JetBrains Mono / **Alegreya Sans** | display · prose · numbers · **the interface voice (added 2026-08-13)**. Swapping a role = swapping its `FONT_*_FILE` preload |
 
 **Run-specific — `RunHud`:**
 
@@ -556,6 +557,41 @@ Not `# FEEL:`-tagged (no combat feel rides on them) but the same contract: **the
 | `BOSS_W` / `BOSS_H` / `BOSS_DIAMOND` / `BOSS_TRACKING` | 420 / 7 / 7 / 2.6 | boss bar geometry + its name's letter-spacing |
 | `HINT_LIFT` | 30 | hint prose's height above the HP bar |
 | `VIGNETTE_DEPTH/STEPS/ALPHA` | 90 / 24 / 0.30 | low-HP screen edge. **Known dial:** nested `draw_rect` outlines read as faint banding, not a smooth glow (inherited from Slate) |
+
+## Ember menus — `src/core/ember_hud.gd` + `ember_menu_core.gd` + `ember_theme.gd` *(built 2026-08-13; the base the fifteen Slate screens migrate onto, `design/ui-hud.md` § "Ember menu vocabulary")*
+
+Same contract as above: **the human owns every value.** Judge with `tools/render_menu.tscn` (renders a specimen screen exercising every primitive at once, side-by-side-able with `assets_src/anchors/weapon-menu-reference.png`), then in F5 once real screens migrate.
+
+**Menu palette + sizes — `EmberHud`** (beside the HUD block, same file, one dial source):
+
+| Const | Now | What it does |
+| --- | --- | --- |
+| `COL_SCRIM` | `#0a090d` @ 0.90 | the dim over whatever the menu opened on. **Lower it to let more world through; raise it toward opaque and Ember starts becoming Slate again** |
+| `COL_ROW` / `COL_ROW_HOVER` | white @ 0.035 / 0.075 | the resting + hovered row wash. Deliberately near-invisible — a row is bounded by its hairline, not by a fill |
+| `COL_ROW_SELECTED` | gold @ 0.10 | the selected row's wash (it also gets the dashed gold frame) |
+| `COL_DISABLED` | dim ink @ 0.38 | unaffordable actions, locked rows. **Never red** — the house rule holds |
+| `FS_TITLE` / `FS_SUB` | 34 / 16 | the screen's name (display) and the line under it (prose) |
+| `FS_ROW` / `FS_ROW_SM` | 17 / 13 | list-row names + dock labels / meta lines, level captions, costs |
+| `FS_HERO` / `FS_PROMPT` | 26 / 14 | the centre stage's big name / footer prompt labels |
+
+**Primitive defaults** (each also takes an argument, so a screen can override locally without touching the shared value): `_flourish` diamond half **4.0** · `_dashed_rect` width **1.5**, dash **7.0**, gap **5.0** · `_pips` half **4.5**, gap **13.0** · `_prompt` radius **9.0**, gap **9.0** · `_section` rule drop **13.0**, first-row drop **24.0**.
+
+**Layout — `EmberMenuCore`** (the grammar all fifteen screens share; changing one number here moves every migrated screen at once, which is the point):
+
+| Const | Now | What it does |
+| --- | --- | --- |
+| `PAD_PX` | 46 | screen-edge margin. **Deliberately larger than the HUD's `MARGIN` 22** — a menu's negative space does the work a panel border used to |
+| `TITLE_TOP_PX` / `SUBTITLE_DROP_PX` | 30 / 30 | title centre below the top edge / subtitle below the title |
+| `CONTENT_TOP_PX` / `CONTENT_BOTTOM_PX` | 96 / 66 | where the content band starts and stops |
+| `FOOTER_BOTTOM_PX` | 34 | the prompt row's centre, above the bottom edge |
+| `RAIL_W_PX` / `COL_GAP_PX` | 74 / 26 | the icon rail's width / the gap between all four columns |
+| `LIST_WEIGHT` / `HERO_WEIGHT` / `DOCK_WEIGHT` | 0.34 / 0.32 / 0.34 | how the three real columns split what the rail left. **Relative, not absolute** — they need not sum to 1 |
+| `COLUMN_W_PX` | 700 | the centred single-column width (settings / achievements shape) |
+| `RAIL_MIN_W_PX` | 900 | below this viewport width the rail is **dropped, not squeezed** |
+
+**Theme sizes — `EmberTheme`:** `FS_PROSE` 18 · `BTN_RADIUS` **3** (Ember frames are near-square by design — a big radius reads as Slate) · `BTN_MARGIN` (16, 9) · `ACTION_MARGIN` (26, 13) · `PANEL_MARGIN` 18. **The Panel/PanelContainer stylebox is `StyleBoxEmpty` and should stay that way** — that transparency IS the language.
+
+**Glyphs:** all 12 new marks (`leaf`, `stone`, `sword`, `shield`, `heart`, `boot`, `star`, `anvil`, `book`, `house`, `lock`, `check`) are placeholder silhouettes, unit-square point lists in `EmberHud`. Re-shaping one is editing a point list; adding one is a dictionary entry.
 
 ## Boss — Den-Warden (floor 1; data dials + 2 exports, `design/bosses/floor-1-boss.md`, built 2026-07-10)
 

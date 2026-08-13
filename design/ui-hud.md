@@ -4,7 +4,7 @@
 
 **Ember is defined by what it does NOT draw.** Slate stated every element in an opaque rounded panel with a visible border. Ember has **no panels at all**: every element floats directly on the world, held together by hairline rules, thin rings, negative space, and gold used *only* for state. Over a dark 2.5D field that reads better, because the HUD never fights the scene for contrast.
 
-**Ember sits BESIDE Slate, not on top of it** (human decision, 2026-08-10: "run HUD now, rest later"). `SlateHud` and the eleven menu screens that extend it are untouched, so nothing already dialed regresses. Only `RunHud` speaks Ember today. If the language wins in combat, the menu screens migrate one at a time — deliberately not pre-empted.
+**Ember is the whole game's language (human directive, 2026-08-13: "I want all of my ingame HUD and menus to be in the new style").** This supersedes the 2026-08-10 "run HUD now, rest later" scoping: Slate is now **legacy**, still dressing the fifteen unmigrated surfaces, and it is deleted the day the last one moves so there is one dial source again. The vocabulary for those migrations is built — see **§ Ember menu vocabulary** below — and the order is in **§ Migrating to Ember**.
 
 It is **one code-built `Control`** — `src/combat/run_hud.gd` (`RunHud extends EmberHud`) — added by `combat_room.gd` onto its existing `$HUD` CanvasLayer, `mouse_filter = IGNORE`, filling the screen. It draws everything itself in `_draw` and polls the player/boss each frame; `combat_room.gd` + `game.gd` push the room/hint/wave/HP/boss state in through setters. The public API is unchanged from the Slate build except for `set_wave_progress(kills, total)`, the live objective counter.
 
@@ -29,15 +29,20 @@ It is **one code-built `Control`** — `src/combat/run_hud.gd` (`RunHud extends 
 6. **Contextual hint — bottom-centre, above the HP bar.** The exit-open / choose-a-door / wellspring / artifact strings as **bare Garamond prose with a 1 px dark shadow** — no chip, no panel. Ember has nothing behind its text, so the shadow is what keeps prose legible over a bright patch of world. Hidden when empty.
 7. **Boss bar — top-centre, boss rooms only.** The boss's name in letter-spaced Cinzel over a 420×7 track using the same mirrored centre-diamond grammar as the HP bar, purple fill. Tracks the boss node's `current_hp()` / `max_hp` (passed in by `combat_room` at spawn). Hidden once the boss dies.
 
-## Typography (added 2026-07-07, human-provided fonts)
+## Typography (added 2026-07-07; the fourth role added 2026-08-13)
 
-Three OFL fonts under `assets/fonts/` (provenance: `assets/fonts/SOURCES.md`; the full family drops live outside the project in `temp/`, which carries a `.gdignore` so Godot doesn't import them all), each with one role:
+Four OFL fonts under `assets/fonts/` (provenance: `assets/fonts/SOURCES.md`; the full family drops live outside the project in `temp/`, which carries a `.gdignore` so Godot doesn't import them all), each with one role:
 
-- **Cinzel SemiBold — display.** The engraved-Roman-caps voice: echo-medallion monograms and the boss name.
-- **JetBrains Mono Medium — numbers/readouts.** The room header, resource readouts, objective counters, HP numerals, key badges, stack-count badges. Mono digits don't shuffle as values tick, and it natively carries the header's `⚠`.
-- **EB Garamond Medium — prose.** The contextual hint **and the objective labels** — under Ember the HUD speaks in sentences more than Slate did, so Garamond's role widened.
+- **Cinzel SemiBold — display.** The engraved-Roman-caps voice: screen titles, echo-medallion monograms, the boss name.
+- **JetBrains Mono Medium — numbers/readouts.** Resource readouts, objective counters, HP numerals, key badges, stack-count badges, stat values, costs. Mono digits don't shuffle as values tick, and it natively carries the room header's `⚠`.
+- **EB Garamond Medium — prose.** Descriptions, flavour, dialogue, screen subtitles, and the in-run contextual hint — the places the *game* is speaking rather than the interface labelling itself.
+- **Alegreya Sans Regular / Medium — the interface voice (NEW 2026-08-13).** Labels, list-row names, section heads, buttons, footer prompts, objective labels.
 
-**Ember adds NO fourth font.** The reference anchors are set in a light humanist sans the project does not own; buying into one is a separate call, deliberately not made here. Everything else about the language was adopted; the type was not.
+**The fourth font was the deliberate gap, and the menu work closed it.** Ember originally shipped with three and pressed Garamond into label duty, because both reference anchors are set in a humanist sans the project did not own and buying into one was left as an open call. The human made it (2026-08-13: *"use new font as fits best"*). **Alegreya Sans** is the pick: humanist rather than geometric, drawn by Huerta Tipográfica from the same old-style calligraphic roots as EB Garamond, so the two share a screen as one system instead of two. A neutral UI sans (Inter, Source Sans) would be equally legible and would read as a productivity app dropped onto a painted medieval world. **Regular** is the workhorse; **Medium** carries the small tracked caps, where Regular goes thin against an unbacked world.
+
+**Why two weights and not one:** Ember draws on the world with no panel behind its text, so hairline-thin type at 12–13 px is a real legibility risk — the anchors get away with a Light weight because they sit over a heavy vignette. Regular for body-size UI, Medium for the small stuff.
+
+**One RunHud change came with it (sanctioned):** the **objective labels** moved from Garamond to the UI font. Both anchors set the task block in the sans — `art-style.png` shows `Defeat all enemies in the area` in it verbatim — so Garamond was standing in there, and the stand-in shows once a real sans exists. **The contextual hint stayed Garamond**: no anchor covers it, and it is the game talking to the player (`Choose a door — the sigil is what the next room pays`), not a label. Both are one-line swaps in `run_hud.gd` if the human disagrees.
 
 Each font is wrapped in a `FontVariation` with `fallbacks = [ThemeDB.fallback_font]` (`RunHud._with_fallback`) so a missing glyph never renders as a box, without mutating the shared imported resource. Held back for later UI (dialogue panel, codex, titles): Cormorant, Cormorant Garamond, IM Fell English.
 
@@ -52,6 +57,76 @@ Each font is wrapped in a `FontVariation` with `fallbacks = [ThemeDB.fallback_fo
 **Judging the layout without playing to the right room state:** `tools/render_hud.tscn` renders the HUD into a 1280×720 SubViewport over a dark field with bright test patches (so shadowed prose can be checked for legibility) and writes `user://hud_render_<state>.png`. Needs a real GPU context — not `--headless`. Command in `design/godot-conventions.md` § Tools. It is a layout probe, not a screenshot of the game: **final judgment is still F5 over real combat.**
 
 **Known dial (flagged 2026-08-10, inherited from Slate):** the low-HP vignette is 24 nested `draw_rect` *outlines*, which reads as faint concentric banding rather than a smooth glow. It behaved the same under Slate but is more visible against Ember's flat dark field. Left as-is rather than silently redesigning a decided feature — worth a pass when the human dials the low-HP treatment.
+
+## Ember menu vocabulary (built 2026-08-13 — the base every migration lands on)
+
+> **Step 1 of the migration** (human-directed: *"start at step 1, use new font as fits best, code drawn icons"*). `EmberHud` knew only HUD shapes — rings, hairlines, arcs, a diamond. A menu needs a ground, a row, a section, a track, a prompt. This chunk grew the base to cover both, added the fourth font, added the marks the screens will need, and built a probe so the language could be judged **before** fifteen screens commit to it. **No screen migrated in this chunk** — that is Step 2.
+
+**The grammar comes from `assets_src/anchors/weapon-menu-reference.png`** (human-picked 2026-08-10, the sibling of the in-run anchor): a title band with a gold flourish, a resource readout top-right, then four columns — **icon rail → list → hero stage → detail dock** — over a footer that names its inputs. `art-style.png` shows the same language over the painted world, so the two anchors agree and the look fork did not invalidate them.
+
+### The four pieces
+
+**1. `EmberHud` grew a menu half** (`src/core/ember_hud.gd`). Same file, same palette, same dial source — a second block of primitives under the HUD ones:
+
+| Primitive | What it is | Why it exists |
+| --- | --- | --- |
+| `_scrim()` | full-screen dim over whatever the menu opened on | Ember's answer to Slate's opaque fullscreen panel — the world stays visible, it just stops competing |
+| `_row_box(rect, state)` | a barely-there wash inside a hairline | bounds a list row **without** becoming a panel; states `idle` / `hover` / `selected` / `disabled` |
+| `_dashed_rect` / `_dashed_line` | a real dashed frame | the anchor marks its selected row and its primary button this way. Also retires the S2 slot-select's "approximated-dashed" placeholder (StyleBoxFlat has no dashed border) |
+| `_section(x0, x1, y, label)` | tracked caps over a hairline, returns the first row's y | the dock's `WEAPON LEVEL` / `UPGRADE COST` grammar — Ember's replacement for a titled panel |
+| `_pips(centre, states)` | a diamond level track | one implementation for the forge's refine levels, the build panel's building levels, and the etchings' mark depth, which today are three |
+| `_prompt(pos, key, label)` / `_prompt_w` | a ringed key badge + label | the footer says what its inputs do, now that the ESC-close pass removed every Close button |
+| `_flourish(centre, half_w)` | a gold diamond with rules fading out both sides | the one purely decorative mark in the language. It says *this is a page* — the job a panel border used to do |
+| `_v_rule` / `_text_right` / `_elide` | column divider, right-aligned text, pixel-exact ellipsis | the plumbing every dock and list row needs |
+
+**2. `EmberMenuCore`** (`src/core/ember_menu_core.gd`, static, unit-tested `tests/core/ember_menu_core_test.gd`) — the pure half, sitting under the menus exactly as `HudCore` sits under `RunHud`:
+- **`catalogue(size)`** → the four-column grammar as `Rect2`s (`title` / `subtitle` / `resources` / `rail` / `list` / `hero` / `dock` / `footer` / `content`). Below `RAIL_MIN_W_PX` the rail is **dropped, not squeezed**, so a small window degrades once, centrally, instead of in fifteen screens.
+- **`column(size, width)`** → the centred single-column variant for read-down pages (settings, achievements). **It returns the identical title/subtitle/footer/content bands** — that shared furniture is what makes a four-column forge and a one-column settings page read as one language, and there is a test asserting the two never drift.
+- **`stack` / `rows_that_fit`** — list-row rects, and when a list needs to scroll.
+- **`stat_delta(from, to, unit)`** → the anchor's `38 › 44` row: `{from, to, changed, improved}`, units `""` / `"%"` / `"x"`.
+- **`cost_rows(costs, have)`** → `{rows:[{id, need, have, ok}], affordable}` over the shipped `{resource_id: amount}` cost shape every core already speaks. **Row order follows the def's key order** — the data authored it.
+- **`pip_states(level, max)`** → `filled` / `next` / `rest`, all-filled at max, plus `is_maxed` so "all gold" and "no action button" can never disagree.
+- **`truncate`** — the pure character-count elide (the pixel-exact one needs a font and lives on `EmberHud`).
+
+**3. `EmberTheme`** (`src/core/ember_theme.gd`) — the `Theme` factory for the screens that are Control **trees** rather than one `_draw`: anything whose content is a variable number of stacked rows that must scroll or reflow (achievements page, pause-menu button column, dialogue panel). Reads every colour and font off `EmberHud`, exactly as `SlateTheme` reads `SlateHud`; only sizes/margins/the one radius are its own.
+
+> **THE INVERSION, and why this is not a palette swap of `SlateTheme`:** Slate's `Panel` was an opaque box with a 2 px border, and its `Button` was that box again. Ember's `Panel`/`PanelContainer` are **`StyleBoxEmpty` — transparent**: they group and pad, they never paint. A `Button` is a hairline frame over nothing that goes gold when it is the actionable thing. **If a migrated screen still looks boxy, something is setting its own StyleBox instead of taking these.**
+
+Type variations: `EmberTitle` (Cinzel) · `EmberHead` (UI Medium, small + dim) · `EmberDim` · `EmberNum` (mono) · `EmberProse` (Garamond) · `EmberAction` (the gold-framed primary button, at most one per screen). Scrollbars are restyled too — no track, a hairline grabber — because a scrolling page is the main reason a screen is a Control tree at all.
+
+**4. Code-drawn marks, extended** (human decision, held from 2026-08-10 and re-confirmed: *"code drawn icons"*). The HUD's 10 glyphs became 22. New: `leaf` + `stone` (so all **seven** Ledger resources have a mark, not just the four the run HUD showed), and `sword` / `shield` / `heart` / `boot` / `star` / `anvil` / `book` / `house` / `lock` / `check` for rails, categories, stat rows, locked rows and met requirements. `GLYPH_ARCS` entries gained an optional **centre offset** (4th/5th element) so a mark can carry a non-concentric arc — the padlock's shackle needed it. `_glyph()` is still the single swap point when real icons exist.
+
+### The probe — `tools/render_menu.tscn`
+
+`godot --path . tools/render_menu.tscn` (**not** `--headless`) renders a **specimen** screen into a 1280×720 SubViewport over a mid-tone field with bright patches, and writes `user://menu_render_{catalogue,column}.png`.
+
+**Why a specimen rather than migrating a screen first:** the vocabulary is about to be applied fifteen times. If it is wrong — columns too tight, rows too loud, gold in the wrong places — that is fifteen rewrites. One fake screen exercising every primitive at once is judgeable side by side with the anchor. The content is deliberately fake (a weapon menu matching the anchor); it touches no game state, no `data/`, no save. **It paid for itself twice in the first pass:** the dock's `Lv. 2` numeral had the pip track drawn on top of it (a guessed pixel offset — now laid out from the measured text width), and the `sword` glyph read as a letter **T** because the blade and crossguard had no grip below them.
+
+### What is deliberately NOT here
+
+- **No screen migrated.** Step 1 is the base only; the first real screens are Step 2.
+- **No scroll/virtualization helper.** `rows_that_fit` reports the need; the first screen that actually overflows builds the mechanism, rather than an unused abstraction landing now.
+- **No hover/focus state machine.** Each screen already owns its hit-testing (`TechChart`, `EtchingsArms`, `ForgeAnvil` all do it their own way); the vocabulary only supplies how a state *looks*.
+- **No keyboard navigation model.** The footer prompts name the inputs; wiring gamepad/arrow traversal is its own decision, not a byproduct of a restyle.
+
+**HUMAN dial placeholders:** every menu const in `EmberHud` (`COL_SCRIM` / `COL_ROW*` / `COL_DISABLED`, `FS_TITLE/SUB/ROW/ROW_SM/HERO/PROMPT`), every layout dial in `EmberMenuCore` (`PAD_PX`, the band drops, `RAIL_W_PX`, the three column weights, `COLUMN_W_PX`, `RAIL_MIN_W_PX`), every size/margin in `EmberTheme`, and **every coordinate of the 12 new glyphs**. Dial board: `design/feel-tuning.md` § Ember menus.
+
+---
+
+## Migrating to Ember (the plan — Step 2 onward)
+
+**Inventory as of 2026-08-13:** Ember = 1 surface (`RunHud`). **Slate = 15**, plus 7 helper draw classes that read Slate colours directly (`TechChart`, `EtchingsArms`, `SigilIcon`, `ForgeAnvil`, `WeaponSilhouette`, `BuildingSilhouette`, `SlotSelectSky`).
+
+| Tier | Surfaces | Why this order |
+| --- | --- | --- |
+| **A — in-run + always-on** | `EchoOfferPanel`, `PauseMenu`, `TownHud`, `AchievementToast` | they appear *beside* Ember, so they disagree with it most visibly. `EchoOfferPanel` is nearly Ember already — no panels, rings, glow, Cinzel monograms |
+| **B — the anchor's own archetype** | `ForgePanel` (+`ForgeAnvil`, `WeaponSilhouette`), `EtchingsPanel` (+`EtchingsArms`, `SigilIcon`), `AttunementsPage`, `BuildPanel` (+`BuildingSilhouette`), `SurveyPanel`, `MarketPanel` | the anchor **is** a weapon menu; these six are the catalogue grammar almost line for line |
+| **C — the rest** | `TechPanel` (+`TechChart`), `SlotSelect` (+`SlotSelectSky`), `SettingsPanel`, `AchievementsPanel`, `DialoguePanel` | each is its own picture. The star chart is already panel-less and gold-for-state, so it is closer than it looks; the night-sky title screen needs the least |
+| **D — retire Slate** | delete `SlateHud` + `SlateTheme` | only once the last screen has moved. Until then the two languages coexist by design |
+
+**Rules for every migration chunk:** restyle only — public API, signals, flow, pause semantics, guards and game-copy strings stay byte-identical (the precedent every Slate rebuild set, and what lets the smoke drive them unchanged). New copy ships as placeholders. A screen that gains a pure rule puts it in `EmberMenuCore`, not in its own file.
+
+> **Doc debt, flagged 2026-08-13:** `MarketPanel` (`src/town/market_panel.gd`) and `AttunementsPage` (`src/town/attunements_page.gd`) have **no spec section in this file** — they shipped inside the economy-v2 and attunements chunks. That is why this doc said "eleven menu screens" while the code has fifteen surfaces. Their sections should be written as they migrate.
 
 ## Town HUD (decided + built 2026-07-07)
 

@@ -338,8 +338,11 @@ func _draw_room_block() -> void:
 		var label_col := COL_INK_FAINT if done else COL_INK
 		_diamond(Vector2(left + BULLET_HALF, y), BULLET_HALF,
 			COL_INK_FAINT if done else COL_ACCENT)
+		# UI font, not prose: both anchors set the task block in the interface sans, and
+		# Garamond was only standing in here while Ember had no sans (2026-08-13). Swap
+		# back to `_font_body` in this one place to A/B it.
 		_text_at(Vector2(left + BULLET_HALF * 2.0 + BULLET_GAP, y), str(row.get("label", "")),
-			label_col, FS_LABEL, _font_body)
+			label_col, FS_LABEL, _font_ui)
 		var want := int(row.get("want", 0))
 		if want > 0:
 			var have := int(row.get("have", 0))

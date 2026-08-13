@@ -10,14 +10,19 @@ class_name EmberHud
 ## thin rings, negative space, and gold used ONLY for state. It reads better over a dark
 ## 2.5D field because it never fights the scene for contrast.
 ##
-## Ember sits BESIDE Slate, not on top of it. SlateHud and every menu screen that extends
-## it are untouched; only RunHud (src/combat/run_hud.gd) speaks Ember today. If the
-## language wins in combat, the menu screens migrate one at a time — that is a later
-## decision, deliberately not pre-empted here.
+## Ember is becoming the WHOLE game's language (human directive, 2026-08-13: "I want all
+## of my ingame HUD and menus to be in the new style"). Slate (src/core/slate_hud.gd +
+## src/core/slate_theme.gd) is now legacy: it still dresses the fifteen unmigrated screens
+## and the two languages coexist until the last one moves, at which point Slate is deleted
+## so there is one dial source again. Migration order: design/ui-hud.md § "Migrating to
+## Ember".
 ##
-## Subclasses own their own pixels + state; this file owns the palette, the three project
-## fonts, the draw primitives (hairline / ring / arc / diamond / tracked caps / shadowed
-## text) and the code-drawn glyph library.
+## Subclasses own their own pixels + state; this file owns the palette, the four project
+## fonts, the draw primitives — the HUD set (hairline / ring / arc / diamond / tracked caps
+## / shadowed text) and the MENU set (scrim / flourish / dashed frame / row box / pip track
+## / prompt) — and the code-drawn glyph library. Pure menu layout + formatting rules live
+## beside it in EmberMenuCore (src/core/ember_menu_core.gd), and Control-TREE screens
+## (containers, not _draw) get the same language from EmberTheme (src/core/ember_theme.gd).
 ##
 ## HUMAN: EVERYTHING under "Shared style" is a PLACEHOLDER — colours, sizes, fonts, and
 ## every coordinate in the glyph table. Dial them like FEEL numbers (they carry no combat
@@ -38,26 +43,52 @@ const COL_ON_ACCENT := Color(26.0/255, 22.0/255, 16.0/255)         # dark text o
 const COL_TRACK := Color(1.0, 1.0, 1.0, 0.16)                      # the unfilled part of any bar
 const COL_SHADOW := Color(0.0, 0.0, 0.0, 0.7)                      # text legibility over the world
 const COL_DANGER := Color(255.0/255, 92.0/255, 92.0/255)           # #ff5c5c peril mark
+# Menu-only additions. A menu owns the whole screen, so it needs a ground to sit on and a
+# way to bound a row — but Ember still refuses opaque panels: the scrim is a dim of the
+# world behind, and a "row" is a barely-there wash inside a hairline, never a filled box.
+const COL_SCRIM := Color(10.0/255, 9.0/255, 13.0/255, 0.90)        # #0a090d @ .90 backdrop
+const COL_ROW := Color(1.0, 1.0, 1.0, 0.035)                       # resting row wash
+const COL_ROW_HOVER := Color(1.0, 1.0, 1.0, 0.075)                 # hovered row wash
+const COL_ROW_SELECTED := Color(224.0/255, 168.0/255, 60.0/255, 0.10) # gold wash, selected
+const COL_DISABLED := Color(154.0/255, 150.0/255, 145.0/255, 0.38) # unaffordable / locked
 # Resource identity colours are deliberately shared with Slate (src/core/slate_hud.gd) so
 # gold/ore/dust/shards mean the same colour on every screen, whichever language draws it.
 const COL_GOLD := Color(255.0/255, 230.0/255, 128.0/255)           # #ffe680
 const COL_ORE := Color(176.0/255, 164.0/255, 224.0/255)            # #b0a4e0
 const COL_DUST := Color(128.0/255, 230.0/255, 255.0/255)           # #80e6ff
 const COL_SHARDS := Color(208.0/255, 143.0/255, 255.0/255)         # #d08fff
-# Fonts — the same three OFL files Slate uses (assets/fonts/, provenance in SOURCES.md).
-# Ember adds NO fourth font: the reference anchors use a light humanist sans we do not own,
-# and buying into one is a separate call. Roles: DISPLAY = engraved caps (monograms, boss
-# name), NUM = every number/readout (mono, so digits don't shuffle), BODY = prose (hint,
-# objective labels — Ember speaks in sentences more than Slate did).
+# Fonts — four OFL files (assets/fonts/, provenance in SOURCES.md). Roles:
+#   DISPLAY (Cinzel)          engraved caps — screen titles, monograms, the boss name
+#   BODY    (EB Garamond)     prose — descriptions, flavour, dialogue
+#   NUM     (JetBrains Mono)  every number/readout — mono, so digits don't shuffle
+#   UI      (Alegreya Sans)   interface voice — labels, list rows, section heads, buttons
+#
+# The UI role is NEW (2026-08-13, human: "use new font as fits best"). Ember originally
+# shipped with three and pressed Garamond into label duty, because the reference anchors
+# are set in a humanist sans the project did not own. Both anchors put every interface
+# label in that sans — Garamond was standing in, and in a menu (which is almost entirely
+# labels) the stand-in shows. Alegreya Sans is the pick: humanist rather than geometric,
+# drawn by Huerta Tipografica from the same old-style calligraphic roots as EB Garamond,
+# so the two sit on a screen together as one system instead of two. Regular is the
+# workhorse; Medium is for small tracked caps, where Regular goes thin against the world.
 const FONT_DISPLAY_FILE := preload("res://assets/fonts/Cinzel-SemiBold.ttf")
 const FONT_BODY_FILE := preload("res://assets/fonts/EBGaramond-Medium.ttf")
 const FONT_NUM_FILE := preload("res://assets/fonts/JetBrainsMono-Medium.ttf")
-const FS_HEAD := 12      # tracked section headers (num)
-const FS_LABEL := 17     # objective labels / prose rows (body)
+const FONT_UI_FILE := preload("res://assets/fonts/AlegreyaSans-Regular.ttf")
+const FONT_UI_MED_FILE := preload("res://assets/fonts/AlegreyaSans-Medium.ttf")
+const FS_HEAD := 12      # tracked section headers (ui med)
+const FS_LABEL := 17     # objective labels / list-row names (ui)
 const FS_VALUE := 15     # counters, HP numerals (num)
 const FS_BIG := 22       # the bare resource readouts (num)
 const FS_KEY := 10       # ability key badges (num)
 const FS_MONO := 13      # echo medallion monograms (display)
+# Menu-only sizes.
+const FS_TITLE := 34     # the screen's name (display)
+const FS_SUB := 16       # the line under the title (body — the one place prose leads)
+const FS_ROW := 17       # list-row names, dock labels (ui)
+const FS_ROW_SM := 13    # meta lines, level captions, costs (ui)
+const FS_HERO := 26      # the centre stage's big name (display)
+const FS_PROMPT := 14    # footer prompt labels (ui)
 ## Extra advance per character for tracked caps (the reference's letter-spaced headers).
 const TRACKING := 1.6
 ## Layout margin from screen edges.
@@ -66,16 +97,22 @@ const MARGIN := 22.0
 var _font_display: FontVariation
 var _font_body: FontVariation
 var _font_num: FontVariation
+var _font_ui: FontVariation
+var _font_ui_med: FontVariation
 
 
 func _ready() -> void:
 	# Common Ember setup; subclasses override _ready and call super._ready() FIRST, then
-	# add their own group + signal wiring.
+	# add their own group + signal wiring. NOTE the mouse_filter default: the HUD is
+	# non-interactive, so it ignores the mouse. A menu subclass must set MOUSE_FILTER_STOP
+	# itself (it wants the clicks, and it wants to swallow them from the world behind).
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_font_display = _with_fallback(FONT_DISPLAY_FILE)
 	_font_body = _with_fallback(FONT_BODY_FILE)
 	_font_num = _with_fallback(FONT_NUM_FILE)
+	_font_ui = _with_fallback(FONT_UI_FILE)
+	_font_ui_med = _with_fallback(FONT_UI_MED_FILE)
 
 
 static func _with_fallback(base: Font) -> FontVariation:
@@ -193,6 +230,190 @@ func _text_tracked_w(s: String, fs: int, font: Font, tracking: float = TRACKING)
 	return maxf(0.0, w - tracking)
 
 
+## Text ending at `right_x` instead of starting at a left edge — dock values, costs, any
+## right-aligned column. Returns the width drawn.
+func _text_right(right_x: float, y: float, s: String, col: Color, fs: int,
+		font: Font, shadow: bool = false) -> float:
+	var w := _text_w(s, fs, font)
+	var pos := Vector2(right_x - w, y)
+	if shadow:
+		_text_shadowed(pos, s, col, fs, font)
+	else:
+		_text_at(pos, s, col, fs, font)
+	return w
+
+
+## Pixel-exact ellipsis: the longest prefix of `s` that fits `max_w`, plus "…".
+## (EmberMenuCore.truncate is the pure character-count version, for tests and for callers
+## that have no font in hand. This one is what a real row should use.)
+func _elide(s: String, max_w: float, fs: int, font: Font) -> String:
+	if max_w <= 0.0:
+		return ""
+	if _text_w(s, fs, font) <= max_w:
+		return s
+	var ell := "…"
+	var ell_w := _text_w(ell, fs, font)
+	var cut := s.length()
+	while cut > 0 and _text_w(s.substr(0, cut), fs, font) + ell_w > max_w:
+		cut -= 1
+	return s.substr(0, cut).strip_edges(false, true) + ell
+
+
+# =====================================================================================
+# Menu primitives — the Ember vocabulary, part two
+# =====================================================================================
+# The HUD floats on live gameplay; a MENU owns the screen and pauses it. That asks for
+# four things the HUD never needed: a ground to sit on (the scrim), a way to bound a row
+# without drawing a panel (the wash + hairline), a way to mark the ONE actionable thing
+# (the dashed gold frame), and a footer that names its inputs (prompts). Everything else
+# is the same vocabulary — hairlines, thin rings, negative space, gold only for state.
+#
+# HUMAN: every default below is a PLACEHOLDER. Dial board: design/feel-tuning.md.
+
+## The dim over whatever the menu opened on top of. Ember's answer to Slate's opaque
+## fullscreen panel: you can still see the world, it just stops competing.
+func _scrim(col: Color = COL_SCRIM) -> void:
+	draw_rect(Rect2(Vector2.ZERO, size), col, true)
+
+
+## A vertical hairline — the rail/list divider, or any column separator.
+func _v_rule(x: float, from_y: float, to_y: float, col: Color = COL_HAIR,
+		w: float = 1.0) -> void:
+	draw_line(Vector2(x, from_y), Vector2(x, to_y), col, w, true)
+
+
+## The anchor's title ornament: a tapering rule running INTO a small gold diamond, drawn
+## on both sides of a screen title. It is the one purely decorative mark in the language —
+## it says "this is a page", which is the job a panel border used to do.
+## `half_w` is the length of one wing, measured from the diamond outward.
+func _flourish(centre: Vector2, half_w: float, col: Color = COL_ACCENT,
+		diamond_half: float = 4.0) -> void:
+	_diamond(centre, diamond_half, col)
+	# The rule fades out as it travels away from the diamond, so it dissolves into the
+	# negative space rather than stopping at a hard end.
+	var steps := 12
+	var start := diamond_half + 4.0
+	var seg := (half_w - start) / float(steps)
+	if seg <= 0.0:
+		return
+	for i in steps:
+		var t := float(i) / float(steps)
+		var a := col.a * (1.0 - t)
+		var x0 := start + seg * float(i)
+		var x1 := x0 + seg
+		var c := Color(col, a)
+		draw_line(centre + Vector2(x0, 0.0), centre + Vector2(x1, 0.0), c, 1.0, true)
+		draw_line(centre - Vector2(x1, 0.0), centre - Vector2(x0, 0.0), c, 1.0, true)
+
+
+## A dashed rectangle — the anchor uses it for the SELECTED list row and for the primary
+## action button, and it is exactly the "approximated-dashed" mark the Slate slot-select
+## had to fake with a dimmer stylebox (StyleBoxFlat has no dashed border). Drawn by hand
+## so it is a real dash, and so the dash length is dialable.
+func _dashed_rect(rect: Rect2, col: Color, w: float = 1.5, dash: float = 7.0,
+		gap: float = 5.0) -> void:
+	var tl := rect.position
+	var tr := Vector2(rect.end.x, rect.position.y)
+	var br := rect.end
+	var bl := Vector2(rect.position.x, rect.end.y)
+	for e: Array in [[tl, tr], [tr, br], [br, bl], [bl, tl]]:
+		_dashed_line(e[0], e[1], col, w, dash, gap)
+
+
+func _dashed_line(from: Vector2, to: Vector2, col: Color, w: float = 1.5,
+		dash: float = 7.0, gap: float = 5.0) -> void:
+	var span := from.distance_to(to)
+	if span <= 0.0 or dash <= 0.0:
+		return
+	var dir := (to - from) / span
+	var travelled := 0.0
+	while travelled < span:
+		var seg := minf(dash, span - travelled)
+		draw_line(from + dir * travelled, from + dir * (travelled + seg), col, w, true)
+		travelled += dash + gap
+
+
+## A list row's bounds. NOT a panel: a barely-there wash inside a hairline, so the row
+## groups its contents without acquiring a border the eye has to read past. `state` is one
+## of "idle" / "hover" / "selected" / "disabled"; selected gets the dashed gold frame that
+## marks the screen's single active thing.
+func _row_box(rect: Rect2, state: String = "idle", radius: float = 0.0) -> void:
+	var fill := COL_ROW
+	var border := COL_HAIR
+	match state:
+		"hover":
+			fill = COL_ROW_HOVER
+			border = COL_RING
+		"selected":
+			fill = COL_ROW_SELECTED
+		"disabled":
+			fill = Color(COL_ROW, COL_ROW.a * 0.5)
+			border = Color(COL_HAIR, COL_HAIR.a * 0.6)
+	if radius > 0.0:
+		var sb := StyleBoxFlat.new()
+		sb.bg_color = fill
+		sb.set_corner_radius_all(int(radius))
+		draw_style_box(sb, rect)
+	else:
+		draw_rect(rect, fill, true)
+	if state == "selected":
+		_dashed_rect(rect, COL_ACCENT)
+	else:
+		draw_rect(rect, border, false, 1.0)
+
+
+## A level track: one small diamond per level, from EmberMenuCore.pip_states.
+## filled = gold, next = a gold outline (the affordance), rest = a faint outline.
+## Centred on `centre`; returns the track's total width so a caller can lay out beside it.
+func _pips(centre: Vector2, states: Array[String], half: float = 4.5,
+		gap: float = 13.0) -> float:
+	var n := states.size()
+	if n == 0:
+		return 0.0
+	var total := float(n - 1) * gap
+	var x := centre.x - total * 0.5
+	for s: String in states:
+		var p := Vector2(x, centre.y)
+		match s:
+			"filled":
+				_diamond(p, half, COL_ACCENT)
+			"next":
+				_diamond(p, half, COL_ACCENT, false, 1.4)
+			_:
+				_diamond(p, half * 0.85, COL_RING, false, 1.2)
+		x += gap
+	return total + half * 2.0
+
+
+## A footer input prompt: the key in a thin ring, then its label. The anchor's `Ⓑ Back` /
+## `Ⓐ Select` row — it is where a menu says what its inputs do, now that the Close buttons
+## are gone (the ESC-close pass, design/ui-hud.md). Returns the total width drawn.
+func _prompt(pos: Vector2, key: String, label: String, col: Color = COL_INK_DIM,
+		radius: float = 9.0, gap: float = 9.0) -> float:
+	var centre := Vector2(pos.x + radius, pos.y)
+	_ring(centre, radius, 1.2, col)
+	_text_centred(centre.x, centre.y, key, col, FS_KEY, _font_ui_med)
+	var lx := pos.x + radius * 2.0 + gap
+	return radius * 2.0 + gap + _text_at(Vector2(lx, pos.y), label, col, FS_PROMPT, _font_ui)
+
+
+## Width `_prompt` will occupy — for right-aligning one against the screen edge.
+func _prompt_w(key: String, label: String, radius: float = 9.0, gap: float = 9.0) -> float:
+	var _unused := key  # the ring is a fixed size whatever the key is
+	return radius * 2.0 + gap + _text_w(label, FS_PROMPT, _font_ui)
+
+
+## A section head: tracked caps sitting over a hairline that runs to `to_x`. The dock's
+## `WEAPON LEVEL` / `UPGRADE COST` grammar — Ember's replacement for a titled panel.
+## Returns the y the first row under it should use.
+func _section(from_x: float, to_x: float, y: float, label: String,
+		col: Color = COL_INK_DIM, rule_drop: float = 13.0,
+		first_row_drop: float = 24.0) -> float:
+	_text_tracked(Vector2(from_x, y), label, col, FS_HEAD, _font_ui_med)
+	_hairline(from_x, to_x, y + rule_drop)
+	return y + first_row_drop
+
+
 # =====================================================================================
 # Glyph library — code-drawn vector marks
 # =====================================================================================
@@ -218,10 +439,41 @@ const GLYPH_FILL := {
 	# Abilities that read better solid than stroked.
 	"bolt": [Vector2(0.14, -0.48), Vector2(-0.22, 0.04), Vector2(0.01, 0.04),
 		Vector2(-0.11, 0.48), Vector2(0.24, -0.06), Vector2(0.01, -0.06)],
+	# --- Menu marks (added 2026-08-13 with the menu vocabulary) -------------------------
+	# The town's other two resources, so all seven now have a mark (the run HUD only ever
+	# showed four). The anchor uses a green leaf for its third resource — kept for food.
+	"leaf": [Vector2(0, -0.46), Vector2(0.26, -0.10), Vector2(0.20, 0.24),
+		Vector2(0, 0.46), Vector2(-0.20, 0.24), Vector2(-0.26, -0.10)],
+	"stone": [Vector2(-0.40, 0.10), Vector2(-0.22, -0.26), Vector2(0.14, -0.32),
+		Vector2(0.40, -0.02), Vector2(0.36, 0.30), Vector2(-0.10, 0.38),
+		Vector2(-0.36, 0.30)],
+	# Category / screen marks — the anchor's left icon rail and its stat rows.
+	"sword": [Vector2(0, -0.48), Vector2(0.09, -0.32), Vector2(0.09, 0.10),
+		Vector2(-0.09, 0.10), Vector2(-0.09, -0.32)],
+	"shield": [Vector2(0, -0.44), Vector2(0.34, -0.29), Vector2(0.30, 0.12),
+		Vector2(0, 0.46), Vector2(-0.30, 0.12), Vector2(-0.34, -0.29)],
+	"heart": [Vector2(0, -0.20), Vector2(0.14, -0.40), Vector2(0.34, -0.36),
+		Vector2(0.45, -0.16), Vector2(0.38, 0.08), Vector2(0, 0.46),
+		Vector2(-0.38, 0.08), Vector2(-0.45, -0.16), Vector2(-0.34, -0.36),
+		Vector2(-0.14, -0.40)],
+	"boot": [Vector2(-0.20, -0.44), Vector2(0.02, -0.44), Vector2(0.05, 0.08),
+		Vector2(0.40, 0.20), Vector2(0.42, 0.40), Vector2(-0.20, 0.40)],
+	"star": [Vector2(0, -0.48), Vector2(0.11, -0.11), Vector2(0.48, 0),
+		Vector2(0.11, 0.11), Vector2(0, 0.48), Vector2(-0.11, 0.11),
+		Vector2(-0.48, 0), Vector2(-0.11, -0.11)],
+	"anvil": [Vector2(-0.32, -0.26), Vector2(0.22, -0.26), Vector2(0.45, -0.15),
+		Vector2(0.22, -0.05), Vector2(0.11, -0.03), Vector2(0.09, 0.20),
+		Vector2(0.28, 0.40), Vector2(-0.28, 0.40), Vector2(-0.09, 0.20),
+		Vector2(-0.11, -0.03), Vector2(-0.32, -0.08)],
+	"lock": [Vector2(-0.27, 0.02), Vector2(0.27, 0.02), Vector2(0.27, 0.40),
+		Vector2(-0.27, 0.40)],
 }
 ## A second filled piece for glyphs built from two shapes.
 const GLYPH_FILL2 := {
 	"shards": [Vector2(0.17, 0.01), Vector2(0.34, 0.19), Vector2(0.23, 0.46), Vector2(0.11, 0.27)],
+	# The sword's crossguard — without it the blade reads as a spike.
+	"sword": [Vector2(-0.28, 0.10), Vector2(0.28, 0.10), Vector2(0.28, 0.20),
+		Vector2(-0.28, 0.20)],
 }
 ## Stroked polylines, per glyph id (a list of separate strokes).
 const GLYPH_STROKE := {
@@ -249,12 +501,36 @@ const GLYPH_STROKE := {
 		[Vector2(0.30, -0.30), Vector2(0.18, -0.18)],
 		[Vector2(-0.30, 0.30), Vector2(-0.18, 0.18)],
 		[Vector2(0.30, 0.30), Vector2(0.18, 0.18)]],
+	# --- Menu marks --------------------------------------------------------------------
+	# Sword — the grip + pommel below the crossguard. Without them the blade and guard
+	# read as a letter T (caught in the first render_menu.tscn pass).
+	"sword": [[Vector2(0, 0.20), Vector2(0, 0.42)],
+		[Vector2(-0.09, 0.44), Vector2(0.09, 0.44)]],
+	"leaf": [[Vector2(0, -0.42), Vector2(0, 0.42)]],
+	"stone": [[Vector2(-0.22, -0.26), Vector2(-0.04, 0.02), Vector2(0.40, -0.02)],
+		[Vector2(-0.04, 0.02), Vector2(-0.10, 0.38)]],
+	# Book — a spine with two pages falling away from it (knowledge, the codex).
+	"book": [[Vector2(0, -0.26), Vector2(0, 0.32)],
+		[Vector2(0, -0.26), Vector2(-0.20, -0.34), Vector2(-0.44, -0.28),
+			Vector2(-0.44, 0.26), Vector2(-0.20, 0.32), Vector2(0, 0.32)],
+		[Vector2(0, -0.26), Vector2(0.20, -0.34), Vector2(0.44, -0.28),
+			Vector2(0.44, 0.26), Vector2(0.20, 0.32), Vector2(0, 0.32)]],
+	# House — the town / buildings mark.
+	"house": [[Vector2(-0.40, 0.02), Vector2(0, -0.38), Vector2(0.40, 0.02)],
+		[Vector2(-0.30, 0.02), Vector2(-0.30, 0.40), Vector2(0.30, 0.40),
+			Vector2(0.30, 0.02)]],
+	# Check — a researched node, a built level, a met requirement.
+	"check": [[Vector2(-0.36, 0.02), Vector2(-0.10, 0.30), Vector2(0.38, -0.30)]],
 }
-## Glyphs that also want one or more concentric arcs: id -> [[radius, from_rad, to_rad], ...].
+## Glyphs that also want one or more arcs. Entry: [radius, from_rad, to_rad] — with an
+## optional 4th/5th element giving the arc's centre OFFSET in unit-square coords, for
+## marks whose arc is not concentric with the glyph (the padlock's shackle).
 const GLYPH_ARCS := {
 	"snare": [[0.26, 0.0, TAU]],
 	# Shockwave — three nested arcs opening to the right.
 	"shockwave": [[0.16, -0.95, 0.95], [0.30, -0.95, 0.95], [0.44, -0.95, 0.95]],
+	# Lock — the shackle: a half circle sitting on top of the body, opening downward.
+	"lock": [[0.19, PI, TAU, 0.0, 0.02]],
 }
 
 
@@ -274,7 +550,11 @@ func _glyph(centre: Vector2, glyph_size: float, id: String, col: Color, stroke_w
 			draw_polyline(_scaled(stroke, centre, glyph_size), col, stroke_w, true)
 	if GLYPH_ARCS.has(id):
 		for a: Array in GLYPH_ARCS[id]:
-			draw_arc(centre, glyph_size * float(a[0]), float(a[1]), float(a[2]), 32, col, stroke_w, true)
+			var off := Vector2.ZERO
+			if a.size() >= 5:
+				off = Vector2(float(a[3]), float(a[4])) * glyph_size
+			draw_arc(centre + off, glyph_size * float(a[0]), float(a[1]), float(a[2]),
+				32, col, stroke_w, true)
 
 
 ## Unit-square points -> screen points.
