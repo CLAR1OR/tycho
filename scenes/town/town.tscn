@@ -25,6 +25,18 @@ albedo_color = Color(0.3, 0.32, 0.24, 1)
 [sub_resource type="BoxShape3D" id="FloorShape"]
 size = Vector3(34, 1, 34)
 
+[sub_resource type="BoxMesh" id="TreeBlockMesh"]
+size = Vector3(1.2, 3.5, 1.2)
+
+[sub_resource type="StandardMaterial3D" id="FoliageBlockMat"]
+albedo_color = Color(0.28, 0.36, 0.22, 1)
+
+[sub_resource type="BoxMesh" id="StockBuildingMesh"]
+size = Vector3(5, 4, 5)
+
+[sub_resource type="StandardMaterial3D" id="StockBuildingMat"]
+albedo_color = Color(0.45, 0.4, 0.34, 1)
+
 [sub_resource type="BoxMesh" id="WallNSMesh"]
 size = Vector3(34, 2, 1)
 
@@ -106,21 +118,6 @@ albedo_color = Color(0.45, 0.35, 0.22, 1)
 [sub_resource type="StandardMaterial3D" id="SophiaMat"]
 albedo_color = Color(0.55, 0.45, 0.62, 1)
 
-[sub_resource type="BoxMesh" id="StockBuildingMesh"]
-size = Vector3(5, 4, 5)
-
-[sub_resource type="StandardMaterial3D" id="StockBuildingMat"]
-albedo_color = Color(0.45, 0.4, 0.34, 1)
-
-[sub_resource type="BoxMesh" id="TreeBlockMesh"]
-size = Vector3(1.2, 3.5, 1.2)
-
-[sub_resource type="BoxMesh" id="BushBlockMesh"]
-size = Vector3(1.2, 0.8, 1.2)
-
-[sub_resource type="StandardMaterial3D" id="FoliageBlockMat"]
-albedo_color = Color(0.28, 0.36, 0.22, 1)
-
 [sub_resource type="CylinderMesh" id="MeditationMesh"]
 top_radius = 0.6
 bottom_radius = 0.7
@@ -128,6 +125,9 @@ height = 0.4
 
 [sub_resource type="StandardMaterial3D" id="MeditationMat"]
 albedo_color = Color(0.4, 0.42, 0.5, 1)
+
+[sub_resource type="BoxMesh" id="BushBlockMesh"]
+size = Vector3(1.2, 0.8, 1.2)
 
 [node name="Town" type="Node3D" unique_id=452192815]
 script = ExtResource("1")
@@ -158,7 +158,7 @@ mesh = SubResource("TreeBlockMesh")
 surface_material_override/0 = SubResource("FoliageBlockMat")
 
 [node name="MarketBlock" type="MeshInstance3D" parent="Floor" unique_id=82596463]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.478127, 2.1502072, 1.2101059)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -10.478127, 2.1502073, 1.2101059)
 mesh = SubResource("StockBuildingMesh")
 surface_material_override/0 = SubResource("StockBuildingMat")
 
@@ -691,7 +691,7 @@ curve_frequency = 0.5
 sand_color = Color(0.69628286, 0.513866, 0.3831825, 1)
 
 [node name="Grass" type="MultiMeshInstance3D" parent="." unique_id=1526648954]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 5)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 2, 0, 23.020485)
 instance_shader_parameters/player_position = Vector3(1000000, 0, 0)
 script = ExtResource("6_grass")
 blade_mesh = ExtResource("7_gmesh")
