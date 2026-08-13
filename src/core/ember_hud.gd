@@ -57,6 +57,34 @@ const COL_GOLD := Color(255.0/255, 230.0/255, 128.0/255)           # #ffe680
 const COL_ORE := Color(176.0/255, 164.0/255, 224.0/255)            # #b0a4e0
 const COL_DUST := Color(128.0/255, 230.0/255, 255.0/255)           # #80e6ff
 const COL_SHARDS := Color(208.0/255, 143.0/255, 255.0/255)         # #d08fff
+# The three town-economy resources. The run HUD never showed them (they are never picked
+# up in a run), but the town HUD does, so they belong beside the other four.
+const COL_STONE := Color(181.0/255, 173.0/255, 160.0/255)          # #b5ada0
+const COL_FOOD := Color(164.0/255, 217.0/255, 122.0/255)           # #a4d97a
+const COL_KNOWLEDGE := Color(159.0/255, 220.0/255, 255.0/255)      # #9fdcff
+
+## Ledger id -> the glyph that means it, everywhere in the game. Lives here rather than in
+## each screen so a resource cannot end up wearing two different marks on two screens.
+const RESOURCE_GLYPH := {
+	"gold": "gold", "stone": "stone", "food": "leaf", "knowledge": "book",
+	"knowledge-shards": "shards", "resonance-ore": "ore", "resonance-dust": "dust",
+}
+## Ledger id -> its identity colour. Same reason.
+const RESOURCE_COLOR := {
+	"gold": COL_GOLD, "stone": COL_STONE, "food": COL_FOOD, "knowledge": COL_KNOWLEDGE,
+	"knowledge-shards": COL_SHARDS, "resonance-ore": COL_ORE, "resonance-dust": COL_DUST,
+}
+
+
+## The mark + colour for a Ledger resource id. Unknown ids fall back to a hollow diamond
+## (what `_glyph` draws for anything it doesn't know) in plain ink, so a new resource is
+## visible rather than silently missing.
+static func resource_glyph(id: String) -> String:
+	return str(RESOURCE_GLYPH.get(id, id))
+
+
+static func resource_color(id: String) -> Color:
+	return RESOURCE_COLOR.get(id, COL_INK)
 # Fonts — four OFL files (assets/fonts/, provenance in SOURCES.md). Roles:
 #   DISPLAY (Cinzel)          engraved caps — screen titles, monograms, the boss name
 #   BODY    (EB Garamond)     prose — descriptions, flavour, dialogue

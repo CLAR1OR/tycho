@@ -1,58 +1,70 @@
-extends Control
+extends EmberHud
 class_name EchoOfferPanel
 ## In-run Echo offer UI — "The etchings answer" (O1, human-picked 2026-07-09 via
 ## claude.ai/design, "Echo Offer" group). No panel, no cards: when the offer fires (the
-## game is already paused) the whole screen dims hard and three resonance marks bloom over
-## the dimmed battlefield — the same ring-and-glow language as the etchings screen's marks
-## (E1). Each mark carries the echo's Cinzel monogram (the exact glyph it will wear on the
-## RunHud echo shelf — HudCore.monogram, reused), a key badge, the name in Cinzel, and the
-## effect lines in mono. Hover wakes the ring (full cyan + halo); click or number key picks.
+## game is already paused) the whole screen dims and three resonance marks bloom over the
+## dimmed battlefield. Each mark carries the echo's Cinzel monogram (the exact glyph it
+## will wear on the RunHud echo rail — HudCore.monogram, reused), a key badge, the name in
+## Cinzel, and the effect lines. Hover wakes the ring; click or number key picks.
+##
+## **Migrated to Ember 2026-08-13** (Tier A of design/ui-hud.md § "Migrating to Ember").
+## This screen was ALREADY the language before the language had a name — O1 was picked as
+## "no panel, no cards" nine months before Ember was named, so the migration is mostly
+## deleting the three Slate leftovers: the chip-styled key badge and held badge became a
+## thin ring and a gold disc (the run HUD's stack-badge grammar), the letter-spaced sub
+## dropped its bespoke FontVariation for the shared `_text_tracked`, and the effect lines
+## moved from mono to the UI voice (they are phrases, not readouts).
 ##
 ## Drawn entirely in `_draw` (the panel IS the screen); hover/click hit-test in `_gui_input`.
 ## The pure display rules live in EchoOfferCore; this owns only pixels + hit-testing.
 ##
 ## FROZEN: the panel unpauses BEFORE reporting the pick, so whatever the callback does
-## (apply stats, open the exit) runs in a live tree. present()/pick() are public so the
-## headless smoke driver can choose programmatically. The mock's gold pick-flash and
-## fly-to-shelf animation are DEFERRED to a later juice pass — pick() stays synchronous.
+## (apply stats, open the exit) runs in a live tree. present()/pick()/mark_count() are
+## public so the headless smoke driver can choose programmatically. The mock's gold
+## pick-flash and fly-to-rail animation are DEFERRED — pick() stays synchronous.
 ##
 ## HUMAN: everything under "Style / copy" is a PLACEHOLDER — dial like FEEL numbers (no
-## combat feel, so no `# FEEL:` tag). The shared palette + fonts live in SlateHud.
+## combat feel, so no `# FEEL:` tag). The shared palette + fonts live in EmberHud.
 
 # =====================================================================================
-# Style / copy — placeholders. (Palette + fonts are shared — see SlateHud.)
+# Style / copy — placeholders. (Palette + fonts + primitives are shared — see EmberHud.)
 # =====================================================================================
-const DIMMER := Color(8.0/255, 7.0/255, 12.0/255, 0.62)          # hard screen dim over the field
-const COL_SUB := Color(87.0/255, 83.0/255, 106.0/255)            # #57536a faint caps sub
-const COL_DRAWBACK := Color(201.0/255, 129.0/255, 129.0/255)     # #c98181 soft red (softer than COL_PERIL)
+## Deliberately LIGHTER than EmberHud.COL_SCRIM: a menu can afford to bury the world, but
+## this offer fires mid-run and you are still reading the battlefield you will drop back
+## into. HUMAN: this is the one dial that decides whether the offer feels like a pause or
+## like a screen.
+const DIMMER := Color(8.0/255, 7.0/255, 12.0/255, 0.62)
+const COL_DRAWBACK := Color(201.0/255, 129.0/255, 129.0/255)     # #c98181 soft red (softer than COL_DANGER)
 const COL_MONO_HOVER := Color(191.0/255, 242.0/255, 255.0/255)   # #bff2ff woken monogram
-const COL_HELD_BORDER := Color(138.0/255, 124.0/255, 70.0/255)   # #8a7c46 gold held-badge border
-const TITLE := "Your etchings glow."          # placeholder copy (was "…— choose an Echo")
-const SUB := "CHOOSE AN ECHO"                 # placeholder copy (caps mono sub)
+const TITLE := "Your etchings glow."          # placeholder copy
+const SUB := "CHOOSE AN ECHO"                 # placeholder copy (tracked caps sub)
 const WOVEN_FMT := "woven from %s"            # placeholder copy — wraps the resolved parents
 # Header
 const HEADER_TOP_FRAC := 0.13
-const FS_TITLE := 21    # title (body / Garamond)
-const FS_SUB := 11      # caps sub (num / mono, letter-spaced)
-const SUB_SPACING := 3
-const SUB_DY := 6.0
+const FS_OFFER_TITLE := 21    # title (body / Garamond — the game speaking, not a label)
+const FS_OFFER_SUB := 11      # tracked caps sub (ui med)
+const SUB_TRACKING := 3.0
+const SUB_DY := 24.0
 # Marks (a shallow arc; ring radius, the middle lifted when the count is odd)
 const RING_R := 75.0
 const ARC_BASE_FRAC := 0.52   # ring-centre y as a fraction of size.y
 const ARC_LIFT := 38.0        # the middle mark rides higher (odd counts, >= 3)
 const RING_W := 2.0
-const RING_SEGMENTS := 48
 const RING_IDLE_ALPHA := 0.45
 const MONO_IDLE_ALPHA := 0.85
-const FS_MONO := 46     # monogram (display / Cinzel)
+const FS_OFFER_MONO := 46     # monogram (display / Cinzel)
 const FS_NAME := 21     # echo name (display / Cinzel)
-const FS_FX := 12       # effect lines (num / mono)
-const FS_PARENTS := 10  # synergy parents line (num / mono)
-const FS_KEY := 11      # key badge digit (num)
+const FS_FX := 13       # effect lines (ui)
+const FS_PARENTS := 10  # synergy parents line (ui med, tracked)
+const FS_OFFER_KEY := 11      # key badge digit (num)
 const FS_HELD := 10     # held ×n badge (num)
-const NAME_DY := 14.0   # name top, below the ring
-const LINE_GAP := 4.0
-const FX_GAP := 3.0
+const NAME_DY := 26.0   # name centre, below the ring's edge
+const LINE_GAP := 22.0
+const FX_GAP := 18.0
+# Key badge: a thin ring at the mark's top, the footer-prompt grammar.
+const KEY_R := 11.0
+# Held ×n badge: a gold disc, the run HUD's echo-rail stack badge, same corner.
+const HELD_R := 9.0
 # Glow / halo (layered fills + arcs, like the S2 title glow / E1 mark halo)
 const GLOW_A_IDLE := 0.10
 const GLOW_A_HOVER := 0.16
@@ -75,23 +87,12 @@ var _on_pick: Callable
 var _defs: Dictionary = {}
 var _hovered: int = -1
 
-var _font_display: FontVariation
-var _font_body: FontVariation
-var _font_num: FontVariation
-var _font_sub: FontVariation
-var _sb := StyleBoxFlat.new()
-
 
 func _ready() -> void:
+	super._ready()  # EmberHud: anchors + the four fonts (mouse_filter is overridden below)
 	process_mode = Node.PROCESS_MODE_ALWAYS  # must work while the tree is paused
 	add_to_group("echo_offer")
 	mouse_filter = Control.MOUSE_FILTER_STOP  # the whole screen catches hover + clicks
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_font_display = SlateHud._with_fallback(SlateHud.FONT_DISPLAY_FILE)
-	_font_body = SlateHud._with_fallback(SlateHud.FONT_BODY_FILE)
-	_font_num = SlateHud._with_fallback(SlateHud.FONT_NUM_FILE)
-	_font_sub = SlateHud._with_fallback(SlateHud.FONT_NUM_FILE)
-	_font_sub.set_spacing(TextServer.SPACING_GLYPH, SUB_SPACING)
 
 
 ## Show the offer and pause the game. `on_pick` is called with the chosen echo id.
@@ -99,7 +100,7 @@ func present(offer_ids: Array[String], on_pick: Callable) -> void:
 	_ids = offer_ids
 	_on_pick = on_pick
 	_defs = EchoCore.defs()
-	_sync_size()  # the marks draw off size — set it now (no more await-a-frame recenter hack)
+	_sync_viewport_size()  # the marks draw off size — set it now, before the first frame
 	get_tree().paused = true
 	Sfx.play("echo-open")
 	queue_redraw()
@@ -141,9 +142,11 @@ func _gui_input(event: InputEvent) -> void:
 
 
 func _process(_delta: float) -> void:
-	# Anchors set in a Control's own _ready under a CanvasLayer get no layout pass (size stays
-	# 0,0) — sync to the viewport, like every other rebuilt Slate screen.
-	if _sync_size():
+	# Anchors set in a Control's own _ready under a CanvasLayer get no layout pass (size
+	# stays 0,0) — sync to the viewport, like every other Ember surface.
+	var before := size
+	_sync_viewport_size()
+	if size != before:
 		queue_redraw()
 
 
@@ -154,14 +157,6 @@ func mark_count() -> int:
 
 
 # --- Layout / hit-test ---------------------------------------------------------------
-
-func _sync_size() -> bool:
-	var vp := get_viewport_rect().size
-	if size != vp:
-		size = vp
-		return true
-	return false
-
 
 ## The ring centre of mark `i` — a shallow arc: outer marks lower, the exact-middle mark
 ## lifted when the count is odd (and >= 3). 1-2-mark offers centre gracefully.
@@ -187,7 +182,7 @@ func _mark_at(pos: Vector2) -> int:
 func _draw() -> void:
 	if size.x < 1.0:
 		return
-	draw_rect(Rect2(Vector2.ZERO, size), DIMMER)  # the hard dim over the battlefield
+	_scrim(DIMMER)  # the dim over the battlefield — lighter than a menu's, on purpose
 	_draw_header()
 	for i in _ids.size():
 		_draw_mark(i)
@@ -196,8 +191,10 @@ func _draw() -> void:
 func _draw_header() -> void:
 	var cx := size.x * 0.5
 	var top := size.y * HEADER_TOP_FRAC
-	_line(_font_body, Vector2(cx, top), TITLE, FS_TITLE, SlateHud.COL_KEY_TEXT)
-	_line(_font_sub, Vector2(cx, top + FS_TITLE + SUB_DY), SUB, FS_SUB, COL_SUB)
+	_text_centred(cx, top, TITLE, COL_INK_DIM, FS_OFFER_TITLE, _font_body)
+	var w := _text_tracked_w(SUB, FS_OFFER_SUB, _font_ui_med, SUB_TRACKING)
+	_text_tracked(Vector2(cx - w * 0.5, top + SUB_DY), SUB, COL_INK_FAINT, FS_OFFER_SUB,
+		_font_ui_med, SUB_TRACKING)
 
 
 func _draw_mark(i: int) -> void:
@@ -209,78 +206,54 @@ func _draw_mark(i: int) -> void:
 	# Radial inner glow, then the ring (a faint outer weave first when it's a synergy).
 	_inner_glow(c, hovered)
 	if synergy:
-		draw_arc(c, RING_R + WEAVE_GAP, 0.0, TAU, RING_SEGMENTS,
-			Color(SlateHud.COL_DUST, WEAVE_ALPHA), WEAVE_W, true)
-	var border := SlateHud.COL_DUST if hovered else Color(SlateHud.COL_DUST, RING_IDLE_ALPHA)
-	draw_arc(c, RING_R, 0.0, TAU, RING_SEGMENTS, border, RING_W, true)
+		_ring(c, RING_R + WEAVE_GAP, WEAVE_W, Color(COL_DUST, WEAVE_ALPHA))
+	_ring(c, RING_R, RING_W, COL_DUST if hovered else Color(COL_DUST, RING_IDLE_ALPHA))
 	if hovered:
 		_halo(c)
-	# Monogram — the exact glyph the pick will wear on the shelf.
+	# Monogram — the exact glyph the pick will wear on the rail.
 	var mono := HudCore.monogram(str(def.get("name", id)))
-	var mcol := COL_MONO_HOVER if hovered else Color(SlateHud.COL_DUST, MONO_IDLE_ALPHA)
-	_glyph(_font_display, c, mono, FS_MONO, mcol)
-	# Key badge (top-centre of the ring) + held ×n badge (upper-right, stackables only).
-	_chip(c + Vector2(0, -RING_R), str(i + 1), _font_num, FS_KEY,
-		SlateHud.COL_CHIP_BG, SlateHud.COL_CHIP_BORDER, SlateHud.COL_KEY_TEXT)
+	var mcol := COL_MONO_HOVER if hovered else Color(COL_DUST, MONO_IDLE_ALPHA)
+	_text_centred(c.x, c.y, mono, mcol, FS_OFFER_MONO, _font_display)
+	# Key badge (top of the ring) — a thin ring with the digit, the footer-prompt grammar.
+	# Drawn at INK weight, not the usual faint ring: the O1 rebuild deleted the "press
+	# 1 / 2 / 3" hint line on the grounds that these badges carry the affordance, so they
+	# are the only thing telling you the keys work. The first probe render had them at
+	# COL_RING over the mark's own glow, where they all but vanished.
+	var key_c := c + Vector2(0.0, -RING_R)
+	_ring(key_c, KEY_R, 1.4, COL_INK_DIM)
+	_text_centred(key_c.x, key_c.y, str(i + 1), COL_INK, FS_OFFER_KEY, _font_num)
+	# Held ×n badge (upper-right, stackables only) — a gold disc with dark text, the same
+	# badge the echo rail wears, in the same corner of the same medallion.
 	var held := EchoOfferCore.held_count(id, RunState.echoes)
 	if held > 0:
-		_chip(c + Vector2(RING_R * 0.62, -RING_R * 0.62), "×%d" % held, _font_num, FS_HELD,
-			SlateHud.COL_CHIP_BG, COL_HELD_BORDER, SlateHud.COL_READY)
+		var held_c := c + Vector2(RING_R * 0.62, -RING_R * 0.62)
+		_disc(held_c, HELD_R, COL_ACCENT)
+		_text_centred(held_c.x, held_c.y, "×%d" % held, COL_ON_ACCENT, FS_HELD, _font_num)
 	# Name, then (synergy) the parents line, then the effect lines.
 	var y := c.y + RING_R + NAME_DY
-	_line(_font_display, Vector2(c.x, y), str(def.get("name", id)), FS_NAME, SlateHud.COL_TEXT)
-	y += _font_display.get_height(FS_NAME) + LINE_GAP
+	_text_centred(c.x, y, str(def.get("name", id)), COL_INK, FS_NAME, _font_display, true)
+	y += LINE_GAP
 	if synergy:
-		_line(_font_num, Vector2(c.x, y), WOVEN_FMT % EchoOfferCore.parents_line(def, _defs),
-			FS_PARENTS, SlateHud.COL_KEY_TEXT)
-		y += _font_num.get_height(FS_PARENTS) + LINE_GAP
+		var parents := WOVEN_FMT % EchoOfferCore.parents_line(def, _defs)
+		var pw := _text_tracked_w(parents, FS_PARENTS, _font_ui_med)
+		_text_tracked(Vector2(c.x - pw * 0.5, y), parents, COL_INK_FAINT, FS_PARENTS, _font_ui_med)
+		y += FX_GAP
 	for fx: Dictionary in EchoOfferCore.effect_lines(str(def.get("desc", ""))):
-		var col := COL_DRAWBACK if bool(fx["drawback"]) else SlateHud.COL_KEY_TEXT
-		_line(_font_num, Vector2(c.x, y), str(fx["text"]), FS_FX, col)
-		y += _font_num.get_height(FS_FX) + FX_GAP
+		var col := COL_DRAWBACK if bool(fx["drawback"]) else COL_INK_DIM
+		_text_centred(c.x, y, str(fx["text"]), col, FS_FX, _font_ui, true)
+		y += FX_GAP
 
 
 # --- draw helpers --------------------------------------------------------------------
-
-## A horizontally-centred line; `pos.y` is the line top (baseline = top + ascent).
-func _line(font: Font, pos: Vector2, text: String, fs: int, col: Color) -> void:
-	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	draw_string(font, Vector2(pos.x - w * 0.5, pos.y + font.get_ascent(fs)), text,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
-
-
-## A glyph centred (both axes) on `center` — for the monogram inside the ring.
-func _glyph(font: Font, center: Vector2, text: String, fs: int, col: Color) -> void:
-	var w := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	var y := center.y + (font.get_ascent(fs) - font.get_descent(fs)) * 0.5
-	draw_string(font, Vector2(center.x - w * 0.5, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)
-
 
 func _inner_glow(center: Vector2, hovered: bool) -> void:
 	var a := GLOW_A_HOVER if hovered else GLOW_A_IDLE
 	for i in GLOW_LAYERS:
 		var t := float(i) / float(GLOW_LAYERS)
-		draw_circle(center, RING_R * (1.0 - t * 0.35), Color(SlateHud.COL_DUST, a * (1.0 - t)))
+		draw_circle(center, RING_R * (1.0 - t * 0.35), Color(COL_DUST, a * (1.0 - t)))
 
 
 func _halo(center: Vector2) -> void:
 	for i in HALO_RINGS:
 		var r := RING_R + HALO_STEP * float(i + 1)
-		draw_arc(center, r, 0.0, TAU, RING_SEGMENTS, Color(SlateHud.COL_DUST, HALO_A / float(i + 1)),
-			HALO_W, true)
-
-
-## A small chip centred on `center` — the key digit / held-count badge.
-func _chip(center: Vector2, text: String, font: Font, fs: int, bg: Color, border: Color, fg: Color) -> void:
-	var pad := Vector2(7, 2)
-	var tw := font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	var h := font.get_height(fs) + pad.y * 2.0
-	var w := tw + pad.x * 2.0
-	var rect := Rect2(center.x - w * 0.5, center.y - h * 0.5, w, h)
-	_sb.bg_color = bg
-	_sb.border_color = border
-	_sb.set_border_width_all(1)
-	_sb.set_corner_radius_all(4)
-	draw_style_box(_sb, rect)
-	var y := rect.get_center().y + (font.get_ascent(fs) - font.get_descent(fs)) * 0.5
-	draw_string(font, Vector2(rect.position.x + pad.x, y), text, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, fg)
+		_ring(center, r, HALO_W, Color(COL_DUST, HALO_A / float(i + 1)))

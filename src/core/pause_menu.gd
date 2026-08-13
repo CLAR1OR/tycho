@@ -1,7 +1,8 @@
 extends Control
 class_name PauseMenu
-## ESC pause menu (design 2026-07-07; restyled to the Slate language + made FULLSCREEN
-## 2026-07-07). Spawned once by game.gd on the HUD layer (survives scene swaps),
+## ESC pause menu (design 2026-07-07; made FULLSCREEN 2026-07-07; **migrated to Ember
+## 2026-08-13**, Tier A of design/ui-hud.md § "Migrating to Ember"). Spawned once by
+## game.gd on the HUD layer (survives scene swaps),
 ## PROCESS_MODE_ALWAYS, hidden by default. ESC (ui_cancel) toggles it; while open the tree
 ## is paused. Guards: inert at the slot-select screen; ignores ESC while another panel
 ## already owns the pause (dialogue / echo offer / F1 / F2 / tech / forge / etchings) —
@@ -17,16 +18,27 @@ class_name PauseMenu
 ## Code-built like the other panels. Public methods (open / close / forfeit / save_and_quit
 ## / can_quit_now) let the headless smoke drive it; gated actions no-op with a visible reason.
 ##
-## Fullscreen: a near-opaque backdrop over the whole screen with a centred column. It lives
-## on game.gd's `$HUD` CanvasLayer, where anchors set in _ready get NO layout pass (the
-## RunHud geometry quirk) — so `size` is synced to the viewport on open and each frame while
-## visible.
+## Fullscreen: a scrim over the whole screen with a centred column. It lives on game.gd's
+## `$HUD` CanvasLayer, where anchors set in _ready get NO layout pass (the RunHud geometry
+## quirk) — so `size` is synced to the viewport on open and each frame while visible.
+##
+## THIS IS THE FIRST SCREEN ON `EmberTheme`, and it is a Control TREE rather than a `_draw`
+## on purpose: the content is a stack of real Buttons that need hover, focus, disabled and
+## click, and containers already do that correctly. Everything visual now comes from the
+## theme — the diff for the migration was deleting overrides, not adding them. Two notes:
+##   - The backdrop reads `EmberHud.COL_SCRIM` rather than carrying its own copy, so every
+##     Ember screen dims the world by the same amount from one dial.
+##   - Only **Resume** wears `EmberAction` (the gold-framed primary). Gold means state, so
+##     making all five buttons gold would say nothing. The rest rest on the hairline.
+##
+## RESTYLE ONLY — open/close/forfeit/save_and_quit/can_quit_now/open_settings/
+## open_achievements/reshow, every guard, the ESC semantics and all copy are unchanged.
 
 const PANEL_WIDTH := 320.0
-## Fullscreen backdrop: near-opaque dark so the game recedes (HUMAN: placeholder — dial).
-const COL_BACKDROP := Color(12.0 / 255, 11.0 / 255, 16.0 / 255, 0.88)  # #0c0b10 @ 0.88
 ## Shown when the Hades gate refuses a mid-run quit (HUMAN: placeholder copy — dial freely).
 const GATE_REASON := "Finish the fight first (or leave before taking a hit)."
+## Gap between the title and the button column (HUMAN: placeholder — dial).
+const TITLE_GAP := 18
 
 var _game: Node = null
 var _rows: VBoxContainer = null
@@ -38,11 +50,11 @@ func setup(game: Node) -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	visible = false
 	add_to_group("pause_menu")
-	theme = SlateTheme.get_theme()
+	theme = EmberTheme.get_theme()
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP  # eat clicks so they don't fall through to the game
 	var backdrop := ColorRect.new()
-	backdrop.color = COL_BACKDROP
+	backdrop.color = EmberHud.COL_SCRIM  # one scrim dial for every Ember screen
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(backdrop)
@@ -167,20 +179,28 @@ func _rebuild() -> void:
 	var title := Label.new()
 	title.text = "Paused"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.theme_type_variation = &"TitleLabel"
+	title.theme_type_variation = &"EmberTitle"
 	_rows.add_child(title)
 
 	_status_label = Label.new()
-	_status_label.theme_type_variation = &"DimLabel"
+	_status_label.theme_type_variation = &"EmberDim"
 	_status_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	_status_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	_rows.add_child(_status_label)
+
+	# Breathing room between the title block and the buttons — Ember has no panel edge to
+	# separate them, so the negative space has to.
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0, TITLE_GAP)
+	spacer.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	_rows.add_child(spacer)
 
 	var in_run := RunState.in_run()
 	var allowed := can_quit_now()
 	_set_status(_status_line(in_run, allowed))
 
-	_button("Resume", close, false)
+	# Resume is the primary action — the one gold thing on the screen.
+	_button("Resume", close, false, true)
 	_button("Settings", open_settings, false)
 	# HUMAN: placeholder placement — move the entry if the menu should stay leaner.
 	_button("Achievements", open_achievements, false)
@@ -205,11 +225,11 @@ func _set_status(text: String) -> void:
 		_status_label.text = text
 
 
-func _button(text: String, action: Callable, disabled: bool) -> Button:
+func _button(text: String, action: Callable, disabled: bool, primary: bool = false) -> Button:
 	var b := Button.new()
 	b.text = text
 	b.disabled = disabled
-	b.theme_type_variation = &"SlateMenuButton"
+	b.theme_type_variation = &"EmberAction" if primary else &"Button"
 	b.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
 	b.pressed.connect(action)

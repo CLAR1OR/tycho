@@ -14,7 +14,7 @@
 - **One geometry kit** (IC-5) — floors differ by palette/fog/light data + 1 hazard + 2–4 props. No per-floor biome art lines.
 - **"Imitation thins with depth"** — floors 1→5 grade from convincing cave to clean impossible void; floors 1–4 stay deniable, only floor 5 is unambiguous. Governs floor palettes, props, boss silhouettes, even the Wellspring tint.
 - **Readability guard** — enemy/telegraph/hazard colours are FIXED across all strata; floor palettes are chosen around them.
-- **One UI language, mid-migration** — **Ember** (no panels: hairlines, rings, negative space, gold reserved for state) is the target for the whole game (human, 2026-08-13). **Slate** is legacy, still dressing the 15 unmigrated surfaces, and is deleted when the last one moves. All UI copy/colours ship as placeholders the human dials.
+- **One UI language, mid-migration** — **Ember** (no panels: hairlines, rings, negative space, gold reserved for state) is the target for the whole game (human, 2026-08-13). **Slate** is legacy, still dressing the 11 unmigrated surfaces, and is deleted when the last one moves. All UI copy/colours ship as placeholders the human dials.
 - **Placeholder-first** — never block a system on final art.
 
 **Current reality check:** `assets/models|images|anims` are **empty**. Real assets in: **5 OFL fonts** ✅, 15 synthesized placeholder SFX 🟨, 4 synthesized placeholder music loops 🟨. Everything else below is ⬜.
@@ -157,7 +157,7 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 Tycho, Sophia, Thomas, Tilly, Mara, Herzog, Wren, The Woman (dream-blurred), emissary. None exist ⬜ (DialoguePanel shows tinted names).
 
 ### Screens & fonts
-- **15 Slate** surfaces awaiting migration + **1 Ember** (RunHud) — all 🟨 code-drawn, human restyles freely. **Ember is now the target for all of them** (human, 2026-08-13); migration tiers + inventory: `design/ui-hud.md` § "Migrating to Ember".
+- **5 Ember** (RunHud, TownHud, AchievementToast, EchoOfferPanel, PauseMenu — **Tier A done 2026-08-13**) + **11 Slate** surfaces awaiting migration — all 🟨 code-drawn, human restyles freely. **Ember is the target for all of them** (human, 2026-08-13); migration tiers + inventory: `design/ui-hud.md` § "Migrating to Ember".
 - **Icons stay code-drawn ⬜ — this is a standing decision, not a placeholder awaiting art** (human, re-confirmed 2026-08-13). 22 marks live as unit-square point lists in `EmberHud` (`GLYPH_FILL/STROKE/ARCS`): 4 resource crystals + 6 ability + 12 menu (`leaf`, `stone`, `sword`, `shield`, `heart`, `boot`, `star`, `anvil`, `book`, `house`, `lock`, `check`). **This keeps the entire UI migration independent of the asset-pipeline gate.** `_glyph()` is the single swap point if real icons are ever wanted. Same idiom as the town fountain's generated geometry.
 - Also code-drawn ⬜ (Slate-era, migrate with their screens): `SigilIcon`, `WeaponSilhouette`, `BuildingSilhouette`, `EtchingsArms`, `ForgeAnvil`, `TechChart`, `SlotSelectSky`.
 - Fonts ✅ (OFL, committed): Cinzel SemiBold (display), EB Garamond Medium (prose), JetBrains Mono Medium (numbers), **Alegreya Sans Regular + Medium (the UI voice — added 2026-08-13, closing the "no fourth font" gap; rationale in `assets/fonts/SOURCES.md`)**.

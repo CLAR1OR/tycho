@@ -58,15 +58,50 @@ func _ready() -> void:
 func _run() -> void:
 	await _shot("catalogue", "catalogue")
 	await _shot("column", "column")
+	await _shot_pause()
 	print("render_menu: done")
 	get_tree().quit()
+
+
+## The REAL pause menu — the first screen on EmberTheme, and the only Control-TREE screen
+## in either probe. It is here because a theme is exactly the kind of thing that looks
+## right in source and wrong on screen: every colour, font and stylebox arrives indirectly.
+##
+## Driven without open(), which would pause the tree (the probe needs its own _process to
+## keep running) and play a sound. `_rebuild()` is called directly instead.
+func _shot_pause() -> void:
+	_screen.hide()
+	var menu := PauseMenu.new()
+	menu.setup(_StubGame.new())
+	_sv.add_child(menu)
+	menu.visible = true
+	menu.size = Vector2(SHOT_SIZE)
+	menu.call("_rebuild")
+	await _shot_node("pause")
+	menu.queue_free()
+	_screen.show()
+
+
+## The pause menu asks its game for two things while rebuilding. Neither exists in a probe.
+class _StubGame extends Node:
+	func on_slot_select() -> bool:
+		return false
+
+	func current_scene() -> Node:
+		return null  # no gate scene -> can_quit_now() is true, so nothing renders disabled
 
 
 func _shot(label: String, mode: String) -> void:
 	_screen.mode = mode
 	_screen.size = Vector2(SHOT_SIZE)
 	_screen.queue_redraw()
+	await _shot_node(label)
+
+
+func _shot_node(label: String) -> void:
 	# Two frames: one to lay out and redraw, one to be sure it reached the framebuffer.
+	# (A Control TREE needs the extra one more than a _draw does — containers only settle
+	# their children's rects on the layout pass.)
 	await RenderingServer.frame_post_draw
 	await RenderingServer.frame_post_draw
 	var img := _sv.get_texture().get_image()

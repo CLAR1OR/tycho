@@ -1,62 +1,79 @@
-extends SlateHud
+extends EmberHud
 class_name TownHud
-## The town HUD ("Slate" T1 design — human-picked 2026-07-07 via claude.ai/design, the
-## "Town HUD" group: the T1 slate strip + the overnight production toast + a per-resource
-## projection under each column). Replaces the old plain DayInfo / FoodStatus / Hint
-## Labels AND game.gd's stacked $HUD/Resources readout. Spec: design/ui-hud.md.
+## The town HUD. **Migrated to Ember 2026-08-13** (Tier A of design/ui-hud.md §
+## "Migrating to Ember") from the Slate T1 design that shipped 2026-07-07.
 ##
 ## Code-built by town.gd onto the town's $HUD CanvasLayer; a screen-filling Control
-## (mouse_filter IGNORE, from SlateHud) that draws everything itself in _draw and polls
+## (mouse_filter IGNORE, from EmberHud) that draws everything itself in _draw and polls
 ## the Ledger each frame (town is cheap). Pure string/delta/toast logic lives in
 ## TownHudCore (src/town/town_hud_core.gd); this node owns only pixels.
 ##
-## Extends SlateHud (src/core/slate_hud.gd) for the SHARED Slate style — palette, the
-## three fonts, FS_CHIP/BODY/HINT/SMALL, MARGIN, and the draw plumbing. Dial shared style
-## there; the town-specific placeholders below (the three new resource colours, the toast
-## timings, the hint copy) are dialled here.
+## WHAT THE MIGRATION CHANGED — four Slate panels became no panels:
+##   day chip    -> tracked text on a hairline, top-left (the run HUD's room-header grammar)
+##   two strips  -> bare glyph + number readouts, top-right (the run HUD's resource grammar)
+##   hint chip   -> bare shadowed prose, bottom-centre (the run HUD's hint, verbatim)
+##   toast panel -> a tracked caps head over its row, on a hairline, top-centre
+## The point is not that panels are ugly — it is that **the town and the run now speak the
+## same language in the same corners**, so a resource sits in the same place with the same
+## mark whichever scene you are in. Under Slate they merely looked similar.
 ##
-## The strip is TWO panels (human decision 2026-07-07): the town economy (resources a
-## building can generate — derived from the building defs) and the run pickups (only
-## ever brought home from runs), the run panel holding the corner like the in-run strip.
+## The strip stays TWO groups (human decision 2026-07-07): the town economy (resources a
+## building can generate — DERIVED from the building defs, so it self-maintains) and the
+## run pickups (only ever brought home), the run group holding the corner.
 ##
-## HUMAN: HINT_TEXT, the toast copy/timings, the FS_*/PROJECTION_ALPHA, the three new
-## resource colours, and the TOWN/RUN group headers are all PLACEHOLDERS — dial like
-## FEEL numbers (design/ui-hud.md).
+## RESTYLE ONLY — configure / show_day_toast / day_chip / projection / toast_visible /
+## town_group / run_group, the EventBus wiring, and the derivation are byte-identical.
+##
+## HUMAN: HINT_TEXT, the toast copy/timings, every size, and the TOWN/RUN group headers
+## are PLACEHOLDERS — dial like FEEL numbers (design/feel-tuning.md § Ember menus).
 
 # =====================================================================================
-# Town-specific style — placeholders. (Shared palette + fonts + sizes live in SlateHud.)
+# Town-specific style — placeholders. (Palette + fonts + primitives live in EmberHud.)
 # =====================================================================================
-# The stone/food/knowledge resource colours were lifted UP to SlateHud (2026-07-08, the
-# research star chart reads the knowledge colour off the ONE dial source) — they resolve
-# here by inheritance, alongside COL_GOLD/COL_ORE/COL_DUST/COL_SHARDS.
-# Resource strip layout
-const COL_GAP := 16.0            # gap between columns
-const VALUE_LABEL_GAP := 4.0     # gap between a column's value and its dim label
-const PROJECTION_ALPHA := 0.55   # the "+n/d" projection below each column
-# The town/run group split (human decision 2026-07-07): building-producible resources
-# in one panel, run-collected pickups in another, run panel at the corner (mirrors the
-# in-run pickup strip's position). Headers are placeholder copy.
-const GROUP_GAP := 12.0          # gap between the two panels
-const FS_GROUP := 10             # the tiny group headers (display font)
-const GROUP_HEADER_ALPHA := 0.65
-const GROUP_TOWN_LABEL := "TOWN"
-const GROUP_RUN_LABEL := "RUN"
-# Toast (overnight production)
-const FS_TOAST_HEAD := 11        # the "OVERNIGHT" header (display)
+# Day chip (top-left)
+const DAY_TOP := 12.0            # text centre, below MARGIN
+const DAY_RULE_DROP := 13.0      # the hairline under it
+const DAY_RULE_PAD := 8.0        # how far the rule runs past the text
+const DAY_TRACKING := 1.4
+# Resource strip (top-right) — the run HUD's readout grammar, extended to seven ids.
+const RES_TOP := 26.0            # readout row centre, below MARGIN
+const RES_GLYPH := 18.0
+const RES_GAP := 11.0            # glyph -> its number
+const RES_SPACING := 26.0        # between resources inside a group
+const GROUP_GAP := 40.0          # between the two groups (reads as the group boundary)
+const HEAD_LIFT := 20.0          # group header centre, above the readout row
+const FS_GROUP := 10             # the tiny group headers (ui med, tracked)
+const PROJ_DROP := 20.0          # the "+n/d" projection, below the readout row
+const PROJECTION_ALPHA := 0.55
+const GROUP_TOWN_LABEL := "TOWN"  # HUMAN: placeholder copy
+const GROUP_RUN_LABEL := "RUN"    # HUMAN: placeholder copy
+# Toast (overnight production) — TOP-LEFT, under the day chip, fading.
+#
+# It was top-centre under Slate, where it was a panel and the resource strip was another
+# panel, so they never met. Ember's strip has no panel padding and spans seven resources,
+# so it now reaches well past the middle — the first probe render had the toast drawn
+# straight through it. Moving the toast under the day chip fixes the collision AND reads
+# better: "Day 4 · Well-Fed +25%" and "+5 stone +3 food -5 eaten" are the same thought,
+# so they belong in the same column. Top-centre is left free for the achievement toast.
+# HUMAN: placeholder placement — the collision is fixed, the composition is yours.
+const TOAST_TOP := 62.0          # the segment row's centre, below MARGIN
+const TOAST_HEAD_LIFT := 20.0    # the "OVERNIGHT" head, above the row
+const TOAST_RULE_DROP := 17.0
+const TOAST_RULE_PAD := 8.0
+const TOAST_SEG_GAP := 16.0
+const FS_TOAST_HEAD := 11        # the "OVERNIGHT" header (ui med, tracked)
 const TOAST_HOLD_S := 4.0
 const TOAST_FADE_S := 1.0
-# Contextual hint (bottom-center). PLACEHOLDER copy — dial freely.
+# Contextual hint (bottom-centre). PLACEHOLDER copy — dial freely.
 const HINT_TEXT := "WASD move · E interact · the portal starts a run"
+const HINT_BOTTOM := 34.0        # hint centre, above the bottom edge
 
-## The strip's seven columns, in order (Ledger ids). Colours via _strip_color.
+## The strip's seven columns, in order (Ledger ids). Marks + colours come from EmberHud's
+## RESOURCE_GLYPH / RESOURCE_COLOR, so a resource cannot wear two different marks on two
+## screens.
 const STRIP_IDS: Array[String] = [
 	"gold", "stone", "food", "knowledge", "knowledge-shards", "resonance-ore", "resonance-dust",
 ]
-## Short dim label beside each column's value.
-const STRIP_LABEL := {
-	"gold": "gold", "stone": "stone", "food": "food", "knowledge": "know",
-	"knowledge-shards": "shards", "resonance-ore": "ore", "resonance-dust": "dust",
-}
 
 # =====================================================================================
 # State (pushed in by town.gd, or polled/computed)
@@ -76,7 +93,7 @@ var _toast_hold_t: float = 0.0
 
 
 func _ready() -> void:
-	super._ready()  # SlateHud: anchors + mouse_filter + the three fonts
+	super._ready()  # EmberHud: anchors + mouse_filter + the four fonts
 	add_to_group("town_hud")
 	# Process even while paused: a town-entry cutscene can pause the tree before the first
 	# idle frame, and a PAUSABLE _process would then never sync `size` off (0,0) (the
@@ -157,7 +174,7 @@ func run_group() -> Array:
 # --- Process -------------------------------------------------------------------------
 
 func _process(delta: float) -> void:
-	_sync_viewport_size()  # SlateHud: the CanvasLayer-under-_ready layout quirk
+	_sync_viewport_size()  # EmberHud: the CanvasLayer-under-_ready layout quirk
 	if _toast_alpha > 0.0:
 		if _toast_hold_t > 0.0:
 			_toast_hold_t -= delta
@@ -171,174 +188,129 @@ func _process(delta: float) -> void:
 # =====================================================================================
 
 func _draw() -> void:
+	if size.x < 1.0:
+		return
 	_draw_day_chip()
-	_draw_resource_strip()  # + the per-column projections below it
+	_draw_resource_strip()  # + the per-resource projections below it
 	_draw_hint()
 	_draw_toast()
-
-
-func _strip_color(id: String) -> Color:
-	match id:
-		"gold": return COL_GOLD
-		"stone": return COL_STONE
-		"food": return COL_FOOD
-		"knowledge": return COL_KNOWLEDGE
-		"knowledge-shards": return COL_SHARDS
-		"resonance-ore": return COL_ORE
-		"resonance-dust": return COL_DUST
-	return COL_TEXT
 
 
 # --- Day chip (top-left) -------------------------------------------------------------
 
 func _draw_day_chip() -> void:
+	# Three coloured spans on one tracked line — the run HUD's room-header grammar, with
+	# the food status taking the place of the peril mark. NEVER red: red is reserved for
+	# player danger, and being short on food is a problem, not a threat.
+	var y := MARGIN + DAY_TOP
+	var x := MARGIN
 	var prefix := "Day %d" % _day
-	var sep := ""
-	var status := ""
-	var status_col := COL_TEXT
+	x += _text_tracked(Vector2(x, y), prefix, COL_INK, FS_HEAD, _font_ui_med, DAY_TRACKING)
 	if _has_ticked:
-		sep = " · "  # dim separator
+		x += _text_tracked(Vector2(x, y), " · ", COL_INK_DIM, FS_HEAD, _font_ui_med, DAY_TRACKING)
+		var status := "Short on food"
+		var status_col := COL_INK_DIM
 		if _well_fed:
 			status = "Well-Fed +%s%%" % str(int(TownCore.WELL_FED_BONUS * 100))
-			status_col = COL_READY  # gold — a good thing
-		else:
-			status = "Short on food"
-			status_col = COL_KEY_TEXT  # dim, NEVER red (red is reserved for player danger)
-	var pad := Vector2(10, 5)
-	var full := prefix + sep + status
-	var w := _text_w(full, FS_CHIP, _font_num) + pad.x * 2.0
-	var h := _font_num.get_height(FS_CHIP) + pad.y * 2.0
-	var rect := Rect2(MARGIN, MARGIN, w, h)
-	_panel(rect, COL_CHIP_BG, COL_CHIP_BORDER, 1, 8)
-	# Two/three coloured spans on one line: prefix, dim separator, coloured status.
-	var x := rect.position.x + pad.x
-	x = _span(x, rect.position.y, h, prefix, COL_TEXT)
-	if _has_ticked:
-		x = _span(x, rect.position.y, h, sep, COL_KEY_TEXT)
-		_span(x, rect.position.y, h, status, status_col)
-
-
-## Draw one left-aligned FS_CHIP span at x; return the x just past it.
-func _span(x: float, y: float, h: float, s: String, col: Color) -> float:
-	var sw := _text_w(s, FS_CHIP, _font_num)
-	_text_in(Rect2(x, y, sw, h), s, col, FS_CHIP, _font_num, HORIZONTAL_ALIGNMENT_LEFT)
-	return x + sw
+			status_col = COL_ACCENT  # gold — a good thing, and the only gold up here
+		x += _text_tracked(Vector2(x, y), status, status_col, FS_HEAD, _font_ui_med, DAY_TRACKING)
+	_hairline(MARGIN, x + DAY_RULE_PAD, y + DAY_RULE_DROP)
 
 
 # --- Resource strip (top-right) + projections (below) --------------------------------
 
 func _draw_resource_strip() -> void:
-	# Two panels under tiny headers: the town economy (building-producible) left, the
-	# run pickups right — the run group holds the corner, mirroring where the in-run
-	# pickup strip lives so the same resources sit in the same place in both scenes.
-	var head_h := _font_display.get_height(FS_GROUP)
-	var y := MARGIN + head_h + 3.0
-	var run_left := _draw_group(_run_ids, GROUP_RUN_LABEL, size.x - MARGIN, y)
-	_draw_group(_town_ids, GROUP_TOWN_LABEL, run_left - GROUP_GAP, y)
+	# Two groups laid right-to-left: the run pickups hold the corner (mirroring where the
+	# in-run readout lives, so the same resources sit in the same place in both scenes),
+	# the town economy to their left. No panels — the gap IS the group boundary.
+	var y := MARGIN + RES_TOP
+	var right := size.x - MARGIN
+	right = _draw_group(_run_ids, GROUP_RUN_LABEL, right, y) - GROUP_GAP
+	_draw_group(_town_ids, GROUP_TOWN_LABEL, right, y)
 
 
-## Draw one resource-group panel with its columns + projections, right edge at right_x,
-## panel top at y, and a tiny centred header above it. Returns the panel's left edge.
+## Draw one resource group right-anchored at `right_x`: a tiny tracked header above a row
+## of `glyph + number` readouts, each with its projection underneath. Returns the group's
+## left edge, so the caller can lay the next group beside it.
 func _draw_group(ids: Array[String], header: String, right_x: float, y: float) -> float:
-	var pad := Vector2(12, 6)
-	# Measure every column first (value + dim label), so we can right-anchor the panel.
-	var cols: Array = []  # [{id, val, label, val_w, label_w, w}]
+	if ids.is_empty():
+		return right_x
+	# Measure every readout first — there is no panel to anchor to, so the total width has
+	# to be known before anything is drawn.
+	var widths: Array[float] = []
+	var total := 0.0
 	for id: String in ids:
-		var val := "%d" % int(Ledger.get_amount(id))
-		var label := str(STRIP_LABEL.get(id, id))
-		var vw := _text_w(val, FS_BODY, _font_num)
-		var lw := _text_w(label, FS_SMALL, _font_num)
-		cols.append({
-			"id": id, "val": val, "label": label,
-			"val_w": vw, "label_w": lw, "w": vw + VALUE_LABEL_GAP + lw,
-		})
-	var content_w := 0.0
-	for c: Dictionary in cols:
-		content_w += float(c["w"]) + COL_GAP
-	content_w -= COL_GAP
-	var w := content_w + pad.x * 2.0
-	var h := _font_num.get_height(FS_BODY) + pad.y * 2.0
-	var rect := Rect2(right_x - w, y, w, h)
-	_panel(rect, COL_SLATE_BG, COL_SLATE_BORDER, 2, 8)
-	var head_h := _font_display.get_height(FS_GROUP)
-	_text_in(Rect2(rect.position.x, y - head_h - 3.0, w, head_h), header,
-		Color(COL_KEY_TEXT, GROUP_HEADER_ALPHA), FS_GROUP, _font_display)
-	var x := rect.position.x + pad.x
-	for c: Dictionary in cols:
-		var id := str(c["id"])
-		var vw: float = float(c["val_w"])
-		_text_in(Rect2(x, rect.position.y, vw, h), str(c["val"]),
-			_strip_color(id), FS_BODY, _font_num, HORIZONTAL_ALIGNMENT_LEFT)
-		_text_in(Rect2(x + vw + VALUE_LABEL_GAP, rect.position.y, float(c["label_w"]), h),
-			str(c["label"]), COL_KEY_TEXT, FS_SMALL, _font_num, HORIZONTAL_ALIGNMENT_LEFT)
-		# Projection under the column (outside the panel), centred on the column width.
+		var w := RES_GLYPH + RES_GAP + _text_w(_amount_text(id), FS_BIG, _font_num)
+		widths.append(w)
+		total += w + RES_SPACING
+	total -= RES_SPACING
+	var left := right_x - total
+	_text_tracked(Vector2(left, y - HEAD_LIFT), header, COL_INK_DIM, FS_GROUP, _font_ui_med)
+	var x := left
+	for i in ids.size():
+		var id := ids[i]
+		_glyph(Vector2(x + RES_GLYPH * 0.5, y), RES_GLYPH, EmberHud.resource_glyph(id),
+			EmberHud.resource_color(id))
+		_text_at(Vector2(x + RES_GLYPH + RES_GAP, y), _amount_text(id), COL_INK,
+			FS_BIG, _font_num)
+		# Projection under the readout, centred on it.
 		var proj := TownHudCore.projection_text(projection(id))
 		if not proj.is_empty():
-			var pw := _text_w(proj, FS_SMALL, _font_num)
-			var center := x + float(c["w"]) * 0.5
-			_text_in(Rect2(center - pw * 0.5, rect.position.y + h + 3.0, pw,
-				_font_num.get_height(FS_SMALL)), proj, Color(COL_KEY_TEXT, PROJECTION_ALPHA),
-				FS_SMALL, _font_num, HORIZONTAL_ALIGNMENT_LEFT)
-		x += float(c["w"]) + COL_GAP
-	return rect.position.x
+			_text_centred(x + widths[i] * 0.5, y + PROJ_DROP, proj,
+				Color(COL_INK_DIM, PROJECTION_ALPHA), FS_KEY, _font_num)
+		x += widths[i] + RES_SPACING
+	return left
 
 
-# --- Contextual hint (bottom-center) -------------------------------------------------
+func _amount_text(id: String) -> String:
+	return "%d" % int(Ledger.get_amount(id))
+
+
+# --- Contextual hint (bottom-centre) -------------------------------------------------
 
 func _draw_hint() -> void:
-	var pad := Vector2(14, 6)
-	var w := _text_w(HINT_TEXT, FS_HINT, _font_body) + pad.x * 2.0
-	var h := _font_body.get_height(FS_HINT) + pad.y * 2.0
-	var rect := Rect2((size.x - w) * 0.5, size.y - MARGIN - h, w, h)
-	_panel(rect, COL_CHIP_BG, COL_CHIP_BORDER, 1, 8)
-	_text_in(Rect2(rect.position.x + pad.x, rect.position.y, w - pad.x * 2.0, h),
-		HINT_TEXT, COL_TEXT, FS_HINT, _font_body, HORIZONTAL_ALIGNMENT_LEFT)
+	# Bare shadowed prose, exactly as the run HUD draws its hint — same voice, same place.
+	_text_centred(size.x * 0.5, size.y - HINT_BOTTOM, HINT_TEXT, COL_INK,
+		FS_LABEL, _font_body, true)
 
 
-# --- Overnight toast (top-center, fading) --------------------------------------------
+# --- Overnight toast (top-centre, fading) --------------------------------------------
 
 func _draw_toast() -> void:
 	if _toast_alpha <= 0.0 or _toast_segs.is_empty():
 		return
 	var a := _toast_alpha
-	var pad := Vector2(14, 8)
-	var seg_gap := 14.0
-	var head := "OVERNIGHT"
-	var head_h := _font_display.get_height(FS_TOAST_HEAD)
-	var row_h := _font_num.get_height(FS_BODY)
+	var head := "OVERNIGHT"  # HUMAN: placeholder copy
 	# Measure the segment row (the "Well-Fed" word rides Garamond a touch larger).
 	var segs: Array = []  # [{text, color, font, fs, w}]
 	for s: Dictionary in _toast_segs:
 		var id := str(s["id"])
 		var font := _font_body if id == "fed" else _font_num
-		var fs := FS_BODY + 2 if id == "fed" else FS_BODY
+		var fs := FS_VALUE + 2 if id == "fed" else FS_VALUE
 		segs.append({
 			"text": str(s["text"]), "color": _toast_color(id), "font": font, "fs": fs,
 			"w": _text_w(str(s["text"]), fs, font),
 		})
 	var row_w := 0.0
 	for s: Dictionary in segs:
-		row_w += float(s["w"]) + seg_gap
-	row_w -= seg_gap
-	var content_w := maxf(row_w, _text_w(head, FS_TOAST_HEAD, _font_display))
-	var w := content_w + pad.x * 2.0
-	var h := head_h + 4.0 + row_h + pad.y * 2.0
-	var rect := Rect2((size.x - w) * 0.5, MARGIN, w, h)
-	_panel(rect, Color(COL_SLATE_BG, COL_SLATE_BG.a * a),
-		Color(COL_SLATE_BORDER, COL_SLATE_BORDER.a * a), 2, 8)
-	_text_in(Rect2(rect.position.x, rect.position.y + pad.y, w, head_h), head,
-		Color(COL_KEY_TEXT, COL_KEY_TEXT.a * a), FS_TOAST_HEAD, _font_display)
-	var x := rect.position.x + (w - row_w) * 0.5
-	var ry := rect.position.y + pad.y + head_h + 4.0
+		row_w += float(s["w"]) + TOAST_SEG_GAP
+	row_w -= TOAST_SEG_GAP
+	var y := MARGIN + TOAST_TOP
+	var head_w := _text_tracked_w(head, FS_TOAST_HEAD, _font_ui_med)
+	_text_tracked(Vector2(MARGIN, y - TOAST_HEAD_LIFT), head,
+		Color(COL_INK_DIM, a), FS_TOAST_HEAD, _font_ui_med)
+	var x := MARGIN
 	for s: Dictionary in segs:
 		var col: Color = s["color"]
-		_text_in(Rect2(x, ry, float(s["w"]), row_h), str(s["text"]),
-			Color(col, col.a * a), int(s["fs"]), s["font"], HORIZONTAL_ALIGNMENT_LEFT)
-		x += float(s["w"]) + seg_gap
+		# Shadowed: there is nothing behind it, and the town is bright where it lands.
+		x += _text_shadowed(Vector2(x, y), str(s["text"]), Color(col, col.a * a),
+			int(s["fs"]), s["font"]) + TOAST_SEG_GAP
+	_hairline(MARGIN, MARGIN + maxf(row_w, head_w) + TOAST_RULE_PAD, y + TOAST_RULE_DROP,
+		Color(COL_HAIR, COL_HAIR.a * a))
 
 
 func _toast_color(id: String) -> Color:
 	match id:
-		"eaten": return COL_FOOD  # the mock's choice: eaten reads in the food colour
-		"fed": return COL_READY   # gold — a good status
-	return _strip_color(id)
+		"eaten": return COL_FOOD  # eaten reads in the food colour (the T1 mock's choice)
+		"fed": return COL_ACCENT  # gold — a good status
+	return EmberHud.resource_color(id)

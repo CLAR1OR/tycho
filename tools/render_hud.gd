@@ -1,12 +1,19 @@
 extends Node
-## Renders the in-run HUD (RunHud, the "Ember" design) to PNGs so its LAYOUT can be
-## judged without playing to the right room state — the 2D companion to render_prop.gd
-## (which does the same job for 3D props at the game camera angle).
+## Renders the game's OVERLAY surfaces — the ones that float on live gameplay rather than
+## replacing it — to PNGs so their LAYOUT can be judged without playing to the right state.
+## The 2D companion to render_prop.gd (which does the same job for 3D props at the game
+## camera angle), and the sibling of render_menu.gd (which covers the full-screen menus).
 ##
-## It is a layout probe, not a screenshot of the game: the world behind the HUD is a flat
-## dark field with a few bright patches, so you can check that the shadowed prose stays
-## legible over a light background and that nothing collides or falls off-screen. Judge
-## the real thing in F5 — this only catches the gross errors before you spend a run on them.
+## Covers (all Ember): the in-run RunHud, the TownHud, the AchievementToast, and the
+## EchoOfferPanel. They share a probe because they share a problem — each one draws on top
+## of a live world with no panel behind its text, so the thing worth checking is exactly
+## the same: does it stay legible over a bright patch, and does anything collide or fall
+## off-screen. (The pause menu is deliberately NOT here: it is a Control tree over a
+## near-opaque scrim, so it has neither problem.)
+##
+## It is a layout probe, not a screenshot of the game: the world behind is a flat dark
+## field with a few bright patches. Judge the real thing in F5 — this only catches the
+## gross errors before you spend a run on them.
 ##
 ## Needs a real GPU context (it reads the viewport texture back), so NOT --headless:
 ##   godot --path . tools/render_hud.tscn
@@ -29,6 +36,7 @@ const SHOT_SIZE := Vector2i(1280, 720)
 var _hud: RunHud
 var _player: Node = null
 var _sv: SubViewport
+var _layer: CanvasLayer
 
 
 func _ready() -> void:
@@ -46,15 +54,20 @@ func _ready() -> void:
 		p.position = r.position
 		p.size = r.size
 		_sv.add_child(p)
+	# The town HUD's _ready runs a real TownCore.tick for its projections, which needs a
+	# town section in SaveManager.state. Seed it IN MEMORY ONLY — never create_slot(),
+	# which would write to the human's real save files (the rule render_compare.gd set).
+	if SaveManager.state.is_empty():
+		SaveManager.state = SaveData.default_slot("hud-probe", "")
 	# A real Player so the ability dial shows real glyphs + cooldown arcs. If the scene
 	# refuses to stand up outside a combat room, fall back to an empty dial (the rings and
 	# key badges still draw, which is most of what the layout probe is checking). It lives
 	# outside the SubViewport — the HUD only polls it for data, never renders it.
 	_player = _make_player()
-	var layer := CanvasLayer.new()
-	_sv.add_child(layer)
+	_layer = CanvasLayer.new()
+	_sv.add_child(_layer)
 	_hud = RunHud.new()
-	layer.add_child(_hud)
+	_layer.add_child(_hud)
 	if _player != null:
 		_hud.setup(_player)
 	_run()
@@ -96,8 +109,50 @@ func _run() -> void:
 		_hud.set_hint("Choose a door — the sigil is what the next room pays")
 		_hud.set("_echoes", _fake_echoes(11))
 	)
+	_hud.hide()  # the remaining surfaces are shot on their own, not stacked over the run HUD
+	await _shot_town()
+	await _shot_echo_offer()
 	print("render_hud: done")
 	get_tree().quit()
+
+
+## The town HUD + the achievement toast together — they share the top of the screen (the
+## toast lands top-centre between the day chip and the resource strip), so the one thing
+## worth checking is that they do not collide.
+func _shot_town() -> void:
+	var thud := TownHud.new()
+	_layer.add_child(thud)
+	var toast := AchievementToast.new()
+	_layer.add_child(toast)
+	# Some stock to read: the strip only shows what the Ledger holds.
+	for pair: Array in [["gold", 128.0], ["stone", 46.0], ["food", 12.0], ["knowledge", 8.0],
+			["knowledge-shards", 4.0], ["resonance-ore", 35.0], ["resonance-dust", 12.0]]:
+		Ledger.add(str(pair[0]), float(pair[1]) - Ledger.get_amount(str(pair[0])), "probe")
+	thud.configure(4, true, true)
+	thud.show_day_toast({
+		"produced": {"stone": 5.0, "food": 3.0}, "food_consumed": 5.0, "well_fed": true,
+	})
+	toast.enqueue("First Blood", "FB")
+	await _shot("town", func() -> void: pass)
+	thud.queue_free()
+	toast.queue_free()
+
+
+## The in-run echo offer. Driven by setting its state directly rather than calling
+## present(), which would pause the tree and play a sound — neither of which a probe wants.
+func _shot_echo_offer() -> void:
+	var offer := EchoOfferPanel.new()
+	_layer.add_child(offer)
+	var ids: Array[String] = []
+	for id: String in EchoCore.defs().keys():
+		ids.append(id)
+		if ids.size() >= EchoCore.OFFER_SIZE:
+			break
+	offer.set("_ids", ids)
+	offer.set("_defs", EchoCore.defs())
+	offer.set("_hovered", 1)  # wake the middle mark, so the hover state is in the shot too
+	await _shot("echo-offer", func() -> void: pass)
+	offer.queue_free()
 
 
 ## Fake folded-echo tiles, including a couple of stacks so the gold count badge shows.

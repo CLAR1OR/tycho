@@ -591,7 +591,28 @@ Same contract as above: **the human owns every value.** Judge with `tools/render
 
 **Theme sizes — `EmberTheme`:** `FS_PROSE` 18 · `BTN_RADIUS` **3** (Ember frames are near-square by design — a big radius reads as Slate) · `BTN_MARGIN` (16, 9) · `ACTION_MARGIN` (26, 13) · `PANEL_MARGIN` 18. **The Panel/PanelContainer stylebox is `StyleBoxEmpty` and should stay that way** — that transparency IS the language.
 
-**Glyphs:** all 12 new marks (`leaf`, `stone`, `sword`, `shield`, `heart`, `boot`, `star`, `anvil`, `book`, `house`, `lock`, `check`) are placeholder silhouettes, unit-square point lists in `EmberHud`. Re-shaping one is editing a point list; adding one is a dictionary entry.
+**Glyphs:** all 12 new marks (`leaf`, `stone`, `sword`, `shield`, `heart`, `boot`, `star`, `anvil`, `book`, `house`, `lock`, `check`) are placeholder silhouettes, unit-square point lists in `EmberHud`. Re-shaping one is editing a point list; adding one is a dictionary entry. **`RESOURCE_GLYPH` / `RESOURCE_COLOR`** map all seven Ledger ids to one mark and one colour game-wide — change a resource's identity there, once, not per screen.
+
+## Ember Tier A — the migrated overlays *(built 2026-08-13, `design/ui-hud.md` § "Migrating to Ember")*
+
+Judge with `tools/render_hud.tscn` (states `town`, `echo-offer`) and `tools/render_menu.tscn` (state `pause`), then F5.
+
+| Surface | Const | Now | What it does |
+| --- | --- | --- | --- |
+| **TownHud** | `DAY_TOP` / `DAY_RULE_DROP` / `DAY_TRACKING` | 12 / 13 / 1.4 | day chip's line, its hairline, its letter-spacing |
+| | `RES_TOP` / `RES_GLYPH` / `RES_GAP` / `RES_SPACING` | 26 / 18 / 11 / 26 | readout row height, mark size, mark→number, between readouts |
+| | `GROUP_GAP` / `HEAD_LIFT` / `FS_GROUP` | 40 / 20 / 10 | **the gap IS the group boundary** (no panel) · header height · header size |
+| | `PROJ_DROP` / `PROJECTION_ALPHA` | 20 / 0.55 | the `+n/d` under each readout |
+| | `TOAST_TOP` | 62 | overnight toast, **top-LEFT under the day chip** — it moved out of top-centre because the panel-less strip now reaches past the middle. Moving it back needs the strip to shrink first |
+| | `HINT_BOTTOM` | 34 | hint prose above the bottom edge |
+| **AchievementToast** | `TOP_MARGIN` | 96 | **a clearance constraint, not taste** — must clear the run HUD's boss bar AND the town strip, since this is the one toast that plays in every scene |
+| | `MEDAL_R` / `TEXT_GAP` / `RULE_DROP` | 21 / 15 / 22 | the monogram ring, ring→text, the hairline under it |
+| | `SLIDE_S` / `HOLD_S` / `FADE_S` | 0.25 / 3.0 / 0.6 | lifecycle (unchanged from Slate) |
+| **EchoOfferPanel** | `DIMMER` | `#08070c` @ 0.62 | **the dial that decides whether the offer feels like a pause or a screen.** Deliberately lighter than `COL_SCRIM` — you are still reading the battlefield you drop back into |
+| | `KEY_R` / `HELD_R` | 11 / 9 | the key badge ring and the gold held-count disc |
+| | `NAME_DY` / `LINE_GAP` / `FX_GAP` | 26 / 22 / 18 | name below the ring, then the parents line, then the effect lines |
+| **PauseMenu** | `TITLE_GAP` / `PANEL_WIDTH` | 18 / 320 | title block → buttons; the column's width |
+| | *(everything else)* | — | comes from `EmberTheme`. Only **Resume** takes `EmberAction` (gold); the rest are plain hairline Buttons |
 
 ## Boss — Den-Warden (floor 1; data dials + 2 exports, `design/bosses/floor-1-boss.md`, built 2026-07-10)
 
