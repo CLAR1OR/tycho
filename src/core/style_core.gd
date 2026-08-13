@@ -2,10 +2,16 @@ extends RefCounted
 class_name StyleCore
 ## The project palette + pure ramp derivation for the STYLE-UNIFICATION LAYER
 ## (design/asset-pipeline.md §C; dial board: design/feel-tuning.md § Style unification).
-## Every 3D mesh renders through one toon shader (assets/materials/tycho_toon.gdshader);
+## Every 3D mesh renders through one shader (assets/materials/tycho_toon.gdshader);
 ## per-stratum identity is a 3-stop colour RAMP derived here from the floor's env
 ## profile — while the player/enemies/bosses stay on NEUTRAL_RAMP so identity hues and
 ## telegraph colours read IDENTICALLY on every floor (the readability guard).
+##
+## PAINTED-LITE FORK (2026-08-13): the look target moved from the flat/banded town anchor
+## to `assets_src/anchors/art-style.png` — soft painterly shading, no outlines. The shader
+## now samples the ramp CONTINUOUSLY instead of quantizing it into bands, so everything
+## below (ramp shape, derivation, the readability guard) carries over unchanged; only
+## BAND_COUNT retired. Judge in F5 against the anchor and re-dial freely.
 ##
 ## PURE: static funcs over value types only (Color is a value type) — no scene access,
 ## no engine singletons; mirrors src/combat/strata_core.gd. Everything that touches
@@ -16,7 +22,12 @@ class_name StyleCore
 ## a PLACEHOLDER awaiting the human's dial pass. Shader uniform defaults mirror these.
 
 # --- Core style dials ---------------------------------------------------------------
-const BAND_COUNT := 5                            # style: human-tuned, do not optimize — toon light bands
+const SHADOW_WRAP := 0.35        # style: human-tuned, do not optimize — 0 = lambert, 1 = half-lambert
+const PRACTICAL_GAIN := 1.0      # style: human-tuned, do not optimize — omni/spot contribution
+const RIM_STRENGTH := 0.15       # style: human-tuned, do not optimize — soft lit-side rim (0 = off)
+# The painted anchor has no outlines. The inverted-hull pass is KEPT so the human can
+# A/B it in F5 from this one dial — flip to true and every character gets it back.
+const OUTLINES_ENABLED := false                   # style: human-tuned, do not optimize
 const OUTLINE_WIDTH := 0.01                       # style: human-tuned, do not optimize — inverted-hull width (m)
 const OUTLINE_COLOR := Color(0.07, 0.06, 0.10)   # style: human-tuned, do not optimize — near-black outline
 

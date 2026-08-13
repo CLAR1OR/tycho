@@ -7,7 +7,8 @@ class_name Player
 ## round, or DRY these away — they carry the combat feel (CLAUDE.md working agreement).
 ## They are @export vars (not consts) so they can be tuned in the Inspector AND live
 ## via the F1 runtime tuning panel (src/core/tuning_panel.gd).
-## Movement is on the XZ plane; the camera has no yaw, so WASD maps straight to world XZ.
+## Movement is on the XZ plane and is CAMERA-RELATIVE (see _input_dir) — the camera rig
+## carries a yaw since the painted-lite fork, so WASD is rotated into screen space.
 ## Forward = local -Z (Godot look_at convention); the player faces the mouse cursor.
 
 # --- Movement (FEEL) ---
@@ -436,8 +437,23 @@ func _input_dir() -> Vector3:
 	)
 	if v.length() > 1.0:
 		v = v.normalized()
-	# Screen "up" (move_up) is -Z because the camera has no yaw.
-	return Vector3(v.x, 0.0, v.y)
+	# CAMERA-RELATIVE since the painted-lite fork (2026-08-13): the rig gained a yaw
+	# (CameraRig.cam_yaw, 45 deg for the anchor's corner-on framing), so WASD no longer
+	# maps straight to world XZ — "up" has to mean up ON SCREEN or the controls fight the
+	# player. Derived from the LIVE camera basis rather than a constant, so the human can
+	# dial cam_yaw (including back to 0) without this desyncing. basis.x is already
+	# horizontal (pitch rotates about X); basis.z has to be flattened.
+	var cam := get_viewport().get_camera_3d()
+	if cam == null:
+		return Vector3(v.x, 0.0, v.y)   # pre-yaw fallback: screen "up" is -Z
+	var basis := cam.global_transform.basis
+	var fwd := Vector3(-basis.z.x, 0.0, -basis.z.z)   # camera forward = screen "up"
+	if fwd.length_squared() < 0.0001:
+		return Vector3(v.x, 0.0, v.y)   # camera looking straight down; no meaningful yaw
+	fwd = fwd.normalized()
+	var right := Vector3(basis.x.x, 0.0, basis.x.z).normalized()
+	# move_up gives v.y = -1, and screen "up" is +fwd — hence the minus.
+	return right * v.x - fwd * v.y
 
 
 func _face_mouse() -> void:

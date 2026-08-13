@@ -32,11 +32,15 @@ static func toon_material(albedo: Color, ramp_stops: Array[Color], outlined: boo
 	var mat := ShaderMaterial.new()
 	mat.shader = TOON_SHADER
 	mat.set_shader_parameter("albedo", albedo)
-	mat.set_shader_parameter("band_count", StyleCore.BAND_COUNT)
+	mat.set_shader_parameter("shadow_wrap", StyleCore.SHADOW_WRAP)
+	mat.set_shader_parameter("practical_gain", StyleCore.PRACTICAL_GAIN)
+	mat.set_shader_parameter("rim_strength", StyleCore.RIM_STRENGTH)
 	mat.set_shader_parameter("ramp", _ramp_texture(ramp_stops))
 	mat.set_shader_parameter("emission_color", emission)
 	mat.set_shader_parameter("emission_energy", emission_energy)
-	if outlined:
+	# The painted fork ships outlines OFF; the call sites still ask for them, so the
+	# decision lives in ONE dial rather than in every caller (StyleCore.OUTLINES_ENABLED).
+	if outlined and StyleCore.OUTLINES_ENABLED:
 		mat.next_pass = outline_material()
 	return mat
 
@@ -54,6 +58,8 @@ static func outline_material() -> ShaderMaterial:
 ## Chain the outline pass onto an ALREADY-CONVERTED mesh (e.g. after an apply_to_tree
 ## sweep, promote NPC capsules to "character" rendering). No-op on anything else.
 static func add_outline(mesh: MeshInstance3D) -> void:
+	if not StyleCore.OUTLINES_ENABLED:
+		return
 	var mat := mesh.get_active_material(0)
 	if mat is ShaderMaterial and (mat as ShaderMaterial).shader == TOON_SHADER \
 			and (mat as ShaderMaterial).next_pass == null:

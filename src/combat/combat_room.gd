@@ -151,6 +151,9 @@ func _ready() -> void:
 	# room kind; spawn hazards on combat rooms only (reprieve = breather, boss = clean
 	# arena this slice). Enemy/telegraph colours are NEVER touched — the readability guard.
 	_apply_environment()
+	# Painted-lite fork: the vignette sits on CanvasLayer 0, UNDER the HUD's default
+	# layer 1 — it darkens the world, never the Ember readout.
+	add_child(StyleEnvironment.build_vignette())
 	_spawn_props()
 	if kind == RunFlow.KIND_COMBAT and not _reprieve:
 		_spawn_hazards()
@@ -211,14 +214,21 @@ func _ready() -> void:
 func _apply_environment() -> void:
 	var env := StrataCore.environment_of(_profile)
 	var we := $WorldEnvironment as WorldEnvironment
-	if we != null and we.environment != null:
-		var e := we.environment
-		e.background_color = env["background_color"]
-		e.ambient_light_color = env["ambient_color"]
-		e.ambient_light_energy = float(env["ambient_energy"])
+	if we != null:
+		# Painted-lite fork (2026-08-13): the scene's inline Environment carried only a
+		# background colour and an ambient light. StyleEnvironment builds the shared
+		# painted look (tonemap/glow/volumetric fog/SSAO/grade) around this stratum's own
+		# background + ambient, so per-floor identity is unchanged and the render layer is
+		# defined in ONE place. Fresh resource per room — the old sub-resource's
+		# resource_local_to_scene guarantee, by construction.
+		var e := StyleEnvironment.build(env["background_color"], env["ambient_color"],
+			float(env["ambient_energy"]))
+		# The stratum's own DISTANCE fog rides on top of the shared volumetric haze —
+		# it is a per-floor identity dial (design/dungeon-strata.md), not part of the look.
 		e.fog_enabled = bool(env["fog_enabled"])
 		e.fog_light_color = env["fog_color"]
 		e.fog_density = float(env["fog_density"])
+		we.environment = e
 	var light := $DirectionalLight3D as DirectionalLight3D
 	if light != null:
 		light.light_color = env["light_color"]

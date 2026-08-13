@@ -149,11 +149,22 @@ The whole-game freeze-frame when a hit lands — where the *weight* comes from.
 | Var | Default | What it does |
 |-----|---------|--------------|
 | `follow_lerp` | 9.0 | How tightly the camera tracks you (higher = snappier, lower = floatier). |
-| `cam_offset` | (0, 12, 7.5) | Height + pull-back of the fixed camera (the framing). Panel exposes `.y` and `.z`. |
+| `cam_offset` | (0, 25.3, 15.8) *(painted fork, was (0, 12, 7.5))* | Height + pull-back of the fixed camera (the framing). Panel exposes `.y` and `.z`. |
 | `cam_pitch` | -58.0 | Downward tilt in degrees — **the 2.5D angle**. |
+| `cam_yaw` | 45.0 *(new, painted fork — was structurally 0)* | Rig rotation. 45 = the anchor's corner-on read (two faces of every building visible); 0 = the old axis-aligned framing. **Try 45 / 30 / 0.** |
+| `cam_fov` | 40.0 *(painted fork, was Godot's default 75)* | Lower = flatter/more telephoto, which is how the anchor reads. |
 | `shake_decay` | 6.0 | How fast a screen-shake settles (higher = snappier). |
 
 > The shake **amount** on getting hit is `shake_on_hit` in `feel_room.gd` (below).
+
+> **`cam_offset` invariant:** `atan(12/7.5) = 58°` — the offset direction IS `cam_pitch`. Scale
+> the offset **uniformly**; changing one axis alone aims the camera off the rig and the follow
+> silently stops centring. The painted-fork value is the old vector × 2.11, compensating the
+> narrower FOV so the framed ground area is roughly unchanged.
+>
+> **`cam_yaw` ≠ 0 makes WASD camera-relative** (`player.gd::_input_dir`, derived from the live
+> camera basis) — dial it freely, including back to 0, without the controls desyncing.
+> Square rooms read as **diamonds** at 45°; more varied room shapes are a wanted future change.
 
 ---
 
@@ -411,22 +422,50 @@ Floor identity is DATA, not code — dial these like FEEL numbers (no code edit)
 
 ## Style unification — `src/core/style_core.gd` / `assets/materials/*.gdshader` *(built 2026-07-11, design/asset-pipeline.md §C)*
 
-Every 3D mesh renders through ONE toon shader (`tycho_toon.gdshader`); characters (player/enemies/bosses/NPCs/gate models) add the inverted-hull outline pass (`tycho_outline.gdshader`, chained via `next_pass`). Everything below is a **`# style:` dial** — the SAME untouchable contract as `# FEEL:` (human-tuned, agents never optimize). `StyleCore` consts are the source of truth; the two shaders' uniform defaults mirror them — when dialing a default, change BOTH. Anchor-derived values judge against the **town style anchor** (`design/style-bible.md`, started 2026-07-12).
+Every 3D mesh renders through ONE shader (`tycho_toon.gdshader`). Everything below is a **`# style:` dial** — the SAME untouchable contract as `# FEEL:` (human-tuned, agents never optimize). `StyleCore` consts are the source of truth; the shaders' uniform defaults mirror them — when dialing a default, change BOTH.
+
+> **PAINTED-LITE FORK, 2026-08-13.** The look target moved from the flat/banded town anchor to **`assets_src/anchors/art-style.png`** (human pick): soft painterly shading, no outlines, dusk lighting, desaturated world. The shader now samples the ramp **continuously** instead of quantizing it into bands — the ramp's meaning (dark→light) is unchanged, so `ramp_stops()`, the per-stratum derivation and the readability guard all carried over. `BAND_COUNT` retired. **Every value here is a placeholder awaiting the human's F5 verdict** — judge with `tools/render_compare.tscn` (§ Tools) and re-dial freely.
 
 | Var | Default | What it does |
 |-----|---------|--------------|
-| `BAND_COUNT` | 5 (human-dialed from 3) | Toon light bands (2 = harshest cel, higher = softer). Shader uniform default still 3 — sync on next shader dial. |
-| `OUTLINE_WIDTH` | 0.01 (human-dialed from 0.03) | Inverted-hull push distance (m). Characters only, never environment/props. |
+| `SHADOW_WRAP` | 0.35 *(new)* | Diffuse wrap: 0 = plain lambert (hard terminator), 1 = full half-lambert (soft painted falloff). |
+| `PRACTICAL_GAIN` | 1.0 *(new)* | How much omni/spot **practicals** (lanterns, forge, windows) contribute. Before the fork the shader ignored every non-directional light outright, so practicals glowed but lit nothing. |
+| `RIM_STRENGTH` | 0.15 *(new; was a shader-only uniform at 0.0)* | Soft fresnel rim on the lit side. `smoothstep`, not `step` — a hard rim reads as an outline. |
+| `OUTLINES_ENABLED` | **false** *(new)* | Master switch for the inverted-hull pass. The painted anchor has no outlines; the pass is KEPT so it can be A/B'd from this one dial without touching a call site. |
+| `OUTLINE_WIDTH` | 0.01 (human-dialed from 0.03) | Inverted-hull push distance (m). Characters only, never environment/props. Inert while `OUTLINES_ENABLED` is false. |
 | `OUTLINE_COLOR` | near-black `(0.07, 0.06, 0.10)` | Outline colour. (The town anchor's outlines read dark-WARM — a candidate re-dial, see style-bible.) |
 | `NEUTRAL_RAMP` | cool-dark grey → white (3 stops) | The CHARACTER ramp — never stratum-tinted, so enemy identity hues + telegraph colours read identically on every floor (the readability guard). |
 | `TOWN_RAMP` | dusk: indigo shadow → khaki mid → glow-cream (anchor pass 2026-07-12) | The town's ramp (the town has no floor profile). First pass from the anchor's extracted palette — judge in F5 vs the anchor, re-dial freely. |
 | `RAMP_TINT_SATURATION` | 0.5 | Fraction of an env colour's saturation kept when deriving a stratum ramp. |
 | `RAMP_SATURATION_CAP` | 0.4 | Max saturation any derived ramp stop may reach (subtle tint, never a hue takeover). |
 | `PALETTE_*` | parchment / stone / wood / verdigris / iron / ember + roof-slate / roof-rust / window-glow (anchor-derived, 2026-07-12) | Starter medieval palette consts for props/buildings. `PALETTE_WINDOW_GLOW` is the planned emissive-window convention (style-bible carrier #3). |
-| `rim_strength` (shader uniform) | 0.0 (off) | Minimal banded rim light on the lit side of characters. |
 | `data/floors/<n>.json` → `environment.ramp` | absent | OPTIONAL per-floor explicit ramp — `["#hex", "#hex", "#hex"]` dark→light, used VERBATIM; absent/empty = derived from the floor's fog/background + ambient + light colours (brightness always from `NEUTRAL_RAMP`, so the dark→light order is structural). |
 
-**Opt-outs (how a mesh stays raw):** translucent or unshaded materials are never converted (all FX/telegraph/portal/ghost materials, automatically); set metadata `style_skip` on a `MeshInstance3D` for an explicit opt-out. `scenes/combat/feel_room.tscn` is untouched — the sandbox keeps the raw look. Known gotcha: hard-edged primitives (boxes) can gap at outline corners (split normals) — acceptable on placeholders; smooth-normal models won't.
+### Environment + vignette — `src/core/style_environment.gd` *(new with the painted fork, 2026-08-13)*
+
+Before the fork every scene carried a hand-inlined `Environment` with nothing but a background colour and an ambient light — no tonemap, glow, fog or AO. **That gap, not the geometry, was the largest single distance between the build and the anchor.** One factory now defines the look for `town` + `combat_room` + both render tools; callers pass only their per-scene background/ambient identity. `feel_room` is EXEMPT and must never call it.
+
+| Var | Default | What it does |
+|-----|---------|--------------|
+| `TONEMAP_EXPOSURE` | 1.8 | AgX is a filmic curve that rolls the image down hard vs. the old linear tonemap; exposure carries that back so existing light energies stay meaningful. |
+| `TONEMAP_WHITE` | 6.0 | AgX white point. |
+| `GLOW_INTENSITY` / `GLOW_BLOOM` / `GLOW_HDR_THRESHOLD` | 0.5 / 0.15 / 0.95 | The practicals' halo (the anchor's forge/lantern read). Threshold just under 1.0 so warm sources catch and ordinary lit surfaces don't turn to soup. Blend = additive. |
+| `FOG_*` (density / albedo / anisotropy / length / ambient_inject) | 0.015 / cool blue-grey / 0.2 / 64 / 0.1 | Volumetric haze: depth, plus the light shafts around practicals. Rides *alongside* each stratum's own distance fog, which stays a per-floor identity dial. |
+| `SSAO_*` (radius / intensity / power / detail) | 1.0 / 2.0 / 1.5 / 0.5 | Contact shadows in the clutter. |
+| `ADJ_BRIGHTNESS` / `ADJ_CONTRAST` | 1.0 / 1.05 | Grade. |
+| **`ADJ_SATURATION`** | **0.85** | **Double duty — do not "clean up" toward 1.0.** Desaturating the world is (a) most of what reads as *painted* rather than *3D render*, and (b) the combat-readability guard: it leaves telegraph red / hazard amber / pickup cyan as the only saturated pixels on screen, so they pop on hue alone without being brightened out of the palette. |
+| `VIGNETTE_STRENGTH` / `_RADIUS` / `_SOFTNESS` / `_COLOR` | 0.55 / 0.75 / 0.45 / near-black | `Environment` has no vignette and the anchor's corners are near-black — a full-rect `ColorRect` on `tycho_vignette.gdshader`. Deliberately **not** aspect-corrected: an elliptical vignette that follows the frame beats a circular one that clips the sides. |
+| `VIGNETTE_LAYER` | 0 | Under every gameplay CanvasLayer (the HUDs sit on the default layer 1) — it darkens the WORLD, never the UI. A dimmed HUD would undo Ember's whole contrast story. |
+
+### Town practicals — `src/town/town.gd` *(the look-gate scene)*
+
+| Var | Default | What it does |
+|-----|---------|--------------|
+| `PRACTICALS` | 5 warm omnis (fountain, market face, tree line, 2 corners), energy 3.5–5.0, range 10–12, shadowless | The anchor's light story: many small warm sources at **edges and on props**, so the play area keeps an ambient fill and nothing important happens inside the vignette. |
+| `KEY_ENERGY` / `KEY_COLOR` | 1.5 / cool blue-white | The DirectionalLight is the dusk key now, not the whole lighting story. |
+| **`AMBIENT_ENERGY` / `AMBIENT_COLOR`** | **0.3 / cool dusk blue** *(was 0.8, near-white)* | **The least obvious dial, and the one the anchor's drama hangs on.** The old ambient lit every surface evenly, so the practicals had nothing to read against and the ramp's dark stop was never reached. The anchor's power is a **ratio** — dark cool ambient, bright warm local pools — not brighter lights. |
+
+**Opt-outs (how a mesh stays raw):** translucent or unshaded materials are never converted (all FX/telegraph/portal/ghost materials, automatically); set metadata `style_skip` on a `MeshInstance3D` for an explicit opt-out. `scenes/combat/feel_room.tscn` is untouched — the sandbox keeps the raw look. Known gotcha: hard-edged primitives (boxes) can gap at outline corners (split normals) — acceptable on placeholders; smooth-normal models won't. (Moot while `OUTLINES_ENABLED` is false; faceted primitives DO show their facets under the fork's soft light — expected, and the answer is smooth normals on real models, not a dial.)
 
 ### Water — `src/core/water_plane.gd` (@export → Inspector) + `assets/materials/water_absorption.gdshader` uniforms *(built 2026-07-11; the town's south border)*
 

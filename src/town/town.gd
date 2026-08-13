@@ -79,6 +79,7 @@ func _ready() -> void:
 	# already converted itself (children ready first) on NEUTRAL_RAMP. NPC capsules then
 	# get the character outline so they read as characters, not props.
 	StyleMaterials.apply_to_tree(self, StyleCore.TOWN_RAMP)
+	_apply_painted_look()
 	for npc in _npcs:
 		var npc_mesh := npc.get_node_or_null("Mesh") as MeshInstance3D
 		if npc_mesh != null:
@@ -126,6 +127,56 @@ func _ready() -> void:
 	# once per town instance, so one visit = at most one forced scene. Deferred a
 	# frame so the scene (and any save/swap in flight) settles first.
 	call_deferred("_check_force_play")
+
+
+# --- Painted-lite look (the art-style.png fork, 2026-08-13) -------------------------
+# The town is the LOOK GATE scene: the human judges a frame here side by side with
+# assets_src/anchors/art-style.png (tools/render_compare.tscn) before any asset pipeline
+# is committed to. Everything below is a `# style:` placeholder — dial freely.
+
+## Warm practicals, the anchor's real light story: a weak cool dusk key plus many small
+## warm sources (forge, lanterns, windows). Placed at EDGES and on props — the play area
+## keeps an ambient fill so nothing important ever happens inside the vignette.
+## pos is XZ; y is the lamp height. All shadowless but one (cost, and soft shadowless
+## fill is what a painted lantern actually looks like).
+const PRACTICALS: Array[Dictionary] = [
+	{"pos": Vector3(0.0, 2.2, -0.5), "energy": 4.0, "range": 12.0},   # style: fountain, town centre
+	{"pos": Vector3(-10.5, 3.0, 1.2), "energy": 5.0, "range": 11.0},  # style: market face
+	{"pos": Vector3(13.6, 3.2, 3.6), "energy": 3.5, "range": 10.0},   # style: tree-line lantern
+	{"pos": Vector3(-13.0, 2.6, -12.0), "energy": 5.0, "range": 11.0},# style: north-west corner
+	{"pos": Vector3(12.0, 2.6, -12.5), "energy": 5.0, "range": 11.0}, # style: north-east corner
+]
+const PRACTICAL_COLOR := StyleCore.PALETTE_WINDOW_GLOW  # style: human-tuned, do not optimize
+const KEY_ENERGY := 1.5                                # style: dusk key, not the only light
+const KEY_COLOR := Color(0.62, 0.68, 0.85)             # style: cool low-angle dusk key
+## THE dial the anchor's light story hangs on, and the least obvious one: the town's own
+## ambient (0.8, near-white) lit every surface evenly, so the practicals had nothing to
+## read against and the ramp's dark stop was never reached. The anchor's drama is a RATIO
+## — dark cool ambient, bright warm local pools — not brighter lights.
+const AMBIENT_ENERGY := 0.3                            # style: human-tuned, do not optimize
+const AMBIENT_COLOR := Color(0.34, 0.40, 0.55)         # style: cool dusk fill
+
+
+func _apply_painted_look() -> void:
+	var we := $WorldEnvironment as WorldEnvironment
+	if we != null:
+		var bg := we.environment.background_color if we.environment != null else Color.BLACK
+		we.environment = StyleEnvironment.build(bg, AMBIENT_COLOR, AMBIENT_ENERGY)
+	# The directional light is the dusk KEY now, not the whole lighting story — dropped
+	# and cooled so the warm practicals below have something to read against.
+	var key := $DirectionalLight3D as DirectionalLight3D
+	if key != null:
+		key.light_energy = KEY_ENERGY
+		key.light_color = KEY_COLOR
+	for p: Dictionary in PRACTICALS:
+		var lamp := OmniLight3D.new()
+		lamp.position = p["pos"]
+		lamp.light_color = PRACTICAL_COLOR
+		lamp.light_energy = float(p["energy"])
+		lamp.omni_range = float(p["range"])
+		lamp.shadow_enabled = false
+		add_child(lamp)
+	add_child(StyleEnvironment.build_vignette())
 
 
 func _unhandled_input(event: InputEvent) -> void:

@@ -23,8 +23,10 @@ const TOWN_AMBIENT := Color(0.55, 0.55, 0.5)
 const TOWN_AMBIENT_ENERGY := 0.8
 const TOWN_GROUND := Color(0.3, 0.32, 0.24)
 # Mirrors src/core/camera_rig.gd's FEEL dials — the fixed 2.5D framing.
-const CAM_OFFSET := Vector3(0, 12, 7.5)
+const CAM_OFFSET := Vector3(0, 25.3, 15.8)
 const CAM_PITCH := -58.0
+const CAM_YAW := 45.0
+const CAM_FOV := 40.0
 
 ## Framings to render: label -> how much to scale the rig offset in (a closer shot is
 ## the SAME angle, just nearer — never a different angle).
@@ -56,12 +58,10 @@ func _make_shot(label: String, distance_scale: float) -> Dictionary:
 	vp.render_target_update_mode = SubViewport.UPDATE_ALWAYS
 	add_child(vp)
 
-	var env := Environment.new()
-	env.background_mode = Environment.BG_COLOR
-	env.background_color = TOWN_BG
-	env.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
-	env.ambient_light_color = TOWN_AMBIENT
-	env.ambient_light_energy = TOWN_AMBIENT_ENERGY
+	# The project's painted-lite Environment (tonemap/glow/volumetric fog/SSAO/grade),
+	# NOT a hand-rolled one — a prop judged under a different environment than the game's
+	# is judged wrong. Only the town's background/ambient identity is passed in.
+	var env := StyleEnvironment.build(TOWN_BG, TOWN_AMBIENT, TOWN_AMBIENT_ENERGY)
 	var we := WorldEnvironment.new()
 	we.environment = env
 	vp.add_child(we)
@@ -83,11 +83,17 @@ func _make_shot(label: String, distance_scale: float) -> Dictionary:
 	var prop := TownFountain.new()
 	vp.add_child(prop)
 
+	# Yaw on a rig node, pitch local to the camera — exactly how CameraRig composes them,
+	# so the prop is seen at the game's real angle and not a lookalike.
+	var rig := Node3D.new()
+	rig.rotation_degrees = Vector3(0.0, CAM_YAW, 0.0)
+	vp.add_child(rig)
 	var cam := Camera3D.new()
 	cam.position = CAM_OFFSET * distance_scale
 	cam.rotation_degrees = Vector3(CAM_PITCH, 0.0, 0.0)
+	cam.fov = CAM_FOV
 	cam.current = true
-	vp.add_child(cam)
+	rig.add_child(cam)
 
 	# The one line that matters for fidelity: the town's own toon sweep.
 	StyleMaterials.apply_to_tree(ground, StyleCore.TOWN_RAMP)
