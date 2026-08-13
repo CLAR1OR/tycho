@@ -8,15 +8,42 @@
 
 ## Global constraints (apply to every line below)
 
-- **2.5D fixed camera** — every 3D asset is judged at the game's camera angle (`scenes/core/camera_rig.tscn`), never in a free-orbit turntable.
-- **Asset-pipeline gate first** — no 3D art line proceeds until one character passes `scenes/core/asset_pipeline_gate.tscn` (Tripo → rig → UAL retarget → reads well under the camera).
+- **2.5D fixed camera** — every 3D asset is judged at the game's camera angle (`scenes/core/camera_rig.tscn`), never in a free-orbit turntable. Corner-on and near-telephoto since the painted fork (`cam_yaw` 45 / `cam_fov` 40).
+- **Asset-pipeline gate first** — no 3D art line proceeds until one character passes `scenes/core/asset_pipeline_gate.tscn` (Tripo → rig → UAL retarget → reads like the anchor under the camera).
+- **Materials before models (painted fork, 2026-08-13)** — the look lives in ~10 tileable hand-painted materials triplanar-mapped onto simple geometry, NOT in per-asset textures. Generated model textures are **discarded** for props/buildings and kept only for characters. Ordering + rationale: `design/asset-pipeline.md` § Stage 1.
 - **One geometry kit** (IC-5) — floors differ by palette/fog/light data + 1 hazard + 2–4 props. No per-floor biome art lines.
 - **"Imitation thins with depth"** — floors 1→5 grade from convincing cave to clean impossible void; floors 1–4 stay deniable, only floor 5 is unambiguous. Governs floor palettes, props, boss silhouettes, even the Wellspring tint.
 - **Readability guard** — enemy/telegraph/hazard colours are FIXED across all strata; floor palettes are chosen around them.
-- **Slate UI language** — engraved-Roman/candlelit-cosmic; all UI copy/colours ship as placeholders the human dials.
+- **Two UI languages** — **Slate** on the 11 menu screens (engraved-Roman/candlelit-cosmic), **Ember** on the in-run HUD (no panels: hairlines, rings, negative space, gold reserved for state). All UI copy/colours ship as placeholders the human dials.
 - **Placeholder-first** — never block a system on final art.
 
 **Current reality check:** `assets/models|images|anims` are **empty**. Real assets in: 3 OFL fonts ✅, 15 synthesized placeholder SFX 🟨, 4 synthesized placeholder music loops 🟨. Everything else below is ⬜.
+
+---
+
+## 0. Tileable materials + backdrops (**NEW 2026-08-13 — the painted fork's primary asset class**)
+
+These come first in the pipeline and clothe everything in sections 1–3. 2D raster only, no 3D generation needed. Details + prompt shapes: `design/asset-pipeline.md` §§ Stage 1–2.
+
+### Material library — **0 / ~10**
+| Asset | Used by | Status |
+|---|---|---|
+| `cobble` | town plaza, dungeon floors | ⬜ |
+| `plaster` | building walls | ⬜ |
+| `timber` | beams, frames, carts, crates | ⬜ |
+| `slate` | roofs | ⬜ |
+| `thatch` | roofs (accent) | ⬜ |
+| `stone_block` | walls, fountain, ruins | ⬜ |
+| `iron` | fittings, hazards, weapons | ⬜ |
+| `cloth` | banners, awnings, tents | ⬜ |
+| `dirt` | paths, dungeon ground | ⬜ |
+| `moss_overlay` | the lived-in pass over stone/cobble | ⬜ |
+
+### Backdrops — **0 / 6** (5 strata + town)
+Painted panoramas beyond the wall line — scenery the player never walks into. One per stratum, keyed like the optional per-floor `ramp`. ⬜
+
+### Foliage cards — **0 / ~8** (grass, 3 flower types, vine, bush, fern, reed)
+Alpha-cut card textures on `MultiMesh`, **not** models. Large fraction of the anchor's frame, minimal cost. ⬜ *(a `GrassPatch` precedent exists)*
 
 ---
 
