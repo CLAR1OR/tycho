@@ -81,6 +81,11 @@ func _run() -> void:
 	await _shot_build()
 	await _shot_survey()
 	await _shot_market()
+	await _shot_tech()
+	await _shot_settings()
+	await _shot_achievements()
+	await _shot_slot_select()
+	await _shot_dialogue()
 	_screen.show()
 	SaveManager.delete_slot(SLOT)
 	print("render_menu: done")
@@ -172,6 +177,70 @@ func _shot_market() -> void:
 	_stage(p)
 	p.open()
 	await _shot_node("market")
+	_unstage(p)
+
+
+# =====================================================================================
+# The real Tier C screens
+# =====================================================================================
+
+## Two shots off the research screen: the constellation with a node selected (so the dock
+## is populated), then the reading page — which is the only place in the game the player
+## actually READS, and therefore the only place the prose font has to carry a whole screen.
+func _shot_tech() -> void:
+	var p := TechPanel.new()
+	_stage(p)
+	p.open()
+	var ids: Array = DataLoader.load_domain("tech").keys()
+	ids.sort()   # deterministic: the probe must render the same node every run
+	if not ids.is_empty():
+		p.select_node(str(ids[0]))
+	await _shot_node("tech")
+	if not ids.is_empty():
+		p.begin_read()
+		await _shot_node("tech-read")
+	_unstage(p)
+
+
+func _shot_settings() -> void:
+	var p := SettingsPanel.new()
+	_stage(p)
+	p.open()
+	await _shot_node("settings")
+	_unstage(p)   # NOT close() — close() would persist the profile
+
+
+func _shot_achievements() -> void:
+	var p := AchievementsPanel.new()
+	_stage(p)
+	p.open()
+	await _shot_node("achievements")
+	_unstage(p)
+
+
+## The title screen. Its plaques read the REAL slot files, and this probe's user:// is a
+## throwaway, so all three render EMPTY — which is the state worth seeing anyway, since the
+## empty plaque's dashed frame is the mark Tier C added. The occupied plaque is exercised by
+## the smoke. The probe deliberately does NOT write a save to dress this shot: slots 1-3 are
+## the human's, and a tool that writes them is one bad `--path` away from eating a saga.
+func _shot_slot_select() -> void:
+	var p := SlotSelect.new()
+	_stage(p)
+	await _shot_node("slot-select")
+	_unstage(p)
+
+
+## The talk box — the one Ember surface that stays see-through, because you have to be able
+## to see who is speaking. The shot is over the probe's bright patches on purpose: the check
+## is whether the box's own ground carries the line where the world behind it is lightest.
+func _shot_dialogue() -> void:
+	var p := DialoguePanel.new()
+	_stage(p)
+	p.play({"scene": {"kind": "talk", "lines": [
+		{"who": "sophia", "text": "The shards are a record of something that already happened. Read them and you are reading the past, not the stone."},
+	]}})
+	get_tree().paused = false
+	await _shot_node("dialogue")
 	_unstage(p)
 
 

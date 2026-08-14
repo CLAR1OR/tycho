@@ -14,7 +14,7 @@
 - **One geometry kit** (IC-5) — floors differ by palette/fog/light data + 1 hazard + 2–4 props. No per-floor biome art lines.
 - **"Imitation thins with depth"** — floors 1→5 grade from convincing cave to clean impossible void; floors 1–4 stay deniable, only floor 5 is unambiguous. Governs floor palettes, props, boss silhouettes, even the Wellspring tint.
 - **Readability guard** — enemy/telegraph/hazard colours are FIXED across all strata; floor palettes are chosen around them.
-- **One UI language, mid-migration** — **Ember** (no panels: hairlines, rings, negative space, gold reserved for state) is the target for the whole game (human, 2026-08-13). **Slate** is legacy, still dressing the **5** unmigrated surfaces after Tier B (2026-08-14), and is deleted when the last one moves. All UI copy/colours ship as placeholders the human dials.
+- **One UI language — Ember** (no panels: hairlines, rings, negative space, gold reserved for state; screens fully opaque since 2026-08-14). **The migration is done: 16 surfaces on Ember, 0 on Slate** (Tier C, 2026-08-14); `SlateHud`/`SlateTheme` are orphaned files awaiting deletion. All UI copy/colours ship as placeholders the human dials.
 - **Placeholder-first** — never block a system on final art.
 
 **Current reality check:** `assets/models|images|anims` are **empty**. Real assets in: **5 OFL fonts** ✅, 15 synthesized placeholder SFX 🟨, 4 synthesized placeholder music loops 🟨. Everything else below is ⬜.
@@ -138,7 +138,7 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 
 ## 5. 2D UI / HUD (all code-drawn today — Slate monograms/primitives on the menus, Ember vector glyphs on the run HUD; painterly pass deferred)
 
-> **Two languages in play since 2026-08-10, and Ember is winning** (`design/ui-hud.md`): after Tier B (2026-08-14) **11 surfaces speak Ember** (no panels, code-drawn vector glyphs) and **5 still speak Slate** (opaque panels, letter monograms). Ember's glyphs are point lists in `EmberHud.GLYPH_*` — real icons would replace them at the single `_glyph()` swap point, so this table's ⬜ rows are the same work either way.
+> **One language as of 2026-08-14** (`design/ui-hud.md`): all **16 surfaces speak Ember** — no panels, code-drawn vector glyphs. Ember's glyphs are point lists in `EmberHud.GLYPH_*` — real icons would replace them at the single `_glyph()` swap point, so this table's ⬜ rows are the same work either way.
 
 ### Icon sets
 | Set | Built / v1 target | Status |
@@ -157,9 +157,9 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 Tycho, Sophia, Thomas, Tilly, Mara, Herzog, Wren, The Woman (dream-blurred), emissary. None exist ⬜ (DialoguePanel shows tinted names).
 
 ### Screens & fonts
-- **11 Ember** (RunHud, TownHud, AchievementToast, EchoOfferPanel, PauseMenu — Tier A 2026-08-13; ForgePanel, EtchingsPanel, AttunementsPage, BuildPanel, SurveyPanel, MarketPanel — **Tier B 2026-08-14**) + **5 Slate** awaiting migration (TechPanel, SlotSelect, SettingsPanel, AchievementsPanel, DialoguePanel) — all 🟨 code-drawn, human restyles freely. Migration tiers + inventory: `design/ui-hud.md` § "Migrating to Ember".
+- **16 Ember, 0 Slate** — RunHud, TownHud, AchievementToast, EchoOfferPanel, PauseMenu (Tier A 2026-08-13) · ForgePanel, EtchingsPanel, AttunementsPage, BuildPanel, SurveyPanel, MarketPanel (Tier B 2026-08-14) · TechPanel, SlotSelect, SettingsPanel, AchievementsPanel, DialoguePanel (**Tier C 2026-08-14**). All 🟨 code-drawn, human restyles freely. Inventory: `design/ui-hud.md` § "Migrating to Ember".
 - **Icons stay code-drawn ⬜ — this is a standing decision, not a placeholder awaiting art** (human, re-confirmed 2026-08-13). 22 marks live as unit-square point lists in `EmberHud` (`GLYPH_FILL/STROKE/ARCS`): 4 resource crystals + 6 ability + 12 menu (`leaf`, `stone`, `sword`, `shield`, `heart`, `boot`, `star`, `anvil`, `book`, `house`, `lock`, `check`). **This keeps the entire UI migration independent of the asset-pipeline gate.** `_glyph()` is the single swap point if real icons are ever wanted. Same idiom as the town fountain's generated geometry.
-- Also code-drawn ⬜: `SigilIcon`, `WeaponSilhouette`, `BuildingSilhouette`, `EtchingsArms`, `ForgeAnvil` (**all five on Ember since Tier B**) · `TechChart`, `SlotSelectSky` (still Slate-era, migrate with their screens in Tier C).
+- Also code-drawn ⬜, **all seven on Ember**: `SigilIcon`, `WeaponSilhouette`, `BuildingSilhouette`, `EtchingsArms`, `ForgeAnvil` (Tier B) · `TechChart`, `SlotSelectSky` (Tier C). Plus two packable Control marks — `EmberPips` (level tracks) and `EmberFrame` (hairline / dashed / ring bounds).
 - Fonts ✅ (OFL, committed): Cinzel SemiBold (display), EB Garamond Medium (prose), JetBrains Mono Medium (numbers), **Alegreya Sans Regular + Medium (the UI voice — added 2026-08-13, closing the "no fourth font" gap; rationale in `assets/fonts/SOURCES.md`)**.
 - Reference anchors ✅ (`assets_src/anchors/`, `.gdignore`'d): `art-style.png` (THE look), `town-style-anchor.png` (superseded), `in-run-hud-reference.png` + `weapon-menu-reference.png` (the Ember UI language — HUD and menu halves).
 

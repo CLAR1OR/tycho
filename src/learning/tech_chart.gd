@@ -1,18 +1,25 @@
-extends Control
+extends EmberHud
 class_name TechChart
 ## The research constellation (R1 — Star chart, human-picked 2026-07-08 via
-## claude.ai/design). Draws the tech tree as stars + prereq edges in `_draw` (reading the
-## SlateHud Slate palette + the three project fonts) and turns a click near a star into a
-## select callback. Pure state → the state grammar lives in TechChartCore; this node owns
-## only pixels + hit-testing. The header, detail dock, and solve flow live in the panel
-## (src/learning/tech_panel.gd). Non-interactive chrome (title/subtitle/carry chip/turn-in
-## button/dock/close) sits on top of this Control as siblings; only stars are clickable.
+## claude.ai/design). Draws the tech tree as stars + prereq edges in `_draw` and turns a
+## click near a star into a select callback. Pure state → the state grammar lives in
+## TechChartCore; this node owns only pixels + hit-testing. The header, detail dock, and
+## solve flow live in the panel (src/learning/tech_panel.gd). Non-interactive chrome
+## (title/subtitle/carry/turn-in/dock) sits on top of this Control as siblings; only stars
+## are clickable.
+##
+## MIGRATED TO EMBER 2026-08-14 (Tier C). The star chart was always the closest Slate
+## screen to Ember — panel-less, gold-for-state, drawn on a dark field — so the migration
+## is mostly a palette swap plus two deletions: the bottom **hint chip** is gone (the
+## no-on-screen-instructions directive), taking the last bordered box on the screen with
+## it, and `_centered` gave way to the shared `_text_centred`. The star geometry, the
+## states and the Age-II fade are untouched.
 ##
 ## HUMAN: everything under "Style" is a PLACEHOLDER — dial like FEEL numbers (they carry
-## no combat feel, so no `# FEEL:` tag). The shared palette + fonts live in SlateHud.
+## no combat feel, so no `# FEEL:` tag). The shared palette + fonts live in EmberHud.
 
 # =====================================================================================
-# Style — placeholders. (Palette + fonts are shared — see SlateHud.)
+# Style — placeholders. (Palette + fonts are shared — see EmberHud.)
 # =====================================================================================
 const R_MAIN := 8.0          # done / ready / active / available core radius
 const R_LOCKED := 4.5        # a dim locked dot
@@ -34,17 +41,13 @@ const FADE_STEPS := 40
 const FADE_ALPHA := 0.9
 const FS_NAME := 13          # star name (display)
 const FS_META := 10          # star meta (num)
-const FS_HINT := 17          # bottom hint chip (body)
 const FS_AGE := 11           # the Age-II caps label (display)
-# The frame background the right fade dissolves toward (radial-gradient floor of the mock).
-const COL_FRAME_BG := Color(11.0/255, 10.0/255, 16.0/255)         # #0b0a10
 const COL_TEASE := Color(44.0/255, 42.0/255, 53.0/255)            # #2c2a35 unnamed dots
 const COL_EDGE_DIM := Color(44.0/255, 42.0/255, 53.0/255)         # #2c2a35 dashed
 const COL_LOCKED_CORE := Color(44.0/255, 42.0/255, 53.0/255)      # #2c2a35
 const COL_LOCKED_NAME := Color(87.0/255, 83.0/255, 106.0/255)     # #57536a
 const COL_ACTIVE_NAME := Color(240.0/255, 238.0/255, 246.0/255)   # #f0eef6 bright
 const COL_AGE_LABEL := Color(87.0/255, 83.0/255, 106.0/255)       # #57536a
-const HINT_TEXT := "Click a star to make it Sophia's focus · she solves it herself after ~5 runs"
 const AGE_LABEL := "AGE II — THE SKY GOES DEEPER"
 const QUIZ_LOCK_META := "ask again after a run"  # the only red on the screen
 
@@ -63,18 +66,12 @@ var defs: Dictionary = {}
 var on_select: Callable = Callable()
 
 var _selected: String = ""
-var _font_display: FontVariation
-var _font_body: FontVariation
-var _font_num: FontVariation
-var _sb := StyleBoxFlat.new()
 
 
 func _ready() -> void:
+	super._ready()  # EmberHud: full-rect anchors + the five shared fonts
+	# EmberHud defaults to MOUSE_FILTER_IGNORE; the chart hit-tests its stars.
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_font_display = SlateHud._with_fallback(SlateHud.FONT_DISPLAY_FILE)
-	_font_body = SlateHud._with_fallback(SlateHud.FONT_BODY_FILE)
-	_font_num = SlateHud._with_fallback(SlateHud.FONT_NUM_FILE)
 	resized.connect(queue_redraw)
 
 
@@ -128,7 +125,7 @@ func _draw() -> void:
 		return
 	var tech: Dictionary = SaveManager.state["tech"]
 	for d: Vector2 in DUST:
-		draw_circle(d * size, DUST_R, Color(SlateHud.COL_TEXT, DUST_ALPHA))
+		draw_circle(d * size, DUST_R, Color(COL_INK, DUST_ALPHA))
 	for t: Vector2 in TEASE:
 		draw_circle(t * size, R_UNKNOWN, COL_TEASE)
 	_draw_fade()
@@ -144,7 +141,6 @@ func _draw() -> void:
 	for id: String in defs:
 		_draw_star(id, TechChartCore.node_state(defs[id], tech, id), tech)
 	_draw_age_label()
-	_draw_hint()
 
 
 func _draw_fade() -> void:
@@ -154,15 +150,15 @@ func _draw_fade() -> void:
 	for i in FADE_STEPS:
 		var a := FADE_ALPHA * (float(i) / float(FADE_STEPS - 1))
 		draw_rect(Rect2(x0 + strip * i, 0.0, strip + 1.0, size.y),
-			Color(COL_FRAME_BG, a))
+			Color(COL_SCRIM, a))
 
 
 func _draw_edge(a: Vector2, b: Vector2, kind: StringName) -> void:
 	match kind:
 		&"lit":
-			draw_line(a, b, Color(SlateHud.COL_READY, 0.55), 1.5)
+			draw_line(a, b, Color(COL_ACCENT, 0.55), 1.5)
 		&"open":
-			draw_line(a, b, SlateHud.COL_SLATE_BORDER, 1.2)
+			draw_line(a, b, COL_RING, 1.2)
 		_:
 			draw_dashed_line(a, b, COL_EDGE_DIM, 1.2, 5.0)
 
@@ -171,53 +167,55 @@ func _draw_star(id: String, state: StringName, tech: Dictionary) -> void:
 	var c := _px(id)
 	var def: Dictionary = defs[id]
 	if id == _selected:
-		_dashed_ring(c, SEL_R, Color(SlateHud.COL_READY, 0.5))
-	var name_col := SlateHud.COL_TEXT
+		_dashed_ring(c, SEL_R, Color(COL_ACCENT, 0.5))
+	var name_col := COL_INK
 	var meta := ""
-	var meta_col := SlateHud.COL_KEY_TEXT
+	var meta_col := COL_INK_DIM
+	# A star's core is punched out of the field, so an unfilled one needs a ground to sit
+	# on: COL_SCRIM is the same ground the panel's backdrop paints, which is what makes a
+	# hollow star read as a hole rather than a dark disc.
 	match state:
 		&"researched":
-			draw_circle(c, GLOW_R, Color(SlateHud.COL_READY, GLOW_ALPHA))
-			draw_circle(c, R_MAIN, SlateHud.COL_READY)
-			name_col = SlateHud.COL_READY
+			draw_circle(c, GLOW_R, Color(COL_ACCENT, GLOW_ALPHA))
+			draw_circle(c, R_MAIN, COL_ACCENT)
+			name_col = COL_ACCENT
 			meta = "✓ researched" + ("  ·  🧠" if bool(def.get("thinking_tool", false)) else "")
 		&"ready":
-			draw_circle(c, GLOW_R, Color(SlateHud.COL_READY, GLOW_ALPHA))
-			draw_circle(c, R_MAIN, SlateHud.COL_SLATE_BG)
-			draw_arc(c, R_MAIN, 0.0, TAU, 28, SlateHud.COL_READY, RING_W)
-			name_col = SlateHud.COL_READY
+			draw_circle(c, GLOW_R, Color(COL_ACCENT, GLOW_ALPHA))
+			draw_circle(c, R_MAIN, COL_SCRIM)
+			_ring(c, R_MAIN, RING_W, COL_ACCENT)
+			name_col = COL_ACCENT
 			if TechCore.is_quiz_locked(tech, id) and _is_quiz(def):
 				meta = QUIZ_LOCK_META
-				meta_col = SlateHud.COL_PERIL  # the one red on the screen
+				meta_col = COL_DANGER  # the one red on the screen
 			else:
 				meta = "READY — read & solve"
-				meta_col = SlateHud.COL_READY
+				meta_col = COL_ACCENT
 		&"active":
-			draw_circle(c, GLOW_R, Color(SlateHud.COL_KNOWLEDGE, GLOW_ALPHA))
-			draw_circle(c, R_MAIN, SlateHud.COL_SLATE_BG)
-			draw_arc(c, R_MAIN, 0.0, TAU, 28, SlateHud.COL_KNOWLEDGE, RING_W)
+			draw_circle(c, GLOW_R, Color(COL_KNOWLEDGE, GLOW_ALPHA))
+			draw_circle(c, R_MAIN, COL_SCRIM)
+			_ring(c, R_MAIN, RING_W, COL_KNOWLEDGE)
 			var cost := float(def.get("cost_knowledge", 0.0))
 			var prog := TechCore.progress(tech, id)
 			var frac := clampf(prog / cost, 0.0, 1.0) if cost > 0.0 else 0.0
 			if frac > 0.0:
-				draw_arc(c, ARC_R, -PI * 0.5, -PI * 0.5 + frac * TAU, 32,
-					SlateHud.COL_KNOWLEDGE, ARC_W)
+				_arc_sweep(c, ARC_R, ARC_W, frac, COL_KNOWLEDGE)
 			name_col = COL_ACTIVE_NAME
 			meta = "%d/%d · Sophia's focus" % [int(prog), int(cost)]
-			meta_col = SlateHud.COL_KNOWLEDGE
+			meta_col = COL_KNOWLEDGE
 		&"available":
-			draw_circle(c, R_MAIN, SlateHud.COL_SLATE_BG)
-			draw_arc(c, R_MAIN, 0.0, TAU, 28, SlateHud.COL_SLATE_BORDER, RING_W)
+			draw_circle(c, R_MAIN, COL_SCRIM)
+			_ring(c, R_MAIN, RING_W, COL_RING)
 			meta = "%d knowledge" % int(def.get("cost_knowledge", 0.0))
 		_:  # locked
 			draw_circle(c, R_LOCKED, COL_LOCKED_CORE)
-			draw_arc(c, R_LOCKED, 0.0, TAU, 20, SlateHud.COL_CHIP_BORDER, 1.0)
+			_ring(c, R_LOCKED, 1.0, COL_RING)
 			name_col = COL_LOCKED_NAME
 			meta_col = COL_LOCKED_NAME
 			meta = "needs %s" % _first_unmet_prereq_name(def, tech)
-	_centered(Vector2(c.x, c.y + NAME_DY), str(def["name"]), name_col, FS_NAME, _font_display)
+	_text_centred(c.x, c.y + NAME_DY, str(def["name"]), name_col, FS_NAME, _font_display)
 	if not meta.is_empty():
-		_centered(Vector2(c.x, c.y + META_DY), meta, meta_col, FS_META, _font_num)
+		_text_centred(c.x, c.y + META_DY, meta, meta_col, FS_META, _font_ui)
 
 
 func _is_quiz(def: Dictionary) -> bool:
@@ -241,34 +239,5 @@ func _dashed_ring(c: Vector2, r: float, col: Color) -> void:
 
 
 func _draw_age_label() -> void:
-	_centered(Vector2(size.x - FADE_W * 0.5, size.y - 70.0), AGE_LABEL, COL_AGE_LABEL,
+	_text_centred(size.x - FADE_W * 0.5, size.y - 70.0, AGE_LABEL, COL_AGE_LABEL,
 		FS_AGE, _font_display)
-
-
-func _draw_hint() -> void:
-	var pad := Vector2(16, 6)
-	var tw := _font_body.get_string_size(HINT_TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_HINT).x
-	var w := tw + pad.x * 2.0
-	var h := _font_body.get_height(FS_HINT) + pad.y * 2.0
-	var rect := Rect2((size.x - w) * 0.5, size.y - SlateHud.MARGIN - h, w, h)
-	_panel(rect, SlateHud.COL_CHIP_BG, SlateHud.COL_CHIP_BORDER, 1, 8)
-	_centered(Vector2(rect.get_center().x, rect.position.y + h * 0.5), HINT_TEXT,
-		SlateHud.COL_TEXT, FS_HINT, _font_body)
-
-
-# --- draw helpers (self-contained; TechChart doesn't extend SlateHud) ----------------
-
-func _panel(rect: Rect2, bg: Color, border: Color, bw: int, radius: int) -> void:
-	_sb.bg_color = bg
-	_sb.border_color = border
-	_sb.set_border_width_all(bw)
-	_sb.set_corner_radius_all(radius)
-	draw_style_box(_sb, rect)
-
-
-## Draw `s` centred horizontally on `center.x`, vertically centred on `center.y` (baseline
-## math, matching SlateHud._text_in).
-func _centered(center: Vector2, s: String, col: Color, fs: int, font: Font) -> void:
-	var tw := font.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs).x
-	var y := center.y + (font.get_ascent(fs) - font.get_descent(fs)) * 0.5
-	draw_string(font, Vector2(center.x - tw * 0.5, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, fs, col)

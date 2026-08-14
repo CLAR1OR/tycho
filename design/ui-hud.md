@@ -99,6 +99,8 @@ Type variations: `EmberTitle` (Cinzel) · `EmberHead` (UI Medium, small + dim) �
 - **`HSeparator` / `VSeparator` → the hairline.** `EmberHud._hairline` is the drawn version; a Control-tree screen separating stacked rows uses the node, and unstyled it lands as a fat grey slab. Styling it here is what keeps a row divider in the market sheet identical to a section rule in the run HUD.
 - **Scrollbars → a hairline track with a thin grabber.** These shipped in Step 1 with an *empty* track and a `COL_RING` grabber, on the theory that a scrollbar is furniture and Ember hides furniture. **Tier B's probe showed that is wrong:** over the scrim the bar was invisible, so the survey and the attunements page read as pages that had been **cut off** rather than pages that continue. Ember hides the box *around* content; it must not hide the one mark saying there is more content.
 
+**3c. `EmberFrame`** (`src/core/ember_frame.gd`, added in Tier C) — a bounding mark as a packable Control: hairline rect, **dashed** rect, or ring, drawn to fill its own node's rect. Same reason as `EmberPips`: a `StyleBoxFlat` cannot draw a dashed border and cannot draw a circle, and both are Ember marks that mean something (the dashed frame = the selected/empty thing; the ring = the medallion an echo, an achievement and an ability slot all wear). The slot-select's empty plaques and the achievements page's monograms both use it.
+
 **3b. `EmberPips`** (`src/core/ember_pips.gd`, added in Tier B) — `_pips` wrapped as a packable Control, so a Control-**tree** screen can drop a level track into an `HBox` beside a name or a cost. It exists because the pip track is the single most-repeated mark in the game's menus and **four** screens each drew their own: the forge built five `Panel` nodes with StyleBoxFlat borders, while the etchings, attunements and survey pages printed literal `●`/`○` characters in whatever font the row happened to inherit — so the same idea rendered at three sizes with three fill rules, and *"what does hollow mean"* had three answers. `setup(level, max)` takes a track; `set_states(["filled"])` names a single pip outright, for the one-pip-per-row ladders (a build page's level rows, the etchings' deepen rungs) where the screen already knows which of the three states a row is.
 
 **4. Code-drawn marks, extended** (human decision, held from 2026-08-10 and re-confirmed: *"code drawn icons"*). The HUD's 10 glyphs became 22. New: `leaf` + `stone` (so all **seven** Ledger resources have a mark, not just the four the run HUD showed), and `sword` / `shield` / `heart` / `boot` / `star` / `anvil` / `book` / `house` / `lock` / `check` for rails, categories, stat rows, locked rows and met requirements. `GLYPH_ARCS` entries gained an optional **centre offset** (4th/5th element) so a mark can carry a non-concentric arc — the padlock's shackle needed it. `_glyph()` is still the single swap point when real icons exist.
@@ -124,16 +126,16 @@ Type variations: `EmberTitle` (Cinzel) · `EmberHead` (UI Medium, small + dim) �
 
 ## Migrating to Ember (the plan — Step 2 onward)
 
-**Inventory:** started at Ember = 1 surface (`RunHud`), Slate = 15. **Tier A shipped 2026-08-13 → Ember 5 / Slate 11. Tier B shipped 2026-08-14 → Ember 11 / Slate 5.** Of the 7 helper draw classes that read Slate colours directly, five have moved (`EtchingsArms`, `SigilIcon`, `ForgeAnvil`, `WeaponSilhouette`, `BuildingSilhouette`); `TechChart` and `SlotSelectSky` remain, and are Tier C.
+**Inventory:** started at Ember = 1 surface (`RunHud`), Slate = 15. **Tier A 2026-08-13 → Ember 5 / Slate 11. Tier B 2026-08-14 → Ember 11 / Slate 5. Tier C 2026-08-14 → Ember 16 / Slate 0.** All 7 helper draw classes have moved too.
 
-**Slate's five survivors:** `TechPanel` (+`TechChart`), `SlotSelect` (+`SlotSelectSky`), `SettingsPanel`, `AchievementsPanel`, `DialoguePanel`.
+> **The migration is functionally complete.** `SlateHud` and `SlateTheme` now have **zero references anywhere in `src/`, `tools/` or `tests/`** — they are orphaned files. Tier D is the deletion, and nothing depends on it happening.
 
 | Tier | Surfaces | Why this order |
 | --- | --- | --- |
 | **A — in-run + always-on ✅ DONE 2026-08-13** | `EchoOfferPanel`, `PauseMenu`, `TownHud`, `AchievementToast` | they appear *beside* Ember, so they disagreed with it most visibly. `EchoOfferPanel` was nearly Ember already — no panels, rings, glow, Cinzel monograms |
 | **B — the anchor's own archetype ✅ DONE 2026-08-14** | `ForgePanel` (+`ForgeAnvil`, `WeaponSilhouette`), `EtchingsPanel` (+`EtchingsArms`, `SigilIcon`), `AttunementsPage`, `BuildPanel` (+`BuildingSilhouette`), `SurveyPanel`, `MarketPanel` | the anchor **is** a weapon menu; these six are the catalogue grammar almost line for line |
-| **C — the rest** | `TechPanel` (+`TechChart`), `SlotSelect` (+`SlotSelectSky`), `SettingsPanel`, `AchievementsPanel`, `DialoguePanel` | each is its own picture. The star chart is already panel-less and gold-for-state, so it is closer than it looks; the night-sky title screen needs the least |
-| **D — retire Slate** | delete `SlateHud` + `SlateTheme` | only once the last screen has moved. Until then the two languages coexist by design |
+| **C — the rest ✅ DONE 2026-08-14** | `TechPanel` (+`TechChart`), `SlotSelect` (+`SlotSelectSky`), `SettingsPanel`, `AchievementsPanel`, `DialoguePanel` | each is its own picture. The star chart was already panel-less and gold-for-state, so it was closer than it looked; the night-sky title screen needed the least |
+| **D — retire Slate** | delete `SlateHud` + `SlateTheme` | **unblocked since Tier C** — both files are orphaned. A pure deletion |
 
 **Rules for every migration chunk:** restyle only — public API, signals, flow, pause semantics, guards and game-copy strings stay byte-identical (the precedent every Slate rebuild set, and what lets the smoke drive them unchanged). New copy ships as placeholders. A screen that gains a pure rule puts it in `EmberMenuCore`, not in its own file.
 
@@ -188,7 +190,55 @@ All six were **restyles**: every public method, transaction, guard, pause semant
 
 **What carries the affordance instead:** the world. The exit portal lights and plays a sound; the doors appear with their sigils; the Wellspring is a visible object you walk into. Those were always the real signals — the line was narrating them.
 
-**The rule this leaves behind, for anything built later:** the run HUD's objective rows are now the only words on screen, so **a row must read as state, never as an instruction** (`Room cleared`, not "now choose a door"). `HudCore.task_rows` carries that note at its definition. The rule is about the in-world HUD; a *menu* prompt naming its inputs (`_prompt`, the anchor's footer row) is a different thing and is not covered — though note that no Tier B screen adds one, so the directive's spirit is intact until the human asks for it.
+**The rule this leaves behind, for anything built later:** the run HUD's objective rows are now the only words on screen, so **a row must read as state, never as an instruction** (`Room cleared`, not "now choose a door"). `HudCore.task_rows` carries that note at its definition.
+
+**Extended through Tier C (2026-08-14), with a line drawn.** Applying it to the menus needed a rule, because a settings page is explanatory by nature. The line is **control prompts go, descriptive copy in the game's voice stays** — a control prompt tells you which key does what or what to do next, which is exactly what `WASD to move` and `Clear the room` were.
+
+| Removed (control prompts) | Where |
+| --- | --- |
+| `Esc — back` | achievements page footer |
+| `E / click — continue` | the dialogue talk box |
+| `Click a star to make it Sophia's focus · she solves it herself after ~5 runs` | the star chart's bottom hint chip |
+
+Kept, as descriptive copy in the game's voice: `Changes take hold as you make them.` and `The nanobots do not answer this one yet.` (settings), and every star's own meta line (`READY — read & solve`, `0/20 · Sophia's focus`), which is state.
+
+> **One fact was lost with the star-chart chip:** that Sophia auto-solves the active node after roughly five runs. Nothing else on screen says so. If the human wants it back it belongs in Sophia's dialogue, not on the chart — she is standing right there.
+
+**Precedent, not a new idea:** the ESC-close pass had already deleted every Close button, and the O1 echo offer had already deleted `press 1 / 2 / 3` on the grounds that the key badges carry the affordance. Every panel in the game already closed on ESC with no prompt; the achievements page was the outlier.
+
+---
+
+### Tier C — the last five screens (2026-08-14)
+
+All five were **restyles**: every public method, the research flow, the two-step delete, the live-apply settings contract, the pause-ownership rules and all authored copy are byte-identical, and the smoke drove them unchanged.
+
+- **`TechPanel` + `TechChart`** — the star chart was always the closest Slate screen to Ember (panel-less, gold-for-state, drawn on a dark field), so the chart itself was mostly a palette swap plus deleting the bottom hint chip, which took the last bordered box on the screen with it. The panel got the dock's inner hairline and a transparent carry readout. **The reading page is the real win:** explanations and ahas now set in Garamond (`EmberProse`) rather than the interface sans, because this is the one screen in the game where the player is actually *reading* rather than scanning a label — and the learning pillar lives there.
+- **`SlotSelect` + `SlotSelectSky`** — **this is where `_dashed_rect` finally pays the debt it was created to pay.** The empty plaque always wanted a dashed frame and could not have one, because `StyleBoxFlat` has no dashed border; the old source said so out loud and approximated it with a thinner, dimmer box. The plaque is now a plain `Control` wearing one `EmberFrame`, so idle / hover / armed / empty are four states of **one** mark and the empty one is a real dashed frame — an unwritten saga drawn as an outline waiting to be filled. The sky, being an illustration rather than a UI surface, borrowed only three colours from Slate and needed nothing else.
+- **`SettingsPanel`** — entirely drawn already, so it simply became an `EmberHud` subclass: backdrop → `_scrim()`, section heads → the shared `_section`, and the two window chips → **`_row_box`**, the same selected/hover/idle mark a weapon row wears in the forge. That last one is the point of having a vocabulary: picking a window mode and picking a weapon are the same gesture, so they should look the same.
+- **`AchievementsPanel`** — the monogram chip became the **gold ring medallion the unlock toast already draws**, so the page and the toast now show the same object: a reward you just saw pop is findable here by its shape.
+- **`DialoguePanel`** — the last Slate surface, and **the one place Ember deliberately does not go opaque** (see below).
+
+**One new shared piece: `EmberFrame`** (`src/core/ember_frame.gd`) — a bounding mark as a packable Control (hairline rect / dashed rect / ring), the counterpart of `_row_box`/`_dashed_rect`/`_ring` the way `EmberPips` is the counterpart of `_pips`. It exists because a `StyleBoxFlat` can draw neither a dash nor a circle, and both are Ember marks that *mean* something.
+
+**Four defects the probe caught:**
+1. **The title screen had no sky.** `SlotSelectSky` sets full-rect anchors in its own `_ready`, which under a CanvasLayer never gets a layout pass — so its size stayed (0,0), its `_draw` bailed on the size guard, and the plaques floated on whatever was behind them. `SlotSelect` now drives its size explicitly, the same fix every other Ember surface applies to itself.
+2. **The settings ASSIST row printed its note straight through its own name** — the note was left-aligned at `col_x + NAME_W`, and "Reinforcement Protocol" in Cinzel at 18 px is far wider than `NAME_W`, which is sized for "Interface". Now right-aligned to the column edge, where the volume numbers sit. *(Pre-existing — it was wrong under Slate too.)*
+3. **The achievement medallion's ring was invisible** — the chip was a `PanelContainer`, which lays its children out as content, so `EmberTheme`'s 18 px panel padding squeezed a 44 px medallion down to about 8 px. It is a plain `Control` now.
+4. **The achievements title sat visibly right of centre** — `PRESET_CENTER_TOP` applied in `_ready` anchors the label's *left* edge to the centre, because its size is still (0,0) at that point. Positioned by hand in `_process` instead. *(Also pre-existing.)*
+
+---
+
+## Opaque screens (human directive, 2026-08-14)
+
+> *"make sure that all screens are completely opaque. right now some (e.g. smith) shows the town faintly in the background, which is annoying as it distracts"*
+
+**`EmberHud.COL_SCRIM` is now alpha 1.0.** Everything that draws `_scrim()` with no argument takes it: all sixteen migrated screens plus the pause menu.
+
+**Why the original 0.90 was wrong, stated plainly so it does not come back.** The menu vocabulary shipped translucent on the theory that letting the world show through is what separates Ember from Slate's opaque fullscreen panel. That confused two different things. **Ember's argument is about panels *inside* a screen** — no boxes around rows, no chrome the eye has to read past. A fullscreen menu's backdrop is not one of those panels; it is the page itself. And the town is not a neutral field: it is a lit 3D scene with a fountain, moving water and warm practicals, so 10% of it is still *motion* behind static text. **Tier B is what made it noticeable** — the six town screens used to fill themselves with an opaque rect and the migration swapped that for the scrim.
+
+**Two deliberate exceptions, both in-world rather than screens:**
+- **`EchoOfferPanel.DIMMER`** (0.62) — an in-run beat over a paused battlefield you drop straight back into. You are still reading the fight.
+- **`DialoguePanel`** — someone is talking to you in the town and you have to be able to see who. The box gets a *solid ground of its own* (a bottom band plus one hairline along its top edge) while the world stays visible around it. The theme's transparent PanelContainer would have left the lines floating on the world: legible over a dark wall, not over a lit fountain.
 
 ---
 
@@ -250,7 +300,7 @@ The town HUD replaces the old plain `DayInfo` / `FoodStatus` / `Hint` Labels on 
 
 **HUMAN dial placeholders:** `HINT_TEXT`, the toast copy + `TOAST_HOLD_S`/`TOAST_FADE_S` + its new `TOAST_TOP` placement, `PROJECTION_ALPHA`, the `TOWN`/`RUN` headers, and every size/gap are TownHud consts; the shared palette/fonts/marks are in `EmberHud`. Dial like FEEL numbers. Judge with `tools/render_hud.tscn`'s `town` state.
 
-## Panels & the pause menu — Slate (2026-07-07; **legacy — five screens left, see § "Migrating to Ember"**)
+## Panels & the pause menu — Slate (2026-07-07; **retired — every screen has moved, see § "Migrating to Ember"**)
 
 > Human directive: "continue with the pause/panel restyle to slate. pause menu should be fullscreen." Cashes in the deferred "pause / panel restyle" item below.
 
@@ -268,7 +318,7 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** `SlateTheme`'s sizes / margins / radii and the pause backdrop colour are placeholders; the shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
-## Research screen — Star chart (R1) (decided + built 2026-07-08)
+## Research screen — Star chart (R1) (decided + built 2026-07-08; **migrated to Ember 2026-08-14**)
 
 > Human picked **R1 — Star chart** on claude.ai/design (project "Tycho UI", the "Research Screen" group): the tech tree drawn as Sophia's constellation map — the strongest thematic fit (Tycho Brahe charted stars; Sophia charts what the resonance knows). The old LIST + NODE screens merge into a chart; the solve flow (READ → QUIZ/PUZZLE → LOCKED/AHA) keeps its scrolling reading page with two small Slate touches.
 
@@ -358,7 +408,7 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** the ember glow colour/shape (`COL_EMBER`, `EMBER_*`), the anvil/weapon/tab geometry (`ForgeAnvil`/`WeaponSilhouette`, painterly pass), the ore crystal glyph, the pip sizes/radius, all visual consts at the tops of `forge_anvil.gd` / `forge_panel.gd`, and ALL new copy (`SUBTITLE`, the `LEVEL_LINE` format, the name-bar meta-line format — Mara's register, no aphorisms). The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
-## Slot select — Under the night sky (S2) (decided + built 2026-07-08)
+## Slot select — Under the night sky (S2) (decided + built 2026-07-08; **migrated to Ember 2026-08-14**)
 
 > Human picked **S2 — Under the night sky** on claude.ai/design ("Slot Select" group). The classic title-screen shape done in the game's language: the big Cinzel `TYCHO` over a quiet star field with ONE faint cyan constellation (the research chart's visual leaking into the title — Tycho Brahe again), a dark ridge horizon, and the three sagas as wide slate plaques. This screen is also the game's **title screen** (F5 boots here; the title track plays over it — music untouched). It was the last default-gray UI in the game.
 
@@ -447,7 +497,7 @@ A new **PlanningTable** (Area3D + placeholder box mesh + Label3D) sits next to `
 
 **HUMAN dial placeholders:** the building sketch geometry + colours (`BuildingSilhouette`, painterly pass); all visual consts atop `build_panel.gd` / `survey_panel.gd` (dock/sheet widths, stage scale/positions, carry/name/meta font sizes); and ALL copy (`TITLE` `The Town Ledger`, the subtitles, the Well-Fed footnote, `research:`/`next:`/`max level` labels, and the `BuildPanelCore` yield formats + the `CAP_FLAVOR` walls line — Herzog's register). The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
-## Settings — The quiet page (SET1) (decided + built 2026-07-09)
+## Settings — The quiet page (SET1) (decided + built 2026-07-09; **migrated to Ember 2026-08-14**)
 
 > Human picked the **Settings** group on claude.ai/design, with BOTH proposals accepted: the DISPLAY window-mode row AND the dormant ASSIST row. The game had no settings UI — three volumes sat in `profile.json` (`settings.{music_volume,sfx_volume,ui_volume}`, linear 0..1), applied once in `Music._ready`. SET1 makes them dialable and adds a window-mode toggle, with two entry points.
 
@@ -469,7 +519,7 @@ A new **PlanningTable** (Area3D + placeholder box mesh + Label3D) sits next to `
 
 **HUMAN placeholders:** the backdrop/hover/notch colours + all sizes (consts atop `settings_panel.gd`), `SettingsCore.STEP` + the row labels, and ALL copy (title/subtitle/section heads/chip labels/the ASSIST name+note/footer). Shared palette/fonts live in `SlateHud`.
 
-## Achievements — page + unlock toast (built 2026-07-11)
+## Achievements — page + unlock toast (built 2026-07-11; **page migrated to Ember 2026-08-14**)
 
 > Built WITH the achievements system (`architecture-schemas.md` §5) — no claude.ai/design round yet; both pieces are first-pass Slate placeholders the human restyles freely.
 

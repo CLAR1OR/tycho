@@ -1,7 +1,7 @@
 extends Control
 class_name AchievementsPanel
-## The achievements page (architecture-schemas.md §5) — a fullscreen Slate panel listing
-## every authored def: monogram chip + name + desc, progress n/count for progress
+## The achievements page (architecture-schemas.md §5) — a fullscreen page listing every
+## authored def: monogram medallion + name + desc, progress n/count for progress
 ## achievements, greyed until unlocked. `hidden` defs render masked ("???") until they
 ## unlock. Reached from the ESC pause menu's Achievements button (placeholder placement,
 ## the human may move it).
@@ -10,20 +10,27 @@ class_name AchievementsPanel
 ## ownership — open() pauses only if the tree was not already paused (so it can open
 ## OVER the pause menu without stealing its pause); close() unpauses only if it owns
 ## the pause. Spawned on demand onto game.gd's $HUD via game.open_achievements();
-## queue_free on close. Built from Controls under SlateTheme (a scrolling list wants
+## queue_free on close. Built from Controls under EmberTheme (a scrolling list wants
 ## containers, not _draw). Public open()/close()/row_count()/lists_unlocked() let the
 ## headless smoke drive the real paths.
+##
+## MIGRATED TO EMBER 2026-08-14 (Tier C) — a restyle; the ordering, the masking rule, the
+## pause ownership and every public method are byte-identical. Two changes worth naming:
+## the monogram chip became the **gold ring medallion** the achievement toast already
+## draws, so the page and the toast now show the same object (an unlock you just saw pop
+## is findable here by its shape); and the `Esc — back` footer is gone under the
+## no-on-screen-instructions directive — every other panel in the game already closes on
+## ESC with no prompt.
 ##
 ## HUMAN: everything under "Style / copy" is a PLACEHOLDER — dial like FEEL numbers.
 
 signal closed
 
 # =====================================================================================
-# Style / copy — placeholders. (Shared palette + fonts ride SlateTheme/SlateHud.)
+# Style / copy — placeholders. (Shared palette + fonts ride EmberTheme/EmberHud.)
 # =====================================================================================
-## Fullscreen backdrop: the pause menu's near-opaque dark (HUMAN placeholder).
-const COL_BACKDROP := Color(12.0 / 255, 11.0 / 255, 16.0 / 255, 0.88)  # #0c0b10 @ 0.88
 const COLUMN_W := 700.0
+const TITLE_Y := 24.0
 const TOP_MARGIN := 70.0
 const BOTTOM_MARGIN := 50.0
 const ROW_SEPARATION := 10
@@ -31,9 +38,9 @@ const ICON_BOX := 44.0
 const LOCKED_ALPHA := 0.45      # locked rows grey out to this
 const TITLE := "Achievements"
 const MASKED := "???"           # hidden-and-locked rows mask name/desc/icon
-const FOOTER := "Esc — back"
 
 var _owns_pause := false
+var _title: Label = null
 var _rows: VBoxContainer = null
 var _row_unlocked: Dictionary = {}   # id -> bool, as rendered (smoke getter)
 
@@ -41,26 +48,24 @@ var _row_unlocked: Dictionary = {}   # id -> bool, as rendered (smoke getter)
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("achievements_panel")
-	theme = SlateTheme.get_theme()
+	theme = EmberTheme.get_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP  # eat clicks so they don't fall through
 	var backdrop := ColorRect.new()
-	backdrop.color = COL_BACKDROP
+	backdrop.color = EmberHud.COL_SCRIM  # opaque, like every Ember screen
 	backdrop.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	backdrop.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(backdrop)
 	var title := Label.new()
 	title.text = TITLE
-	title.theme_type_variation = &"TitleLabel"
-	title.set_anchors_and_offsets_preset(Control.PRESET_CENTER_TOP)
-	title.position.y = 24.0
+	title.theme_type_variation = &"EmberTitle"
+	# Positioned by hand in _process, NOT by an anchor preset. Anchor presets applied in
+	# _ready resolve against a size that is still (0,0) under a CanvasLayer (the house
+	# quirk), and CENTER_TOP in particular bakes the label's LEFT edge onto the centre —
+	# which printed the title visibly right of centre.
+	title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(title)
-	var footer := Label.new()
-	footer.text = FOOTER
-	footer.theme_type_variation = &"DimLabel"
-	footer.set_anchors_and_offsets_preset(Control.PRESET_CENTER_BOTTOM)
-	footer.position.y = -34.0
-	add_child(footer)
+	_title = title
 	var scroll := ScrollContainer.new()
 	scroll.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	scroll.offset_top = TOP_MARGIN
@@ -99,10 +104,12 @@ func close() -> void:
 
 func _process(_delta: float) -> void:
 	# Anchors set in a Control's own _ready under a CanvasLayer get no layout pass —
-	# sync to the viewport, like every other rebuilt Slate screen.
+	# sync to the viewport, like every other Ember screen.
 	var vp := get_viewport_rect().size
 	if size != vp:
 		size = vp
+	if _title != null:
+		_title.position = Vector2((size.x - _title.size.x) * 0.5, TITLE_Y)
 
 
 func _input(event: InputEvent) -> void:
@@ -156,32 +163,49 @@ func _build_row(id: String, def: Dictionary, achievements: Dictionary) -> Contro
 	var unlocked := AchievementCore.is_unlocked(achievements, id)
 	var masked := bool(def.get("hidden", false)) and not unlocked
 	_row_unlocked[id] = unlocked
-	var row := PanelContainer.new()
+	var row := PanelContainer.new()   # transparent under EmberTheme — it groups and pads
 	if not unlocked:
 		row.modulate = Color(1, 1, 1, LOCKED_ALPHA)
 	var h := HBoxContainer.new()
 	h.add_theme_constant_override("separation", 14)
 	row.add_child(h)
-	# Monogram chip.
-	var chip := PanelContainer.new()
+	# Monogram medallion — the SAME mark the unlock toast draws, so a reward you just saw
+	# pop is findable on this page by its shape. Gold ring once unlocked, faint until then.
+	# A plain Control, NOT a PanelContainer: the medallion is two stacked full-rect children
+	# (ring + monogram) and a PanelContainer would lay them out as content — squeezing both
+	# into what is left after EmberTheme's 18 px panel padding, which shrank the ring to
+	# roughly 8 px and hid it entirely.
+	var chip := Control.new()
 	chip.custom_minimum_size = Vector2(ICON_BOX, ICON_BOX)
+	chip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	chip.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	var ring := EmberFrame.new()
+	chip.add_child(ring)
 	var mono := Label.new()
 	mono.text = MASKED if masked else str(def.get("icon", "?"))
-	mono.theme_type_variation = &"TitleLabel"
+	mono.theme_type_variation = &"EmberTitle"
+	mono.add_theme_font_size_override("font_size", EmberHud.FS_MONO + 3)
+	mono.add_theme_color_override("font_color",
+		EmberHud.COL_ACCENT if unlocked else EmberHud.COL_INK_DIM)
 	mono.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	mono.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	mono.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	chip.add_child(mono)
+	mono.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	h.add_child(chip)
+	ring.setup(EmberFrame.Shape.RING,
+		EmberHud.COL_ACCENT if unlocked else EmberHud.COL_RING)
 	# Name + desc.
 	var text := VBoxContainer.new()
 	text.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var name_label := Label.new()
 	name_label.text = MASKED if masked else str(def["name"])
-	name_label.theme_type_variation = &"TitleLabel"
+	name_label.theme_type_variation = &"EmberTitle"
+	name_label.add_theme_font_size_override("font_size", EmberHud.FS_ROW + 3)
 	text.add_child(name_label)
 	var desc := Label.new()
 	desc.text = MASKED if masked else str(def["desc"])
-	desc.theme_type_variation = &"DimLabel"
+	desc.theme_type_variation = &"EmberDim"
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	text.add_child(desc)
 	h.add_child(text)
@@ -191,7 +215,7 @@ func _build_row(id: String, def: Dictionary, achievements: Dictionary) -> Contro
 		var progress := Label.new()
 		var n := count if unlocked else mini(AchievementCore.progress_of(achievements, id), count)
 		progress.text = "%d/%d" % [n, count]
-		progress.theme_type_variation = &"NumLabel"
+		progress.theme_type_variation = &"EmberNum"
 		progress.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		h.add_child(progress)
 	return row

@@ -8,12 +8,17 @@ class_name SlotSelectSky
 ## title with a cool glow + the dim Garamond subtitle. The three saga plaques sit on top as
 ## panel siblings; this Control is pure pixels (MOUSE_FILTER_IGNORE), never re-randomized.
 ##
+## MIGRATED TO EMBER 2026-08-14 (Tier C) — the smallest migration in the whole project,
+## because this node is an ILLUSTRATION rather than a UI surface: it draws its own opaque
+## sky, so it borrowed only three colours from Slate. Those three now come from EmberHud
+## and nothing else changed. The title screen was always going to be the least affected.
+##
 ## HUMAN: everything under "Style" is a PLACEHOLDER — gradient stops, the star/constellation/
 ## ridge geometry, the title size/spacing/glow, and the subtitle copy. Dial like FEEL numbers
-## (no combat feel, so no `# FEEL:` tag). The shared palette + fonts live in SlateHud.
+## (no combat feel, so no `# FEEL:` tag). The shared palette + fonts live in EmberHud.
 
 # =====================================================================================
-# Style — placeholders. (Shared palette + fonts are in SlateHud.)
+# Style — placeholders. (Shared palette + fonts are in EmberHud.)
 # =====================================================================================
 # Gradient (three vertical stops; hex in the comment, Color(r/255,…) so it const-folds).
 const COL_SKY_TOP := Color(10.0/255, 9.0/255, 16.0/255)        # #0a0910
@@ -67,6 +72,8 @@ const SUBTITLE_FS := 16
 const SUBTITLE_SPACING := 3
 const SUBTITLE_DY := 22.0                                      # below the title box
 
+## Two bespoke FontVariations: the title and subtitle carry per-glyph letter spacing, which
+## the shared `EmberHud` variations must not (every other label would inherit it).
 var _font_title: FontVariation
 var _font_sub: FontVariation
 
@@ -74,9 +81,9 @@ var _font_sub: FontVariation
 func _ready() -> void:
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_font_title = SlateHud._with_fallback(SlateHud.FONT_DISPLAY_FILE)
+	_font_title = EmberHud._with_fallback(EmberHud.FONT_DISPLAY_FILE)
 	_font_title.set_spacing(TextServer.SPACING_GLYPH, TITLE_SPACING)
-	_font_sub = SlateHud._with_fallback(SlateHud.FONT_BODY_FILE)
+	_font_sub = EmberHud._with_fallback(EmberHud.FONT_BODY_FILE)
 	_font_sub.set_spacing(TextServer.SPACING_GLYPH, SUBTITLE_SPACING)
 	resized.connect(queue_redraw)
 
@@ -114,9 +121,9 @@ func _draw_constellation() -> void:
 	for np: Vector2 in CONSTELLATION_PTS:
 		pts.append(np * size)
 	for i in pts.size() - 1:
-		draw_line(pts[i], pts[i + 1], Color(SlateHud.COL_SLATE_BORDER, CONSTELLATION_LINE_A), 1.0, true)
+		draw_line(pts[i], pts[i + 1], Color(EmberHud.COL_RING, CONSTELLATION_LINE_A), 1.0, true)
 	for i in pts.size():
-		draw_circle(pts[i], CONSTELLATION_R[i], Color(SlateHud.COL_KNOWLEDGE, CONSTELLATION_A[i]))
+		draw_circle(pts[i], CONSTELLATION_R[i], Color(EmberHud.COL_KNOWLEDGE, CONSTELLATION_A[i]))
 
 
 func _draw_horizon() -> void:
@@ -145,7 +152,7 @@ func _draw_title() -> void:
 	for i in TITLE_GLOW_LAYERS:
 		var t := float(i) / float(TITLE_GLOW_LAYERS)
 		draw_circle(glow_centre, TITLE_GLOW_R * (1.0 - t * 0.7),
-			Color(SlateHud.COL_KNOWLEDGE, 0.05 * (1.0 - t)))
+			Color(EmberHud.COL_KNOWLEDGE, 0.05 * (1.0 - t)))
 	# TYCHO — big Cinzel, letter-spaced, centred.
 	var tw := _font_title.get_string_size(TITLE_TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, TITLE_FS).x
 	var ty := title_y + _font_title.get_ascent(TITLE_FS) * 0.5
@@ -155,4 +162,4 @@ func _draw_title() -> void:
 	var sw := _font_sub.get_string_size(SUBTITLE_TEXT, HORIZONTAL_ALIGNMENT_LEFT, -1, SUBTITLE_FS).x
 	var sy := ty + _font_title.get_descent(TITLE_FS) + SUBTITLE_DY + _font_sub.get_ascent(SUBTITLE_FS)
 	draw_string(_font_sub, Vector2(cx - sw * 0.5, sy), SUBTITLE_TEXT,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, SUBTITLE_FS, SlateHud.COL_KEY_TEXT)
+		HORIZONTAL_ALIGNMENT_LEFT, -1, SUBTITLE_FS, EmberHud.COL_INK_DIM)

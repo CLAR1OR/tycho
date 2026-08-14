@@ -44,9 +44,28 @@ const COL_TRACK := Color(1.0, 1.0, 1.0, 0.16)                      # the unfille
 const COL_SHADOW := Color(0.0, 0.0, 0.0, 0.7)                      # text legibility over the world
 const COL_DANGER := Color(255.0/255, 92.0/255, 92.0/255)           # #ff5c5c peril mark
 # Menu-only additions. A menu owns the whole screen, so it needs a ground to sit on and a
-# way to bound a row — but Ember still refuses opaque panels: the scrim is a dim of the
-# world behind, and a "row" is a barely-there wash inside a hairline, never a filled box.
-const COL_SCRIM := Color(10.0/255, 9.0/255, 13.0/255, 0.90)        # #0a090d @ .90 backdrop
+# way to bound a row. Note what Ember refuses and what it does not: a "row" is a
+# barely-there wash inside a hairline, never a filled box — but the SCREEN's ground is
+# solid (see COL_SCRIM).
+##
+## OPAQUE, on a human call (2026-08-14): "make sure that all screens are completely
+## opaque. right now some (e.g. smith) shows the town faintly in the background, which is
+## annoying as it distracts."
+##
+## It shipped at 0.90 with the menu vocabulary, on the theory that letting the world show
+## through is what separates Ember from Slate's opaque fullscreen panel. That reasoning
+## confused two different things. **Ember's argument is about panels INSIDE a screen** —
+## no boxes around rows, no chrome the eye has to read past. A fullscreen menu's backdrop
+## is not one of those panels; it is the page itself. And the town is not a neutral field:
+## it is a lit 3D scene with a fountain, moving water and warm practicals, so 10% of it is
+## still motion behind static text. **Tier B made this worse and is where it was noticed**
+## — the six town screens used to fill themselves with an opaque `TechChart.COL_FRAME_BG`
+## rect and the migration swapped that for this scrim.
+##
+## Everything drawing `_scrim()` with no argument takes this: all eleven migrated menus
+## plus the pause menu. The ONE deliberate exception is `EchoOfferPanel.DIMMER` — that is
+## an in-run beat over a paused battlefield you drop straight back into, not a screen.
+const COL_SCRIM := Color(10.0/255, 9.0/255, 13.0/255, 1.0)         # #0a090d, opaque
 const COL_ROW := Color(1.0, 1.0, 1.0, 0.035)                       # resting row wash
 const COL_ROW_HOVER := Color(1.0, 1.0, 1.0, 0.075)                 # hovered row wash
 const COL_ROW_SELECTED := Color(224.0/255, 168.0/255, 60.0/255, 0.10) # gold wash, selected
@@ -298,8 +317,9 @@ func _elide(s: String, max_w: float, fs: int, font: Font) -> String:
 #
 # HUMAN: every default below is a PLACEHOLDER. Dial board: design/feel-tuning.md.
 
-## The dim over whatever the menu opened on top of. Ember's answer to Slate's opaque
-## fullscreen panel: you can still see the world, it just stops competing.
+## The ground a menu sits on. Opaque by default (see `COL_SCRIM` for the human call and
+## why); pass a translucent colour explicitly when a surface genuinely wants the world
+## behind it, as the echo offer does.
 func _scrim(col: Color = COL_SCRIM) -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), col, true)
 

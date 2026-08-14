@@ -566,7 +566,7 @@ Same contract as above: **the human owns every value.** Judge with `tools/render
 
 | Const | Now | What it does |
 | --- | --- | --- |
-| `COL_SCRIM` | `#0a090d` @ 0.90 | the dim over whatever the menu opened on. **Lower it to let more world through; raise it toward opaque and Ember starts becoming Slate again** |
+| `COL_SCRIM` | `#0a090d` **opaque** | the ground every screen sits on. **Human call 2026-08-14: fully opaque** — it shipped at 0.90 and the town showing faintly through the forge read as distraction, not depth. Lowering it below 1.0 brings that back; the two surfaces that DO want the world visible (`EchoOfferPanel.DIMMER`, the dialogue box) carry their own values |
 | `COL_ROW` / `COL_ROW_HOVER` | white @ 0.035 / 0.075 | the resting + hovered row wash. Deliberately near-invisible — a row is bounded by its hairline, not by a fill |
 | `COL_ROW_SELECTED` | gold @ 0.10 | the selected row's wash (it also gets the dashed gold frame) |
 | `COL_DISABLED` | dim ink @ 0.38 | unaffordable actions, locked rows. **Never red** — the house rule holds |
@@ -640,6 +640,32 @@ Judge with `tools/render_menu.tscn` (states `forge`, `etchings`, `attunements`, 
 | **MarketPanel** | `SHEET_W` / `SHEET_TOP` | 560 / 120 | exchange + caravan |
 
 **Where the gold went, per screen** (the language's one hard rule — gold is state, at most one gold control per screen): forge → **Refine** · etchings → **Awaken/Deepen** · build → **Build/Raise** · market → **Accept** (the caravan is once a day; the exchange buttons are plain) · survey → **nothing** (it is read-only, so there is no action to spend gold on) · attunements → **nothing** (seven rows; seven gold buttons would mark nothing).
+
+## Ember Tier C — the last five screens *(built 2026-08-14, `design/ui-hud.md` § "Migrating to Ember")*
+
+Judge with `tools/render_menu.tscn` (states `tech`, `tech-read`, `settings`, `achievements`, `slot-select`, `dialogue`), then F5 from the title screen.
+
+| Surface | Const | Now | What it does |
+| --- | --- | --- | --- |
+| **shared** | `EmberFrame.WIDTH` / `RING_WIDTH` | 1.0 / 1.6 | every packable frame + ring in the game (empty plaques, achievement medallions) |
+| **TechChart** | `R_MAIN` / `R_LOCKED` / `GLOW_R` / `GLOW_ALPHA` | 8 / 4.5 / 16 / 0.16 | the star sizes and their soft glow — unchanged from R1 |
+| | `SEL_R` / `SEL_SEGMENTS` | 26 / 22 | the dashed selection ring around the chosen star |
+| | `FADE_W` / `FADE_ALPHA` | 270 / 0.9 | the Age-II darkening at the right edge; it dissolves toward `COL_SCRIM` now, so it follows the scrim dial |
+| **TechPanel** | `DOCK_W` / `DOCK_TOP` / `DOCK_BAR_H` | 348 / 96 / 12 | the detail dock. It gained the inner hairline in Tier C but **did not need the +26 px the build/etchings docks did** — its rows are short |
+| | `GUTTER_X` / `GUTTER_Y` | 240 / 24 | the reading page's margins. **This is the dial that decides whether an explanation reads like a page or a wall** — the line length is `1280 - 2×GUTTER_X` |
+| **SettingsPanel** | `COLUMN_W` / `TOP_FRAC` / `ROW_H` | 700 / 0.13 / 56 | the page's column |
+| | `NOTCH_COUNT` / `NOTCH_GAP` / `TRACK_H` | 12 / 6 / 26 | the volume tracks. **The lit notches are the loudest thing on the screen** — full `COL_DUST` on 12 fat blocks. Thinner notches or a dimmer lit colour is the first thing to try |
+| | `COL_HOVER_BRIGHT` / `COL_NOTCH_UNLIT` | `#bff2ff` / white @ 0.16 | hovered-lit, and the unlit remainder (the shared unfilled-bar wash) |
+| **SlotSelect** | `PLAQUE_W` / `PLAQUE_H` / `PLAQUE_GAP` | 620 / 74 / 22 | the three saga plaques |
+| | `FS_NAME_ROW` / `FS_RN` / `FS_META` | 20 / 15 / 12 | the saga name, its roman numeral, the meta line |
+| | *(frame states)* | `_style_frame` | idle hairline · hover ink · armed danger-red · **empty = a real dashed frame**. Four states of one mark |
+| **SlotSelectSky** | the whole Style block | — | gradient stops, star scatter, constellation, ridge, `TITLE_FS` 72 / `TITLE_SPACING` 16 / `TITLE_GLOW_R` 150. Untouched by the migration; it is an illustration, dial it as art |
+| **AchievementsPanel** | `COLUMN_W` / `ICON_BOX` / `LOCKED_ALPHA` | 700 / 44 / 0.45 | the column, the medallion box, how far a locked row greys out |
+| **DialoguePanel** | `BOX_HEIGHT` / `MARGIN_X` / `BOX_LIFT` | 150 / 180 / 16 | the talk box's band |
+| | `CUTSCENE_DIM` / `COL_WHO` | black @ 0.55 / `#ffd980` | the cutscene dim over the world, and the speaker name's warm gold |
+| | `FS_WHO` / `FS_LINE` | 16 / 19 | speaker (display) and the spoken line (prose) |
+
+**Where the gold went:** tech → **Invest / Read & solve** (never both — the dock shows one) · settings → the **selected window chip** · slot-select → nothing until a plaque is hovered or armed (the title screen's only gold is a mid-run or ACT I badge, which is state) · achievements → an **unlocked medallion's ring** · dialogue → the speaker's name.
 
 ## Boss — Den-Warden (floor 1; data dials + 2 exports, `design/bosses/floor-1-boss.md`, built 2026-07-10)
 

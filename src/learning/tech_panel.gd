@@ -2,7 +2,16 @@ extends Control
 class_name TechPanel
 ## Sophia's research screen (PRD §7.8) — the "Star chart" (R1, human-picked 2026-07-08
 ## via claude.ai/design): the tech tree drawn as a constellation. Fullscreen, code-built,
-## Slate-themed; pauses the game while open.
+## EMBER-themed (migrated 2026-08-14, Tier C); pauses the game while open.
+##
+## The Ember migration is a RESTYLE — the whole flow (invest → ready → read → quiz/puzzle →
+## locked/aha → finish), every frozen public method and all authored copy are byte-identical,
+## and the smoke drives it unchanged. What moved: the backdrop is the shared opaque
+## `EmberHud.COL_SCRIM`; the carry chip's panel is gone (bare glyph + number, the readout
+## every other screen shows); the dock's panel is transparent with a vertical hairline on its
+## inner edge; the progress bar is a hairline track with a coloured fill; and the reading
+## page's essays now set in Garamond (`EmberProse`) rather than the UI voice, because an
+## explanation is the game teaching, not the interface labelling.
 ##
 ## Two child roots, toggled by screen:
 ##   CHART  — the constellation (TechChart, custom-drawn stars + prereq edges) plus the
@@ -37,7 +46,7 @@ const PUZZLES: Dictionary = {
 }
 
 # =====================================================================================
-# Style — placeholders. Dial like FEEL numbers (the shared palette/fonts live in SlateHud;
+# Style — placeholders. Dial like FEEL numbers (the shared palette/fonts live in EmberHud;
 # the constellation's own placeholders live in TechChart; the reading page reuses the
 # original gutter widths). New UI copy strings are placeholders too — dial freely.
 # =====================================================================================
@@ -65,6 +74,8 @@ var _quiz_index: int = 0
 # Chart screen
 var _chart_root: Control
 var _chart: TechChart
+var _title_label: Label
+var _subtitle_label: Label
 var _topright: HBoxContainer
 var _carry: HBoxContainer
 var _turnin_btn: Button
@@ -78,17 +89,19 @@ var _puzzle: Control
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("tech_panel")
-	theme = SlateTheme.get_theme()
+	theme = EmberTheme.get_theme()
 
 
 func open() -> void:
 	_defs = DataLoader.load_domain("tech")
 	_building_defs = DataLoader.load_domain("buildings")
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# A near-opaque backdrop over the whole screen (the frame bg of the mock).
+	# The screen's ground. Opaque (EmberHud.COL_SCRIM) — and it has to be a real node rather
+	# than something the chart draws, because the reading PAGE hides the chart root and would
+	# otherwise sit on the bare town.
 	var bg := ColorRect.new()
 	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = TechChart.COL_FRAME_BG
+	bg.color = EmberHud.COL_SCRIM
 	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(bg)
 	_build_page()
@@ -240,25 +253,23 @@ func _build_chart() -> void:
 	# (No Close button — ESC closes the panel; see _input. 2026-07-09 ESC-close pass.)
 
 	# Header: title + subtitle (top-left).
-	var title := Label.new()
-	title.text = "Sophia's Desk — Research"
-	title.theme_type_variation = &"TitleLabel"
-	title.position = Vector2(MARGIN + 8.0, MARGIN)
-	_chart_root.add_child(title)
-	var subtitle := Label.new()
-	subtitle.text = SUBTITLE
-	subtitle.theme_type_variation = &"DimLabel"
-	subtitle.position = Vector2(MARGIN + 9.0, MARGIN + 32.0)
-	_chart_root.add_child(subtitle)
+	# Header: title + subtitle, on EmberMenuCore's bands like every other Ember screen.
+	# (Positioned in _reposition, which runs every frame the chart is up.)
+	_title_label = Label.new()
+	_title_label.text = "Sophia's Desk — Research"
+	_title_label.theme_type_variation = &"EmberTitle"
+	_chart_root.add_child(_title_label)
+	_subtitle_label = Label.new()
+	_subtitle_label.text = SUBTITLE
+	_subtitle_label.theme_type_variation = &"EmberDim"
+	_chart_root.add_child(_subtitle_label)
 
-	# Header: carry chip + turn-in button (top-right).
+	# Header: carry readout + turn-in button (top-right). No panel behind the numbers.
 	_topright = HBoxContainer.new()
 	_topright.add_theme_constant_override("separation", 10)
-	var carry_panel := PanelContainer.new()
 	_carry = HBoxContainer.new()
 	_carry.add_theme_constant_override("separation", 5)
-	carry_panel.add_child(_carry)
-	_topright.add_child(carry_panel)
+	_topright.add_child(_carry)
 	_turnin_btn = Button.new()
 	_turnin_btn.pressed.connect(func() -> void: Sfx.play("ui-click"))
 	_turnin_btn.pressed.connect(turn_in_shards)
@@ -269,10 +280,17 @@ func _build_chart() -> void:
 ## Position the header group, dock, and Close each frame while the chart is visible (their
 ## container sizes only settle after a layout pass, so absolute placement is simplest).
 func _reposition() -> void:
+	var bands := EmberMenuCore.catalogue(size)
+	if _title_label != null:
+		_title_label.position = EmberMenuCore.label_pos(bands["title"], _title_label.size.y)
+	if _subtitle_label != null:
+		_subtitle_label.position = EmberMenuCore.label_pos(
+			bands["subtitle"], _subtitle_label.size.y)
 	if _topright != null:
-		_topright.position = Vector2(size.x - MARGIN - _topright.size.x, MARGIN - 4.0)
+		_topright.position = Vector2(size.x - EmberMenuCore.PAD_PX - _topright.size.x,
+			(bands["title"] as Rect2).position.y - _topright.size.y * 0.5)
 	if _dock != null:
-		_dock.position = Vector2(size.x - MARGIN - DOCK_W, DOCK_TOP)
+		_dock.position = Vector2(size.x - EmberMenuCore.PAD_PX - DOCK_W, DOCK_TOP)
 
 
 func _show_chart() -> void:
@@ -288,10 +306,12 @@ func _show_chart() -> void:
 func _refresh_header() -> void:
 	for child in _carry.get_children():
 		child.queue_free()
-	_carry.add_child(_carry_span("%d" % int(Ledger.get_amount("knowledge")), SlateHud.COL_KNOWLEDGE, false))
-	_carry.add_child(_carry_span(CARRY_KNOWLEDGE_LABEL, SlateHud.COL_KEY_TEXT, true))
-	_carry.add_child(_carry_span("%d" % int(Ledger.get_amount("knowledge-shards")), SlateHud.COL_SHARDS, false))
-	_carry.add_child(_carry_span(CARRY_SHARDS_LABEL, SlateHud.COL_KEY_TEXT, true))
+	_carry.add_child(_carry_span("%d" % int(Ledger.get_amount("knowledge")),
+		EmberHud.resource_color("knowledge"), false))
+	_carry.add_child(_carry_span(CARRY_KNOWLEDGE_LABEL, EmberHud.COL_INK_DIM, true))
+	_carry.add_child(_carry_span("%d" % int(Ledger.get_amount("knowledge-shards")),
+		EmberHud.resource_color("knowledge-shards"), false))
+	_carry.add_child(_carry_span(CARRY_SHARDS_LABEL, EmberHud.COL_INK_DIM, true))
 	var shards := int(Ledger.get_amount("knowledge-shards"))
 	_turnin_btn.text = "Turn in %d Knowledge Shards → %d Knowledge" % [
 		shards, shards * int(TechCore.SHARD_KNOWLEDGE_VALUE)]
@@ -301,10 +321,8 @@ func _refresh_header() -> void:
 func _carry_span(text: String, col: Color, dim: bool) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.theme_type_variation = &"NumLabel"
+	l.theme_type_variation = &"EmberHead" if dim else &"EmberNum"
 	l.add_theme_color_override("font_color", col)
-	if dim:
-		l.add_theme_font_size_override("font_size", SlateHud.FS_SMALL + 1)
 	l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	return l
 
@@ -318,19 +336,28 @@ func _build_dock() -> void:
 		return
 	var def: Dictionary = _defs[_node_id]
 	var tech: Dictionary = SaveManager.state["tech"]
-	_dock = PanelContainer.new()
+	_dock = PanelContainer.new()   # transparent under EmberTheme — it groups and pads only
 	_dock.custom_minimum_size = Vector2(DOCK_W, 0)
+	# The dock's inner edge carries a vertical hairline — the anchor's hero/dock divider, the
+	# same mark the forge, etchings and build docks wear.
+	var split := HBoxContainer.new()
+	split.add_theme_constant_override("separation", 18)
+	_dock.add_child(split)
+	split.add_child(VSeparator.new())
 	var margin := MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for s in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + s, 18)
-	_dock.add_child(margin)
+	split.add_child(margin)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 6)
 	margin.add_child(box)
 
 	var name_l := Label.new()
 	name_l.text = str(def["name"])
-	name_l.theme_type_variation = &"TitleLabel"
+	name_l.theme_type_variation = &"EmberTitle"
+	# The dock is 348 px wide; full title size would wrap most node names.
+	name_l.add_theme_font_size_override("font_size", EmberHud.FS_HERO)
 	box.add_child(name_l)
 
 	# Meta line: tier caps (gold for KEY) · AGE n · puzzle kind · 🧠.
@@ -338,16 +365,16 @@ func _build_dock() -> void:
 	meta.add_theme_constant_override("separation", 0)
 	var tier_l := Label.new()
 	tier_l.text = str(def["tier"]).to_upper()
-	tier_l.theme_type_variation = &"NumLabel"
+	tier_l.theme_type_variation = &"EmberHead"
 	tier_l.add_theme_color_override("font_color",
-		SlateHud.COL_READY if str(def["tier"]) == "key" else SlateHud.COL_KEY_TEXT)
+		EmberHud.COL_ACCENT if str(def["tier"]) == "key" else EmberHud.COL_INK_DIM)
 	meta.add_child(tier_l)
 	var kind := "gateway" if str((def["puzzle"] as Dictionary).get("kind", "quiz")) == "interactive" else "quiz"
 	var rest_l := Label.new()
 	rest_l.text = " · AGE %d · %s%s" % [int(def["age"]), kind,
 		"  ·  🧠" if bool(def.get("thinking_tool", false)) else ""]
-	rest_l.theme_type_variation = &"NumLabel"
-	rest_l.add_theme_color_override("font_color", SlateHud.COL_KEY_TEXT)
+	rest_l.theme_type_variation = &"EmberHead"
+	rest_l.add_theme_color_override("font_color", EmberHud.COL_INK_DIM)
 	meta.add_child(rest_l)
 	box.add_child(meta)
 
@@ -356,11 +383,11 @@ func _build_dock() -> void:
 	var prog := TechCore.progress(tech, _node_id)
 	var ready := TechCore.is_ready(def, tech)
 	var frac := clampf(prog / float(cost), 0.0, 1.0) if cost > 0 else 0.0
-	box.add_child(_dock_bar(frac, SlateHud.COL_READY if ready else SlateHud.COL_KNOWLEDGE))
+	box.add_child(_dock_bar(frac, EmberHud.COL_ACCENT if ready else EmberHud.COL_KNOWLEDGE))
 	var bar_num := Label.new()
 	bar_num.text = "%d / %d knowledge" % [int(prog), cost]
-	bar_num.theme_type_variation = &"NumLabel"
-	bar_num.add_theme_color_override("font_color", SlateHud.COL_KNOWLEDGE)
+	bar_num.theme_type_variation = &"EmberNum"
+	bar_num.add_theme_color_override("font_color", EmberHud.COL_KNOWLEDGE)
 	box.add_child(bar_num)
 
 	# Requires / Unlocks.
@@ -373,7 +400,7 @@ func _build_dock() -> void:
 			reqs.append(check + (str(_defs[r]["name"]) if _defs.has(r) else r))
 		var req_l := Label.new()
 		req_l.text = DOCK_REQUIRES_PREFIX + ", ".join(reqs)
-		req_l.theme_type_variation = &"DimLabel"
+		req_l.theme_type_variation = &"EmberDim"
 		req_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(req_l)
 	var unlocks: Array = def.get("unlocks", [])
@@ -383,7 +410,7 @@ func _build_dock() -> void:
 			names.append(_display_unlock(u))
 		var unl_l := Label.new()
 		unl_l.text = DOCK_UNLOCKS_PREFIX + ", ".join(names)
-		unl_l.theme_type_variation = &"DimLabel"
+		unl_l.theme_type_variation = &"EmberDim"
 		unl_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(unl_l)
 
@@ -391,24 +418,25 @@ func _build_dock() -> void:
 	if ready:
 		var ready_l := Label.new()
 		ready_l.text = "It's ready. Sophia lays out what the shards revealed —"
-		ready_l.theme_type_variation = &"DimLabel"
+		ready_l.theme_type_variation = &"EmberProse"  # Sophia talking, not a label
 		ready_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		box.add_child(ready_l)
-		_dock_button(box, "Read & solve", begin_read)
+		_dock_button(box, "Read & solve", begin_read, true)
 	else:
-		_dock_button(box, "Invest everything you carry", invest_all)
+		_dock_button(box, "Invest everything you carry", invest_all, true)
 
 	_chart_root.add_child(_dock)
 
 
-## A two-layer bar: slate track + a colour fill scaled to `frac` via an anchor.
+## A two-layer bar: the shared faint track + a colour fill scaled to `frac` via an anchor.
+## `COL_TRACK` is the same unfilled-bar wash the run HUD's HP and boss bars use.
 func _dock_bar(frac: float, fill_col: Color) -> Control:
 	var bar := Control.new()
 	bar.custom_minimum_size = Vector2(0, DOCK_BAR_H)
 	bar.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	var track := ColorRect.new()
 	track.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	track.color = TechChart.COL_FRAME_BG
+	track.color = EmberHud.COL_TRACK
 	bar.add_child(track)
 	var fill := ColorRect.new()
 	fill.anchor_left = 0.0
@@ -424,9 +452,14 @@ func _dock_bar(frac: float, fill_col: Color) -> Control:
 	return bar
 
 
-func _dock_button(box: VBoxContainer, text: String, action: Callable) -> void:
+## The dock's action. `primary` wears `EmberAction` — the screen's one gold control, and
+## there is only ever one (invest OR read & solve, never both).
+func _dock_button(box: VBoxContainer, text: String, action: Callable,
+		primary: bool = false) -> void:
 	var b := Button.new()
 	b.text = text
+	if primary:
+		b.theme_type_variation = &"EmberAction"
 	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
 	b.pressed.connect(action)
 	box.add_child(b)
@@ -545,9 +578,9 @@ func _title(text: String, gold: bool = false) -> void:
 	var l := Label.new()
 	l.text = text
 	l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	l.theme_type_variation = &"TitleLabel"
+	l.theme_type_variation = &"EmberTitle"
 	if gold:
-		l.add_theme_color_override("font_color", SlateHud.COL_READY)
+		l.add_theme_color_override("font_color", EmberHud.COL_ACCENT)
 	_rows.add_child(l)
 
 
@@ -559,18 +592,25 @@ func _label(text: String) -> void:
 
 
 ## Long-form text (explanations and ahas are essays, by design). The PAGE scrolls, so this
-## is just a wrapping label at reading width.
+## is just a wrapping label at reading width — set in Garamond, because this is the one
+## screen in the game where the player is actually READING rather than scanning a label.
 func _reading(text: String) -> void:
 	var l := Label.new()
 	l.text = text
+	l.theme_type_variation = &"EmberProse"
 	l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rows.add_child(l)
 
 
+## The reading page's action. Shrunk to its own text and centred: at the page's full
+## reading width a transparent Ember frame reads as a field to type in rather than a
+## button to press (the same trap the market's exchange buttons fell into).
 func _button(text: String, action: Callable) -> void:
 	var b := Button.new()
 	b.text = text
+	b.theme_type_variation = &"EmberAction"
+	b.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
 	b.pressed.connect(action)
 	_rows.add_child(b)
