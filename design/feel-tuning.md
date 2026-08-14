@@ -533,7 +533,7 @@ Not `# FEEL:`-tagged (no combat feel rides on them) but the same contract: **the
 | `COL_ACCENT` | `#e0a83c` | **THE gold — state only.** Ready slots, bullets, badges, the HP diamond |
 | `COL_TRACK` | white @ 0.16 | the unfilled part of any bar |
 | `COL_SHADOW` | black @ 0.7 | the 1 px drop under unbacked prose |
-| `COL_GOLD/ORE/DUST/SHARDS` | as Slate | **deliberately shared with `SlateHud`** — a resource means one colour game-wide |
+| `COL_GOLD/ORE/DUST/SHARDS` | unchanged since Slate | these values came across from the retired Slate palette on purpose — a resource means one colour game-wide, and a player's saves look the same across the migration |
 | `FS_HEAD/LABEL/VALUE/BIG/KEY/MONO` | 12 / 17 / 15 / 22 / 10 / 13 | section heads · objective labels + list rows · counters+HP · resource numbers · key badges · monograms |
 | `TRACKING` / `MARGIN` | 1.6 / 22 | letter-spacing on tracked caps / screen-edge margin |
 | `GLYPH_FILL` / `GLYPH_STROKE` / `GLYPH_ARCS` | unit-square point lists | **every glyph silhouette** — now **22** marks (4 resource crystals + 6 ability + 12 menu). Adding one is a `match` arm. `GLYPH_ARCS` entries take an optional 4th/5th element = the arc's centre offset |
@@ -558,7 +558,7 @@ Not `# FEEL:`-tagged (no combat feel rides on them) but the same contract: **the
 | `HINT_LIFT` | 30 | hint prose's height above the HP bar |
 | `VIGNETTE_DEPTH/STEPS/ALPHA` | 90 / 24 / 0.30 | low-HP screen edge. **Known dial:** nested `draw_rect` outlines read as faint banding, not a smooth glow (inherited from Slate) |
 
-## Ember menus — `src/core/ember_hud.gd` + `ember_menu_core.gd` + `ember_theme.gd` *(built 2026-08-13; the base the fifteen Slate screens migrate onto, `design/ui-hud.md` § "Ember menu vocabulary")*
+## Ember menus — `src/core/ember_hud.gd` + `ember_menu_core.gd` + `ember_theme.gd` *(built 2026-08-13; the base all fifteen migrating screens landed on, `design/ui-hud.md` § "Ember menu vocabulary")*
 
 Same contract as above: **the human owns every value.** Judge with `tools/render_menu.tscn` (renders a specimen screen exercising every primitive at once, side-by-side-able with `assets_src/anchors/weapon-menu-reference.png`), then in F5 once real screens migrate.
 

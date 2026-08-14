@@ -2,11 +2,12 @@ extends "res://tests/test_suite.gd"
 ## Tests EmberTheme (src/core/ember_theme.gd) — the shared Godot `Theme` for the Ember
 ## screens that are Control trees (design/ui-hud.md § "Ember menu vocabulary").
 ##
-## Why a test for what is "just style": Theme registration fails SILENTLY. SlateTheme's
-## `MenuButton` variation never registered for a day because a type variation may not
-## shadow a built-in Godot class name, and nothing errored — the panels just quietly
-## ignored it (found 2026-07-08). These tests assert that each variation actually landed
-## and that the one structural promise of the language holds.
+## Why a test for what is "just style": Theme registration fails SILENTLY. The predecessor
+## theme had a `MenuButton` variation that never registered for a day, because a type
+## variation may not shadow a built-in Godot class name and nothing errored — the panels
+## just quietly ignored it (found 2026-07-08; that theme is gone, the trap is not). These
+## tests assert that each variation actually landed and that the one structural promise of
+## the language holds.
 ##
 ## They assert STRUCTURE, never specific colours or sizes — every one of those is a human
 ## dial, and pinning a placeholder to a number would break the moment it is dialed.
@@ -30,8 +31,8 @@ func test_every_type_variation_registered() -> void:
 
 
 func test_no_variation_shadows_a_builtin_class() -> void:
-	# The rule that cost SlateTheme a day. A variation named after a real Godot class is
-	# rejected by set_type_variation without an error.
+	# The rule that cost the predecessor theme a day: a variation named after a real Godot
+	# class is rejected by set_type_variation without an error.
 	for name: String in ["EmberTitle", "EmberHead", "EmberDim", "EmberNum", "EmberProse",
 			"EmberAction"]:
 		check(not ClassDB.class_exists(name),
@@ -39,8 +40,8 @@ func test_no_variation_shadows_a_builtin_class() -> void:
 
 
 func test_panels_are_transparent() -> void:
-	# THE inversion vs Slate, and the whole language: Ember has no panels. If this ever
-	# becomes a StyleBoxFlat, every migrated screen silently grows boxes.
+	# THE inversion, and the whole language: Ember has no panels. If this ever becomes a
+	# StyleBoxFlat, every screen in the game silently grows boxes.
 	var t := EmberTheme.get_theme()
 	for type: String in ["Panel", "PanelContainer"]:
 		var sb := t.get_stylebox("panel", type)

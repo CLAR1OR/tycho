@@ -14,7 +14,7 @@
 - **One geometry kit** (IC-5) — floors differ by palette/fog/light data + 1 hazard + 2–4 props. No per-floor biome art lines.
 - **"Imitation thins with depth"** — floors 1→5 grade from convincing cave to clean impossible void; floors 1–4 stay deniable, only floor 5 is unambiguous. Governs floor palettes, props, boss silhouettes, even the Wellspring tint.
 - **Readability guard** — enemy/telegraph/hazard colours are FIXED across all strata; floor palettes are chosen around them.
-- **One UI language — Ember** (no panels: hairlines, rings, negative space, gold reserved for state; screens fully opaque since 2026-08-14). **The migration is done: 16 surfaces on Ember, 0 on Slate** (Tier C, 2026-08-14); `SlateHud`/`SlateTheme` are orphaned files awaiting deletion. All UI copy/colours ship as placeholders the human dials.
+- **One UI language — Ember** (no panels: hairlines, rings, negative space, gold reserved for state; screens fully opaque since 2026-08-14). **The migration is done: 16 surfaces on Ember, 0 on Slate** (Tiers A–C) and `SlateHud`/`SlateTheme` are deleted (Tier D) — all 2026-08-13/14. All UI copy/colours ship as placeholders the human dials.
 - **Placeholder-first** — never block a system on final art.
 
 **Current reality check:** `assets/models|images|anims` are **empty**. Real assets in: **5 OFL fonts** ✅, 15 synthesized placeholder SFX 🟨, 4 synthesized placeholder music loops 🟨. Everything else below is ⬜.
@@ -136,7 +136,7 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 
 > **KayKit stock packs REMOVED 2026-08-10 (human call: "the kaykit was only for testing").** Both the tracked `assets/models/kaykit-forest-gltf/` (2.3 MB — 2 trees + 1 bush in town) and the untracked `addons/kaykit_medieval_hexagon_pack/` (33 MB — 3 buildings the human was trialling in the town square) are gone; all six instances became **block placeholders** in `town.tscn` (`StockBuildingMesh` 5×4×5 for buildings, `TreeBlockMesh` / `BushBlockMesh` for foliage, on two placeholder materials). The town is back to 100 % primitives, which is where the placeholder-first rule wants it until the asset-pipeline gate runs. KayKit stays a *sourcing option* in `design/asset-pipeline.md` — nothing about the pipeline strategy changed, only that no KayKit assets ship in the repo today.
 
-## 5. 2D UI / HUD (all code-drawn today — Slate monograms/primitives on the menus, Ember vector glyphs on the run HUD; painterly pass deferred)
+## 5. 2D UI / HUD (all code-drawn today — Ember vector glyphs and primitives everywhere; painterly pass deferred)
 
 > **One language as of 2026-08-14** (`design/ui-hud.md`): all **16 surfaces speak Ember** — no panels, code-drawn vector glyphs. Ember's glyphs are point lists in `EmberHud.GLYPH_*` — real icons would replace them at the single `_glyph()` swap point, so this table's ⬜ rows are the same work either way.
 
@@ -157,7 +157,7 @@ Vent plate (F1) · Watcher node (F2) · Burst crystal (F3) · Sweep beam (F4) ·
 Tycho, Sophia, Thomas, Tilly, Mara, Herzog, Wren, The Woman (dream-blurred), emissary. None exist ⬜ (DialoguePanel shows tinted names).
 
 ### Screens & fonts
-- **16 Ember, 0 Slate** — RunHud, TownHud, AchievementToast, EchoOfferPanel, PauseMenu (Tier A 2026-08-13) · ForgePanel, EtchingsPanel, AttunementsPage, BuildPanel, SurveyPanel, MarketPanel (Tier B 2026-08-14) · TechPanel, SlotSelect, SettingsPanel, AchievementsPanel, DialoguePanel (**Tier C 2026-08-14**). All 🟨 code-drawn, human restyles freely. Inventory: `design/ui-hud.md` § "Migrating to Ember".
+- **16 Ember, 0 Slate** — RunHud, TownHud, AchievementToast, EchoOfferPanel, PauseMenu (Tier A 2026-08-13) · ForgePanel, EtchingsPanel, AttunementsPage, BuildPanel, SurveyPanel, MarketPanel (Tier B 2026-08-14) · TechPanel, SlotSelect, SettingsPanel, AchievementsPanel, DialoguePanel (Tier C 2026-08-14). **Slate deleted the same day (Tier D)** — one language, one dial source. All 🟨 code-drawn, human restyles freely. Inventory: `design/ui-hud.md` § "Migrating to Ember".
 - **Icons stay code-drawn ⬜ — this is a standing decision, not a placeholder awaiting art** (human, re-confirmed 2026-08-13). 22 marks live as unit-square point lists in `EmberHud` (`GLYPH_FILL/STROKE/ARCS`): 4 resource crystals + 6 ability + 12 menu (`leaf`, `stone`, `sword`, `shield`, `heart`, `boot`, `star`, `anvil`, `book`, `house`, `lock`, `check`). **This keeps the entire UI migration independent of the asset-pipeline gate.** `_glyph()` is the single swap point if real icons are ever wanted. Same idiom as the town fountain's generated geometry.
 - Also code-drawn ⬜, **all seven on Ember**: `SigilIcon`, `WeaponSilhouette`, `BuildingSilhouette`, `EtchingsArms`, `ForgeAnvil` (Tier B) · `TechChart`, `SlotSelectSky` (Tier C). Plus two packable Control marks — `EmberPips` (level tracks) and `EmberFrame` (hairline / dashed / ring bounds).
 - Fonts ✅ (OFL, committed): Cinzel SemiBold (display), EB Garamond Medium (prose), JetBrains Mono Medium (numbers), **Alegreya Sans Regular + Medium (the UI voice — added 2026-08-13, closing the "no fourth font" gap; rationale in `assets/fonts/SOURCES.md`)**.

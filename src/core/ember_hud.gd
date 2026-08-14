@@ -4,18 +4,19 @@ class_name EmberHud
 ## human-picked reference anchors (assets_src/anchors/in-run-hud-reference.png and
 ## weapon-menu-reference.png) on 2026-08-10. Spec: design/ui-hud.md § "In-run HUD — Ember".
 ##
-## Ember is defined by what it does NOT draw. Where Slate (src/core/slate_hud.gd) states
-## itself in opaque rounded panels with visible borders, Ember has no panels at all:
-## every element floats directly on the world and is held together by hairline rules,
-## thin rings, negative space, and gold used ONLY for state. It reads better over a dark
-## 2.5D field because it never fights the scene for contrast.
+## Ember is defined by what it does NOT draw. It has no panels at all: every element
+## floats directly on the world and is held together by hairline rules, thin rings,
+## negative space, and gold used ONLY for state. It reads better over a dark 2.5D field
+## because it never fights the scene for contrast.
 ##
-## Ember is becoming the WHOLE game's language (human directive, 2026-08-13: "I want all
-## of my ingame HUD and menus to be in the new style"). Slate (src/core/slate_hud.gd +
-## src/core/slate_theme.gd) is now legacy: it still dresses the fifteen unmigrated screens
-## and the two languages coexist until the last one moves, at which point Slate is deleted
-## so there is one dial source again. Migration order: design/ui-hud.md § "Migrating to
-## Ember".
+## THE ONLY UI LANGUAGE IN THE GAME since 2026-08-14. It replaced "Slate" — opaque rounded
+## panels with visible borders — on a human directive ("I want all of my ingame HUD and
+## menus to be in the new style", 2026-08-13); all 16 surfaces migrated over three tiers
+## and `SlateHud`/`SlateTheme` were deleted. If you are reading a doc that says the two
+## languages coexist, that doc is stale. History: design/ui-hud.md § "Migrating to Ember".
+##
+## Slate's one lasting bequest is a warning, kept here because it still applies: a screen
+## that "looks boxy" is a screen setting its own StyleBox instead of taking EmberTheme's.
 ##
 ## Subclasses own their own pixels + state; this file owns the palette, the four project
 ## fonts, the draw primitives — the HUD set (hairline / ring / arc / diamond / tracked caps
@@ -70,8 +71,9 @@ const COL_ROW := Color(1.0, 1.0, 1.0, 0.035)                       # resting row
 const COL_ROW_HOVER := Color(1.0, 1.0, 1.0, 0.075)                 # hovered row wash
 const COL_ROW_SELECTED := Color(224.0/255, 168.0/255, 60.0/255, 0.10) # gold wash, selected
 const COL_DISABLED := Color(154.0/255, 150.0/255, 145.0/255, 0.38) # unaffordable / locked
-# Resource identity colours are deliberately shared with Slate (src/core/slate_hud.gd) so
-# gold/ore/dust/shards mean the same colour on every screen, whichever language draws it.
+# Resource identity colours: gold/ore/dust/shards mean the same colour on every screen.
+# (These values predate Ember — they came across unchanged from Slate, so a save from
+# before the migration shows a player the same colours it always did.)
 const COL_GOLD := Color(255.0/255, 230.0/255, 128.0/255)           # #ffe680
 const COL_ORE := Color(176.0/255, 164.0/255, 224.0/255)            # #b0a4e0
 const COL_DUST := Color(128.0/255, 230.0/255, 255.0/255)           # #80e6ff
@@ -172,9 +174,11 @@ static func _with_fallback(base: Font) -> FontVariation:
 
 
 ## Sync `size` to the viewport each frame — subclasses call this from their own _process.
-## Godot quirk (same one SlateHud documents): anchors set in a Control's own _ready never
-## get a layout pass under a CanvasLayer, so `size` stays (0,0) and everything anchored to
-## size.x/size.y draws off-screen. Sync explicitly; also covers window resizes.
+## Godot quirk: anchors set in a Control's own _ready never get a layout pass under a
+## CanvasLayer, so `size` stays (0,0) and everything anchored to size.x/size.y draws
+## off-screen. Sync explicitly; also covers window resizes. (Tier C found this AGAIN, in
+## `SlotSelectSky` — a child that sets its own full-rect anchors has the same problem, so
+## its parent drives its size. Any full-rect Control built from code needs one of the two.)
 func _sync_viewport_size() -> void:
 	var vp := get_viewport_rect().size
 	if size != vp:

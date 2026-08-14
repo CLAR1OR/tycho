@@ -1,25 +1,24 @@
 extends RefCounted
 class_name EmberTheme
 ## Shared Godot `Theme` for the "Ember" screens that are Control TREES rather than one
-## `_draw` (design/ui-hud.md § "Ember menu vocabulary"). The mirror of `SlateTheme`, and
-## its eventual replacement: a screen migrates by swapping `SlateTheme.get_theme()` for
-## `EmberTheme.get_theme()` and re-pointing its `theme_type_variation`s.
+## `_draw` (design/ui-hud.md § "Ember menu vocabulary"). It replaced `SlateTheme`, which
+## was deleted 2026-08-14 once the last screen migrated.
 ##
 ## Which screens need this rather than `EmberHud`: the ones whose content is a variable
 ## number of stacked rows that must scroll or reflow — the achievements page, the pause
 ## menu's button column, the dialogue panel. Everything laid out at fixed positions is
 ## cheaper and more controllable drawn directly in an `EmberHud` subclass.
 ##
-## It reads every colour and font OFF `EmberHud` so there is ONE dial source, exactly as
-## SlateTheme reads SlateHud. Never duplicate an EmberHud colour or font literal here —
-## only sizes, margins and the one radius are this file's own.
+## It reads every colour and font OFF `EmberHud` so there is ONE dial source. Never
+## duplicate an EmberHud colour or font literal here — only sizes, margins and the one
+## radius are this file's own.
 ##
-## THE INVERSION vs Slate, and the whole reason this file is not a palette swap: Slate's
-## `Panel` was an opaque slate box with a 2 px border, and its `Button` was the same box
-## again. Ember has no panels — `Panel`/`PanelContainer` here are TRANSPARENT (they group
-## and pad, they do not draw), and a `Button` is a hairline frame over nothing that goes
-## gold when it is the actionable thing. If a migrated screen still looks boxy, something
-## is setting its own StyleBox instead of taking these.
+## THE INVERSION that made this more than a palette swap of the theme it replaced: Slate's
+## `Panel` was an opaque box with a 2 px border, and its `Button` was that box again.
+## Ember has no panels — `Panel`/`PanelContainer` here are TRANSPARENT (they group and pad,
+## they do not draw), and a `Button` is a hairline frame over nothing that goes gold when
+## it is the actionable thing. **If a screen still looks boxy, something is setting its own
+## StyleBox instead of taking these.**
 ##
 ## HUMAN: the SIZES / MARGINS / RADIUS below are placeholders — dial like FEEL numbers.
 ##
