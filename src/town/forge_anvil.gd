@@ -1,4 +1,4 @@
-extends Control
+extends EmberHud
 class_name ForgeAnvil
 ## Mara's Forge, centre stage — "The anvil" (F2, human-picked 2026-07-08 via claude.ai/design,
 ## with the "no stat bars" amendment). Draws the ember glow, the three weapon tabs (left
@@ -8,12 +8,22 @@ class_name ForgeAnvil
 ## pixels + hit-testing. The header (title/subtitle), the bottom strip, and Close sit on top
 ## as panel siblings (ForgePanel).
 ##
+## MIGRATED TO EMBER 2026-08-14 (Tier B). What changed: this node now extends `EmberHud`, so
+## it draws the SCRIM itself (ForgePanel's backdrop ColorRect is gone — one scrim dial for
+## every Ember screen); the three tabs became `_row_box` list rows, the same mark the anchor's
+## weapon list uses and the same one every migrated catalogue now wears; and the hand-rolled
+## ore crystal + big number gave way to the shared `_resource_readout`. The tab column and the
+## readout sit against `EmberMenuCore`'s bands, so the forge's margins agree with every other
+## screen. The anvil, the ember glow and the weapon-on-the-anvil staging are UNTOUCHED — that
+## picture was the human's F2 pick, and Ember is a language for drawing it, not a different
+## composition.
+##
 ## HUMAN: everything under "Style" is a PLACEHOLDER — dial like FEEL numbers (no combat feel,
-## so no `# FEEL:` tag). The anvil / weapon / tab geometry, the ember glow, the ore glyph, and
-## the name-bar meta-line format are all placeholder. Shared palette + fonts live in SlateHud.
+## so no `# FEEL:` tag). The anvil / weapon / tab geometry, the ember glow, and the name-bar
+## meta-line format are all placeholder. Shared palette + fonts live in EmberHud.
 
 # =====================================================================================
-# Style — placeholders. (Palette + fonts are shared — see SlateHud.)
+# Style — placeholders. (Palette + fonts are shared — see EmberHud.)
 # =====================================================================================
 # The ember glow — the ONE warm note on the screen (a soft warm radial around the anvil).
 const COL_EMBER := Color(150.0/255, 75.0/255, 25.0/255)   # warm forge orange
@@ -32,25 +42,26 @@ const WEAPON_ANGLE := -0.052                              # ~-3°, "slightly rot
 const WEAPON_LINE_W := 2.0
 const WEAPON_SHADOW := Color(0, 0, 0, 0.5)
 const WEAPON_SHADOW_OFF := Vector2(0, 12)
-# Tabs (left column) — normalized rects.
+# Tabs (left column) — the anchor's weapon LIST, drawn with the shared row-box mark. Sized
+# in px against EmberMenuCore's content band, so the column starts where every other Ember
+# screen's content starts.
 const TAB_ORDER: Array[String] = ["sword", "daggers", "bow"]
-const TAB_X := 0.03125          # 40/1280
-const TAB_W := 0.1172           # 150/1280
-const TAB_H := 0.1194           # 86/720
-const TAB_TOPS: Array[float] = [0.1806, 0.3278, 0.475]   # 130 / 236 / 342
-const TAB_LINE_W := 2.0
-const TAB_RADIUS := 10
+const TAB_W := 168.0
+const TAB_H := 92.0
+const TAB_GAP := 14.0
+const TAB_TOP_DROP := 34.0      # first tab, below the content band's top
+const TAB_LINE_W := 1.6
 const TAB_SIL_SCALE := 0.22
-const FS_TAB := 10              # tab caps label (num)
+const FS_TAB := 11              # tab caps label (ui med, tracked)
+const TAB_TRACKING := 1.2
 # Name bar (over the anvil).
 const NAME_TITLE_Y := 0.185     # 132/720 baseline-ish top
 const NAME_META_Y := 0.235      # 168/720
 const FS_NAME := 30             # weapon name (display)
-const FS_META := 11             # meta line (num, caps)
-# Ore readout (top-right — bare glyph + big number + dim label, NO box; mirrors the Dust one).
-const FS_ORE := 30              # the big ore number (num)
-const FS_ORE_LABEL := 11        # "resonance ore" (num, dim)
-const ORE_SUBTITLE := "resonance ore"
+const FS_META := 11             # meta line (ui med, tracked caps)
+const META_TRACKING := 1.4
+# The shared resource readout's row (top-right), level with the title band.
+const RES_Y := 40.0
 
 var defs: Dictionary = {}
 var on_select: Callable = Callable()
@@ -58,15 +69,13 @@ var on_select: Callable = Callable()
 var _tab_ids: Array[String] = []
 var _selected: String = ""
 var _hovered: String = ""
-var _font_display: FontVariation
-var _font_num: FontVariation
 
 
 func _ready() -> void:
+	super._ready()  # EmberHud: full-rect anchors + the five shared fonts
+	# EmberHud defaults to MOUSE_FILTER_IGNORE (the run HUD is not interactive). This stage
+	# hit-tests its tabs, so it takes the mouse — and swallows it from the town behind.
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_font_display = SlateHud._with_fallback(SlateHud.FONT_DISPLAY_FILE)
-	_font_num = SlateHud._with_fallback(SlateHud.FONT_NUM_FILE)
 	resized.connect(queue_redraw)
 
 
@@ -115,10 +124,13 @@ func _tab_at(pos: Vector2) -> String:
 	return ""
 
 
+## Tab `i`'s bounds. Laid down the content band via EmberMenuCore.stack, so the column's
+## left edge and first row line up with the list column of every other Ember screen.
 func _tab_rect(i: int) -> Rect2:
-	var top: float = TAB_TOPS[i] if i < TAB_TOPS.size() else TAB_TOPS[TAB_TOPS.size() - 1] \
-		+ (i - TAB_TOPS.size() + 1) * TAB_H * 1.2
-	return Rect2(TAB_X * size.x, top * size.y, TAB_W * size.x, TAB_H * size.y)
+	var content: Rect2 = EmberMenuCore.catalogue(size)["content"]
+	var col := Rect2(content.position.x, content.position.y + TAB_TOP_DROP, TAB_W,
+		maxf(0.0, content.size.y - TAB_TOP_DROP))
+	return EmberMenuCore.stack(col, maxi(1, i + 1), TAB_H, TAB_GAP)[i]
 
 
 # --- Draw ----------------------------------------------------------------------------
@@ -126,13 +138,14 @@ func _tab_rect(i: int) -> Rect2:
 func _draw() -> void:
 	if size.x < 1.0:
 		return
+	_scrim()  # the ground every Ember menu sits on — ForgePanel no longer carries its own
 	_draw_ember()
 	_draw_anvil()
 	_draw_weapon()
 	_draw_name_bar()
 	for i in _tab_ids.size():
 		_draw_tab(i)
-	_draw_ore()
+	_resource_readout(size.x - EmberMenuCore.PAD_PX, RES_Y, ["resonance-ore"])
 
 
 func _draw_ember() -> void:
@@ -181,29 +194,25 @@ func _draw_name_bar() -> void:
 	var equipped := str(SaveManager.state["combat"].get("current_weapon", "sword")) == _selected
 	var level := WeaponCore.flat_level(SaveManager.state["combat"], _selected)
 	var pct := ForgePanelCore.damage_bonus_pct(def, level)
-	# Title (Cinzel, centred).
-	var tw := _font_display.get_string_size(wname, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_NAME).x
-	var ty := NAME_TITLE_Y * size.y + _font_display.get_ascent(FS_NAME)
-	draw_string(_font_display, Vector2((size.x - tw) * 0.5, ty), wname,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, FS_NAME, SlateHud.COL_TEXT)
-	# Meta line (mono caps): KIND · [EQUIPPED ·] FLAT Ln · +N% DAMAGE. EQUIPPED gold.
+	# Title (Cinzel, centred over the anvil).
+	var cx := size.x * 0.5
+	_text_centred(cx, NAME_TITLE_Y * size.y, wname, COL_INK, FS_NAME, _font_display)
+	# Meta line (tracked caps): KIND · [EQUIPPED ·] FLAT Ln · +N% DAMAGE. EQUIPPED is the one
+	# gold word — Ember spends gold on state, and "this is the weapon you carry" is the only
+	# state on the line.
 	var kind := str(def.get("kind", "melee")).to_upper()
 	var lead := "%s · " % kind
 	var eq_txt := "EQUIPPED · " if equipped else ""
 	var tail := "FLAT L%d · +%d%% DAMAGE" % [level, int(round(pct))]
-	var my := NAME_META_Y * size.y + _font_num.get_ascent(FS_META)
-	var full := lead + eq_txt + tail
-	var mw := _font_num.get_string_size(full, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_META).x
-	var mx := (size.x - mw) * 0.5
-	mx = _seg(lead, mx, my, SlateHud.COL_KEY_TEXT)
+	var my := NAME_META_Y * size.y
+	var mw := _text_tracked_w(lead + eq_txt + tail, FS_META, _font_ui_med, META_TRACKING)
+	var mx := cx - mw * 0.5
+	mx += _text_tracked(Vector2(mx, my), lead, COL_INK_DIM, FS_META, _font_ui_med,
+		META_TRACKING) + META_TRACKING
 	if not eq_txt.is_empty():
-		mx = _seg(eq_txt, mx, my, SlateHud.COL_READY)
-	_seg(tail, mx, my, SlateHud.COL_KEY_TEXT)
-
-
-func _seg(s: String, x: float, y: float, col: Color) -> float:
-	draw_string(_font_num, Vector2(x, y), s, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_META, col)
-	return x + _font_num.get_string_size(s, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_META).x
+		mx += _text_tracked(Vector2(mx, my), eq_txt, COL_ACCENT, FS_META, _font_ui_med,
+			META_TRACKING) + META_TRACKING
+	_text_tracked(Vector2(mx, my), tail, COL_INK_DIM, FS_META, _font_ui_med, META_TRACKING)
 
 
 func _draw_tab(i: int) -> void:
@@ -211,63 +220,31 @@ func _draw_tab(i: int) -> void:
 	var rect := _tab_rect(i)
 	var selected := id == _selected
 	var hovered := id == _hovered
-	# Box.
-	var border := SlateHud.COL_CHIP_BORDER
+	# The row box: a barely-there wash inside a hairline, and a dashed GOLD frame on the
+	# selected one. Under Slate this was a filled chip with a coloured border, which made
+	# three weapons read as three buttons; the row-box mark says "a list of things, one of
+	# them is current" — and it is the same mark the build and market lists now wear.
+	var state := "idle"
 	if selected:
-		border = SlateHud.COL_READY
+		state = "selected"
 	elif hovered:
-		border = SlateHud.COL_ORE
-	var sb := StyleBoxFlat.new()
-	sb.bg_color = SlateHud.COL_CHIP_BG
-	sb.border_color = border
-	sb.set_border_width_all(int(TAB_LINE_W))
-	sb.set_corner_radius_all(TAB_RADIUS)
-	draw_style_box(sb, rect)
+		state = "hover"
+	_row_box(rect, state)
 	# Silhouette (dim, brightens on hover/select via a modulate on the metal fill).
 	var alpha := 1.0 if (selected or hovered) else 0.75
 	var fill := Color(WeaponSilhouette.COL_METAL_FILL, alpha)
 	var stroke := Color(WeaponSilhouette.COL_METAL_STROKE, alpha)
 	var sil_c := Vector2(rect.get_center().x, rect.position.y + rect.size.y * 0.42)
 	WeaponSilhouette.paint(self, id, sil_c, TAB_SIL_SCALE, fill, stroke, TAB_LINE_W,
-		_font_num, FS_TAB)
-	# Label (mono caps): NAME, or NAME · EQUIPPED when equipped (gold when selected).
+		_font_ui_med, FS_TAB)
+	# Label (tracked caps): NAME, or NAME · EQUIPPED when equipped (gold when selected).
 	var def: Dictionary = defs.get(id, {})
 	var wname := str(def.get("name", id)).to_upper()
 	var equipped := str(SaveManager.state["combat"].get("current_weapon", "sword")) == id
 	var label := wname + " · EQUIPPED" if equipped else wname
-	var col := SlateHud.COL_READY if selected else SlateHud.COL_KEY_TEXT
-	var lw := _font_num.get_string_size(label, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_TAB).x
-	var ly := rect.position.y + rect.size.y - 8.0
-	draw_string(_font_num, Vector2(rect.get_center().x - lw * 0.5, ly), label,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, FS_TAB, col)
+	var col := COL_ACCENT if selected else COL_INK_DIM
+	var lw := _text_tracked_w(label, FS_TAB, _font_ui_med, TAB_TRACKING)
+	var ly := rect.position.y + rect.size.y - 14.0
+	_text_tracked(Vector2(rect.get_center().x - lw * 0.5, ly), label, col, FS_TAB,
+		_font_ui_med, TAB_TRACKING)
 
-
-func _draw_ore() -> void:
-	var n := int(Ledger.get_amount("resonance-ore"))
-	var num := str(n)
-	var right := size.x - SlateHud.MARGIN - 6.0
-	var top := SlateHud.MARGIN + 6.0
-	# Big number, right-aligned.
-	var nw := _font_num.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_ORE).x
-	var ny := top + _font_num.get_ascent(FS_ORE)
-	draw_string(_font_num, Vector2(right - nw, ny), num, HORIZONTAL_ALIGNMENT_LEFT, -1,
-		FS_ORE, SlateHud.COL_ORE)
-	# Placeholder ore glyph — a small faceted crystal outline to the left of the number.
-	_ore_crystal(Vector2(right - nw - 20.0, top + FS_ORE * 0.5), 11.0)
-	# Small dim label under the number.
-	var lw := _font_num.get_string_size(ORE_SUBTITLE, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_ORE_LABEL).x
-	draw_string(_font_num, Vector2(right - lw, ny + FS_ORE_LABEL + 4.0), ORE_SUBTITLE,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, FS_ORE_LABEL, SlateHud.COL_KEY_TEXT)
-
-
-func _ore_crystal(p: Vector2, s: float) -> void:
-	# A faceted gem: a hexagon outline + two inner facet lines, in the ore violet.
-	var hex := PackedVector2Array([
-		p + Vector2(0, -s), p + Vector2(s * 0.85, -s * 0.4), p + Vector2(s * 0.85, s * 0.4),
-		p + Vector2(0, s), p + Vector2(-s * 0.85, s * 0.4), p + Vector2(-s * 0.85, -s * 0.4)])
-	draw_colored_polygon(hex, Color(SlateHud.COL_ORE, 0.18))
-	hex.append(hex[0])
-	draw_polyline(hex, SlateHud.COL_ORE, 1.6, true)
-	draw_line(p + Vector2(-s * 0.85, -s * 0.4), p + Vector2(s * 0.85, -s * 0.4),
-		Color(SlateHud.COL_ORE, 0.7), 1.2, true)
-	draw_line(p + Vector2(0, -s), p + Vector2(0, s), Color(SlateHud.COL_ORE, 0.7), 1.2, true)

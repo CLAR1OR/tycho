@@ -110,6 +110,16 @@ static func _bands(size: Vector2) -> Dictionary:
 	}
 
 
+## Where a `Label` node's TOP-LEFT goes so the label sits centred on a band's line.
+##
+## The bands above give a line's CENTRE (a drawn screen measures its own text and centres
+## it), but a Control-tree screen positions a `Label` by its top-left — and every migrated
+## panel was about to write the same `y - height * 0.5` by hand. Six copies of that is six
+## chances to write `- height` instead, which reads as "the title drifted up a bit".
+static func label_pos(band: Rect2, label_height: float) -> Vector2:
+	return Vector2(band.position.x, band.position.y - label_height * 0.5)
+
+
 ## Evenly stack `count` rows of `row_h` (plus `gap`) down a column, starting at its top.
 ## Returns the row rects — the list column's one job, and the same maths every screen with
 ## a stacked list would otherwise repeat.

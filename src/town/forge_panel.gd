@@ -5,8 +5,17 @@ class_name ForgePanel
 ## nowhere). One weapon at a time lies large on Mara's anvil in the ember light; the three
 ## tabs on the left switch it; refining is the screen's single ceremony (name + level over the
 ## weapon, description + pip track + the one gold button in the strip below). Fullscreen,
-## code-built, Slate-themed; pauses the game while open. Opened from Mara once the forge is
-## unlocked (B1). A REBUILD of the old scrolling list — the mechanics are byte-identical.
+## code-built, EMBER-themed (migrated 2026-08-14, Tier B); pauses the game while open. Opened
+## from Mara once the forge is unlocked (B1). A REBUILD of the old scrolling list — the
+## mechanics are byte-identical.
+##
+## The Ember migration is a RESTYLE: every public method, the transaction, the pause
+## semantics and all copy are byte-identical, and the smoke drives it unchanged. What moved:
+## the backdrop ColorRect is gone (ForgeAnvil draws the shared scrim), the bottom strip's
+## panel is transparent and bounded by a hairline instead of a border, the five refine pips
+## are the shared `EmberPips` node rather than five bordered `Panel`s, and Refine is the
+## screen's one `EmberAction` — gold is state, so only the thing you came here to press
+## wears it.
 ##
 ## v1-slice scope: EQUIP one of the three weapons + buy FLAT levels (Resonance Ore, 5 levels,
 ## +15% damage each). The future resonance-effects track joins as a SECOND (dust-cyan) pip row
@@ -15,15 +24,12 @@ class_name ForgePanel
 ## headless smoke drives the real path.
 
 # =====================================================================================
-# Style / copy — placeholders. Dial like FEEL numbers (shared palette/fonts live in SlateHud;
+# Style / copy — placeholders. Dial like FEEL numbers (shared palette/fonts live in EmberHud;
 # the anvil/weapon/tab visuals in ForgeAnvil/WeaponSilhouette). ALL copy below is HUMAN pen.
 # =====================================================================================
-const MARGIN := 20.0
 const STRIP_GUTTER := 230.0     # left/right inset of the bottom strip
 const STRIP_BOTTOM := 26.0
 const STRIP_SEP := 28
-const PIP_SIZE := Vector2(26, 11)
-const PIP_RADIUS := 6
 const SUBTITLE := "She keeps working while you look."
 const LEVEL_LINE := "REFINED L%d OF %d · +%d%%/L"   # placeholder format
 
@@ -39,19 +45,14 @@ var _strip: PanelContainer
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("forge_panel")
-	theme = SlateTheme.get_theme()
+	theme = EmberTheme.get_theme()
 
 
 func open() -> void:
 	_defs = WeaponCore.defs()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	# A near-opaque backdrop over the whole screen (the frame bg of the mock).
-	var bg := ColorRect.new()
-	bg.set_anchors_preset(Control.PRESET_FULL_RECT)
-	bg.color = TechChart.COL_FRAME_BG
-	bg.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	add_child(bg)
-	# The anvil stage (drawn + tab hit-tested).
+	# The anvil stage (drawn + tab hit-tested). It draws the scrim as its first act, so this
+	# screen no longer carries a backdrop ColorRect of its own — one scrim dial, in EmberHud.
 	_anvil = ForgeAnvil.new()
 	_anvil.set_anchors_preset(Control.PRESET_FULL_RECT)
 	add_child(_anvil)
@@ -59,12 +60,12 @@ func open() -> void:
 	# Header: title + subtitle (top-left).
 	_title = Label.new()
 	_title.text = "Mara's Forge"
-	_title.theme_type_variation = &"TitleLabel"
+	_title.theme_type_variation = &"EmberTitle"
 	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_title)
 	_subtitle = Label.new()
 	_subtitle.text = SUBTITLE
-	_subtitle.theme_type_variation = &"DimLabel"
+	_subtitle.theme_type_variation = &"EmberDim"
 	_subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_subtitle)
 	# Default selection = the equipped weapon.
@@ -96,15 +97,20 @@ func _process(_delta: float) -> void:
 	var vp := get_viewport_rect().size
 	if size != vp:
 		size = vp
+	# Title band from EmberMenuCore, so the forge's header sits exactly where the build,
+	# survey, market and etchings headers sit. The band's y is the line's CENTRE; a Label
+	# positions by its top-left, so lift it by half its measured height.
+	var bands := EmberMenuCore.catalogue(size)
 	if _title != null:
-		_title.position = Vector2(MARGIN + 8.0, MARGIN)
+		_title.position = EmberMenuCore.label_pos(bands["title"], _title.size.y)
 	if _subtitle != null:
-		_subtitle.position = Vector2(MARGIN + 9.0, MARGIN + 32.0)
+		_subtitle.position = EmberMenuCore.label_pos(bands["subtitle"], _subtitle.size.y)
 	if _strip != null:
 		var w := maxf(0.0, size.x - 2.0 * STRIP_GUTTER)
 		_strip.custom_minimum_size.x = w
 		_strip.size.x = w
 		_strip.position = Vector2(STRIP_GUTTER, size.y - STRIP_BOTTOM - _strip.size.y)
+
 
 
 # --- Public (tab callback, strip buttons, and the smoke driver all land here) -----------
@@ -168,16 +174,22 @@ func _build_strip() -> void:
 	var per_level := int(round(float((def.get("flat", {}) as Dictionary).get(
 		"damage_mult_per_level", 0.0)) * 100.0))
 
-	_strip = PanelContainer.new()
+	_strip = PanelContainer.new()   # transparent under EmberTheme — it groups and pads only
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 24)
 	margin.add_theme_constant_override("margin_right", 24)
 	margin.add_theme_constant_override("margin_top", 16)
 	margin.add_theme_constant_override("margin_bottom", 16)
 	_strip.add_child(margin)
+	# A hairline over the strip, doing the job the panel border used to: it says "this band
+	# belongs together" without drawing a box the eye has to read past.
+	var stack := VBoxContainer.new()
+	stack.add_theme_constant_override("separation", 14)
+	margin.add_child(stack)
+	stack.add_child(HSeparator.new())
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", STRIP_SEP)
-	margin.add_child(row)
+	stack.add_child(row)
 
 	# Left: description + level line + pip track.
 	var left := VBoxContainer.new()
@@ -186,14 +198,17 @@ func _build_strip() -> void:
 	row.add_child(left)
 	var desc := Label.new()
 	desc.text = str(def.get("desc", ""))       # authored data copy — verbatim
+	desc.theme_type_variation = &"EmberProse"  # a weapon's description is flavour, not a label
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	desc.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	left.add_child(desc)
 	var lv := Label.new()
 	lv.text = LEVEL_LINE % [level, max_level, per_level]
-	lv.theme_type_variation = &"NumLabel"
+	lv.theme_type_variation = &"EmberNum"
 	left.add_child(lv)
-	left.add_child(_pip_track(level, max_level))
+	var pips := EmberPips.new()
+	left.add_child(pips)
+	pips.setup(level, max_level)   # after add_child: setup sizes the node, _ready re-anchors
 
 	# Right: the refine action (+ Equip when this weapon isn't the equipped one).
 	var right := VBoxContainer.new()
@@ -211,51 +226,21 @@ func _build_strip() -> void:
 	add_child(_strip)
 
 
-## The 5-pip refine track: filled = ore violet (glow), next = ore-violet outline, rest = slate
-## outline; ALL-gold at max (the states card).
-func _pip_track(level: int, max_level: int) -> HBoxContainer:
-	var track := HBoxContainer.new()
-	track.add_theme_constant_override("separation", 7)
-	var maxed := level >= max_level
-	for i in max_level:
-		var pip := Panel.new()
-		pip.custom_minimum_size = PIP_SIZE
-		var sb := StyleBoxFlat.new()
-		sb.set_corner_radius_all(PIP_RADIUS)
-		sb.set_border_width_all(2)
-		if maxed:                                   # all gold at max
-			sb.bg_color = SlateHud.COL_READY
-			sb.border_color = SlateHud.COL_READY
-			sb.shadow_color = Color(SlateHud.COL_READY, 0.5)
-			sb.shadow_size = 4
-		elif i < level:                             # filled — ore violet + glow
-			sb.bg_color = SlateHud.COL_ORE
-			sb.border_color = SlateHud.COL_ORE
-			sb.shadow_color = Color(SlateHud.COL_ORE, 0.5)
-			sb.shadow_size = 4
-		elif i == level:                            # next — ore-violet outline
-			sb.draw_center = false
-			sb.border_color = SlateHud.COL_ORE
-		else:                                       # rest — slate outline
-			sb.draw_center = false
-			sb.border_color = SlateHud.COL_SLATE_BORDER
-		pip.add_theme_stylebox_override("panel", sb)
-		track.add_child(pip)
-	return track
-
-
 ## The gold refine button below max, or the inert "Flat track maxed" gold-dim label at max.
 func _refine_action(def: Dictionary, level: int) -> Control:
 	var action := ForgePanelCore.refine_action(def, level)
 	if str(action["kind"]) == "maxed":
 		var l := Label.new()
 		l.text = "Flat track maxed"
-		l.theme_type_variation = &"DimLabel"
-		l.add_theme_color_override("font_color", SlateHud.COL_READY)
+		l.theme_type_variation = &"EmberDim"
+		l.add_theme_color_override("font_color", EmberHud.COL_ACCENT)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		return l
 	var cost := int(action["cost"])
 	var b := Button.new()
+	# The screen's ONE gold control — refining is why the forge exists. Equip stays a plain
+	# frame beside it, so the two never compete for the same read.
+	b.theme_type_variation = &"EmberAction"
 	b.text = "Refine to L%d  (%d Resonance Ore)" % [int(action["to_level"]), cost]
 	b.disabled = Ledger.get_amount("resonance-ore") < float(cost)
 	b.pressed.connect(func() -> void: Sfx.play("ui-click"))

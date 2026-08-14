@@ -11,14 +11,14 @@ class_name RunHud
 ##
 ## Layout (see the reference anchor):
 ##   bottom-left    echo rail, medallions growing UPWARD from the HP baseline
-##   bottom-centre  the thin HP bar with its gold centre diamond, hint prose above it
+##   bottom-centre  the thin HP bar with its gold centre diamond
 ##   bottom-right   the ability dial: three rings + a smaller dash ring, cooldown arcs
 ##   top-right      bare resource readouts, then the room block (header + objective rows)
 ##   top-centre     the boss bar (boss rooms only)
 ##
 ## One screen-filling Control (mouse_filter IGNORE) on combat_room's $HUD CanvasLayer. It
 ## draws everything itself in _draw and polls the player/boss each frame — combat_room +
-## game.gd push room/hint/wave/HP/boss state in through the setters. The public API is
+## game.gd push room/wave/HP/boss state in through the setters. The public API is
 ## unchanged from the Slate version except for `set_wave_progress` (the live kill count
 ## the objective row needs), so combat_room's wiring is untouched apart from that feed.
 ##
@@ -90,8 +90,6 @@ const BOSS_BAR_TOP := 34.0       # bar centre, below MARGIN
 const BOSS_TRACKING := 2.6
 const COL_BOSS := Color(155.0/255, 79.0/255, 192.0/255)            # #9b4fc0
 const COL_BOSS_LABEL := Color(230.0/255, 213.0/255, 242.0/255)     # #e6d5f2
-# Contextual hint — bottom-centre, bare prose above the HP bar (no chip, no panel).
-const HINT_LIFT := 30.0          # hint centre, above the HP bar's centre
 # Vignette (low HP) — the one Slate element Ember keeps, because it is combat information.
 const VIGNETTE_DEPTH := 90.0
 const VIGNETTE_STEPS := 24
@@ -137,7 +135,6 @@ var _wave_total: int = 0   # enemies in the CURRENT wave
 
 var _hp: int = 0
 var _max_hp: int = 1
-var _hint: String = ""
 var _echoes: Array = []   # HudCore.fold_echoes output
 
 var _res_amounts: Dictionary = {}   # id -> current amount, for the top-right readout
@@ -187,11 +184,6 @@ func set_wave_progress(kills: int, total: int) -> void:
 
 func mark_cleared() -> void:
 	_cleared = true
-	queue_redraw()
-
-
-func set_hint(text: String) -> void:
-	_hint = text
 	queue_redraw()
 
 
@@ -292,7 +284,6 @@ func _draw() -> void:
 	_draw_echo_rail()
 	_draw_hp()
 	_draw_abilities()
-	_draw_hint()
 
 
 # --- Resource readout (top-right, bare glyph + big number, no box) --------------------
@@ -456,15 +447,6 @@ func _draw_boss_bar() -> void:
 		draw_rect(Rect2(cx - HP_FILL_INSET - run, top, run, BOSS_H), COL_BOSS)
 		draw_rect(Rect2(cx + HP_FILL_INSET, top, run, BOSS_H), COL_BOSS)
 	_diamond(Vector2(cx, cy), BOSS_DIAMOND, COL_BOSS_LABEL)
-
-
-# --- Contextual hint (bottom-centre, bare prose) --------------------------------------
-
-func _draw_hint() -> void:
-	if _hint.is_empty():
-		return
-	_text_centred(size.x * 0.5, size.y - HP_BOTTOM - HINT_LIFT, _hint, COL_INK,
-		FS_LABEL, _font_body, true)
 
 
 # --- Vignette (low HP) ----------------------------------------------------------------

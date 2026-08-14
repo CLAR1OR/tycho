@@ -51,7 +51,7 @@ var mono_font: Font = null
 
 
 static func _dust() -> Color:
-	return SlateHud.COL_DUST
+	return EmberHud.COL_DUST
 
 
 func _ready() -> void:

@@ -87,22 +87,48 @@ static func get_theme() -> Theme:
 
 	# --- ScrollContainer --------------------------------------------------------------
 	# A scrolling page is the main reason a screen is a Control tree at all, so its
-	# furniture has to speak Ember too: no track, a hairline-thin grabber.
+	# furniture has to speak Ember too: a hairline track and a thin grabber on it.
+	#
+	# It shipped in Tier B with an EMPTY track and a COL_RING grabber, on the theory that a
+	# scrollbar is furniture and Ember hides furniture. The menu probe showed why that is
+	# wrong: over the scrim the bar was invisible, so the survey and the attunements page
+	# read as pages that had been CUT OFF rather than pages that continue. Ember hides the
+	# box around content; it must not hide the one mark saying there is more content.
+	var track := StyleBoxFlat.new()
+	track.bg_color = EmberHud.COL_HAIR
+	track.set_corner_radius_all(2)
+	track.content_margin_left = 5
+	track.content_margin_right = 5
 	var grabber := StyleBoxFlat.new()
-	grabber.bg_color = EmberHud.COL_RING
+	grabber.bg_color = EmberHud.COL_INK_DIM
 	grabber.set_corner_radius_all(2)
-	grabber.content_margin_left = 3
-	grabber.content_margin_right = 3
+	grabber.content_margin_left = 4
+	grabber.content_margin_right = 4
 	var grabber_hl := StyleBoxFlat.new()
-	grabber_hl.bg_color = EmberHud.COL_INK_DIM
+	grabber_hl.bg_color = EmberHud.COL_INK
 	grabber_hl.set_corner_radius_all(2)
-	grabber_hl.content_margin_left = 3
-	grabber_hl.content_margin_right = 3
+	grabber_hl.content_margin_left = 4
+	grabber_hl.content_margin_right = 4
 	for bar: String in ["VScrollBar", "HScrollBar"]:
-		t.set_stylebox("scroll", bar, StyleBoxEmpty.new())
+		t.set_stylebox("scroll", bar, track)
 		t.set_stylebox("grabber", bar, grabber)
 		t.set_stylebox("grabber_highlight", bar, grabber_hl)
 		t.set_stylebox("grabber_pressed", bar, grabber_hl)
+
+	# --- Separator --------------------------------------------------------------------
+	# The hairline, as a container node. `EmberHud._hairline` is the drawn version; a
+	# Control-tree screen that separates stacked rows reaches for `HSeparator` instead, and
+	# under the default theme that lands as a fat grey slab. Styling it here is what keeps a
+	# row divider in the market sheet identical to a section rule in the run HUD.
+	var rule := StyleBoxLine.new()
+	rule.color = EmberHud.COL_HAIR
+	rule.thickness = 1
+	t.set_stylebox("separator", "HSeparator", rule)
+	var v_rule := StyleBoxLine.new()
+	v_rule.color = EmberHud.COL_HAIR
+	v_rule.thickness = 1
+	v_rule.vertical = true
+	t.set_stylebox("separator", "VSeparator", v_rule)
 
 	# --- Type variations --------------------------------------------------------------
 	t.set_type_variation("EmberTitle", "Label")

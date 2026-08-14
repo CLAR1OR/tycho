@@ -94,7 +94,6 @@ func _run() -> void:
 		_hud.set_wave(1, 3)
 		_hud.set_wave_progress(2, 5)
 		_hud.set_hp(72, 100)
-		_hud.set_hint("Clear the room")
 		_hud.set("_res_amounts", {
 			"gold": 128.0, "resonance-ore": 35.0, "resonance-dust": 12.0,
 			"knowledge-shards": 4.0,
@@ -106,7 +105,6 @@ func _run() -> void:
 		_hud.set_wave(2, 3)
 		_hud.mark_cleared()
 		_hud.set_hp(14, 100)
-		_hud.set_hint("Choose a door — the sigil is what the next room pays")
 		_hud.set("_echoes", _fake_echoes(11))
 	)
 	_hud.hide()  # the remaining surfaces are shot on their own, not stacked over the run HUD

@@ -22,12 +22,11 @@ It is **one code-built `Control`** — `src/combat/run_hud.gd` (`RunHud extends 
 2. **Room block — top-right, under the resources.** The anchor's "Tasks" list, filled with state the run *already tracks* rather than a new objective system (human decision, 2026-08-10). Two parts:
    - **Header** = `HudCore.chip_text(...)` — `F2 · R3/5 ⚠ · Wave 2/3` — drawn letter-spaced and dim over a hairline rule. Same string Slate drew as a top-left chip; Ember promotes it to the block's heading. The peril `⚠` stays red inside the dim line (`_text_tracked`'s per-character highlight).
    - **Objective rows** = `HudCore.task_rows(...)`: a gold diamond bullet, the label, and its counter beneath. Combat → `Defeat all enemies` + `2 / 5` (kills in the **current wave**, so the counter restarts each wave while the header tracks the room). Boss → `Defeat The Den-Warden`, no counter (the boss has its own bar). Reprieve → `Catch your breath`. Cleared rows dim and their diamond goes faint.
-   - **The row states the OBJECTIVE; the hint line states the PROMPT.** They must never duplicate — a cleared room says only `Room cleared` and lets the hint name the next action.
+   - **The rows are the ONLY words the run HUD puts on screen** (since the 2026-08-14 hint removal, below). A row must therefore read as **state, never as an instruction**: `Room cleared`, not "now choose a door". What to do next is said by the world — the open door, the lit portal, the Wellspring.
 3. **Echo rail — bottom-left, growing UPWARD** (human-specified: "starting from bottom left and stacking up towards top of screen"). The run's echo picks as 38 px ringed medallions carrying the Cinzel monogram (Tempest Stride → `TS`). Stackable repeats fold into one medallion with a small gold count disc. One clean column, no wrap — it simply stops when it runs out of screen (~13 fit at 720). Rebuilt on room spawn and after each pick from `RunState.echoes`.
 4. **HP bar — bottom-centre.** A 460×5 track filling **outward from a gold centre diamond** in both directions; the grey track is the missing HP. **The anchor shows no number** — Tycho needs one (you are constantly judging "does the next hit kill me"), so it fades in on any HP change and leaves again (`HP_NUM_HOLD_S` 1.5 s; set it to 0 to follow the anchor exactly, or far higher to keep it permanent). **Low-HP state** at ≤25% of max: the fill brightens, the diamond goes red, and the red screen-edge **vignette** appears — the one Slate element Ember keeps, because it is combat information rather than decoration.
 5. **Ability dial — bottom-right, stacked upward.** Three 56 px rings (RMB / Q / R) with a smaller 40 px dash ring nearest the corner. The ring face carries the **ability glyph**, not a letter — that swap is the whole point of the language. **Ready is the only thing gold**: a ready slot's ring is gold, everything else is the idle ring. On cooldown a gold arc sweeps clockwise from 12 o'clock *outside* the ring and **grows back as the ability recovers**, so a full circle means ready — a continuous glanceable read where Slate printed a decimal. Read via `player.ability_slot_info()` (clean getter, gives `cd_left` + `cd_total` per slot and for the dash). Key badges sit small and dim under each ring.
-6. **Contextual hint — bottom-centre, above the HP bar.** The exit-open / choose-a-door / wellspring / artifact strings as **bare Garamond prose with a 1 px dark shadow** — no chip, no panel. Ember has nothing behind its text, so the shadow is what keeps prose legible over a bright patch of world. Hidden when empty.
-7. **Boss bar — top-centre, boss rooms only.** The boss's name in letter-spaced Cinzel over a 420×7 track using the same mirrored centre-diamond grammar as the HP bar, purple fill. Tracks the boss node's `current_hp()` / `max_hp` (passed in by `combat_room` at spawn). Hidden once the boss dies.
+6. **Boss bar — top-centre, boss rooms only.** The boss's name in letter-spaced Cinzel over a 420×7 track using the same mirrored centre-diamond grammar as the HP bar, purple fill. Tracks the boss node's `current_hp()` / `max_hp` (passed in by `combat_room` at spawn). Hidden once the boss dies.
 
 ## Typography (added 2026-07-07; the fourth role added 2026-08-13)
 
@@ -35,14 +34,14 @@ Four OFL fonts under `assets/fonts/` (provenance: `assets/fonts/SOURCES.md`; the
 
 - **Cinzel SemiBold — display.** The engraved-Roman-caps voice: screen titles, echo-medallion monograms, the boss name.
 - **JetBrains Mono Medium — numbers/readouts.** Resource readouts, objective counters, HP numerals, key badges, stack-count badges, stat values, costs. Mono digits don't shuffle as values tick, and it natively carries the room header's `⚠`.
-- **EB Garamond Medium — prose.** Descriptions, flavour, dialogue, screen subtitles, and the in-run contextual hint — the places the *game* is speaking rather than the interface labelling itself.
+- **EB Garamond Medium — prose.** Descriptions, flavour, dialogue, screen subtitles — the places the *game* is speaking rather than the interface labelling itself. (It also carried the in-run contextual hint until that line was removed, 2026-08-14.)
 - **Alegreya Sans Regular / Medium — the interface voice (NEW 2026-08-13).** Labels, list-row names, section heads, buttons, footer prompts, objective labels.
 
 **The fourth font was the deliberate gap, and the menu work closed it.** Ember originally shipped with three and pressed Garamond into label duty, because both reference anchors are set in a humanist sans the project did not own and buying into one was left as an open call. The human made it (2026-08-13: *"use new font as fits best"*). **Alegreya Sans** is the pick: humanist rather than geometric, drawn by Huerta Tipográfica from the same old-style calligraphic roots as EB Garamond, so the two share a screen as one system instead of two. A neutral UI sans (Inter, Source Sans) would be equally legible and would read as a productivity app dropped onto a painted medieval world. **Regular** is the workhorse; **Medium** carries the small tracked caps, where Regular goes thin against an unbacked world.
 
 **Why two weights and not one:** Ember draws on the world with no panel behind its text, so hairline-thin type at 12–13 px is a real legibility risk — the anchors get away with a Light weight because they sit over a heavy vignette. Regular for body-size UI, Medium for the small stuff.
 
-**One RunHud change came with it (sanctioned):** the **objective labels** moved from Garamond to the UI font. Both anchors set the task block in the sans — `art-style.png` shows `Defeat all enemies in the area` in it verbatim — so Garamond was standing in there, and the stand-in shows once a real sans exists. **The contextual hint stayed Garamond**: no anchor covers it, and it is the game talking to the player (`Choose a door — the sigil is what the next room pays`), not a label. Both are one-line swaps in `run_hud.gd` if the human disagrees.
+**One RunHud change came with it (sanctioned):** the **objective labels** moved from Garamond to the UI font. Both anchors set the task block in the sans — `art-style.png` shows `Defeat all enemies in the area` in it verbatim — so Garamond was standing in there, and the stand-in shows once a real sans exists. One line swap in `run_hud.gd` if the human disagrees. *(The contextual hint was kept in Garamond at the time on the grounds that it was the game talking rather than a label; the line itself was removed a day later — see § "No on-screen instructions".)*
 
 Each font is wrapped in a `FontVariation` with `fallbacks = [ThemeDB.fallback_font]` (`RunHud._with_fallback`) so a missing glyph never renders as a box, without mutating the shared imported resource. Held back for later UI (dialogue panel, codex, titles): Cormorant, Cormorant Garamond, IM Fell English.
 
@@ -74,12 +73,14 @@ Each font is wrapped in a `FontVariation` with `fallbacks = [ThemeDB.fallback_fo
 | `_row_box(rect, state)` | a barely-there wash inside a hairline | bounds a list row **without** becoming a panel; states `idle` / `hover` / `selected` / `disabled` |
 | `_dashed_rect` / `_dashed_line` | a real dashed frame | the anchor marks its selected row and its primary button this way. Also retires the S2 slot-select's "approximated-dashed" placeholder (StyleBoxFlat has no dashed border) |
 | `_section(x0, x1, y, label)` | tracked caps over a hairline, returns the first row's y | the dock's `WEAPON LEVEL` / `UPGRADE COST` grammar — Ember's replacement for a titled panel |
-| `_pips(centre, states)` | a diamond level track | one implementation for the forge's refine levels, the build panel's building levels, and the etchings' mark depth, which today are three |
+| `_pips(centre, states)` | a diamond level track | one implementation for the forge's refine levels, the build panel's building levels, and the etchings' mark depth, which were three (**four**, as Tier B found) |
 | `_prompt(pos, key, label)` / `_prompt_w` | a ringed key badge + label | the footer says what its inputs do, now that the ESC-close pass removed every Close button |
 | `_flourish(centre, half_w)` | a gold diamond with rules fading out both sides | the one purely decorative mark in the language. It says *this is a page* — the job a panel border used to do |
 | `_v_rule` / `_text_right` / `_elide` | column divider, right-aligned text, pixel-exact ellipsis | the plumbing every dock and list row needs |
+| `_resource_readout(right_x, y, ids)` *(Tier B)* | the top-right "what am I carrying" row, right-aligned so it grows leftward | it replaced **six** hand-rolled copies — the forge's ore crystal, two mote clusters, and three identical carry stacks in build/survey/market, each with its own glyph primitive and number size |
 
 **2. `EmberMenuCore`** (`src/core/ember_menu_core.gd`, static, unit-tested `tests/core/ember_menu_core_test.gd`) — the pure half, sitting under the menus exactly as `HudCore` sits under `RunHud`:
+- **`label_pos(band, label_height)`** *(Tier B)* → where a `Label` node's top-left goes so it sits centred on a band's line. The bands give a line's **centre** (a drawn screen measures and centres its own text); a Control-tree screen positions by top-left, and six migrated panels were each about to write `y - height * 0.5` by hand.
 - **`catalogue(size)`** → the four-column grammar as `Rect2`s (`title` / `subtitle` / `resources` / `rail` / `list` / `hero` / `dock` / `footer` / `content`). Below `RAIL_MIN_W_PX` the rail is **dropped, not squeezed**, so a small window degrades once, centrally, instead of in fifteen screens.
 - **`column(size, width)`** → the centred single-column variant for read-down pages (settings, achievements). **It returns the identical title/subtitle/footer/content bands** — that shared furniture is what makes a four-column forge and a one-column settings page read as one language, and there is a test asserting the two never drift.
 - **`stack` / `rows_that_fit`** — list-row rects, and when a list needs to scroll.
@@ -92,13 +93,21 @@ Each font is wrapped in a `FontVariation` with `fallbacks = [ThemeDB.fallback_fo
 
 > **THE INVERSION, and why this is not a palette swap of `SlateTheme`:** Slate's `Panel` was an opaque box with a 2 px border, and its `Button` was that box again. Ember's `Panel`/`PanelContainer` are **`StyleBoxEmpty` — transparent**: they group and pad, they never paint. A `Button` is a hairline frame over nothing that goes gold when it is the actionable thing. **If a migrated screen still looks boxy, something is setting its own StyleBox instead of taking these.**
 
-Type variations: `EmberTitle` (Cinzel) · `EmberHead` (UI Medium, small + dim) · `EmberDim` · `EmberNum` (mono) · `EmberProse` (Garamond) · `EmberAction` (the gold-framed primary button, at most one per screen). Scrollbars are restyled too — no track, a hairline grabber — because a scrolling page is the main reason a screen is a Control tree at all.
+Type variations: `EmberTitle` (Cinzel) · `EmberHead` (UI Medium, small + dim) · `EmberDim` · `EmberNum` (mono) · `EmberProse` (Garamond) · `EmberAction` (the gold-framed primary button, at most one per screen).
+
+**Two container styles were added in Tier B**, both because a migrated Control tree reaches for them and the *default* theme's version is loud:
+- **`HSeparator` / `VSeparator` → the hairline.** `EmberHud._hairline` is the drawn version; a Control-tree screen separating stacked rows uses the node, and unstyled it lands as a fat grey slab. Styling it here is what keeps a row divider in the market sheet identical to a section rule in the run HUD.
+- **Scrollbars → a hairline track with a thin grabber.** These shipped in Step 1 with an *empty* track and a `COL_RING` grabber, on the theory that a scrollbar is furniture and Ember hides furniture. **Tier B's probe showed that is wrong:** over the scrim the bar was invisible, so the survey and the attunements page read as pages that had been **cut off** rather than pages that continue. Ember hides the box *around* content; it must not hide the one mark saying there is more content.
+
+**3b. `EmberPips`** (`src/core/ember_pips.gd`, added in Tier B) — `_pips` wrapped as a packable Control, so a Control-**tree** screen can drop a level track into an `HBox` beside a name or a cost. It exists because the pip track is the single most-repeated mark in the game's menus and **four** screens each drew their own: the forge built five `Panel` nodes with StyleBoxFlat borders, while the etchings, attunements and survey pages printed literal `●`/`○` characters in whatever font the row happened to inherit — so the same idea rendered at three sizes with three fill rules, and *"what does hollow mean"* had three answers. `setup(level, max)` takes a track; `set_states(["filled"])` names a single pip outright, for the one-pip-per-row ladders (a build page's level rows, the etchings' deepen rungs) where the screen already knows which of the three states a row is.
 
 **4. Code-drawn marks, extended** (human decision, held from 2026-08-10 and re-confirmed: *"code drawn icons"*). The HUD's 10 glyphs became 22. New: `leaf` + `stone` (so all **seven** Ledger resources have a mark, not just the four the run HUD showed), and `sword` / `shield` / `heart` / `boot` / `star` / `anvil` / `book` / `house` / `lock` / `check` for rails, categories, stat rows, locked rows and met requirements. `GLYPH_ARCS` entries gained an optional **centre offset** (4th/5th element) so a mark can carry a non-concentric arc — the padlock's shackle needed it. `_glyph()` is still the single swap point when real icons exist.
 
 ### The probe — `tools/render_menu.tscn`
 
-`godot --path . tools/render_menu.tscn` (**not** `--headless`) renders a **specimen** screen into a 1280×720 SubViewport over a mid-tone field with bright patches, and writes `user://menu_render_{catalogue,column}.png`.
+`godot --path . tools/render_menu.tscn` (**not** `--headless`) renders into a 1280×720 SubViewport over a mid-tone field with bright patches. Ten states: the **specimen** (`catalogue`, `column`), the real `PauseMenu`, and — since Tier B — the six real migrated screens (`forge`, `etchings`, `attunements`, `build`, `build-locked`, `survey`, `market`).
+
+**The specimen and the real screens answer different questions, and both are needed.** The specimen proves the vocabulary is *coherent*; the real screens prove each one actually reaches for it. Every defect Tier A shipped was of the second kind — a collision, an invisible badge — and no test would have caught any of them. Tier B repeated the lesson: five of its six defects were only visible in a render.
 
 **Why a specimen rather than migrating a screen first:** the vocabulary is about to be applied fifteen times. If it is wrong — columns too tight, rows too loud, gold in the wrong places — that is fifteen rewrites. One fake screen exercising every primitive at once is judgeable side by side with the anchor. The content is deliberately fake (a weapon menu matching the anchor); it touches no game state, no `data/`, no save. **It paid for itself twice in the first pass:** the dock's `Lv. 2` numeral had the pip track drawn on top of it (a guessed pixel offset — now laid out from the measured text width), and the `sword` glyph read as a letter **T** because the blade and crossguard had no grip below them.
 
@@ -115,25 +124,27 @@ Type variations: `EmberTitle` (Cinzel) · `EmberHead` (UI Medium, small + dim) �
 
 ## Migrating to Ember (the plan — Step 2 onward)
 
-**Inventory:** started at Ember = 1 surface (`RunHud`), Slate = 15. **Tier A shipped 2026-08-13 → Ember = 5, Slate = 11**, plus 7 helper draw classes that read Slate colours directly (`TechChart`, `EtchingsArms`, `SigilIcon`, `ForgeAnvil`, `WeaponSilhouette`, `BuildingSilhouette`, `SlotSelectSky`).
+**Inventory:** started at Ember = 1 surface (`RunHud`), Slate = 15. **Tier A shipped 2026-08-13 → Ember 5 / Slate 11. Tier B shipped 2026-08-14 → Ember 11 / Slate 5.** Of the 7 helper draw classes that read Slate colours directly, five have moved (`EtchingsArms`, `SigilIcon`, `ForgeAnvil`, `WeaponSilhouette`, `BuildingSilhouette`); `TechChart` and `SlotSelectSky` remain, and are Tier C.
+
+**Slate's five survivors:** `TechPanel` (+`TechChart`), `SlotSelect` (+`SlotSelectSky`), `SettingsPanel`, `AchievementsPanel`, `DialoguePanel`.
 
 | Tier | Surfaces | Why this order |
 | --- | --- | --- |
 | **A — in-run + always-on ✅ DONE 2026-08-13** | `EchoOfferPanel`, `PauseMenu`, `TownHud`, `AchievementToast` | they appear *beside* Ember, so they disagreed with it most visibly. `EchoOfferPanel` was nearly Ember already — no panels, rings, glow, Cinzel monograms |
-| **B — the anchor's own archetype** | `ForgePanel` (+`ForgeAnvil`, `WeaponSilhouette`), `EtchingsPanel` (+`EtchingsArms`, `SigilIcon`), `AttunementsPage`, `BuildPanel` (+`BuildingSilhouette`), `SurveyPanel`, `MarketPanel` | the anchor **is** a weapon menu; these six are the catalogue grammar almost line for line |
+| **B — the anchor's own archetype ✅ DONE 2026-08-14** | `ForgePanel` (+`ForgeAnvil`, `WeaponSilhouette`), `EtchingsPanel` (+`EtchingsArms`, `SigilIcon`), `AttunementsPage`, `BuildPanel` (+`BuildingSilhouette`), `SurveyPanel`, `MarketPanel` | the anchor **is** a weapon menu; these six are the catalogue grammar almost line for line |
 | **C — the rest** | `TechPanel` (+`TechChart`), `SlotSelect` (+`SlotSelectSky`), `SettingsPanel`, `AchievementsPanel`, `DialoguePanel` | each is its own picture. The star chart is already panel-less and gold-for-state, so it is closer than it looks; the night-sky title screen needs the least |
 | **D — retire Slate** | delete `SlateHud` + `SlateTheme` | only once the last screen has moved. Until then the two languages coexist by design |
 
 **Rules for every migration chunk:** restyle only — public API, signals, flow, pause semantics, guards and game-copy strings stay byte-identical (the precedent every Slate rebuild set, and what lets the smoke drive them unchanged). New copy ships as placeholders. A screen that gains a pure rule puts it in `EmberMenuCore`, not in its own file.
 
-> **Doc debt, flagged 2026-08-13:** `MarketPanel` (`src/town/market_panel.gd`) and `AttunementsPage` (`src/town/attunements_page.gd`) have **no spec section in this file** — they shipped inside the economy-v2 and attunements chunks. That is why this doc said "eleven menu screens" while the code has fifteen surfaces. Their sections should be written as they migrate (both are Tier B).
+> **Doc debt, flagged 2026-08-13 — PAID 2026-08-14:** `MarketPanel` and `AttunementsPage` had **no spec section in this file** (they shipped inside the economy-v2 and attunements chunks, which is why this doc said "eleven menu screens" while the code had fifteen surfaces). Both were written as they migrated — see § "Market — the trade page" and § "Attunements — The Body" below.
 
 ### Tier A — what the migration actually changed (2026-08-13)
 
 All four were **restyles**: every public method, signal, guard, pause semantic and game-copy string is byte-identical, and the smoke drove them unchanged (its asserts are all API + geometry, never pixels).
 
 - **`AchievementToast`** — a gold-bordered Slate panel became the **echo-medallion grammar**: a gold ring carrying the monogram, tracked caps over the name beside it, one hairline under the lot. It is the piece of UI most likely to land on a bright, busy frame (it plays in town *and* mid-run), and Slate solved that by covering the frame up; Ember solves it with the shadowed name and the ring. The reward now reads as the same kind of object as an echo pickup — which is what it is.
-- **`TownHud`** — four panels became none: day chip → tracked text on a hairline; two resource strips → bare glyph+number readouts; hint chip → bare shadowed prose; overnight toast → a tracked head over its row. **The win is not that panels are ugly** — it is that town and run now speak the same language in the same corners, so a resource sits in the same place wearing the same mark whichever scene you are in. Under Slate they merely *looked* similar. The town/run group split and its data-driven derivation are untouched.
+- **`TownHud`** — four panels became none: day chip → tracked text on a hairline; two resource strips → bare glyph+number readouts; hint chip → bare shadowed prose *(that line was removed outright a day later, 2026-08-14)*; overnight toast → a tracked head over its row. **The win is not that panels are ugly** — it is that town and run now speak the same language in the same corners, so a resource sits in the same place wearing the same mark whichever scene you are in. Under Slate they merely *looked* similar. The town/run group split and its data-driven derivation are untouched.
 - **`EchoOfferPanel`** — this screen was already the language before the language had a name (O1 was picked as "no panel, no cards" a month before Ember was named), so the migration was mostly deleting three Slate leftovers: the chip-styled key badge and held badge became a thin ring and a gold disc (the run HUD's stack-badge grammar), the letter-spaced sub dropped its bespoke `FontVariation` for the shared `_text_tracked`, and the effect lines moved from mono to the UI voice.
 - **`PauseMenu`** — **the first screen on `EmberTheme`**, and deliberately still a Control *tree*: its content is real Buttons that need hover/focus/disabled/click, which containers already do correctly. The migration diff was mostly *deleting* overrides. Two decisions: the backdrop now reads `EmberHud.COL_SCRIM` instead of carrying its own copy (one scrim dial for every Ember screen), and **only Resume wears `EmberAction`** — gold means state, so five gold buttons would say nothing.
 
@@ -141,6 +152,80 @@ All four were **restyles**: every public method, signal, guard, pause semantic a
 1. **A three-way collision at the top of the town screen.** Ember's resource strip has no panel padding and spans seven readouts, so it now reaches well past the middle — and the overnight toast and the achievement toast were both still sitting top-centre where Slate had left them. Fixed by moving the overnight toast **under the day chip** (which also reads better: `Day 4 · Well-Fed +25%` and `+5 stone +3 food -5 eaten` are the same thought) and dropping the achievement toast to clear **both** the town strip and the run HUD's boss bar.
 2. **The echo offer's key badges all but vanished** at `COL_RING` over each mark's own glow. The O1 rebuild deleted the `press 1 / 2 / 3` hint line on the grounds that these badges carry the affordance — so invisible badges meant no affordance at all. Redrawn at ink weight.
 3. **Four `const` collisions with the new parent class** (`FS_TITLE`/`FS_SUB`/`FS_MONO`/`FS_KEY` in `EchoOfferPanel`, which `EmberHud` now also declares). **The editor pass did not report them** — only the smoke did, by hanging. See the gotcha in `godot-conventions.md` § Tools.
+
+### Tier B — the six town screens (2026-08-14)
+
+All six were **restyles**: every public method, transaction, guard, pause semantic and game-copy string is byte-identical, and the smoke drove them unchanged (it opens all six and drives the forge's equip/refine, the etchings' awaken/deepen, the build transaction, the survey's row count and the market's exchange + caravan).
+
+**The scoping decision worth recording — bands yes, composition no.** The anchor is itself a weapon menu, so it was tempting to re-lay all six onto `catalogue()`'s literal rail/list/hero/dock. That was rejected. Each of these screens is a **human pick** from a design round (F2 "the anvil", E1 "the arms", B2 "Herzog's ledger", B3 "the survey"), and the composition *is* the pick — the anvil in the middle with tabs down the left is not a placeholder for a four-column list. So the migration takes `EmberMenuCore`'s **bands** everywhere (title, subtitle, resources, footer, content, and `PAD_PX`) and leaves each screen's own picture alone. That is what makes the six read as one family without discarding four design decisions. If the human wants a screen re-composed onto the full grammar, that is a design round, not a restyle.
+
+**Screen by screen:**
+
+- **`ForgePanel` + `ForgeAnvil`** — the three weapon tabs became `_row_box` **list rows**. Under Slate they were filled chips with coloured borders, which made three weapons read as three buttons; the row-box mark says *a list of things, one of them is current*, and it is now the same mark the build and market lists wear. `EQUIPPED` is the one gold word on the meta line. Refine is the screen's one `EmberAction`; Equip stays a plain frame beside it, so the two never compete.
+- **`EtchingsPanel` + `EtchingsArms`** — the hovered site's key badge lost its bordered chip. Slate gave it a box because a box was the only way it knew to keep 10 px text readable over the arms; Ember uses tracked caps and the shadow, like every other floating label in the game. The dashed **selection ring** around the chosen mark is the round cousin of `_row_box`'s dashed frame — one dashed gold outline means "this is the current thing", whatever its shape.
+- **`AttunementsPage`** — seven ledger rows, now separated by real hairlines and **scrolling** (below).
+- **`BuildPanel` + `BuildingSilhouette`** — the plot line under the building is a hairline; the carry stack is the shared readout; `res_color` is **gone**, because `EmberHud.resource_color` is now the one map from a Ledger id to its colour, game-wide.
+- **`SurveyPanel`** — read-only, and therefore has **no gold on it at all** except a built pip. That is the correct reading of "gold means state": there is no action here to spend it on.
+- **`MarketPanel`** — Accept is the caravan row's `EmberAction` (the deal is once a day and then gone); the two exchange buttons stay plain frames, because buying a stone is a thing you can do all day.
+
+**The dock's inner hairline.** Three screens have a right-hand detail dock (forge's strip, etchings' menu, build's ledger). Under Slate a panel border boxed each one in. Under Ember the dock's panel is transparent and a **vertical hairline** runs down its inner edge — the anchor's own hero/dock divider. Its cost is real and had to be paid: `DOCK_W` went **+26 px** on both the build and etchings panels, because the divider plus its gap eats into the same fixed width, and the probe showed yield text wrapping into the price column.
+
+**Six defects the probe caught, all invisible to every test:**
+1. **The attunements page dimmed its own screen's title.** It draws a scrim (it must: the arms are hidden on its tab, so *their* scrim goes with them), and it was being added to the tree *after* the header labels — so the scrim fell on top of them. Fixed by z-order, not by weakening the scrim.
+2. **Two pages ran off the bottom of the screen.** Nine building defs on the survey and seven attunements do not fit a 720p content band, and both rosters are budgeted to grow. Both sheets now **scroll** inside the band. This is the first screen that actually overflowed, which is exactly the trigger Step 1 wrote down for building the mechanism.
+3. **The scrollbar those pages needed was invisible** (see `EmberTheme`, above).
+4. **Rows lost their left rail.** A one-pip ladder row whose track was zero-long drew *no pip at all*, so "beyond" rows had nothing to hang on — the reason `EmberPips.set_states` exists.
+5. **Dock text wrapped into the price column** (the `DOCK_W` cost, above).
+6. **The market's two exchange buttons filled the sheet.** A 480 px transparent frame with centred text reads as a *field to type in*, not a button to press — the one place Ember's frame-over-nothing needs its width reined in by hand. They are side by side and shrunk to their text now.
+
+---
+
+## No on-screen instructions (human directive, 2026-08-14)
+
+> *"remove the text on the bottom of the screen that says stuff like 'clear the room' when in run, or 'WASD to move' when in town. no text explanations on screen like that"*
+
+**Removed:** the run HUD's contextual hint line (`set_hint` and its five call sites in `combat_room.gd` — `Clear the room`, `Breather — touch the Wellspring, then choose a door`, `Exit open — step into the light`, `Choose a door — the sigil is what the next room pays`, `The codex artifact stands whole — step into it`) and the town HUD's `HINT_TEXT`. Neither HUD now puts any text along the bottom edge.
+
+**What carries the affordance instead:** the world. The exit portal lights and plays a sound; the doors appear with their sigils; the Wellspring is a visible object you walk into. Those were always the real signals — the line was narrating them.
+
+**The rule this leaves behind, for anything built later:** the run HUD's objective rows are now the only words on screen, so **a row must read as state, never as an instruction** (`Room cleared`, not "now choose a door"). `HudCore.task_rows` carries that note at its definition. The rule is about the in-world HUD; a *menu* prompt naming its inputs (`_prompt`, the anchor's footer row) is a different thing and is not covered — though note that no Tier B screen adds one, so the directive's spirit is intact until the human asks for it.
+
+---
+
+## Market — the trade page (built 2026-07-10 inside economy v2; spec'd + migrated to Ember 2026-08-14)
+
+`MarketPanel` (`src/town/market_panel.gd`, group `market_panel`). The Market's Gold→Stone/Food **exchange** (the repeatable soft sink, deliberately worse than producing the resource) and the day's rotating **caravan** deal. Fullscreen, code-built, pauses while open, ESC closes.
+
+**Where it opens from:** the built Market's `BuildPanel` row carries a `Trade at the stalls` button, and `town.gd` also exposes `open_market_panel()`. This was a deliberate choice over giving the Market plot a second interaction site — the plot already opens its ledger page, and *one plot = one press* stays true (`design/town-economy.md`).
+
+**Layout** — the centred `column()` band, `SHEET_W` 560:
+- **Header** — Cinzel `The Market` + dim subtitle `Coin moves. Herzog counts it twice.` (placeholder, Herzog's register).
+- **Carry readout** — top-right, gold / stone / food: the civilian set the Market trades. Resonance is never traded here (IC-14).
+- **`EXCHANGE`** — a tracked-caps section head, then the two buy buttons side by side, each shrunk to its own text. Disabled at the price when short; never red.
+- **`TODAY'S CARAVAN`** — the deal's pitch in Garamond, its terms in mono beneath, and a gold **Accept**. One accept per day across all slots; afterwards the row is replaced by `Done for today. The caravan moves on.` A day with no deal reads `No caravan today.`
+
+**Frozen (the smoke drives it):** `open` / `close` / `buy_stone` / `buy_food` / `accept_deal` / `deal_id` / `rates` / `day`. Rates come from `MarketCore.caps(def, level)` — the built level's own data — and rotation is pure in `MarketCore` with no RNG state.
+
+---
+
+## Attunements — The Body (built 2026-07-11; spec'd + migrated to Ember 2026-08-14)
+
+`AttunementsPage` (`src/town/attunements_page.gd`) — the etchings panel's **second page** (bible "Passive Attunements", PRD §7.4). The E1 arms page stays the default; a quiet two-tab row at the top-left swaps between them (`THE MARKS` / `THE BODY`, the selected one gold).
+
+**Why a page and not a screen:** attunements spend the *same* Resonance Dust as the active marks. Putting them behind a tab on the same screen makes that one budget visible in one place — two screens would have hidden the trade-off.
+
+**Layout** — the centred `column()` band, `SHEET_W` 700, one row per attunement in `ORDER` (unknown ids appended sorted, so a future attunement never vanishes). Each row:
+- name (UI voice, row size) + the 3-pip level track, right-aligned;
+- what it does, dim, one line;
+- the current effect line in mono (`+20 max health`, `Heal 4% of missing on clear`, …) — dimmer while un-owned, where it shows L1's effect as a preview — and a **Deepen (n Dust)** button.
+
+**The buttons stay plain frames, all seven of them.** Gold marks the one thing a screen wants you to press, and a page of gold buttons marks nothing. A maxed row shows an inert gold `Mastered` instead.
+
+**The sheet scrolls** — seven rows already overrun a 720p content band, and the roster is budgeted to grow.
+
+**Dust readout** top-right, the shared `_resource_readout`, so Dust wears the same mark here as on the arms page it shares a screen with, and as it does in the run HUD.
+
+---
 
 ## Town HUD (decided + built 2026-07-07; **migrated to Ember 2026-08-13**)
 
@@ -157,7 +242,7 @@ The town HUD replaces the old plain `DayInfo` / `FoodStatus` / `Hint` Labels on 
 1. **Day chip — top-left.** `Day 4 · Well-Fed +25%` (gold status span) / `Day 4 · Short on food` (dim status span) / just `Day 1` before any day has ticked. NEVER red — red is reserved for player danger. The `+25%` literal derives from `TownCore.WELL_FED_BONUS` so the two can't drift. **Ember:** no chip — three coloured spans on one letter-spaced line over a hairline, the run HUD's room-header grammar, with the food status where the peril `⚠` sits in a run.
 2. **Resource readouts — top-right, TWO groups (split 2026-07-07, human decision).** The seven resources (Ledger ids `gold`, `stone`, `food`, `knowledge`, `knowledge-shards`, `resonance-ore`, `resonance-dust`) are partitioned into a **town-economy group** (resources a building can generate on a day tick) and a **run-pickups group** (only ever brought home from runs), each under a tiny tracked header (`TOWN` / `RUN`, placeholder copy). The split is **derived from the building defs** (`TownHudCore.producible_resources` — `produce` effects + the `knowledge` kind), so it self-maintains: today town = stone/food/knowledge and run = gold/shards/ore/dust (exactly the in-run readout set — the run group holds the top-right corner so the same resources sit in the same place in both scenes), and a future gold-producing Market would migrate gold to the town group by itself. **Ember:** no panels — each readout is a bare **glyph + big number** (the run HUD's exact grammar, from the shared `RESOURCE_GLYPH`/`RESOURCE_COLOR`), the value labels retired (the mark carries the identity now), and `GROUP_GAP` alone marks the group boundary.
 3. **Projections — under each readout.** Centred, a small ~0.55-alpha `+n/d` showing that resource's projected **net** per-day generation, from `TownHudCore.day_deltas(TownCore.tick(…))`. **The rule:** derived only from the tick RESULT — every `produced` entry is a `+`, and **food nets its upkeep** (produced food MINUS `food_consumed`, so a farmless town shows food going negative). Zero → nothing drawn. Recomputed on `resource_changed` **and** `building_built` (a build's resource-spend fires before the building lands in state), never per frame.
-4. **Hint — bottom-centre.** `WASD move · E interact · the portal starts a run` (Garamond, placeholder copy — `HINT_TEXT`). **Ember:** no chip — bare shadowed prose, drawn exactly as the run HUD draws its contextual hint. Same voice, same place, same treatment.
+4. ~~**Hint — bottom-centre.**~~ **REMOVED 2026-08-14** (human directive — § "No on-screen instructions"). It read `WASD move · E interact · the portal starts a run`. The town screen now has no text along its bottom edge at all.
 
 **The overnight toast — TOP-LEFT under the day chip, fading** *(moved there from top-centre in the Ember migration: the panel-less strip now reaches past the middle and the two collided — and under the day chip reads better anyway, since "Day 4 · Well-Fed" and "+5 stone +3 food −5 eaten" are the same thought)*. `game.gd` stashes each day tick's result (`_last_day_tick`, in-memory) and hands it to `town.show_day_toast(tick)` on the run-end return; the Forfeit path reaches town WITHOUT setting it, so it never toasts (Forfeit ticks no day). A tracked `OVERNIGHT` header over one row of `TownHudCore.toast_segments`, on a hairline, shadowed (no panel): produced resources first (`+5 gold`, display order gold/stone/food/knowledge then extras alphabetically, short labels for shards/ore/dust), then `-5 eaten` only when Food was consumed (drawn in the food colour), then `Well-Fed` only when fed (gold). Lifecycle mirrors RunHud's pickup strip: snap to full alpha, hold `TOAST_HOLD_S` (4.0 s), fade over `TOAST_FADE_S` (1.0 s). `TownHud` is `PROCESS_MODE_ALWAYS` so the toast fades (and `size` syncs) even behind a town-entry cutscene.
 
@@ -165,7 +250,7 @@ The town HUD replaces the old plain `DayInfo` / `FoodStatus` / `Hint` Labels on 
 
 **HUMAN dial placeholders:** `HINT_TEXT`, the toast copy + `TOAST_HOLD_S`/`TOAST_FADE_S` + its new `TOAST_TOP` placement, `PROJECTION_ALPHA`, the `TOWN`/`RUN` headers, and every size/gap are TownHud consts; the shared palette/fonts/marks are in `EmberHud`. Dial like FEEL numbers. Judge with `tools/render_hud.tscn`'s `town` state.
 
-## Panels & the pause menu — Slate (2026-07-07)
+## Panels & the pause menu — Slate (2026-07-07; **legacy — five screens left, see § "Migrating to Ember"**)
 
 > Human directive: "continue with the pause/panel restyle to slate. pause menu should be fullscreen." Cashes in the deferred "pause / panel restyle" item below.
 
@@ -213,7 +298,7 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** all chart visual numbers (star radii per state, glow/arc/ring widths, dust positions/alpha, right-fade width, hit radius, dock width/bar height) live at the top of `tech_chart.gd` + `tech_panel.gd` under a placeholder block; the new UI copy (subtitle, carry/dock labels, hint, age-II label, quiz-lock meta) is placeholder too. The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
-## Etchings panel — The arms (E1) (decided + built 2026-07-08)
+## Etchings panel — The arms (E1) (decided + built 2026-07-08; **migrated to Ember 2026-08-14**)
 
 > Human picked **E1 — The arms** on claude.ai/design ("Etchings Panel" group), with two amendments: **no bottom hint chip**, and **the Resonance Dust readout is a bare icon + big number top-right, no panel box behind it**. Thomas's meditation screen is Tycho's two arms laid palm-up in the meditation posture, four etched marks on the skin — hands carry the instant casts, forearms the deeper ones.
 
@@ -244,7 +329,7 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** the arm silhouettes + sigil geometry (`EtchingsArms`/`SigilIcon`, painterly pass); all visual consts (`HIT_R`, halo/badge/dust sizes, arm dimensions, dock width) at the top of `etchings_arms.gd` / `etchings_panel.gd`; the `STARTERS` map; and ALL new copy (`SUBTITLE`, `DORMANT_DESC`, `DASH_DESC`, `DASH_PRINCIPLE`, `DEEP_BLURB`, `MARK_DEEPENS`, and the `desc`/`level_blurbs` in the three JSONs — plain register, Thomas's territory, no aphorisms). The shared palette/fonts live in `SlateHud`. Dial like FEEL numbers.
 
-## Forge panel — The anvil (F2) (decided + built 2026-07-08)
+## Forge panel — The anvil (F2) (decided + built 2026-07-08; **migrated to Ember 2026-08-14**)
 
 > Human picked **F2 — The anvil** on claude.ai/design ("Forge Panel" group), with one amendment: **NO stat bars** — the BITE/PACE/REACH "character bars" from the mocks (and the shared states card) are explicitly rejected and built nowhere. Mara's Forge is one weapon at a time lying large on the anvil in the ember light; the tabs switch it; refining is the screen's single ceremony.
 
@@ -324,7 +409,7 @@ Each UI sets `theme = SlateTheme.get_theme()` on its root in `_ready`/`play`/`pr
 
 **HUMAN dial placeholders:** `DIMMER` (**the one dial that decides whether the offer feels like a pause or like a screen** — deliberately lighter than `EmberHud.COL_SCRIM`, because you are still reading the battlefield you drop back into), the ring radius / glow layers+alphas / halo / weave, the arc base + lift, all font sizes, the drawback red + hover-monogram colours, the hit-box, and ALL copy (`TITLE`, `SUB`, `WOVEN_FMT`) — all consts atop `echo_offer_panel.gd`. The shared palette/fonts live in `EmberHud`. Judge with `tools/render_hud.tscn`'s `echo-offer` state.
 
-## Town building — Herzog's ledger (B2) + The survey (B3) (decided + built 2026-07-09)
+## Town building — Herzog's ledger (B2) + The survey (B3) (decided + built 2026-07-09; **both migrated to Ember 2026-08-14**)
 
 > Human picked the **Town Building** group on claude.ai/design. The build-plot flow (raw Label3D text over each plot + instant E-build in `town.gd`, no panel) is rebuilt as TWO screens plus a panel-wide **ESC-close pass** (human amendment). Diegetically it is the town ledger Herzog opened at B4: one building per page at the plots, the whole town at a glance at his Planning Table.
 

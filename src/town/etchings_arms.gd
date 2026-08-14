@@ -1,4 +1,4 @@
-extends Control
+extends EmberHud
 class_name EtchingsArms
 ## Tycho's two arms, palms up, with the four etched sites (E1 — "The arms", human-picked
 ## 2026-07-08 via claude.ai/design). Draws the stylized arm silhouettes + the four marks +
@@ -7,12 +7,20 @@ class_name EtchingsArms
 ## sigil geometry in SigilIcon; this node owns only pixels + hit-testing. The header
 ## (title/subtitle), the skill menu, and Close sit on top as panel siblings.
 ##
+## MIGRATED TO EMBER 2026-08-14 (Tier B). This node extends `EmberHud` and now draws the
+## SCRIM itself (EtchingsPanel's backdrop ColorRect is gone). Two Slate leftovers went: the
+## key badge was a bordered chip and is now bare tracked caps with a shadow — the badge had
+## a box only because Slate had no other way to keep small text legible over the arms — and
+## the hand-rolled mote cluster + big number became the shared `_resource_readout`, so Dust
+## here wears exactly the mark it wears in the run HUD and the town strip. The arms, the four
+## site positions and the hover/select glow are UNTOUCHED (the human's E1 pick).
+##
 ## HUMAN: everything under "Style" is a PLACEHOLDER — dial like FEEL numbers (no combat feel,
 ## so no `# FEEL:` tag). The arm silhouettes are placeholder primitives for the painterly
-## pass. The shared palette + fonts live in SlateHud.
+## pass. The shared palette + fonts live in EmberHud.
 
 # =====================================================================================
-# Style — placeholders. (Palette + fonts are shared — see SlateHud.)
+# Style — placeholders. (Palette + fonts are shared — see EmberHud.)
 # =====================================================================================
 const HIT_R := 44.0             # click / hover radius around a site centre
 const SIGIL_W := 2.4            # sigil stroke width
@@ -20,10 +28,9 @@ const SITE_HALO_R := 30.0       # hover/select glow radius
 const SEL_RING_R := 30.0        # dashed selection ring radius
 const SEL_SEGMENTS := 22
 const BADGE_DY := 40.0          # key badge baseline below a site centre
-const FS_BADGE := 10            # key badge (num)
-const FS_DUST := 30             # the big dust number (num)
-const FS_DUST_LABEL := 11       # "resonance dust" (num, dim)
-const DUST_GLYPH_N := 5         # motes in the placeholder dust glyph
+const FS_BADGE := 11            # key badge (ui med, tracked caps)
+const BADGE_TRACKING := 1.2
+const RES_Y := 40.0             # the shared Dust readout's row, level with the title band
 # Arm silhouette (placeholder primitives).
 const ARM_FORE_HALF_ELBOW := 30.0
 const ARM_FORE_HALF_WRIST := 20.0
@@ -33,7 +40,6 @@ const ARM_FINGER_W := 10.0
 const COL_ARM_FILL := Color(26.0/255, 25.0/255, 34.0/255)      # #1a1922
 const COL_ARM_PALM := Color(29.0/255, 28.0/255, 37.0/255)      # #1d1c25
 const COL_ARM_STROKE := Color(52.0/255, 50.0/255, 63.0/255)    # #34323f
-const DUST_SUBTITLE := "resonance dust"
 
 ## The four sites, in draw order. Normalized to the control size (from the mock's 1280x720
 ## frame). Left arm carries Q (palm) + SPC/dash (forearm); right arm RMB (palm) + R (forearm).
@@ -50,16 +56,12 @@ var on_select: Callable = Callable()
 
 var _selected: String = ""
 var _hovered: String = ""
-var _font_display: FontVariation
-var _font_num: FontVariation
-var _sb := StyleBoxFlat.new()
 
 
 func _ready() -> void:
+	super._ready()  # EmberHud: full-rect anchors + the five shared fonts
+	# EmberHud defaults to MOUSE_FILTER_IGNORE; this stage hit-tests its four sites.
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_font_display = SlateHud._with_fallback(SlateHud.FONT_DISPLAY_FILE)
-	_font_num = SlateHud._with_fallback(SlateHud.FONT_NUM_FILE)
 	resized.connect(queue_redraw)
 
 
@@ -110,13 +112,14 @@ func _site_at(pos: Vector2) -> String:
 func _draw() -> void:
 	if size.x < 1.0:
 		return
+	_scrim()  # the ground every Ember menu sits on — EtchingsPanel no longer carries its own
 	# The two arms (palm site + forearm site define each arm's axis).
 	_draw_arm(_pos("rmb"), _pos("r"), 1.0)
 	_draw_arm(_pos("q"), _pos("spc"), -1.0)
 	# The four marks on top.
 	for site: Dictionary in SITES:
 		_draw_site(site)
-	_draw_dust()
+	_resource_readout(size.x - EmberMenuCore.PAD_PX, RES_Y, ["resonance-dust"])
 
 
 func _pos(slot: String) -> Vector2:
@@ -173,52 +176,31 @@ func _draw_site(site: Dictionary) -> void:
 		ability_id = EtchingsArmsCore.displayed_ability(slot, etchings, starters)
 		level = EtchingsCore.level_of(etchings, ability_id)
 	var awake := is_dash or level >= 1
-	# Colour + alpha by state.
-	var col := SlateHud.COL_DUST
+	# Colour + alpha by state. Dust cyan is the mark's own colour; gold means SELECTED, and
+	# nothing else on this screen is allowed to be gold.
+	var col := COL_DUST
 	if selected:
-		col = SlateHud.COL_READY
+		col = COL_ACCENT
 	elif hovered:
-		col = Color(SlateHud.COL_DUST, 1.0)
+		col = Color(COL_DUST, 1.0)
 	elif awake:
-		col = Color(SlateHud.COL_DUST, 0.62)
+		col = Color(COL_DUST, 0.62)
 	else:
-		col = Color(SlateHud.COL_DUST, 0.22)
-	# Glow / ring behind the mark.
+		col = Color(COL_DUST, 0.22)
+	# Glow / ring behind the mark. The dashed selection ring is the round cousin of the
+	# `_row_box` dashed frame — one dashed gold outline means "this is the current thing".
 	if selected:
-		_glow(center, SITE_HALO_R, SlateHud.COL_READY)
-		_dashed_ring(center, SEL_RING_R, Color(SlateHud.COL_READY, 0.55))
+		_glow(center, SITE_HALO_R, COL_ACCENT)
+		_dashed_ring(center, SEL_RING_R, Color(COL_ACCENT, 0.55))
 	elif hovered:
-		_glow(center, SITE_HALO_R, SlateHud.COL_DUST)
+		_glow(center, SITE_HALO_R, COL_DUST)
 	# The sigil.
-	SigilIcon.paint(self, ability_id, center, 1.0, col, SIGIL_W, awake, _font_num, 14)
+	SigilIcon.paint(self, ability_id, center, 1.0, col, SIGIL_W, awake, _font_ui_med, 14)
 	# Key badge on hover / select.
 	if hovered or selected:
 		var disp_name := "Dash" if is_dash else str((defs.get(ability_id, {}) as Dictionary).get("name", ability_id))
 		_badge(center + Vector2(0, BADGE_DY), "%s · %s" % [str(site["key"]), disp_name.to_upper()],
-			SlateHud.COL_READY if selected else SlateHud.COL_KEY_TEXT)
-
-
-func _draw_dust() -> void:
-	var n := int(Ledger.get_amount("resonance-dust"))
-	var num := str(n)
-	var right := size.x - SlateHud.MARGIN - 6.0
-	var top := SlateHud.MARGIN + 6.0
-	# Big number, right-aligned.
-	var nw := _font_num.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_DUST).x
-	var ny := top + _font_num.get_ascent(FS_DUST)
-	draw_string(_font_num, Vector2(right - nw, ny), num, HORIZONTAL_ALIGNMENT_LEFT, -1,
-		FS_DUST, SlateHud.COL_DUST)
-	# Placeholder dust glyph — a loose cluster of motes to the left of the number.
-	var gx := right - nw - 20.0
-	var gy := top + FS_DUST * 0.5
-	var offs: Array[Vector2] = [Vector2(0, 0), Vector2(-9, -6), Vector2(-14, 5), Vector2(-4, 9), Vector2(-18, -4)]
-	var sizes: Array[float] = [4.0, 2.6, 3.2, 2.2, 2.0]
-	for i in mini(DUST_GLYPH_N, offs.size()):
-		_diamond(Vector2(gx, gy) + offs[i], sizes[i], Color(SlateHud.COL_DUST, 0.55 + 0.1 * i))
-	# Small dim label under the number.
-	var lw := _font_num.get_string_size(DUST_SUBTITLE, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_DUST_LABEL).x
-	draw_string(_font_num, Vector2(right - lw, ny + FS_DUST_LABEL + 4.0), DUST_SUBTITLE,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, FS_DUST_LABEL, SlateHud.COL_KEY_TEXT)
+			COL_ACCENT if selected else COL_INK_DIM)
 
 
 # --- draw helpers --------------------------------------------------------------------
@@ -237,22 +219,12 @@ func _dashed_ring(c: Vector2, r: float, col: Color) -> void:
 			draw_arc(c, r, a, a + step * 0.55, 4, col, 1.0)
 
 
-func _diamond(p: Vector2, s: float, col: Color) -> void:
-	draw_colored_polygon(PackedVector2Array([
-		p + Vector2(0, -s), p + Vector2(s, 0), p + Vector2(0, s), p + Vector2(-s, 0)]), col)
-
-
+## The hovered site's name, under the mark. No box: Slate gave this a bordered chip because
+## a chip was the only way it knew to keep 10px text readable over the arms; Ember uses
+## tracked caps and the shadow, which is what every other floating label in the game does.
 func _badge(center: Vector2, text: String, text_col: Color) -> void:
-	var pad := Vector2(7, 2)
-	var tw := _font_num.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_BADGE).x
-	var h := _font_num.get_height(FS_BADGE) + pad.y * 2.0
-	var w := tw + pad.x * 2.0
-	var rect := Rect2(center.x - w * 0.5, center.y - h * 0.5, w, h)
-	_sb.bg_color = SlateHud.COL_CHIP_BG
-	_sb.border_color = SlateHud.COL_READY if text_col == SlateHud.COL_READY else SlateHud.COL_CHIP_BORDER
-	_sb.set_border_width_all(1)
-	_sb.set_corner_radius_all(4)
-	draw_style_box(_sb, rect)
-	var y := rect.get_center().y + (_font_num.get_ascent(FS_BADGE) - _font_num.get_descent(FS_BADGE)) * 0.5
-	draw_string(_font_num, Vector2(rect.position.x + pad.x, y), text,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, FS_BADGE, text_col)
+	var w := _text_tracked_w(text, FS_BADGE, _font_ui_med, BADGE_TRACKING)
+	var pos := Vector2(center.x - w * 0.5, center.y)
+	_text_tracked(pos + Vector2(1.0, 1.0), text, Color(COL_SHADOW, COL_SHADOW.a * text_col.a),
+		FS_BADGE, _font_ui_med, BADGE_TRACKING)
+	_text_tracked(pos, text, text_col, FS_BADGE, _font_ui_med, BADGE_TRACKING)

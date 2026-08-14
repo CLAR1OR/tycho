@@ -115,7 +115,7 @@ func test_task_rows_combat_counts_the_wave() -> void:
 func test_task_rows_combat_cleared_has_no_counter() -> void:
 	var rows := HudCore.task_rows(HudCore.KIND_COMBAT, true, 5, 5)
 	check_eq(str(rows[0]["label"]), "Room cleared", "a cleared room states only that")
-	check_eq(int(rows[0]["want"]), 0, "no counter once cleared — the hint names the next action")
+	check_eq(int(rows[0]["want"]), 0, "no counter once cleared — the row is a state, not a next step")
 	check(bool(rows[0]["done"]), "a cleared room's row is done")
 
 

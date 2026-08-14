@@ -11,7 +11,7 @@ class_name BuildingSilhouette
 ## drawn buildings replace these primitives later (no combat feel, so no `# FEEL:` tag).
 
 # =====================================================================================
-# Style — placeholders. (Palette elsewhere is shared — see SlateHud.)
+# Style — placeholders. (Palette elsewhere is shared — see EmberHud.)
 # =====================================================================================
 const COL_BODY_FILL := Color(46.0 / 255, 44.0 / 255, 55.0 / 255)     # #2e2c37 wall body
 const COL_BODY_STROKE := Color(74.0 / 255, 71.0 / 255, 86.0 / 255)   # #4a4756 edge

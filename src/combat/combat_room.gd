@@ -163,7 +163,6 @@ func _ready() -> void:
 	_hud.setup(_player)
 	var hud_kind := HudCore.KIND_REPRIEVE if _reprieve else kind
 	_hud.configure_room(floor_num, room_index, rooms_this_floor, hud_kind, _peril)
-	_hud.set_hint("Clear the room")
 	# Configure this room's FRESH player instance, in order: the equipped weapon
 	# (baseline kit), then the run's echoes on top, then carried-over HP (rooms
 	# must not free-heal).
@@ -421,7 +420,6 @@ func _spawn_wave() -> void:
 		_cleared = true
 		_hud.mark_cleared()
 		cleared.emit.call_deferred()
-		_hud.set_hint("Breather — touch the Wellspring, then choose a door")
 		return
 	if kind == RunFlow.KIND_BOSS:
 		# Boss rooms are a single staged fight — no waves. A floor with an authored def
@@ -631,7 +629,6 @@ func open_exit() -> void:
 	_portal.visible = true
 	_portal.monitoring = true
 	Sfx.play("door-open", _portal.global_position)
-	_hud.set_hint("Exit open — step into the light")
 
 
 func _on_portal_body_entered(body: Node3D) -> void:
@@ -653,7 +650,6 @@ func present_doors(offer: Array, on_choose: Callable) -> void:
 	for i in offer.size():
 		_make_door(Vector3(float(xs[i]), 1.75, -23.0), offer[i], on_choose)
 	Sfx.play("door-open", Vector3(0, 1.75, -23))
-	_hud.set_hint("Choose a door — the sigil is what the next room pays")
 
 
 func _make_door(pos: Vector3, door: Dictionary, on_choose: Callable) -> void:
@@ -790,7 +786,6 @@ func open_artifact(shards: int, shards_max: int) -> void:
 	if not is_inside_tree():
 		return
 	_spawn_artifact(shards, shards_max)
-	_hud.set_hint("The codex artifact stands whole — step into it")
 
 
 func _spawn_artifact(shards: int, shards_max: int) -> void:

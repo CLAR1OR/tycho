@@ -442,6 +442,42 @@ func _section(from_x: float, to_x: float, y: float, label: String,
 	return y + first_row_drop
 
 
+## The menu screens' "what am I carrying" readout: `glyph number` per id, ENDING at
+## `right_x` and growing leftward — a menu's title sits on the left, and a row that grew
+## rightward would eventually walk into it. Returns the row's left edge, so a caller can
+## keep its title clear of it.
+##
+## Added in the Tier B migration (2026-08-14), where it replaced SIX hand-rolled copies:
+## the forge's ore crystal, the arms' and the attunements page's mote clusters, and three
+## identical carry stacks in the build / survey / market panels — each with its own glyph
+## primitive, its own big-number size and its own dim id label. Marks and colours come from
+## RESOURCE_GLYPH / RESOURCE_COLOR, which is the point: a resource wears ONE mark and ONE
+## colour on every screen in the game, and adding a resource is a line in that map.
+func _resource_readout(right_x: float, y: float, ids: Array, fs: int = FS_BIG,
+		glyph_size: float = 17.0, gap: float = 9.0, spacing: float = 24.0) -> float:
+	# Measure first: the row is right-aligned, so nothing can be drawn until the total is
+	# known. (Segments are measured and drawn in the same left-to-right order.)
+	var segs: Array[Dictionary] = []
+	var total := 0.0
+	for id: String in ids:
+		var num := "%d" % int(Ledger.get_amount(id))
+		var w := glyph_size + gap + _text_w(num, fs, _font_num)
+		segs.append({"id": id, "num": num, "w": w})
+		total += w
+	if segs.is_empty():
+		return right_x
+	total += spacing * float(segs.size() - 1)
+	var x := right_x - total
+	var left := x
+	for s: Dictionary in segs:
+		var id := str(s["id"])
+		var col := resource_color(id)
+		_glyph(Vector2(x + glyph_size * 0.5, y), glyph_size, resource_glyph(id), col)
+		_text_at(Vector2(x + glyph_size + gap, y), str(s["num"]), col, fs, _font_num)
+		x += float(s["w"]) + spacing
+	return left
+
+
 # =====================================================================================
 # Glyph library — code-drawn vector marks
 # =====================================================================================

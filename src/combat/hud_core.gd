@@ -52,9 +52,11 @@ static func chip_text(floor_num: int, room: int, rooms: int, kind: String,
 ## the header's "Wave 2/3" tracks the room. `boss_name` is the data-driven def's name
 ## (empty for the placeholder bosses on floors 2-5).
 ##
-## The row states the OBJECTIVE; the contextual hint line states the PROMPT ("Exit open —
-## step into the light"). They must not duplicate each other — a cleared room says only
-## that it is cleared and lets the hint name the next action.
+## The row states the OBJECTIVE, and since 2026-08-14 it is the ONLY words the run HUD
+## puts on screen: the contextual hint line that used to sit above the HP bar ("Clear the
+## room", "Exit open — step into the light") is gone on a human directive — no on-screen
+## text explaining what to do. So a row must READ AS STATE, never as an instruction: the
+## open door, the lit portal and the Wellspring say what to do by being visible.
 static func task_rows(kind: String, cleared: bool, kills: int, wave_total: int,
 		boss_name: String = "") -> Array:
 	match kind:

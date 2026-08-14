@@ -11,7 +11,6 @@ class_name TownHud
 ## WHAT THE MIGRATION CHANGED — four Slate panels became no panels:
 ##   day chip    -> tracked text on a hairline, top-left (the run HUD's room-header grammar)
 ##   two strips  -> bare glyph + number readouts, top-right (the run HUD's resource grammar)
-##   hint chip   -> bare shadowed prose, bottom-centre (the run HUD's hint, verbatim)
 ##   toast panel -> a tracked caps head over its row, on a hairline, top-centre
 ## The point is not that panels are ugly — it is that **the town and the run now speak the
 ## same language in the same corners**, so a resource sits in the same place with the same
@@ -64,9 +63,6 @@ const TOAST_SEG_GAP := 16.0
 const FS_TOAST_HEAD := 11        # the "OVERNIGHT" header (ui med, tracked)
 const TOAST_HOLD_S := 4.0
 const TOAST_FADE_S := 1.0
-# Contextual hint (bottom-centre). PLACEHOLDER copy — dial freely.
-const HINT_TEXT := "WASD move · E interact · the portal starts a run"
-const HINT_BOTTOM := 34.0        # hint centre, above the bottom edge
 
 ## The strip's seven columns, in order (Ledger ids). Marks + colours come from EmberHud's
 ## RESOURCE_GLYPH / RESOURCE_COLOR, so a resource cannot wear two different marks on two
@@ -192,7 +188,6 @@ func _draw() -> void:
 		return
 	_draw_day_chip()
 	_draw_resource_strip()  # + the per-resource projections below it
-	_draw_hint()
 	_draw_toast()
 
 
@@ -264,14 +259,6 @@ func _draw_group(ids: Array[String], header: String, right_x: float, y: float) -
 
 func _amount_text(id: String) -> String:
 	return "%d" % int(Ledger.get_amount(id))
-
-
-# --- Contextual hint (bottom-centre) -------------------------------------------------
-
-func _draw_hint() -> void:
-	# Bare shadowed prose, exactly as the run HUD draws its hint — same voice, same place.
-	_text_centred(size.x * 0.5, size.y - HINT_BOTTOM, HINT_TEXT, COL_INK,
-		FS_LABEL, _font_body, true)
 
 
 # --- Overnight toast (top-centre, fading) --------------------------------------------

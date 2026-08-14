@@ -1,4 +1,4 @@
-extends Control
+extends EmberHud
 class_name MarketPanel
 ## The Market's trade page (design/town-economy.md, 2026-07-10): the Gold→Stone/Food
 ## exchange (the repeatable soft sink — deliberately worse than producing it) and the
@@ -6,8 +6,15 @@ class_name MarketPanel
 ## "Trade" button) or town.gd's open_market_panel() — a deliberate choice over a
 ## second town interaction site: the Market plot already opens its ledger page, and
 ## one plot = one press stays true (documented in town-economy.md). Fullscreen,
-## code-built, Slate-themed; pauses while open; NO Close button — ESC closes (the
-## panel-wide ESC-close pass).
+## code-built, EMBER (migrated 2026-08-14, Tier B); pauses while open; NO Close button —
+## ESC closes (the panel-wide ESC-close pass).
+##
+## The Ember migration is a RESTYLE — every transaction, every public method and all copy are
+## byte-identical, and the smoke drives it unchanged. What moved: the sheet's panel is
+## transparent with real hairlines between its sections, the section heads are tracked caps
+## rather than mono, the carry stack became `_resource_readout`, and Accept is the caravan
+## row's `EmberAction` — the exchange buttons stay plain frames, because buying a stone is a
+## thing you can do all day and the day's one deal is not.
 ##
 ## Transactions (all Ledger, civilian resources only — the Market never trades
 ## Resonance, IC-14): exchange buys 1 Stone / 1 Food per press at the built level's
@@ -19,14 +26,12 @@ class_name MarketPanel
 
 # =====================================================================================
 # Style / copy — placeholders. Dial like FEEL numbers (shared palette/fonts in
-# SlateHud). ALL copy below is PLACEHOLDER, Herzog's register (short declaratives,
+# EmberHud). ALL copy below is PLACEHOLDER, Herzog's register (short declaratives,
 # no aphorisms, no em dashes) — the human dials it.
 # =====================================================================================
-const MARGIN := 20.0
 const SHEET_W := 560.0
 const SHEET_TOP := 120.0
-const FS_CARRY := 28
-const FS_CARRY_LABEL := 11
+const RES_Y := 40.0   # the shared carry readout's row, level with the title band
 const TITLE := "The Market"
 const SUBTITLE := "Coin moves. Herzog counts it twice."
 const EXCHANGE_HEADER := "EXCHANGE"
@@ -46,14 +51,13 @@ var _deals: Dictionary = {}
 var _title: Label
 var _subtitle: Label
 var _sheet: PanelContainer
-var _font_num: FontVariation
 
 
 func _ready() -> void:
+	super._ready()  # EmberHud: full-rect anchors + the five shared fonts
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("market_panel")
-	theme = SlateTheme.get_theme()
-	_font_num = SlateHud._with_fallback(SlateHud.FONT_NUM_FILE)
+	theme = EmberTheme.get_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP
 	resized.connect(queue_redraw)
@@ -64,12 +68,12 @@ func open() -> void:
 	_deals = DataLoader.load_caravan_deals()
 	_title = Label.new()
 	_title.text = TITLE
-	_title.theme_type_variation = &"TitleLabel"
+	_title.theme_type_variation = &"EmberTitle"
 	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_title)
 	_subtitle = Label.new()
 	_subtitle.text = SUBTITLE
-	_subtitle.theme_type_variation = &"DimLabel"
+	_subtitle.theme_type_variation = &"EmberDim"
 	_subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_subtitle)
 	_build_sheet()
@@ -93,12 +97,15 @@ func _process(_delta: float) -> void:
 	var vp := get_viewport_rect().size
 	if size != vp:
 		size = vp
+	# Bands from EmberMenuCore, so this header sits where every Ember screen's header sits.
+	var bands := EmberMenuCore.catalogue(size)
 	if _title != null:
-		_title.position = Vector2(MARGIN + 8.0, MARGIN)
+		_title.position = EmberMenuCore.label_pos(bands["title"], _title.size.y)
 	if _subtitle != null:
-		_subtitle.position = Vector2(MARGIN + 9.0, MARGIN + 32.0)
+		_subtitle.position = EmberMenuCore.label_pos(bands["subtitle"], _subtitle.size.y)
 	if _sheet != null:
-		_sheet.position = Vector2((size.x - _sheet.size.x) * 0.5, SHEET_TOP)
+		var col: Rect2 = EmberMenuCore.column(size, _sheet.size.x)["column"]
+		_sheet.position = Vector2(col.position.x, SHEET_TOP)
 
 
 # --- Public (buttons + the smoke driver land here) ---------------------------------
@@ -174,7 +181,7 @@ func _build_sheet() -> void:
 	if _sheet != null:
 		_sheet.queue_free()
 		_sheet = null
-	_sheet = PanelContainer.new()
+	_sheet = PanelContainer.new()   # transparent under EmberTheme — it groups and pads only
 	_sheet.custom_minimum_size = Vector2(SHEET_W, 0)
 	var margin := MarginContainer.new()
 	for s in ["left", "right", "top", "bottom"]:
@@ -186,10 +193,17 @@ func _build_sheet() -> void:
 
 	var r := rates()
 	box.add_child(_header(EXCHANGE_HEADER))
-	box.add_child(_exchange_button(BUY_STONE_FMT % int(r.get("buy_stone_gold", 0)),
+	# Side by side, each shrunk to its own text. Stacked full-width they filled the sheet,
+	# and a 480 px transparent frame with centred text reads as a field to type in rather
+	# than a button to press — the one place Ember's frame-over-nothing needs its width
+	# reined in by hand.
+	var buys := HBoxContainer.new()
+	buys.add_theme_constant_override("separation", 12)
+	buys.add_child(_exchange_button(BUY_STONE_FMT % int(r.get("buy_stone_gold", 0)),
 		int(r.get("buy_stone_gold", 0)), buy_stone))
-	box.add_child(_exchange_button(BUY_FOOD_FMT % int(r.get("buy_food_gold", 0)),
+	buys.add_child(_exchange_button(BUY_FOOD_FMT % int(r.get("buy_food_gold", 0)),
 		int(r.get("buy_food_gold", 0)), buy_food))
+	box.add_child(buys)
 	box.add_child(HSeparator.new())
 	box.add_child(_header(CARAVAN_HEADER))
 	var slots := int(r.get("deal_slots", 0))
@@ -203,26 +217,28 @@ func _build_sheet() -> void:
 	if not any:
 		var l := Label.new()
 		l.text = NO_DEALS
-		l.theme_type_variation = &"DimLabel"
+		l.theme_type_variation = &"EmberDim"
 		box.add_child(l)
 	elif not MarketCore.can_accept_deal(SaveManager.state["town"], day()):
 		var done := Label.new()
 		done.text = DEAL_DONE
-		done.theme_type_variation = &"DimLabel"
+		done.theme_type_variation = &"EmberDim"
 		box.add_child(done)
 	add_child(_sheet)
 
 
+## A section head — tracked caps over the rows it names. The drawn equivalent is
+## `EmberHud._section`; in a Control tree the head is a Label and the rule is an HSeparator.
 func _header(text: String) -> Label:
 	var l := Label.new()
 	l.text = text
-	l.theme_type_variation = &"NumLabel"
-	l.add_theme_color_override("font_color", SlateHud.COL_KEY_TEXT)
+	l.theme_type_variation = &"EmberHead"
 	return l
 
 
 func _exchange_button(text: String, price_gold: int, action: Callable) -> Button:
 	var b := Button.new()
+	b.size_flags_horizontal = Control.SIZE_SHRINK_BEGIN
 	b.text = text
 	b.disabled = price_gold <= 0 or not Ledger.can_afford({"gold": price_gold})
 	b.pressed.connect(func() -> void: Sfx.play("ui-click"))
@@ -238,15 +254,19 @@ func _deal_row(slot: int, deal: Dictionary) -> Control:
 	mid.add_theme_constant_override("separation", 2)
 	var pitch := Label.new()
 	pitch.text = str(deal.get("text", ""))
+	pitch.theme_type_variation = &"EmberProse"   # the caravan's pitch is voice, not a label
 	pitch.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	mid.add_child(pitch)
 	var terms := Label.new()
 	terms.text = DEAL_TRADE_FMT % [_cost_text(deal.get("give", {})), _cost_text(deal.get("get", {}))]
-	terms.theme_type_variation = &"NumLabel"
-	terms.add_theme_color_override("font_color", SlateHud.COL_KEY_TEXT)
+	terms.theme_type_variation = &"EmberNum"
+	terms.add_theme_color_override("font_color", EmberHud.COL_INK_DIM)
 	mid.add_child(terms)
 	hb.add_child(mid)
 	var b := Button.new()
+	# The caravan is once a day and then gone — that is the one thing on this page worth
+	# marking gold. The two exchange buttons stay plain frames on purpose.
+	b.theme_type_variation = &"EmberAction"
 	b.text = ACCEPT
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	b.disabled = not MarketCore.can_accept_deal(SaveManager.state["town"], day()) \
@@ -265,21 +285,10 @@ func _cost_text(cost: Dictionary) -> String:
 	return ", ".join(parts)
 
 
-# --- Draw (bg + the carry readout, the survey's pattern) -----------------------------
+# --- Draw (the scrim + the shared carry readout) --------------------------------------
 
 func _draw() -> void:
 	if size.x < 1.0:
 		return
-	draw_rect(Rect2(Vector2.ZERO, size), TechChart.COL_FRAME_BG)
-	var right := size.x - MARGIN
-	var y := MARGIN + 6.0
-	for id in CARRY_IDS:
-		var num := str(int(Ledger.get_amount(id)))
-		var nw := _font_num.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_CARRY).x
-		var by := y + _font_num.get_ascent(FS_CARRY)
-		draw_string(_font_num, Vector2(right - nw, by), num,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FS_CARRY, BuildPanel.res_color(id))
-		var lw := _font_num.get_string_size(id, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_CARRY_LABEL).x
-		draw_string(_font_num, Vector2(right - nw - 10.0 - lw, by), id,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FS_CARRY_LABEL, SlateHud.COL_KEY_TEXT)
-		y += FS_CARRY + 10.0
+	_scrim()  # the ground every Ember menu sits on
+	_resource_readout(size.x - EmberMenuCore.PAD_PX, RES_Y, CARRY_IDS)

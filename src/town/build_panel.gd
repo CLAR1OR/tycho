@@ -1,12 +1,20 @@
-extends Control
+extends EmberHud
 class_name BuildPanel
 ## Town building — "Herzog's ledger" (B2, human-picked 2026-07-09 via claude.ai/design, group
 ## "Town Building"). Pressing E at a build plot opens THIS fullscreen page for that one building
 ## (diegetically the town ledger Herzog opened at B4 — one building per page, no tabs; the town
 ## is the tab bar). A REBUILD of the old raw-Label3D + instant-E-build flow — the build
 ## TRANSACTION is byte-identical, just relocated behind the page's button. Fullscreen,
-## code-built, Slate-themed; pauses the game while open. NO Close button — ESC closes (the
-## panel-wide ESC-close pass, 2026-07-09).
+## code-built, EMBER (migrated 2026-08-14, Tier B); pauses the game while open. NO Close
+## button — ESC closes (the panel-wide ESC-close pass, 2026-07-09).
+##
+## The Ember migration is a RESTYLE — the transaction, every public method, the gating and
+## all copy are byte-identical, and the smoke drives it unchanged. This node now extends
+## `EmberHud`, so it draws the shared scrim instead of filling itself with the tech chart's
+## frame colour; the ledger dock's panel is transparent and bounded by a vertical hairline;
+## the level pips are the shared drawn `EmberPips`; and the hand-rolled carry stack became
+## `_resource_readout` — which is why `res_color` is gone, since `EmberHud.resource_color`
+## is now the one map from a Ledger id to its colour, game-wide.
 ##
 ## The frozen transaction (one press = one level): TownCore.next_level_cost → Ledger.try_spend_all
 ## (reason "building-cost") → TownCore.set_building → EventBus.building_built → SaveManager.save.
@@ -18,12 +26,11 @@ class_name BuildPanel
 ## the real path.
 
 # =====================================================================================
-# Style / copy — placeholders. Dial like FEEL numbers (shared palette/fonts live in SlateHud;
+# Style / copy — placeholders. Dial like FEEL numbers (shared palette/fonts live in EmberHud;
 # the building sketch in BuildingSilhouette). ALL copy below is HUMAN pen (Herzog's register:
 # short declaratives, no aphorisms, no em dashes).
 # =====================================================================================
-const MARGIN := 20.0
-const DOCK_W := 384.0
+const DOCK_W := 410.0   # +26 over Slate's 384: the dock's new hairline divider costs that
 const DOCK_TOP := 120.0
 const STAGE_CENTER := Vector2(0.34, 0.60)   # normalized: the plot line for the big sketch
 const STAGE_SCALE := 1.6
@@ -31,8 +38,8 @@ const NAME_Y := 0.185
 const META_Y := 0.238
 const FS_NAME := 30
 const FS_META := 12
-const FS_CARRY := 30
-const FS_CARRY_LABEL := 11
+const META_TRACKING := 1.4
+const RES_Y := 40.0   # the shared carry readout's row, level with the title band
 const TITLE := "The Town Ledger"
 const SUBTITLE := "Herzog keeps it current."
 const WELL_FED_FMT := "The town is Well-Fed. Production pays %d%% more."
@@ -47,16 +54,13 @@ var _title: Label
 var _subtitle: Label
 var _dock: PanelContainer
 var _footnote: Label
-var _font_display: FontVariation
-var _font_num: FontVariation
 
 
 func _ready() -> void:
+	super._ready()  # EmberHud: full-rect anchors + the five shared fonts
 	process_mode = Node.PROCESS_MODE_ALWAYS
 	add_to_group("build_panel")
-	theme = SlateTheme.get_theme()
-	_font_display = SlateHud._with_fallback(SlateHud.FONT_DISPLAY_FILE)
-	_font_num = SlateHud._with_fallback(SlateHud.FONT_NUM_FILE)
+	theme = EmberTheme.get_theme()
 	set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_STOP  # eat clicks so they don't fall through to the town
 	resized.connect(queue_redraw)
@@ -69,17 +73,17 @@ func open(building_id: String) -> void:
 	# Header: title + subtitle (top-left).
 	_title = Label.new()
 	_title.text = TITLE
-	_title.theme_type_variation = &"TitleLabel"
+	_title.theme_type_variation = &"EmberTitle"
 	_title.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_title)
 	_subtitle = Label.new()
 	_subtitle.text = SUBTITLE
-	_subtitle.theme_type_variation = &"DimLabel"
+	_subtitle.theme_type_variation = &"EmberDim"
 	_subtitle.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	add_child(_subtitle)
 	# Well-Fed footnote (bottom-left) — only when the town is Well-Fed.
 	_footnote = Label.new()
-	_footnote.theme_type_variation = &"DimLabel"
+	_footnote.theme_type_variation = &"EmberDim"
 	_footnote.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	_footnote.visible = bool(SaveManager.state["town"].get("well_fed", false))
 	_footnote.text = WELL_FED_FMT % int(round(TownCore.WELL_FED_BONUS * 100.0))
@@ -109,16 +113,19 @@ func _process(_delta: float) -> void:
 	var vp := get_viewport_rect().size
 	if size != vp:
 		size = vp
+	# Bands from EmberMenuCore, so this header and footer sit exactly where every other
+	# Ember screen's do.
+	var bands := EmberMenuCore.catalogue(size)
 	if _title != null:
-		_title.position = Vector2(MARGIN + 8.0, MARGIN)
+		_title.position = EmberMenuCore.label_pos(bands["title"], _title.size.y)
 	if _subtitle != null:
-		_subtitle.position = Vector2(MARGIN + 9.0, MARGIN + 32.0)
+		_subtitle.position = EmberMenuCore.label_pos(bands["subtitle"], _subtitle.size.y)
 	if _footnote != null:
-		_footnote.position = Vector2(MARGIN + 8.0, size.y - MARGIN - _footnote.size.y)
+		_footnote.position = EmberMenuCore.label_pos(bands["footer"], _footnote.size.y)
 	if _dock != null:
 		_dock.custom_minimum_size.x = DOCK_W
 		_dock.size.x = DOCK_W
-		_dock.position = Vector2(size.x - MARGIN - DOCK_W, DOCK_TOP)
+		_dock.position = Vector2(size.x - EmberMenuCore.PAD_PX - DOCK_W, DOCK_TOP)
 
 
 # --- Public (the dock's build button + the smoke driver land here) ----------------------
@@ -182,20 +189,6 @@ func _refresh() -> void:
 	queue_redraw()
 
 
-## Resource id → its SlateHud strip colour (shared with the survey). Placeholder-free — the
-## colours live in SlateHud, the ONE dial source.
-static func res_color(id: String) -> Color:
-	match id:
-		"gold": return SlateHud.COL_GOLD
-		"stone": return SlateHud.COL_STONE
-		"food": return SlateHud.COL_FOOD
-		"knowledge": return SlateHud.COL_KNOWLEDGE
-		"knowledge-shards": return SlateHud.COL_SHARDS
-		"resonance-ore": return SlateHud.COL_ORE
-		"resonance-dust": return SlateHud.COL_DUST
-	return SlateHud.COL_TEXT
-
-
 # --- The ledger dock (right column, rebuilt per state) ----------------------------------
 
 func _build_dock() -> void:
@@ -208,12 +201,19 @@ func _build_dock() -> void:
 	var level := TownCore.building_level(SaveManager.state["town"], _building_id)
 	var tech_locked := not TownCore.is_unlocked(def, SaveManager.state["tech"]["researched"])
 
-	_dock = PanelContainer.new()
+	_dock = PanelContainer.new()   # transparent under EmberTheme — it groups and pads only
 	_dock.custom_minimum_size = Vector2(DOCK_W, 0)
+	# The dock's inner edge carries a vertical hairline — the anchor's hero/dock divider, and
+	# Ember's replacement for the panel border that used to box this column in.
+	var split := HBoxContainer.new()
+	split.add_theme_constant_override("separation", 18)
+	_dock.add_child(split)
+	split.add_child(VSeparator.new())
 	var margin := MarginContainer.new()
+	margin.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	for s in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + s, 20)
-	_dock.add_child(margin)
+	split.add_child(margin)
 	var box := VBoxContainer.new()
 	box.add_theme_constant_override("separation", 12)
 	margin.add_child(box)
@@ -227,8 +227,8 @@ func _build_dock() -> void:
 	if tech_locked:
 		var res := Label.new()
 		res.text = RESEARCH_FMT % _gate_name(def)
-		res.theme_type_variation = &"NumLabel"
-		res.add_theme_color_override("font_color", SlateHud.COL_KNOWLEDGE)
+		res.theme_type_variation = &"EmberNum"
+		res.add_theme_color_override("font_color", EmberHud.COL_KNOWLEDGE)
 		res.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		res.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(res)
@@ -251,19 +251,22 @@ func _entry_row(row: Dictionary) -> Control:
 	var hb := HBoxContainer.new()
 	hb.add_theme_constant_override("separation", 12)
 
-	var pip := Label.new()
-	pip.text = "●" if state == "built" else "○"
-	pip.add_theme_color_override("font_color",
-		SlateHud.COL_READY if state != "beyond" else SlateHud.COL_SLATE_BORDER)
-	pip.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	# One drawn pip per level row: filled gold = built, gold outline = the level you can buy
+	# next, faint = beyond it. Same three states, same mark, as the forge and the survey.
+	var pip := EmberPips.new()
 	hb.add_child(pip)
+	var pip_state := "next"
+	if state == "built":
+		pip_state = "filled"
+	elif state == "beyond":
+		pip_state = "rest"
 
 	var mid := VBoxContainer.new()
 	mid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	mid.add_theme_constant_override("separation", 2)
 	var lv_l := Label.new()
 	lv_l.text = "LEVEL %d" % int(row["level"])
-	lv_l.theme_type_variation = &"NumLabel"
+	lv_l.theme_type_variation = &"EmberHead"
 	mid.add_child(lv_l)
 	var yl: Dictionary = row["yield"]
 	if not str(yl["text"]).is_empty():
@@ -271,7 +274,7 @@ func _entry_row(row: Dictionary) -> Control:
 		y_l.text = str(yl["text"])
 		var res := str(yl["resource"])
 		y_l.add_theme_color_override("font_color",
-			res_color(res) if not res.is_empty() else SlateHud.COL_TEXT)
+			EmberHud.resource_color(res) if not res.is_empty() else EmberHud.COL_INK)
 		y_l.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		mid.add_child(y_l)
 	hb.add_child(mid)
@@ -282,19 +285,21 @@ func _entry_row(row: Dictionary) -> Control:
 	right.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	var price := Label.new()
 	price.text = _cost_text(row["cost"])
-	price.theme_type_variation = &"NumLabel"
+	price.theme_type_variation = &"EmberNum"
 	right.add_child(price)
 	if state == "built":
-		price.add_theme_color_override("font_color", SlateHud.COL_KEY_TEXT)  # dim (stands for struck)
+		price.add_theme_color_override("font_color", EmberHud.COL_INK_DIM)  # dim (stands for struck)
 		var stamp := Label.new()
 		stamp.text = "BUILT"
-		stamp.theme_type_variation = &"NumLabel"
-		stamp.add_theme_color_override("font_color", SlateHud.COL_READY)
+		stamp.theme_type_variation = &"EmberHead"
+		stamp.add_theme_color_override("font_color", EmberHud.COL_ACCENT)
 		right.add_child(stamp)
 	hb.add_child(right)
 
 	if state == "beyond":
 		hb.modulate = Color(1, 1, 1, 0.45)
+	# After add_child: set_states() sizes the node, and EmberPips' own _ready re-anchors it.
+	pip.set_states([pip_state] as Array[String])
 	return hb
 
 
@@ -306,21 +311,22 @@ func _action_node(def: Dictionary, level: int) -> Control:
 	if kind == "maxed":
 		var l := Label.new()
 		l.text = "Max level"
-		l.theme_type_variation = &"DimLabel"
-		l.add_theme_color_override("font_color", SlateHud.COL_READY)
+		l.theme_type_variation = &"EmberDim"
+		l.add_theme_color_override("font_color", EmberHud.COL_ACCENT)
 		l.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		return l
 	if kind == "locked":
 		var lock := Label.new()
 		lock.text = BuildPanelCore.LOCKED_FMT % BuildPanelCore.gate_tech_name(
 			str(action.get("requires", "")), _tech_defs)
-		lock.theme_type_variation = &"NumLabel"
-		lock.add_theme_color_override("font_color", SlateHud.COL_KNOWLEDGE)
+		lock.theme_type_variation = &"EmberNum"
+		lock.add_theme_color_override("font_color", EmberHud.COL_KNOWLEDGE)
 		lock.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 		lock.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		return lock
 	var cost: Dictionary = action["cost"]
 	var b := Button.new()
+	b.theme_type_variation = &"EmberAction"   # the page's one gold control: raising the town
 	if kind == "build":
 		b.text = "Build (%s)" % _cost_text(cost)
 	else:
@@ -350,15 +356,14 @@ func _gate_name(def: Dictionary) -> String:
 func _draw() -> void:
 	if size.x < 1.0:
 		return
-	draw_rect(Rect2(Vector2.ZERO, size), TechChart.COL_FRAME_BG)
+	_scrim()  # the ground every Ember menu sits on
 	if not _defs.has(_building_id):
 		return
 	var def: Dictionary = _defs[_building_id]
 	var level := TownCore.building_level(SaveManager.state["town"], _building_id)
 	var c := Vector2(STAGE_CENTER.x * size.x, STAGE_CENTER.y * size.y)
-	# The plot line the building stands on.
-	draw_line(Vector2(size.x * 0.08, c.y), Vector2(size.x * 0.62, c.y),
-		Color(SlateHud.COL_SLATE_BORDER, 0.8), 2.0, true)
+	# The plot line the building stands on — a hairline now, not a slate rule.
+	_hairline(size.x * 0.08, size.x * 0.62, c.y, COL_RING, 1.0)
 	BuildingSilhouette.paint(self, _building_id, c, STAGE_SCALE,
 		BuildingSilhouette.COL_BODY_FILL, BuildingSilhouette.COL_BODY_STROKE, 2.5,
 		_font_display, FS_NAME, level)
@@ -370,32 +375,18 @@ func _draw_name_meta(def: Dictionary, level: int, cx: float) -> void:
 	# Display names go through TownCore.display_name — a built band opener renames
 	# the building (Library → University, town-economy.md).
 	var nm := TownCore.display_name(def, level)
-	var tw := _font_display.get_string_size(nm, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_NAME).x
-	var ty := NAME_Y * size.y + _font_display.get_ascent(FS_NAME)
-	draw_string(_font_display, Vector2(cx - tw * 0.5, ty), nm,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, FS_NAME, SlateHud.COL_TEXT)
+	_text_centred(cx, NAME_Y * size.y, nm, COL_INK, FS_NAME, _font_display)
 	var cat := str(def.get("category", "")).to_upper()
 	var maxlvl := (def.get("levels", []) as Array).size()
 	var lvl_txt := "UNBUILT" if level == 0 else "L%d OF %d" % [level, maxlvl]
 	var meta := "%s · %s" % [cat, lvl_txt]
-	var mw := _font_num.get_string_size(meta, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_META).x
-	var my := META_Y * size.y + _font_num.get_ascent(FS_META)
-	draw_string(_font_num, Vector2(cx - mw * 0.5, my), meta,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, FS_META, SlateHud.COL_KEY_TEXT)
+	var mw := _text_tracked_w(meta, FS_META, _font_ui_med, META_TRACKING)
+	_text_tracked(Vector2(cx - mw * 0.5, META_Y * size.y), meta, COL_INK_DIM, FS_META,
+		_font_ui_med, META_TRACKING)
 
 
-## The carry readout (top-right, bare — no box): one row per resource in this building's costs,
-## the dim label then the big number, right-aligned (the E1/F2 Dust/Ore readout pattern).
+## The carry readout (top-right): what this building's costs are denominated in, in the ONE
+## shared readout every Ember screen uses. It stays data-driven — `carry_resources` still
+## reads the building's own costs, so a page only shows the resources it can spend.
 func _draw_carry(def: Dictionary) -> void:
-	var right := size.x - MARGIN
-	var y := MARGIN + 6.0
-	for id: String in BuildPanelCore.carry_resources(def):
-		var num := str(int(Ledger.get_amount(id)))
-		var nw := _font_num.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_CARRY).x
-		var by := y + _font_num.get_ascent(FS_CARRY)
-		draw_string(_font_num, Vector2(right - nw, by), num,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FS_CARRY, res_color(id))
-		var lw := _font_num.get_string_size(id, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_CARRY_LABEL).x
-		draw_string(_font_num, Vector2(right - nw - 10.0 - lw, by), id,
-			HORIZONTAL_ALIGNMENT_LEFT, -1, FS_CARRY_LABEL, SlateHud.COL_KEY_TEXT)
-		y += FS_CARRY + 10.0
+	_resource_readout(size.x - EmberMenuCore.PAD_PX, RES_Y, BuildPanelCore.carry_resources(def))

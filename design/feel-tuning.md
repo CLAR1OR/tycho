@@ -604,7 +604,6 @@ Judge with `tools/render_hud.tscn` (states `town`, `echo-offer`) and `tools/rend
 | | `GROUP_GAP` / `HEAD_LIFT` / `FS_GROUP` | 40 / 20 / 10 | **the gap IS the group boundary** (no panel) · header height · header size |
 | | `PROJ_DROP` / `PROJECTION_ALPHA` | 20 / 0.55 | the `+n/d` under each readout |
 | | `TOAST_TOP` | 62 | overnight toast, **top-LEFT under the day chip** — it moved out of top-centre because the panel-less strip now reaches past the middle. Moving it back needs the strip to shrink first |
-| | `HINT_BOTTOM` | 34 | hint prose above the bottom edge |
 | **AchievementToast** | `TOP_MARGIN` | 96 | **a clearance constraint, not taste** — must clear the run HUD's boss bar AND the town strip, since this is the one toast that plays in every scene |
 | | `MEDAL_R` / `TEXT_GAP` / `RULE_DROP` | 21 / 15 / 22 | the monogram ring, ring→text, the hairline under it |
 | | `SLIDE_S` / `HOLD_S` / `FADE_S` | 0.25 / 3.0 / 0.6 | lifecycle (unchanged from Slate) |
@@ -613,6 +612,34 @@ Judge with `tools/render_hud.tscn` (states `town`, `echo-offer`) and `tools/rend
 | | `NAME_DY` / `LINE_GAP` / `FX_GAP` | 26 / 22 / 18 | name below the ring, then the parents line, then the effect lines |
 | **PauseMenu** | `TITLE_GAP` / `PANEL_WIDTH` | 18 / 320 | title block → buttons; the column's width |
 | | *(everything else)* | — | comes from `EmberTheme`. Only **Resume** takes `EmberAction` (gold); the rest are plain hairline Buttons |
+
+## Ember Tier B — the six town screens *(built 2026-08-14, `design/ui-hud.md` § "Migrating to Ember")*
+
+Judge with `tools/render_menu.tscn` (states `forge`, `etchings`, `attunements`, `build`, `build-locked`, `survey`, `market`), then F5 and walk the town.
+
+**Dial the shared numbers first.** These six screens borrow their margins, title band and footer from `EmberMenuCore` (§ Ember menus above), so moving `PAD_PX` or `TITLE_TOP_PX` moves all of them at once — that is the point, and it is also why the per-screen table below is short. Everything here is a placeholder.
+
+| Surface | Const | Now | What it does |
+| --- | --- | --- | --- |
+| **shared** | `EmberPips.PIP_HALF` / `PIP_GAP` / `PAD` | 4.5 / 13 / (2, 6) | **every level track in the game**: forge refine, building levels, attunement depth, etchings rungs. One node, one look |
+| | `EmberHud._resource_readout` defaults | `fs` 22 · glyph 17 · gap 9 · spacing 24 | the top-right carry readout on all six screens. It grows **leftward** from the right margin, so a long readout never walks into the title |
+| | `EmberTheme` scrollbar | track `COL_HAIR`, grabber `COL_INK_DIM` (hover `COL_INK`) | **do not dial these back toward invisible** — a page that scrolls with no visible bar reads as a page that was cut off |
+| **ForgeAnvil** | `TAB_W` / `TAB_H` / `TAB_GAP` / `TAB_TOP_DROP` | 168 / 92 / 14 / 34 | the weapon list rows, laid down `EmberMenuCore`'s content band |
+| | `FS_TAB` / `TAB_TRACKING` | 11 / 1.2 | the tab's caps label |
+| | `FS_NAME` / `FS_META` / `META_TRACKING` | 30 / 11 / 1.4 | the weapon name over the anvil and its `KIND · EQUIPPED · FLAT Ln` line |
+| | `EMBER_*` / `ANVIL_*` / `WEAPON_*` | *(unchanged)* | the forge's warm glow and its staging — the human's F2 pick, untouched by the migration |
+| **EtchingsArms** | `FS_BADGE` / `BADGE_TRACKING` / `BADGE_DY` | 11 / 1.2 / 40 | the hovered site's name, now bare tracked caps (the chip is gone) |
+| | `SITE_HALO_R` / `SEL_RING_R` | 30 / 30 | **equal, so the dashed selection ring hides inside its own glow.** Pull the halo in if you want the dash to read |
+| **EtchingsPanel** | `DOCK_W` | 382 | +26 over Slate's 356 — the dock's new inner hairline and its gap cost that much |
+| | `FS_DOCK_NAME` | `FS_HERO` (26) | the dock's ability name. Full `EmberTitle` size wraps every two-word name at this width |
+| | `TAB_TOP` / `TAB_GAP` | 70 / 18 | the `THE MARKS` / `THE BODY` row |
+| **BuildPanel** | `DOCK_W` | 410 | +26 over Slate's 384, same reason. **Below ~390 the yield text wraps into the price column** |
+| | `STAGE_CENTER` / `STAGE_SCALE` / `NAME_Y` / `META_Y` | (0.34, 0.60) / 1.6 / 0.185 / 0.238 | the building's stage — unchanged from B2 |
+| **SurveyPanel** | `SHEET_W` / `SHEET_TOP` | 800 / 116 | the whole-town sheet. It **scrolls**; its height is the content band's floor |
+| **AttunementsPage** | `SHEET_W` / `SHEET_TOP` | 700 / 150 | seven ledger rows, also scrolling |
+| **MarketPanel** | `SHEET_W` / `SHEET_TOP` | 560 / 120 | exchange + caravan |
+
+**Where the gold went, per screen** (the language's one hard rule — gold is state, at most one gold control per screen): forge → **Refine** · etchings → **Awaken/Deepen** · build → **Build/Raise** · market → **Accept** (the caravan is once a day; the exchange buttons are plain) · survey → **nothing** (it is read-only, so there is no action to spend gold on) · attunements → **nothing** (seven rows; seven gold buttons would mark nothing).
 
 ## Boss — Den-Warden (floor 1; data dials + 2 exports, `design/bosses/floor-1-boss.md`, built 2026-07-10)
 

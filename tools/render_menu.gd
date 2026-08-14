@@ -9,13 +9,24 @@ extends Node
 ## is fifteen rewrites. One fake screen that exercises every primitive at once costs an
 ## hour and is judgeable against assets_src/anchors/weapon-menu-reference.png directly.
 ##
-## The content is deliberately FAKE (a weapon menu that matches the anchor, so the two can
-## be laid side by side). No game state, no data/, no save — this tool is a ruler, not a
-## screen. The real screens keep their own content and only borrow the grammar.
+## The specimen's content is deliberately FAKE (a weapon menu that matches the anchor, so
+## the two can be laid side by side). It is a ruler, not a screen.
+##
+## SINCE TIER B (2026-08-14) the probe also renders the REAL migrated screens — the forge,
+## the etchings arms, the attunements page, a build page (built AND tech-locked), the survey
+## and the market. That is the half a specimen cannot do: the specimen proves the vocabulary
+## is coherent, the real screens prove each one actually reaches for it. Every defect Tier A
+## shipped was of the second kind (a collision, an invisible badge) and no test would have
+## caught any of them.
 ##
 ## Needs a real GPU context (it reads the viewport texture back), so NOT --headless:
 ##   godot --path . tools/render_menu.tscn
 ## Output: user://menu_render_<state>.png (paths echoed to stdout, with the OS path).
+##
+## SAFETY: it seeds `SaveManager.state` from `SaveData.default_slot()` in memory (the rule
+## render_compare.gd set) and points `current_slot` at the throwaway slot 99, because
+## EtchingsPanel.open() legitimately persists its baseline grant. Slot 99 is deleted on the
+## way out. It never touches slots 0-3 or profile.json.
 
 ## Render at the project's BASE viewport, never at whatever size the window manager hands
 ## the probe window — the constants are judged against these numbers.
@@ -55,12 +66,113 @@ func _ready() -> void:
 	_run()
 
 
+## The throwaway save slot, exactly as the smoke uses it (design/godot-conventions.md).
+const SLOT := 99
+
+
 func _run() -> void:
 	await _shot("catalogue", "catalogue")
 	await _shot("column", "column")
 	await _shot_pause()
+	_seed_state()
+	_screen.hide()   # the remaining shots are real screens, not the specimen
+	await _shot_forge()
+	await _shot_etchings()
+	await _shot_build()
+	await _shot_survey()
+	await _shot_market()
+	_screen.show()
+	SaveManager.delete_slot(SLOT)
 	print("render_menu: done")
 	get_tree().quit()
+
+
+# =====================================================================================
+# The real Tier B screens
+# =====================================================================================
+
+## A town far enough along that every state on these pages has something to show: a couple
+## of buildings up, a market to trade at, and enough of each resource that the affordable
+## and the unaffordable both appear. In memory only — never `create_slot`.
+func _seed_state() -> void:
+	SaveManager.state = SaveData.default_slot("menu-probe", "")
+	SaveManager.current_slot = SLOT
+	var town: Dictionary = SaveManager.state["town"]
+	for pair: Array in [["farm", 1], ["quarry", 2], ["market", 1]]:
+		town = TownCore.set_building(town, str(pair[0]), int(pair[1]))
+	SaveManager.state["town"] = town
+	SaveManager.state["town"]["well_fed"] = true   # the Well-Fed footnote is a real state
+	for pair: Array in [["gold", 128.0], ["stone", 64.0], ["food", 30.0],
+			["knowledge", 12.0], ["knowledge-shards", 4.0], ["resonance-ore", 35.0],
+			["resonance-dust", 26.0]]:
+		Ledger.add(str(pair[0]), float(pair[1]), "menu-probe")
+
+
+## Add `panel` to the probe's viewport and undo the pause its open() sets. Every migrated
+## panel pauses the tree while it is up, which in a probe would stop the very _process that
+## syncs its size to the viewport — so the shot would be of a zero-sized screen.
+func _stage(panel: Control) -> void:
+	_sv.add_child(panel)
+	get_tree().paused = false
+
+
+func _unstage(panel: Control) -> void:
+	panel.queue_free()
+	get_tree().paused = false
+
+
+func _shot_forge() -> void:
+	var p := ForgePanel.new()
+	_stage(p)
+	p.open()
+	p.select_weapon("sword")
+	await _shot_node("forge")
+	_unstage(p)
+
+
+## Two shots off one screen: the arms page with a mark selected (so the dock is populated),
+## then the same panel tabbed to the attunements ledger.
+func _shot_etchings() -> void:
+	var p := EtchingsPanel.new()
+	_stage(p)
+	p.open()
+	p.open_menu("rmb")
+	await _shot_node("etchings")
+	p.switch_page("body")
+	await _shot_node("attunements")
+	_unstage(p)
+
+
+## Two shots off the build page: a BUILT building (pips, the BUILT stamp, a live gold
+## action) and a TECH-LOCKED one (no action at all, just the research line) — the two
+## halves of the page that can disagree about where the dock's content ends.
+func _shot_build() -> void:
+	var p := BuildPanel.new()
+	_stage(p)
+	p.open("farm")   # built, not tech-locked -> the gold Raise action actually renders
+	await _shot_node("build")
+	_unstage(p)
+	var locked := BuildPanel.new()
+	_stage(locked)
+	locked.open("library")   # gated on an unauthored tech — the dormant forward ref
+	await _shot_node("build-locked")
+	_unstage(locked)
+
+
+func _shot_survey() -> void:
+	var p := SurveyPanel.new()
+	_stage(p)
+	p.open()
+	await _shot_node("survey")
+	_unstage(p)
+
+
+func _shot_market() -> void:
+	var p := MarketPanel.new()
+	_stage(p)
+	p.open()
+	await _shot_node("market")
+	_unstage(p)
 
 
 ## The REAL pause menu — the first screen on EmberTheme, and the only Control-TREE screen

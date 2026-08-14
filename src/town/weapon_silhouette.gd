@@ -10,7 +10,7 @@ class_name WeaponSilhouette
 ## real forged blades replace these primitives later (no combat feel, so no `# FEEL:` tag).
 
 # =====================================================================================
-# Style — placeholders. (Palette elsewhere is shared — see SlateHud.)
+# Style — placeholders. (Palette elsewhere is shared — see EmberHud.)
 # =====================================================================================
 const COL_METAL_FILL := Color(46.0/255, 44.0/255, 55.0/255)     # #2e2c37 blade body
 const COL_METAL_STROKE := Color(67.0/255, 65.0/255, 79.0/255)   # #43414f edge

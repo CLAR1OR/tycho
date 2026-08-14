@@ -1,4 +1,4 @@
-extends Control
+extends EmberHud
 class_name AttunementsPage
 ## The etchings panel's SECOND page — "The Body": Passive Attunements (bible "Passive
 ## Attunements", PRD §7.4). The E1 "arms" page (the marks) stays the default; a quiet tab
@@ -7,8 +7,17 @@ class_name AttunementsPage
 ## Deepen button (Resonance Dust — the SAME sink as the active abilities). Read-and-buy
 ## only; all the cost/level/effect math is AttunementsCore (pure, tested).
 ##
-## HUMAN: everything here is a PLACEHOLDER — the layout consts, the effect-line copy, and
-## the ordering. Dial like FEEL numbers. Shared palette/fonts live in SlateHud; the attunement
+## MIGRATED TO EMBER 2026-08-14 (Tier B) — a restyle; every public method and all copy are
+## byte-identical and the smoke drives it unchanged. The sheet's panel is transparent and its
+## rows are separated by real hairlines (EmberTheme styles `HSeparator`); the "●/○" text pips
+## became the shared drawn `EmberPips`; and the hand-rolled mote cluster + big Dust number
+## became `_resource_readout`, so Dust wears the same mark here as on the arms page it shares
+## a screen with. The sheet is centred by `EmberMenuCore.column`, which is the same band the
+## settings and achievements pages will use — that is what makes a read-down page in this
+## game look like a read-down page anywhere else in it.
+##
+## HUMAN: everything here is a PLACEHOLDER — the layout consts, the effect-line copy, and the
+## ordering. Dial like FEEL numbers. Shared palette/fonts live in EmberHud; the attunement
 ## numbers themselves are the data (data/attunements/*.json).
 
 # =====================================================================================
@@ -16,10 +25,7 @@ class_name AttunementsPage
 # =====================================================================================
 const SHEET_W := 700.0
 const SHEET_TOP := 150.0
-const DUST_SUBTITLE := "resonance dust"
-const FS_DUST := 30
-const FS_DUST_LABEL := 11
-const DUST_GLYPH_N := 5
+const RES_Y := 40.0   # the shared Dust readout's row, level with the title band
 ## Display order (unknown ids appended sorted → a future attunement never vanishes).
 const ORDER: Array[String] = ["vitality", "recovery", "quickening", "resonance-flow",
 	"focus", "resilience", "attunement"]
@@ -28,13 +34,12 @@ var _defs: Dictionary = {}
 var _on_deepen: Callable = Callable()
 var _rows: VBoxContainer
 var _sheet: PanelContainer
-var _font_num: FontVariation
 
 
 func _ready() -> void:
+	super._ready()  # EmberHud: full-rect anchors + the five shared fonts
+	# EmberHud defaults to MOUSE_FILTER_IGNORE; this page is a buy screen and takes clicks.
 	mouse_filter = Control.MOUSE_FILTER_STOP
-	set_anchors_preset(Control.PRESET_FULL_RECT)
-	_font_num = SlateHud._with_fallback(SlateHud.FONT_NUM_FILE)
 
 
 func setup(defs_in: Dictionary, on_deepen_cb: Callable) -> void:
@@ -61,15 +66,24 @@ func _ordered_ids() -> Array[String]:
 func _build() -> void:
 	if _rows != null:
 		_rows.queue_free()
-	var sheet := PanelContainer.new()
+	var sheet := PanelContainer.new()   # transparent under EmberTheme — it groups and pads
 	sheet.custom_minimum_size = Vector2(SHEET_W, 0)
 	var margin := MarginContainer.new()
 	for s in ["left", "right", "top", "bottom"]:
 		margin.add_theme_constant_override("margin_" + s, 18)
 	sheet.add_child(margin)
+	# Seven rows already run off the bottom of a 720p screen (the menu probe caught it), and
+	# the attunement roster is budgeted to grow — so the sheet scrolls inside the content
+	# band rather than trusting the roster to stay short. This is what EmberTheme's
+	# hairline-thin scrollbar styling exists for.
+	var scroll := ScrollContainer.new()
+	scroll.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	scroll.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	margin.add_child(scroll)
 	_rows = VBoxContainer.new()
+	_rows.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	_rows.add_theme_constant_override("separation", 10)
-	margin.add_child(_rows)
+	scroll.add_child(_rows)
 	var etchings_dust := Ledger.get_amount("resonance-dust")
 	var attn: Dictionary = SaveManager.state["combat"].get("attunements", {})
 	var ids := _ordered_ids()
@@ -77,15 +91,28 @@ func _build() -> void:
 		_rows.add_child(_row(ids[i], _defs[ids[i]], attn, etchings_dust))
 		if i < ids.size() - 1:
 			_rows.add_child(HSeparator.new())
-	# Centre the sheet horizontally, pin it below the header.
-	sheet.position = Vector2((size.x - SHEET_W) * 0.5, SHEET_TOP)
+	sheet.position = _sheet_pos()
+	sheet.size = Vector2(SHEET_W, _sheet_h())
 	add_child(sheet)
-	_sheet = sheet  # kept to recentre on resize (_process)
+	_sheet = sheet  # kept to recentre + re-height on resize (_process)
+
+
+## The sheet's top-left. EmberMenuCore.column centres it in the same content band every
+## other read-down Ember page uses, so the margins agree across screens.
+func _sheet_pos() -> Vector2:
+	var col: Rect2 = EmberMenuCore.column(size, SHEET_W)["column"]
+	return Vector2(col.position.x, SHEET_TOP)
+
+
+## How tall the sheet may be: down to the content band's floor, never past it.
+func _sheet_h() -> float:
+	return maxf(0.0, size.y - EmberMenuCore.CONTENT_BOTTOM_PX - SHEET_TOP)
 
 
 func _process(_delta: float) -> void:
 	if _sheet != null:
-		_sheet.position = Vector2((size.x - SHEET_W) * 0.5, SHEET_TOP)
+		_sheet.position = _sheet_pos()
+		_sheet.size = Vector2(SHEET_W, _sheet_h())
 
 
 func refresh() -> void:
@@ -107,18 +134,18 @@ func _row(id: String, def: Dictionary, attn: Dictionary, dust: float) -> VBoxCon
 	var top := HBoxContainer.new()
 	top.add_theme_constant_override("separation", 12)
 	var name_l := Label.new()
-	name_l.text = str(def.get("name", id))
-	name_l.theme_type_variation = &"TitleLabel"
+	name_l.text = str(def.get("name", id))   # theme default: the UI voice at list-row size
 	name_l.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	name_l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	top.add_child(name_l)
-	top.add_child(_pips(lvl))
+	var track := EmberPips.new()
+	top.add_child(track)
 	box.add_child(top)
 
 	# What it does (dim).
 	var desc := Label.new()
 	desc.text = str(def.get("desc", ""))
-	desc.theme_type_variation = &"DimLabel"
+	desc.theme_type_variation = &"EmberDim"
 	desc.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	box.add_child(desc)
 
@@ -127,33 +154,17 @@ func _row(id: String, def: Dictionary, attn: Dictionary, dust: float) -> VBoxCon
 	bottom.add_theme_constant_override("separation", 12)
 	var eff := Label.new()
 	eff.text = _effect_line(def, maxi(1, lvl))  # dormant shows L1's effect
-	eff.theme_type_variation = &"NumLabel"
+	eff.theme_type_variation = &"EmberNum"
 	if lvl < 1:
-		eff.add_theme_color_override("font_color", SlateHud.COL_KEY_TEXT)  # dimmer while un-owned
+		eff.add_theme_color_override("font_color", EmberHud.COL_INK_DIM)  # dimmer while un-owned
 	eff.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	eff.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	bottom.add_child(eff)
 	bottom.add_child(_action(id, def, attn, dust))
 	box.add_child(bottom)
+	# After add_child: setup() sizes the node, and EmberPips' own _ready re-anchors it.
+	track.setup(lvl, AttunementsCore.MAX_LEVEL)
 	return box
-
-
-func _pips(level: int) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 3)
-	for lvl in range(1, AttunementsCore.MAX_LEVEL + 1):
-		var p := Label.new()
-		if lvl <= level:                              # earned — filled gold
-			p.text = "●"
-			p.add_theme_color_override("font_color", SlateHud.COL_READY)
-		elif lvl == level + 1:                        # next — hollow gold
-			p.text = "○"
-			p.add_theme_color_override("font_color", SlateHud.COL_READY)
-		else:                                         # further — slate
-			p.text = "○"
-			p.add_theme_color_override("font_color", SlateHud.COL_SLATE_BORDER)
-		row.add_child(p)
-	return row
 
 
 func _action(id: String, def: Dictionary, attn: Dictionary, dust: float) -> Control:
@@ -161,12 +172,14 @@ func _action(id: String, def: Dictionary, attn: Dictionary, dust: float) -> Cont
 	if lvl >= AttunementsCore.MAX_LEVEL:
 		var l := Label.new()
 		l.text = "Mastered"
-		l.theme_type_variation = &"DimLabel"
-		l.add_theme_color_override("font_color", SlateHud.COL_READY)  # inert gold-dim
+		l.theme_type_variation = &"EmberDim"
+		l.add_theme_color_override("font_color", EmberHud.COL_ACCENT)  # inert gold
 		l.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		return l
 	var cost := AttunementsCore.next_cost(def, lvl)
 	var b := Button.new()
+	# Seven rows, so seven Deepen buttons: these stay PLAIN frames on purpose. Gold marks the
+	# one thing a screen wants you to press, and a page of gold buttons marks nothing.
 	b.text = "Deepen  (%d Dust)" % cost
 	b.disabled = dust < float(cost)  # never red — just disabled when short
 	b.size_flags_vertical = Control.SIZE_SHRINK_CENTER
@@ -211,30 +224,12 @@ func _stat_line(mods: Array) -> String:
 	return "%s" % stat
 
 
-# --- Dust readout (top-right; the E1 mote-cluster pattern) -----------------------------
+# --- Draw (the scrim + the shared Dust readout) ----------------------------------------
 
 func _draw() -> void:
-	if size.x < 1.0 or _font_num == null:
+	if size.x < 1.0:
 		return
-	var n := int(Ledger.get_amount("resonance-dust"))
-	var num := str(n)
-	var right := size.x - SlateHud.MARGIN - 6.0
-	var top := SlateHud.MARGIN + 6.0
-	var nw := _font_num.get_string_size(num, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_DUST).x
-	var ny := top + _font_num.get_ascent(FS_DUST)
-	draw_string(_font_num, Vector2(right - nw, ny), num, HORIZONTAL_ALIGNMENT_LEFT, -1,
-		FS_DUST, SlateHud.COL_DUST)
-	var gx := right - nw - 20.0
-	var gy := top + FS_DUST * 0.5
-	var offs: Array[Vector2] = [Vector2(0, 0), Vector2(-9, -6), Vector2(-14, 5), Vector2(-4, 9), Vector2(-18, -4)]
-	var sizes: Array[float] = [4.0, 2.6, 3.2, 2.2, 2.0]
-	for i in mini(DUST_GLYPH_N, offs.size()):
-		_diamond(Vector2(gx, gy) + offs[i], sizes[i], Color(SlateHud.COL_DUST, 0.55 + 0.1 * i))
-	var lw := _font_num.get_string_size(DUST_SUBTITLE, HORIZONTAL_ALIGNMENT_LEFT, -1, FS_DUST_LABEL).x
-	draw_string(_font_num, Vector2(right - lw, ny + FS_DUST_LABEL + 4.0), DUST_SUBTITLE,
-		HORIZONTAL_ALIGNMENT_LEFT, -1, FS_DUST_LABEL, SlateHud.COL_KEY_TEXT)
-
-
-func _diamond(p: Vector2, s: float, col: Color) -> void:
-	draw_colored_polygon(PackedVector2Array([
-		p + Vector2(0, -s), p + Vector2(s, 0), p + Vector2(0, s), p + Vector2(-s, 0)]), col)
+	# This page covers the arms page, which is what draws the scrim on the marks tab — so it
+	# has to lay its own down, or the arms would show through the ledger.
+	_scrim()
+	_resource_readout(size.x - EmberMenuCore.PAD_PX, RES_Y, ["resonance-dust"])
